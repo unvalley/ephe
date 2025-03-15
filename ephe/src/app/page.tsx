@@ -7,10 +7,17 @@ import { useRef, memo } from "react";
 const EPHE_VERSION = "0.0.1";
 
 // tiptap editor is a client only component
-const TiptapEditor = dynamic(() => import("../components/tiptap").then(mod => mod.TiptapEditor), {
-    ssr: false,
-    loading: () => <div className="h-screen w-screen flex items-center justify-center">Loading editor...</div>
-});
+const TiptapEditor = dynamic(
+    () => import("../components/tiptap").then((mod) => mod.TiptapEditor),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="h-screen w-screen flex items-center justify-center">
+                Loading editor...
+            </div>
+        ),
+    },
+);
 
 export default function Page() {
     const editorRef = useRef<{ focus: () => void } | undefined>(undefined);
@@ -23,6 +30,7 @@ export default function Page() {
     };
 
     return (
+        // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
         <div
             className="h-screen w-screen flex justify-center pt-16"
             onClick={handlePageClick}
@@ -38,8 +46,12 @@ const EditorFooter = () => {
         <footer className="fixed inset-x-0 bottom-0 bg-white/80 backdrop-blur-sm fira-code">
             <div className="mx-auto px-2 py-0.5 text-sm text-gray-600 flex justify-between">
                 <nav className="flex gap-4">
-                    <a href="#" className="hover:text-gray-900">Home</a>
-                    <a href="#" className="hover:text-gray-900">About</a>
+                    <a href="https://github.com/unvalley/ephe" className="hover:text-gray-900">
+                        Home
+                    </a>
+                    <a href="https://github.com/unvalley/ephe#README" className="hover:text-gray-900">
+                        About
+                    </a>
                 </nav>
                 <div className="flex items-center gap-2">
                     <Avatar size={14} name="ephe" />

@@ -1,57 +1,63 @@
-'use client'
+"use client";
 
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import Placeholder from '@tiptap/extension-placeholder'
-import { JSX, useEffect, useCallback } from 'react'
-import { useLocalStorage } from '../hooks/use-local-storage'
+import { useEditor, EditorContent } from "@tiptap/react";
+import Placeholder from "@tiptap/extension-placeholder";
+import { type JSX, useEffect, useCallback } from "react";
+import { useLocalStorage } from "../hooks/use-local-storage";
+import Document from '@tiptap/extension-document';
+import Paragraph from '@tiptap/extension-paragraph';
+import Text from '@tiptap/extension-text';
+import { MarkdownTaskList } from "./markdown-task-list";
+import { useDebouncedCallback } from "../hooks/use-debounce";
 
-const EDITOR_CONTENT_KEY = 'editor-content'
+const EDITOR_CONTENT_KEY = "editor-content";
+
 
 type TiptapEditorProps = {
     editorRef?: React.RefObject<{ focus: () => void } | undefined>;
-}
+};
 
 export const TiptapEditor = ({ editorRef }: TiptapEditorProps): JSX.Element => {
-    const [content, setContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, '')
+    const [content, setContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, "");
 
-    const debouncedSetContent = useCallback(
-        debounce((newContent: string) => {
+    const debouncedSetContent = useDebouncedCallback(
+        (newContent: string) => {
             setContent(newContent);
-        }, 400),
-        []
+        },
+        400
     );
 
     const editor = useEditor({
         extensions: [
-            StarterKit.configure({
-                heading: false,
-            }),
+            Document,
+            Paragraph,
+            Text,
             Placeholder.configure({
                 placeholder: quotePlaceholder(),
-                emptyEditorClass: 'is-editor-empty',
+                emptyEditorClass: "is-editor-empty",
             }),
+            MarkdownTaskList,
         ],
         content: content,
         onUpdate: ({ editor }) => {
-            const newContent = editor.getHTML()
-            debouncedSetContent(newContent)
+            const newContent = editor.getHTML();
+            debouncedSetContent(newContent);
         },
         editorProps: {
             attributes: {
                 // CSS for the editable element itself (contentEditable div)
                 // Only include focus and cursor styles here
-                class: 'focus:outline-none cursor-text space-mono'
-            }
+                class: "focus:outline-none cursor-text space-mono",
+            },
         },
-        autofocus: true
-    })
+        autofocus: true,
+    });
 
     // Expose focus method to parent component through ref
     useEffect(() => {
         if (editorRef && editor) {
             editorRef.current = {
-                focus: () => editor.commands.focus()
+                focus: () => editor.commands.focus(),
             };
         }
     }, [editor, editorRef]);
@@ -65,8 +71,8 @@ export const TiptapEditor = ({ editorRef }: TiptapEditorProps): JSX.Element => {
                 className="prose max-w-none overflow-auto"
             />
         </div>
-    )
-}
+    );
+};
 
 const WRITING_QUOTES = [
     "The scariest moment is always just before you start. - Stephen King",
@@ -77,24 +83,12 @@ const WRITING_QUOTES = [
     "A word after a word after a word is power. - Margaret Atwood",
     "Get things done. - David Allen",
     "Later equals never. - LeBlanc's Law",
-    "Divide and conquer. - Julius Caesar"
-]
+    "Divide and conquer. - Julius Caesar",
+];
 
 const quotePlaceholder = () => {
-    return WRITING_QUOTES[Math.floor(Math.random() * WRITING_QUOTES.length)]
-}
-
-function debounce<T extends (...args: any[]) => any>(
-    func: T,
-    wait: number
-): (...args: Parameters<T>) => void {
-    let timeout: ReturnType<typeof setTimeout> | null = null;
-
-    return function (...args: Parameters<T>) {
-        if (timeout) clearTimeout(timeout);
-        timeout = setTimeout(() => func(...args), wait);
-    };
-}
+    return WRITING_QUOTES[Math.floor(Math.random() * WRITING_QUOTES.length)];
+};
 
 // Need to use default export since this is a CSR component loaded with dynamic import
-export default TiptapEditor
+export default TiptapEditor;
