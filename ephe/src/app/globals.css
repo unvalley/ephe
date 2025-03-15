@@ -7,3 +7,15 @@
     height: 0;
     pointer-events: none;
 }
+
+html {
+  font-family: monospace;
+}
+
+.fira-code {
+  font-family: var(--font-fira-code), monospace;
+}
+
+.courier-prime {
+  font-family: var(--font-courier-prime), monospace;
+}

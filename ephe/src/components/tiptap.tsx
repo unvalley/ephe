@@ -34,7 +34,7 @@ export const TiptapEditor = ({ editorRef }: TiptapEditorProps): JSX.Element => {
             attributes: {
                 // CSS for the editable element itself (contentEditable div)
                 // Only include focus and cursor styles here
-                class: 'focus:outline-none cursor-text'
+                class: 'focus:outline-none cursor-text space-mono'
             }
         },
         autofocus: true
@@ -68,7 +68,6 @@ const WRITING_QUOTES = [
     "The best way to predict the future is to invent it. - Alan Kay",
     "The only way to do great work is to love what you do. - Steve Jobs",
     "A word after a word after a word is power. - Margaret Atwood",
-    "Start writing, no matter what. The water does not flow until the faucet is turned on. - Louis L'Amour",
 ]
 
 const quotePlaceholder = () => {

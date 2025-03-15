@@ -35,7 +35,7 @@ export default function Page() {
 
 const EditorFooter = () => {
     return (
-        <footer className="fixed inset-x-0 bottom-0 bg-white/80 backdrop-blur-sm">
+        <footer className="fixed inset-x-0 bottom-0 bg-white/80 backdrop-blur-sm fira-code">
             <div className="mx-auto px-2 py-0.5 text-sm text-gray-600 flex justify-between">
                 <nav className="flex gap-4">
                     <a href="#" className="hover:text-gray-900">Home</a>
