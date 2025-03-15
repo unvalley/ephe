@@ -6,9 +6,9 @@ import { useRef, memo } from "react";
 
 const EPHE_VERSION = "0.0.1";
 
-// tiptap editor is a client only component
-const TiptapEditor = dynamic(
-    () => import("../components/tiptap").then((mod) => mod.TiptapEditor),
+// Monaco editor is a client only component
+const MonacoEditor = dynamic(
+    () => import("../components/monaco-editor").then((mod) => mod.MonacoEditor),
     {
         ssr: false,
         loading: () => (
@@ -32,10 +32,12 @@ export default function Page() {
     return (
         // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
         <div
-            className="h-screen w-screen flex justify-center pt-16"
+            className="h-screen w-screen flex flex-col justify-center"
             onClick={handlePageClick}
         >
-            <TiptapEditor editorRef={editorRef} />
+            <div className="flex-1 flex justify-center pt-16 pb-8 overflow-hidden">
+                <MonacoEditor editorRef={editorRef} />
+            </div>
             <MemoizedEditorFooter />
         </div>
     );

@@ -60,6 +60,43 @@
   }
 }
 
+/* Monaco editor styles */
+.monaco-editor {
+  padding: 1rem;
+}
+
+.monaco-editor .overflow-guard {
+  border-radius: 0.375rem;
+}
+
+.monaco-placeholder {
+  z-index: 1;
+  font-family: var(--font-space-mono), monospace;
+}
+
+/* Hide scrollbars completely */
+.monaco-editor .scrollbar {
+  display: none !important;
+}
+
+.monaco-editor .scroll-decoration {
+  box-shadow: none !important;
+}
+
+/* Make sure content is still scrollable */
+.monaco-editor .monaco-scrollable-element {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.monaco-editor .monaco-scrollable-element::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.monaco-editor textarea {
+    outline: 0;
+}
+
 html {
   font-family: monospace;
 }
@@ -102,4 +139,19 @@ span.task-checkbox {
 .task-text.completed {
   text-decoration: line-through !important;
   color: #888 !important;
+}
+
+/* Add these styles to remove Monaco editor blue border */
+.monaco-editor .monaco-editor-background,
+.monaco-editor .inputarea.ime-input {
+    outline: none !important;
+    border: none !important;
+}
+.monaco-editor:focus-within {
+    outline: none !important;
+    border: none !important;
+}
+.monaco-editor-container {
+    outline: none !important;
+    border: none !important;
 }
