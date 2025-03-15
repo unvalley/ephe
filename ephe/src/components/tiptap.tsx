@@ -4,14 +4,13 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import { JSX, useEffect } from 'react'
-import { useLocalStorage } from '../hooks/useLocalStorage'
+import { useLocalStorage } from '../hooks/use-local-storage'
 
 const EDITOR_CONTENT_KEY = 'editor-content'
 
 type TiptapEditorProps = {
     editorRef?: React.RefObject<{ focus: () => void } | undefined>;
 }
-
 export const TiptapEditor = ({ editorRef }: TiptapEditorProps): JSX.Element => {
     const [content, setContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, '')
 
@@ -21,7 +20,7 @@ export const TiptapEditor = ({ editorRef }: TiptapEditorProps): JSX.Element => {
                 heading: false,
             }),
             Placeholder.configure({
-                placeholder: '',
+                placeholder: quotePlaceholder(),
                 emptyEditorClass: 'is-editor-empty',
             }),
         ],
@@ -60,6 +59,22 @@ export const TiptapEditor = ({ editorRef }: TiptapEditorProps): JSX.Element => {
         </div>
     )
 }
+
+const WRITING_QUOTES = [
+    "The scariest moment is always just before you start. - Stephen King",
+    "Fill your paper with the breathings of your heart. - William Wordsworth",
+    "The pen is mightier than the sword. - Thomas Jefferson",
+    "The best way to predict the future is to invent it. - Alan Kay",
+    "The only way to do great work is to love what you do. - Steve Jobs",
+    "A word after a word after a word is power. - Margaret Atwood",
+    "Start writing, no matter what. The water does not flow until the faucet is turned on. - Louis L'Amour",
+]
+
+const quotePlaceholder = () => {
+    return WRITING_QUOTES[Math.floor(Math.random() * WRITING_QUOTES.length)]
+}
+
+
 
 // Need to use default export since this is a CSR component loaded with dynamic import
 export default TiptapEditor
