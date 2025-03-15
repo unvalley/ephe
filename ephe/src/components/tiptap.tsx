@@ -11,6 +11,7 @@ const EDITOR_CONTENT_KEY = 'editor-content'
 type TiptapEditorProps = {
     editorRef?: React.RefObject<{ focus: () => void } | undefined>;
 }
+
 export const TiptapEditor = ({ editorRef }: TiptapEditorProps): JSX.Element => {
     const [content, setContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, '')
 
@@ -54,7 +55,7 @@ export const TiptapEditor = ({ editorRef }: TiptapEditorProps): JSX.Element => {
             {/* EditorContent wrapper - controls the editor's appearance and behavior */}
             <EditorContent
                 editor={editor}
-                className="prose max-w-none overflow-auto max-h-[70vh]"
+                className="prose max-w-none overflow-auto"
             />
         </div>
     )
@@ -73,8 +74,6 @@ const WRITING_QUOTES = [
 const quotePlaceholder = () => {
     return WRITING_QUOTES[Math.floor(Math.random() * WRITING_QUOTES.length)]
 }
-
-
 
 // Need to use default export since this is a CSR component loaded with dynamic import
 export default TiptapEditor
