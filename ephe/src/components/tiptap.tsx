@@ -3,7 +3,7 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
-import { JSX, useEffect } from 'react'
+import { JSX, useEffect, useCallback } from 'react'
 import { useLocalStorage } from '../hooks/use-local-storage'
 
 const EDITOR_CONTENT_KEY = 'editor-content'
@@ -14,6 +14,13 @@ type TiptapEditorProps = {
 
 export const TiptapEditor = ({ editorRef }: TiptapEditorProps): JSX.Element => {
     const [content, setContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, '')
+
+    const debouncedSetContent = useCallback(
+        debounce((newContent: string) => {
+            setContent(newContent);
+        }, 400),
+        []
+    );
 
     const editor = useEditor({
         extensions: [
@@ -28,7 +35,7 @@ export const TiptapEditor = ({ editorRef }: TiptapEditorProps): JSX.Element => {
         content: content,
         onUpdate: ({ editor }) => {
             const newContent = editor.getHTML()
-            setContent(newContent)
+            debouncedSetContent(newContent)
         },
         editorProps: {
             attributes: {
@@ -51,7 +58,7 @@ export const TiptapEditor = ({ editorRef }: TiptapEditorProps): JSX.Element => {
 
     return (
         // Container wrapper - controls the width constraints and horizontal centering
-        <div className="w-full max-w-3xl mx-auto">
+        <div className="w-full max-w-2xl mx-auto">
             {/* EditorContent wrapper - controls the editor's appearance and behavior */}
             <EditorContent
                 editor={editor}
@@ -75,6 +82,18 @@ const WRITING_QUOTES = [
 
 const quotePlaceholder = () => {
     return WRITING_QUOTES[Math.floor(Math.random() * WRITING_QUOTES.length)]
+}
+
+function debounce<T extends (...args: any[]) => any>(
+    func: T,
+    wait: number
+): (...args: Parameters<T>) => void {
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+
+    return function (...args: Parameters<T>) {
+        if (timeout) clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), wait);
+    };
 }
 
 // Need to use default export since this is a CSR component loaded with dynamic import

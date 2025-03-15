@@ -2,7 +2,7 @@
 
 import Avatar from "boring-avatars";
 import dynamic from "next/dynamic";
-import { useRef } from "react";
+import { useRef, memo } from "react";
 
 const EPHE_VERSION = "0.0.1";
 
@@ -28,7 +28,7 @@ export default function Page() {
             onClick={handlePageClick}
         >
             <TiptapEditor editorRef={editorRef} />
-            <EditorFooter />
+            <MemoizedEditorFooter />
         </div>
     );
 }
@@ -48,4 +48,7 @@ const EditorFooter = () => {
             </div>
         </footer>
     );
-}
+};
+
+// Memoize the footer to prevent unnecessary re-renders
+const MemoizedEditorFooter = memo(EditorFooter);
