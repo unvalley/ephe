@@ -1,7 +1,10 @@
 "use client";
 
+import Avatar from "boring-avatars";
 import dynamic from "next/dynamic";
 import { useRef } from "react";
+
+const EPHE_VERSION = "0.0.1";
 
 // tiptap editor is a client only component
 const TiptapEditor = dynamic(() => import("../components/tiptap").then(mod => mod.TiptapEditor), {
@@ -38,7 +41,10 @@ const EditorFooter = () => {
                     <a href="#" className="hover:text-gray-900">Home</a>
                     <a href="#" className="hover:text-gray-900">About</a>
                 </nav>
-                <span>Ephe v0.0.1</span>
+                <div className="flex items-center gap-2">
+                    <Avatar size={14} name="ephe" />
+                    <span>Ephe v{EPHE_VERSION}</span>
+                </div>
             </div>
         </footer>
     );

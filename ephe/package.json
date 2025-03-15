@@ -13,6 +13,7 @@
     "@tiptap/pm": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
+    "boring-avatars": "^1.11.2",
     "next": "15.2.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
