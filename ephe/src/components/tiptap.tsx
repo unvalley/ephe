@@ -22,20 +22,24 @@ const TiptapEditor = (): JSX.Element => {
         },
         editorProps: {
             attributes: {
-                class: 'h-full w-full focus:outline-none cursor-text prose max-w-none'
+                // CSS for the editable element itself (contentEditable div)
+                // Only include focus and cursor styles here
+                class: 'focus:outline-none cursor-text'
             }
         },
         autofocus: true
     })
 
     return (
+        // Container wrapper - controls the width constraints and horizontal centering
         <div
             onClick={() => editor?.commands.focus()}
             className="w-full max-w-3xl mx-auto"
         >
+            {/* EditorContent wrapper - controls the editor's appearance and behavior */}
             <EditorContent
                 editor={editor}
-                className="overflow-auto max-h-[70vh]"
+                className="prose max-w-none overflow-auto max-h-[70vh]"
             />
         </div>
     )
