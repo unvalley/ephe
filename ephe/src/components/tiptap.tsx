@@ -2,47 +2,43 @@
 
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import { useState } from 'react'
+import Placeholder from '@tiptap/extension-placeholder'
+import { JSX, useState } from 'react'
 
-const TiptapEditor = () => {
-    const [content, setContent] = useState('<p>Hello World! This is a basic Tiptap editor.</p>')
+const TiptapEditor = (): JSX.Element => {
+    const [content, setContent] = useState<string>('')
 
     const editor = useEditor({
-        extensions: [StarterKit],
+        extensions: [
+            StarterKit,
+            Placeholder.configure({
+                placeholder: 'Type something...',
+                emptyEditorClass: 'is-editor-empty',
+            }),
+        ],
         content: content,
         onUpdate: ({ editor }) => {
             setContent(editor.getHTML())
         },
+        editorProps: {
+            attributes: {
+                class: 'h-full w-full focus:outline-none cursor-text prose max-w-none'
+            }
+        },
+        autofocus: true
     })
 
     return (
-        <div className="tiptap-editor">
-            <EditorContent editor={editor} className="min-h-[200px] p-4 border rounded-md focus:outline-none" />
-
-            {/* Optional toolbar */}
-            <div className="flex gap-2 mt-2">
-                <button
-                    onClick={() => editor?.chain().focus().toggleBold().run()}
-                    className={`p-2 border rounded ${editor?.isActive('bold') ? 'bg-gray-200' : ''}`}
-                >
-                    Bold
-                </button>
-                <button
-                    onClick={() => editor?.chain().focus().toggleItalic().run()}
-                    className={`p-2 border rounded ${editor?.isActive('italic') ? 'bg-gray-200' : ''}`}
-                >
-                    Italic
-                </button>
-                <button
-                    onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                    className={`p-2 border rounded ${editor?.isActive('bulletList') ? 'bg-gray-200' : ''}`}
-                >
-                    Bullet List
-                </button>
-            </div>
+        <div
+            onClick={() => editor?.commands.focus()}
+            className="w-full max-w-3xl mx-auto"
+        >
+            <EditorContent
+                editor={editor}
+                className="overflow-auto max-h-[70vh]"
+            />
         </div>
     )
 }
 
 export default TiptapEditor
-
