@@ -1,69 +1,9 @@
 @import "tailwindcss";
 
-/* Basic editor styles */
-.tiptap {
-  :first-child {
-    margin-top: 0;
-  }
-
-  p.is-editor-empty:first-child::before {
-    color: #adb5bd;
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
-  }
-
-  /* List styles */
-  ul,
-  ol {
-    padding: 0 1rem;
-    margin: 1.25rem 1rem 1.25rem 0.4rem;
-
-    li p {
-      margin-top: 0.25em;
-      margin-bottom: 0.25em;
-    }
-  }
-
-  /* Markdown task list styles */
-  .task-item {
-    display: flex;
-    margin-bottom: 0.5em;
-    
-    &.task-done {
-      text-decoration: line-through;
-      color: #888;
-    }
-    
-    .task-checkbox {
-      cursor: pointer;
-      margin-right: 0.5rem;
-      user-select: none;
-    }
-  }
-
-  /* Remove the default task list styling since we're using our own */
-  ul[data-type="taskList"] {
-    list-style: none;
-    margin-left: 0;
-    padding: 0;
-    
-    li {
-      position: relative;
-      padding-left: 1.5em;
-      
-      &::before {
-        display: none; /* Hide the default checkbox */
-      }
-    }
-  }
-}
-
 /* Monaco editor styles */
-.monaco-editor {
+/* .monaco-editor {
   padding: 1rem;
-}
+} */
 
 .monaco-editor .overflow-guard {
   border-radius: 0.375rem;
@@ -71,7 +11,8 @@
 
 .monaco-placeholder {
   z-index: 1;
-  font-family: var(--font-space-mono), monospace;
+  font-family: monospace;
+  font-size: 14px;
 }
 
 /* Hide scrollbars completely */
@@ -101,14 +42,6 @@ html {
   font-family: monospace;
 }
 
-.fira-code {
-  font-family: var(--font-fira-code), monospace;
-}
-
-.courier-prime {
-  font-family: var(--font-courier-prime), monospace;
-}
-
 /* Markdown syntax highlighting */
 .markdown-task-item {
   position: relative;
@@ -118,7 +51,7 @@ html {
 .task-completed {
   text-decoration: line-through;
   color: #888;
-  opacity: 0.8;
+  opacity: 0.4;
 }
 
 /* Make the checkbox part clickable */
@@ -141,6 +74,9 @@ span.task-checkbox {
   color: #888 !important;
 }
 
+.monaco-editor {
+    --vscode-focusBorder: #fff !important
+}
 /* Add these styles to remove Monaco editor blue border */
 .monaco-editor .monaco-editor-background,
 .monaco-editor .inputarea.ime-input {

@@ -73,7 +73,6 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
                 if (!position) return;
 
                 const lineContent = model.getLineContent(position.lineNumber);
-                // より柔軟なマッチングパターンを使用
                 const taskListMatch = lineContent.match(/^(\s*)- \[\s*([xX ])\s*\]/);
 
                 if (taskListMatch) {
@@ -99,9 +98,9 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
                         return;
                     }
 
-                    // カーソルがチェックボックスの後ろにある場合
+                    // If the cursor is after the checkbox
                     if (position.column > checkboxEndPos) {
-                        // カーソルが行末にある場合は新しいタスクリストを追加
+                        // If the cursor is at the end of the line, add a new task list item
                         if (position.column > lineContent.length) {
                             e.preventDefault();
                             editor.executeEdits('', [
@@ -116,7 +115,7 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
                                 }
                             ]);
                         } else {
-                            // カーソルが行の途中にある場合は単に行を分割
+                            // If the cursor is in the middle of the line, just split the line
                             e.preventDefault();
                             const textBeforeCursor = lineContent.substring(0, position.column - 1);
                             const textAfterCursor = lineContent.substring(position.column - 1);
@@ -134,8 +133,7 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
                             ]);
                         }
                     } else {
-                        // カーソルがチェックボックスの前または中にある場合は通常の改行
-                        // デフォルトの動作を許可
+                        // If the cursor is before or in the middle of the checkbox, allow the default behavior
                     }
                 }
             }
@@ -155,11 +153,10 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
 
             const lineContent = model.getLineContent(position.lineNumber);
 
-            // より柔軟なマッチングパターンを使用
             const checkboxMatch = lineContent.match(/^(\s*)- \[\s*([xX ])\s*\] (.*)/);
             if (checkboxMatch) {
                 const indentation = checkboxMatch[1] || '';
-                // 大文字のXも許容
+                // Allow uppercase X as well
                 const isChecked = checkboxMatch[2].toLowerCase() === 'x';
                 const taskText = checkboxMatch[3];
 
@@ -167,7 +164,7 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
                 const checkboxStart = indentation.length + 3; // "- [" length
                 const checkboxEnd = checkboxStart + 1; // single character inside brackets
 
-                // チェックボックス周辺のクリック判定を少し広げる
+                // Expand the click area slightly around the checkbox
                 const clickAreaStart = Math.max(1, checkboxStart - 1);
                 const clickAreaEnd = checkboxEnd + 1;
 
@@ -206,28 +203,28 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
 
             for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
                 const lineContent = model.getLineContent(lineNumber);
-                // より柔軟なマッチングパターンを使用（空白の数を考慮）
+                // Use a more flexible matching pattern (considering whitespace)
                 const checkedTaskMatch = lineContent.match(/^(\s*)- \[\s*[xX]\s*\] (.*)/);
 
                 if (checkedTaskMatch) {
                     const indentation = checkedTaskMatch[1] || '';
 
-                    // 行全体に打ち消し線を適用（チェックボックス部分も含む）
+                    // Apply strikethrough to the entire line (including the checkbox)
                     decorations.push({
                         range: new monaco.Range(
                             lineNumber,
-                            1, // 行の先頭から
+                            1, // From the beginning of the line
                             lineNumber,
-                            lineContent.length + 1 // 行の末尾まで
+                            lineContent.length + 1 // To the end of the line
                         ),
                         options: {
-                            inlineClassName: 'text-decoration-line-through text-gray-500'
+                            inlineClassName: 'text-decoration-line-through text-gray-200'
                         }
                     });
                 }
             }
 
-            editor.deltaDecorations([], decorations);
+            editor.createDecorationsCollection(decorations);
         };
 
         // Update placeholder and decorations on content change
@@ -295,7 +292,7 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
         // Container wrapper - controls the width constraints and horizontal centering
         <div className="w-full max-w-2xl mx-auto relative h-full">
             {/* Placeholder element that shows when editor is empty */}
-            <div className="monaco-placeholder absolute top-0 left-0 p-4 text-gray-400 pointer-events-none">
+            <div className="monaco-placeholder absolute left-0.5 text-gray-400 pointer-events-none">
                 {placeholder}
             </div>
 
