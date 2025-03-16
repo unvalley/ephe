@@ -31,9 +31,10 @@ const getRandomQuote = (): string => {
 
 type MonacoEditorProps = {
     editorRef?: React.RefObject<{ focus: () => void } | undefined>;
+    onWordCountChange?: (count: number) => void;
 };
 
-export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactElement => {
+export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps): React.ReactElement => {
     const [content, setContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, "");
     const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
     const [placeholder, setPlaceholder] = useState<string>(getRandomQuote());
@@ -45,6 +46,16 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
             setContent(newContent);
         },
         400
+    );
+
+    // Create a debounced function for character count updates
+    const debouncedCharCountUpdate = useDebouncedCallback(
+        (text: string) => {
+            if (onWordCountChange) {
+                onWordCountChange(text.length);
+            }
+        },
+        50 // Faster updates for character count
     );
 
     // Handle editor mounting
@@ -385,12 +396,21 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
         editor.onDidChangeModelContent(() => {
             updatePlaceholder();
             updateDecorations();
-            debouncedSetContent(editor.getValue());
+            const newContent = editor.getValue();
+            debouncedSetContent(newContent);
+
+            // Use the debounced update for character count
+            debouncedCharCountUpdate(newContent);
         });
 
         // Initial setup
         updatePlaceholder();
         updateDecorations();
+
+        // Initial character count - direct calculation for initial load
+        if (onWordCountChange) {
+            onWordCountChange(editor.getValue().length);
+        }
 
         // Focus editor on mount
         editor.focus();
@@ -480,7 +500,7 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
         // Container wrapper - controls the width constraints and horizontal centering
         <div className="w-full max-w-2xl mx-auto relative h-full rounded-md overflow-hidden">
             {/* Placeholder element that shows when editor is empty */}
-            <div className="monaco-placeholder text-md absolute left-0.5 text-gray-400 dark:text-gray-500 pointer-events-none z-[1]">
+            <div className="monaco-placeholder text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1]">
                 {placeholder}
             </div>
 
@@ -490,9 +510,12 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
                 width="100%"
                 defaultLanguage="markdown"
                 defaultValue={content}
-                options={editorOptions}
+                options={{
+                    ...editorOptions,
+                    padding: { top: 4 }, // カーソルが上部で切れないようにパディングを追加
+                }}
                 onMount={handleEditorDidMount}
-                className="overflow-hidden"
+                className="overflow-visible" // overflow-hiddenからoverflow-visibleに変更
                 loading=""
                 theme={isDarkMode ? "ephe-dark" : "ephe-light"}
             />

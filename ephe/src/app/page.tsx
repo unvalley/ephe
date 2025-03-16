@@ -2,7 +2,7 @@
 
 import Avatar from "boring-avatars";
 import dynamic from "next/dynamic";
-import { useRef, memo } from "react";
+import { useRef, memo, useState } from "react";
 import { useTheme } from "../hooks/use-theme";
 
 const EPHE_VERSION = "0.0.1";
@@ -22,6 +22,7 @@ const MonacoEditor = dynamic(
 
 export default function Page() {
     const editorRef = useRef<{ focus: () => void } | undefined>(undefined);
+    const [charCount, setCharCount] = useState<number>(0);
 
     // Focus the editor when clicking anywhere in the page container
     const handlePageClick = () => {
@@ -37,14 +38,21 @@ export default function Page() {
             onClick={handlePageClick}
         >
             <div className="flex-1 flex justify-center pt-16 pb-8 overflow-hidden">
-                <MonacoEditor editorRef={editorRef} />
+                <MonacoEditor
+                    editorRef={editorRef}
+                    onWordCountChange={setCharCount}
+                />
             </div>
-            <MemoizedEditorFooter />
+            <MemoizedEditorFooter charCount={charCount} />
         </div>
     );
 }
 
-const EditorFooter = () => {
+type EditorFooterProps = {
+    charCount: number;
+};
+
+const EditorFooter = ({ charCount }: EditorFooterProps) => {
     const { theme, toggleTheme } = useTheme();
     const isDark = theme === "dark";
 
@@ -71,6 +79,7 @@ const EditorFooter = () => {
                     </button>
                 </nav>
                 <div className="flex items-center gap-2">
+                    <span className="text-gray-500">{charCount} chars</span>
                     <Avatar size={14} name="ephe" />
                     <span>Ephe v{EPHE_VERSION}</span>
                 </div>
