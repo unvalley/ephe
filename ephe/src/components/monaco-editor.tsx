@@ -85,7 +85,22 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
                         endLineNumber: position.lineNumber,
                         endColumn: position.column
                     },
-                    text: "- [ ]"
+                    text: "- [ ] "
+                }]);
+                return true;
+            }
+
+            // Check if the user just typed "- ["
+            if (textBeforeCursor.endsWith("- ")) {
+                e.preventDefault();
+                editor.executeEdits('', [{
+                    range: {
+                        startLineNumber: position.lineNumber,
+                        startColumn: position.column,
+                        endLineNumber: position.lineNumber,
+                        endColumn: position.column
+                    },
+                    text: "[ ] "
                 }]);
                 return true;
             }
