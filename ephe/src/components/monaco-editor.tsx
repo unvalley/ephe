@@ -7,6 +7,7 @@ import type * as monaco from "monaco-editor";
 import { Editor } from "@monaco-editor/react";
 import type { EditorProps } from "@monaco-editor/react";
 import type React from "react";
+import { isTaskListLine, getTaskListIndentation, getCheckboxEndPosition, isEmptyTaskListLine, isCheckedTask } from "./task-list-utils";
 
 const EDITOR_CONTENT_KEY = "editor-content";
 
@@ -25,28 +26,6 @@ const WRITING_QUOTES = [
 // Helper functions
 const getRandomQuote = (): string => {
     return WRITING_QUOTES[Math.floor(Math.random() * WRITING_QUOTES.length)];
-};
-
-// Task list related utilities
-const isTaskListLine = (lineContent: string): boolean => {
-    return !!lineContent.match(/^(\s*)- \[\s*([xX ])\s*\]/);
-};
-
-const isCheckedTask = (lineContent: string): boolean => {
-    return !!lineContent.match(/^(\s*)- \[\s*[xX]\s*\]/);
-};
-
-const isEmptyTaskListLine = (lineContent: string): boolean => {
-    return !!lineContent.trim().match(/^- \[\s*([xX ])\s*\]\s*$/);
-};
-
-const getTaskListIndentation = (lineContent: string): string => {
-    const match = lineContent.match(/^(\s*)- \[\s*([xX ])\s*\]/);
-    return match ? match[1] || '' : '';
-};
-
-const getCheckboxEndPosition = (lineContent: string): number => {
-    return lineContent.indexOf(']') + 1;
 };
 
 type MonacoEditorProps = {
@@ -166,13 +145,14 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
 
             const lineContent = model.getLineContent(position.lineNumber);
 
-            const checkboxMatch = lineContent.match(/^(\s*)- \[\s*([xX ])\s*\] (.*)/);
-            if (!checkboxMatch) return;
+            if (!isTaskListLine(lineContent)) return;
 
-            const indentation = checkboxMatch[1] || '';
+            const indentation = getTaskListIndentation(lineContent);
+            const checkboxEndPos = getCheckboxEndPosition(lineContent);
+
             // Allow uppercase X as well
-            const isChecked = checkboxMatch[2].toLowerCase() === 'x';
-            const taskText = checkboxMatch[3];
+            const isChecked = lineContent.charAt(checkboxEndPos + 1).toLowerCase() === 'x';
+            const taskText = lineContent.substring(checkboxEndPos + 2);
 
             // Calculate checkbox position in the line
             const checkboxStart = indentation.length + 3; // "- [" length
@@ -238,7 +218,7 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
             }
 
             // Replace all decorations each time
-            editor.deltaDecorations([], decorations);
+            editor.createDecorationsCollection(decorations);
         };
 
         // Add event handlers
