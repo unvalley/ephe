@@ -534,10 +534,10 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
 
     return (
         // Container wrapper - controls the width constraints and horizontal centering
-        <div className="w-full max-w-2xl mx-auto relative h-full rounded-md overflow-hidden">
+        <div className="w-full max-w-2xl mx-auto relative h-full rounded-md overflow-hidden px-4 sm:px-6 md:px-0">
             {/* Placeholder element that shows when editor is empty */}
             <div
-                className={`monaco-placeholder text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 ${shouldShowPlaceholder ? 'opacity-100' : 'opacity-0'}`}
+                className={`monaco-placeholder text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 px-4 sm:px-2 ${shouldShowPlaceholder ? 'opacity-100' : 'opacity-0'}`}
                 aria-hidden={!shouldShowPlaceholder}
             >
                 {placeholder}
@@ -551,7 +551,7 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
                 defaultValue={content}
                 options={{
                     ...editorOptions,
-                    padding: { top: 4 }, // Add padding to prevent cursor from being cut off at the top
+                    padding: { top: 4 }, // Add padding to prevent cursor from being cut off
                 }}
                 onMount={handleEditorDidMount}
                 className="overflow-visible"
