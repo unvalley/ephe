@@ -65,59 +65,48 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
             }
         };
 
-        // Handle task list continuation on Enter key
-        const handleTaskListContinuation = (e: monaco.IKeyboardEvent): void => {
-            if (e.keyCode !== monaco.KeyCode.Enter) return;
-
+        // Handle keyboard events
+        const handleKeyDown = (e: monaco.IKeyboardEvent): void => {
             const model = editor.getModel();
             if (!model) return;
 
             const position = editor.getPosition();
             if (!position) return;
 
-            const lineContent = model.getLineContent(position.lineNumber);
+            // Auto-complete task list syntax
+            if (e.keyCode === monaco.KeyCode.BracketLeft) {
+                const lineContent = model.getLineContent(position.lineNumber);
+                const textBeforeCursor = lineContent.substring(0, position.column - 1);
 
-            if (!isTaskListLine(lineContent)) return;
-
-            const indentation = getTaskListIndentation(lineContent);
-            const checkboxEndPos = getCheckboxEndPosition(lineContent);
-
-            // If the line only contains the task list marker and nothing else, 
-            // remove the current line's task list marker
-            if (isEmptyTaskListLine(lineContent)) {
-                e.preventDefault();
-                editor.executeEdits('', [{
-                    range: {
-                        startLineNumber: position.lineNumber,
-                        startColumn: 1,
-                        endLineNumber: position.lineNumber,
-                        endColumn: lineContent.length + 1
-                    },
-                    text: ''
-                }]);
-                return;
-            }
-
-            // If the cursor is after the checkbox
-            if (position.column > checkboxEndPos) {
-                // If the cursor is at the end of the line, add a new task list item
-                if (position.column > lineContent.length) {
+                // Check if the user just typed "-["
+                if (textBeforeCursor.endsWith("-")) {
                     e.preventDefault();
                     editor.executeEdits('', [{
                         range: {
                             startLineNumber: position.lineNumber,
-                            startColumn: position.column,
+                            startColumn: position.column - 1,
                             endLineNumber: position.lineNumber,
                             endColumn: position.column
                         },
-                        text: `\n${indentation}- [ ] `
+                        text: "- [ ]"
                     }]);
-                } else {
-                    // If the cursor is in the middle of the line, just split the line
-                    e.preventDefault();
-                    const textBeforeCursor = lineContent.substring(0, position.column - 1);
-                    const textAfterCursor = lineContent.substring(position.column - 1);
+                    return;
+                }
+            }
 
+            // Handle task list continuation on Enter key
+            if (e.keyCode === monaco.KeyCode.Enter) {
+                const lineContent = model.getLineContent(position.lineNumber);
+
+                if (!isTaskListLine(lineContent)) return;
+
+                const indentation = getTaskListIndentation(lineContent);
+                const checkboxEndPos = getCheckboxEndPosition(lineContent);
+
+                // If the line only contains the task list marker and nothing else, 
+                // remove the current line's task list marker
+                if (isEmptyTaskListLine(lineContent)) {
+                    e.preventDefault();
                     editor.executeEdits('', [{
                         range: {
                             startLineNumber: position.lineNumber,
@@ -125,8 +114,41 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
                             endLineNumber: position.lineNumber,
                             endColumn: lineContent.length + 1
                         },
-                        text: `${textBeforeCursor}\n${textAfterCursor}`
+                        text: ''
                     }]);
+                    return;
+                }
+
+                // If the cursor is after the checkbox
+                if (position.column > checkboxEndPos) {
+                    // If the cursor is at the end of the line, add a new task list item
+                    if (position.column > lineContent.length) {
+                        e.preventDefault();
+                        editor.executeEdits('', [{
+                            range: {
+                                startLineNumber: position.lineNumber,
+                                startColumn: position.column,
+                                endLineNumber: position.lineNumber,
+                                endColumn: position.column
+                            },
+                            text: `\n${indentation}- [ ] `
+                        }]);
+                    } else {
+                        // If the cursor is in the middle of the line, just split the line
+                        e.preventDefault();
+                        const textBeforeCursor = lineContent.substring(0, position.column - 1);
+                        const textAfterCursor = lineContent.substring(position.column - 1);
+
+                        editor.executeEdits('', [{
+                            range: {
+                                startLineNumber: position.lineNumber,
+                                startColumn: 1,
+                                endLineNumber: position.lineNumber,
+                                endColumn: lineContent.length + 1
+                            },
+                            text: `${textBeforeCursor}\n${textAfterCursor}`
+                        }]);
+                    }
                 }
             }
         };
@@ -147,35 +169,34 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
 
             if (!isTaskListLine(lineContent)) return;
 
-            const indentation = getTaskListIndentation(lineContent);
-            const checkboxEndPos = getCheckboxEndPosition(lineContent);
+            // Find the exact position of the checkbox in the line
+            const checkboxStartIndex = lineContent.indexOf('- [');
+            if (checkboxStartIndex === -1) return;
 
-            // Allow uppercase X as well
-            const isChecked = lineContent.charAt(checkboxEndPos + 1).toLowerCase() === 'x';
-            const taskText = lineContent.substring(checkboxEndPos + 2);
-
-            // Calculate checkbox position in the line
-            const checkboxStart = indentation.length + 3; // "- [" length
-            const checkboxEnd = checkboxStart + 1; // single character inside brackets
+            // Calculate the column positions (Monaco columns start at 1, not 0)
+            const checkboxColumn = checkboxStartIndex + 3 + 1; // +3 for "- [", +1 for Monaco's 1-based columns
 
             // Expand the click area slightly around the checkbox
-            const clickAreaStart = Math.max(1, checkboxStart - 1);
-            const clickAreaEnd = checkboxEnd + 1;
+            const clickAreaStart = checkboxColumn - 1;
+            const clickAreaEnd = checkboxColumn + 1;
 
             // Check if click is within the checkbox area
             if (position.column >= clickAreaStart && position.column <= clickAreaEnd) {
+                // Get the current state of the checkbox
+                const isChecked = isCheckedTask(lineContent);
+
                 // Toggle checkbox state
                 const newState = isChecked ? ' ' : 'x';
 
-                // Apply the edit to toggle checkbox
+                // Apply the edit to toggle checkbox - only change the checkbox character
                 editor.executeEdits('', [{
                     range: {
                         startLineNumber: position.lineNumber,
-                        startColumn: 1,
+                        startColumn: checkboxColumn,
                         endLineNumber: position.lineNumber,
-                        endColumn: lineContent.length + 1
+                        endColumn: checkboxColumn + 1
                     },
-                    text: `${indentation}- [${newState}] ${taskText}`
+                    text: newState
                 }]);
 
                 updateDecorations();
@@ -222,7 +243,7 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
         };
 
         // Add event handlers
-        editor.onKeyDown(handleTaskListContinuation);
+        editor.onKeyDown(handleKeyDown);
         editor.onMouseDown(handleTaskCheckboxToggle);
 
         // Update placeholder and decorations on content change
