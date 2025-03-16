@@ -18,13 +18,14 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.10",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.14",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "latest",
-    "autoprefixer": "^10.4.14"
+    "vitest": "latest"
   }
 }
