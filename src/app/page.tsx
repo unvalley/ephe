@@ -81,7 +81,7 @@ const EditorFooter = ({ charCount }: EditorFooterProps) => {
                 </nav>
                 <div className="flex items-center gap-2">
                     <span className="text-gray-500">{charCount} chars</span>
-                    <Avatar size={14} name="ephe" />
+                    <Avatar size={14} name="Georgia O" colors={["#6c788e", "#a6aec1", "#cfd5e1", "#ededf2", "#fcfdff"]} variant="marble" />
                     <span>Ephe v{EPHE_VERSION}</span>
                 </div>
             </div>
