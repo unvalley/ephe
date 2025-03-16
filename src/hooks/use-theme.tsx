@@ -2,24 +2,22 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark";
+type ColorTheme = "light" | "dark";
 
-interface ThemeContextType {
-    theme: Theme;
+type ThemeContextType = {
+    theme: ColorTheme;
     toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-    const [theme, setTheme] = useState<Theme>("light");
+    const [theme, setTheme] = useState<ColorTheme>("light");
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
-
-        // Check for stored theme preference
-        const storedTheme = sessionStorage.getItem("theme") as Theme | undefined;
+        const storedTheme = sessionStorage.getItem("theme") as ColorTheme | undefined;
 
         if (!storedTheme) {
             setTheme("light");
