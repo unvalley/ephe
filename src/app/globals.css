@@ -103,3 +103,13 @@ span.task-checkbox {
 .light .task-completed-line {
   color: #6B7280;
 }
+
+/* Add this to your globals.css file */
+.task-checkbox-clickable {
+  cursor: pointer !important;
+}
+
+/* Make sure the cursor stays as pointer when hovering over the checkbox */
+.monaco-editor .view-line:hover .task-checkbox-clickable {
+  cursor: pointer !important;
+}

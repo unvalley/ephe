@@ -379,25 +379,50 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
             for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
                 const lineContent = model.getLineContent(lineNumber);
 
-                if (isCheckedTask(lineContent)) {
-                    decorations.push({
-                        range: new monaco.Range(
-                            lineNumber,
-                            1, // Start from beginning of line
-                            lineNumber,
-                            lineContent.length + 1 // To the end of the line
-                        ),
-                        options: {
-                            inlineClassName: 'task-completed-line',
-                            isWholeLine: true,
-                            stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore
-                        }
-                    });
+                if (isTaskListLine(lineContent)) {
+                    // Find the checkbox position
+                    const checkboxMatch = lineContent.match(/^(\s*)- \[([ xX])\]/);
+                    if (checkboxMatch) {
+                        const indentation = checkboxMatch[1] || '';
+                        const checkboxStartColumn = indentation.length + 1;
+                        const checkboxEndColumn = checkboxStartColumn + 5; // "- [ ]" is 5 characters
+
+                        // Add decoration for the checkbox area to make it clickable
+                        decorations.push({
+                            range: new monaco.Range(
+                                lineNumber,
+                                checkboxStartColumn,
+                                lineNumber,
+                                checkboxEndColumn
+                            ),
+                            options: {
+                                inlineClassName: 'task-checkbox-clickable',
+                                stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore
+                            }
+                        });
+                    }
+
+                    // If it's a checked task, add the completed line style
+                    if (isCheckedTask(lineContent)) {
+                        decorations.push({
+                            range: new monaco.Range(
+                                lineNumber,
+                                1, // Start from beginning of line
+                                lineNumber,
+                                lineContent.length + 1 // To the end of the line
+                            ),
+                            options: {
+                                inlineClassName: 'task-completed-line',
+                                isWholeLine: true,
+                                stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore
+                            }
+                        });
+                    }
                 }
             }
 
             const oldIds = oldDecorations
-                .filter(d => d.options.inlineClassName === 'task-completed-line')
+                .filter(d => d.options.inlineClassName === 'task-completed-line' || d.options.inlineClassName === 'task-checkbox-clickable')
                 .map(d => d.id);
 
             editor.deltaDecorations(oldIds, decorations);
