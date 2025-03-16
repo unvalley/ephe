@@ -22,8 +22,31 @@ const WRITING_QUOTES = [
     "Divide and conquer. - Julius Caesar",
 ];
 
+// Helper functions
 const getRandomQuote = (): string => {
     return WRITING_QUOTES[Math.floor(Math.random() * WRITING_QUOTES.length)];
+};
+
+// Task list related utilities
+const isTaskListLine = (lineContent: string): boolean => {
+    return !!lineContent.match(/^(\s*)- \[\s*([xX ])\s*\]/);
+};
+
+const isCheckedTask = (lineContent: string): boolean => {
+    return !!lineContent.match(/^(\s*)- \[\s*[xX]\s*\]/);
+};
+
+const isEmptyTaskListLine = (lineContent: string): boolean => {
+    return !!lineContent.trim().match(/^- \[\s*([xX ])\s*\]\s*$/);
+};
+
+const getTaskListIndentation = (lineContent: string): string => {
+    const match = lineContent.match(/^(\s*)- \[\s*([xX ])\s*\]/);
+    return match ? match[1] || '' : '';
+};
+
+const getCheckboxEndPosition = (lineContent: string): number => {
+    return lineContent.indexOf(']') + 1;
 };
 
 type MonacoEditorProps = {
@@ -63,84 +86,74 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
             }
         };
 
-        // Add keyboard event handler for task list continuation
-        editor.onKeyDown((e) => {
-            if (e.keyCode === monaco.KeyCode.Enter) {
-                const model = editor.getModel();
-                if (!model) return;
+        // Handle task list continuation on Enter key
+        const handleTaskListContinuation = (e: monaco.IKeyboardEvent): void => {
+            if (e.keyCode !== monaco.KeyCode.Enter) return;
 
-                const position = editor.getPosition();
-                if (!position) return;
+            const model = editor.getModel();
+            if (!model) return;
 
-                const lineContent = model.getLineContent(position.lineNumber);
-                const taskListMatch = lineContent.match(/^(\s*)- \[\s*([xX ])\s*\]/);
+            const position = editor.getPosition();
+            if (!position) return;
 
-                if (taskListMatch) {
-                    // If the current line is a task list item
-                    const indentation = taskListMatch[1] || '';
-                    const checkboxEndPos = lineContent.indexOf(']') + 1;
+            const lineContent = model.getLineContent(position.lineNumber);
 
-                    // If the line only contains the task list marker and nothing else, 
-                    // remove the current line's task list marker
-                    if (lineContent.trim().match(/^- \[\s*([xX ])\s*\]\s*$/)) {
-                        e.preventDefault();
-                        editor.executeEdits('', [
-                            {
-                                range: {
-                                    startLineNumber: position.lineNumber,
-                                    startColumn: 1,
-                                    endLineNumber: position.lineNumber,
-                                    endColumn: lineContent.length + 1
-                                },
-                                text: ''
-                            }
-                        ]);
-                        return;
-                    }
+            if (!isTaskListLine(lineContent)) return;
 
-                    // If the cursor is after the checkbox
-                    if (position.column > checkboxEndPos) {
-                        // If the cursor is at the end of the line, add a new task list item
-                        if (position.column > lineContent.length) {
-                            e.preventDefault();
-                            editor.executeEdits('', [
-                                {
-                                    range: {
-                                        startLineNumber: position.lineNumber,
-                                        startColumn: position.column,
-                                        endLineNumber: position.lineNumber,
-                                        endColumn: position.column
-                                    },
-                                    text: `\n${indentation}- [ ] `
-                                }
-                            ]);
-                        } else {
-                            // If the cursor is in the middle of the line, just split the line
-                            e.preventDefault();
-                            const textBeforeCursor = lineContent.substring(0, position.column - 1);
-                            const textAfterCursor = lineContent.substring(position.column - 1);
+            const indentation = getTaskListIndentation(lineContent);
+            const checkboxEndPos = getCheckboxEndPosition(lineContent);
 
-                            editor.executeEdits('', [
-                                {
-                                    range: {
-                                        startLineNumber: position.lineNumber,
-                                        startColumn: 1,
-                                        endLineNumber: position.lineNumber,
-                                        endColumn: lineContent.length + 1
-                                    },
-                                    text: `${textBeforeCursor}\n${textAfterCursor}`
-                                }
-                            ]);
-                        }
-                    } else {
-                        // If the cursor is before or in the middle of the checkbox, allow the default behavior
-                    }
+            // If the line only contains the task list marker and nothing else, 
+            // remove the current line's task list marker
+            if (isEmptyTaskListLine(lineContent)) {
+                e.preventDefault();
+                editor.executeEdits('', [{
+                    range: {
+                        startLineNumber: position.lineNumber,
+                        startColumn: 1,
+                        endLineNumber: position.lineNumber,
+                        endColumn: lineContent.length + 1
+                    },
+                    text: ''
+                }]);
+                return;
+            }
+
+            // If the cursor is after the checkbox
+            if (position.column > checkboxEndPos) {
+                // If the cursor is at the end of the line, add a new task list item
+                if (position.column > lineContent.length) {
+                    e.preventDefault();
+                    editor.executeEdits('', [{
+                        range: {
+                            startLineNumber: position.lineNumber,
+                            startColumn: position.column,
+                            endLineNumber: position.lineNumber,
+                            endColumn: position.column
+                        },
+                        text: `\n${indentation}- [ ] `
+                    }]);
+                } else {
+                    // If the cursor is in the middle of the line, just split the line
+                    e.preventDefault();
+                    const textBeforeCursor = lineContent.substring(0, position.column - 1);
+                    const textAfterCursor = lineContent.substring(position.column - 1);
+
+                    editor.executeEdits('', [{
+                        range: {
+                            startLineNumber: position.lineNumber,
+                            startColumn: 1,
+                            endLineNumber: position.lineNumber,
+                            endColumn: lineContent.length + 1
+                        },
+                        text: `${textBeforeCursor}\n${textAfterCursor}`
+                    }]);
                 }
             }
-        });
+        };
 
-        // Add click handler for task list checkboxes
-        editor.onMouseDown((e) => {
+        // Handle task checkbox toggle on click
+        const handleTaskCheckboxToggle = (e: monaco.editor.IEditorMouseEvent): boolean | undefined => {
             if (e.target.type !== monaco.editor.MouseTargetType.CONTENT_TEXT) {
                 return;
             }
@@ -154,45 +167,43 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
             const lineContent = model.getLineContent(position.lineNumber);
 
             const checkboxMatch = lineContent.match(/^(\s*)- \[\s*([xX ])\s*\] (.*)/);
-            if (checkboxMatch) {
-                const indentation = checkboxMatch[1] || '';
-                // Allow uppercase X as well
-                const isChecked = checkboxMatch[2].toLowerCase() === 'x';
-                const taskText = checkboxMatch[3];
+            if (!checkboxMatch) return;
 
-                // Calculate checkbox position in the line
-                const checkboxStart = indentation.length + 3; // "- [" length
-                const checkboxEnd = checkboxStart + 1; // single character inside brackets
+            const indentation = checkboxMatch[1] || '';
+            // Allow uppercase X as well
+            const isChecked = checkboxMatch[2].toLowerCase() === 'x';
+            const taskText = checkboxMatch[3];
 
-                // Expand the click area slightly around the checkbox
-                const clickAreaStart = Math.max(1, checkboxStart - 1);
-                const clickAreaEnd = checkboxEnd + 1;
+            // Calculate checkbox position in the line
+            const checkboxStart = indentation.length + 3; // "- [" length
+            const checkboxEnd = checkboxStart + 1; // single character inside brackets
 
-                // Check if click is within the checkbox area
-                if (position.column >= clickAreaStart && position.column <= clickAreaEnd) {
-                    // Toggle checkbox state
-                    const newState = isChecked ? ' ' : 'x';
+            // Expand the click area slightly around the checkbox
+            const clickAreaStart = Math.max(1, checkboxStart - 1);
+            const clickAreaEnd = checkboxEnd + 1;
 
-                    // Apply the edit to toggle checkbox
-                    editor.executeEdits('', [
-                        {
-                            range: {
-                                startLineNumber: position.lineNumber,
-                                startColumn: 1,
-                                endLineNumber: position.lineNumber,
-                                endColumn: lineContent.length + 1
-                            },
-                            text: `${indentation}- [${newState}] ${taskText}`
-                        }
-                    ]);
+            // Check if click is within the checkbox area
+            if (position.column >= clickAreaStart && position.column <= clickAreaEnd) {
+                // Toggle checkbox state
+                const newState = isChecked ? ' ' : 'x';
 
-                    updateDecorations();
+                // Apply the edit to toggle checkbox
+                editor.executeEdits('', [{
+                    range: {
+                        startLineNumber: position.lineNumber,
+                        startColumn: 1,
+                        endLineNumber: position.lineNumber,
+                        endColumn: lineContent.length + 1
+                    },
+                    text: `${indentation}- [${newState}] ${taskText}`
+                }]);
 
-                    // Return false to prevent default handling instead of using preventDefault
-                    return false;
-                }
+                updateDecorations();
+
+                // Return false to prevent default handling
+                return false;
             }
-        });
+        };
 
         // Add decorations for checked tasks
         const updateDecorations = () => {
@@ -204,13 +215,9 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
 
             for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
                 const lineContent = model.getLineContent(lineNumber);
-                // Use a more flexible matching pattern (considering whitespace)
-                const checkedTaskMatch = lineContent.match(/^(\s*)- \[\s*[xX]\s*\] (.*)/);
 
-                if (checkedTaskMatch) {
-                    const indentation = checkedTaskMatch[1] || '';
-                    const taskText = checkedTaskMatch[2];
-                    const checkboxEndPos = lineContent.indexOf(']') + 1;
+                if (isCheckedTask(lineContent)) {
+                    const checkboxEndPos = getCheckboxEndPosition(lineContent);
 
                     // Apply strikethrough only to the task text, not the checkbox
                     // Use a specific decoration that doesn't persist on enter
@@ -233,6 +240,10 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
             // Replace all decorations each time
             editor.deltaDecorations([], decorations);
         };
+
+        // Add event handlers
+        editor.onKeyDown(handleTaskListContinuation);
+        editor.onMouseDown(handleTaskCheckboxToggle);
 
         // Update placeholder and decorations on content change
         editor.onDidChangeModelContent(() => {
