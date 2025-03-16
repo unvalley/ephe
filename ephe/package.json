@@ -24,6 +24,7 @@
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "latest"
+    "vitest": "latest",
+    "autoprefixer": "^10.4.14"
   }
 }

@@ -8,6 +8,7 @@ import { Editor } from "@monaco-editor/react";
 import type { EditorProps } from "@monaco-editor/react";
 import type React from "react";
 import { isTaskListLine, getTaskListIndentation, getCheckboxEndPosition, isEmptyTaskListLine, isCheckedTask } from "./task-list-utils";
+import { useTheme } from "../hooks/use-theme";
 
 const EDITOR_CONTENT_KEY = "editor-content";
 
@@ -36,6 +37,8 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
     const [content, setContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, "");
     const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
     const [placeholder, setPlaceholder] = useState<string>(getRandomQuote());
+    const { theme } = useTheme();
+    const isDarkMode = theme === "dark";
 
     const debouncedSetContent = useDebouncedCallback(
         (newContent: string) => {
@@ -343,7 +346,7 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
                             lineContent.length + 1 // To the end of the line
                         ),
                         options: {
-                            inlineClassName: 'text-decoration-line-through text-gray-200',
+                            inlineClassName: 'text-decoration-line-through',
                             isWholeLine: false,
                             stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore
                         }
@@ -372,6 +375,40 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
 
         // Focus editor on mount
         editor.focus();
+
+        // Define custom themes
+        monaco.editor.defineTheme('ephe-light', {
+            base: "vs",
+            inherit: true,
+            rules: [],
+            colors: {
+                'editor.background': "#ffffff",
+                'editor.foreground': '#000000',
+                'editorCursor.foreground': '#000000',
+                'editor.lineHighlightBackground': '#f5f5f5',
+                'editorLineNumber.foreground': '#999999',
+                'editor.selectionBackground': '#b3d4fc',
+                'editor.inactiveSelectionBackground': '#d1e4fd'
+            }
+        });
+
+        monaco.editor.defineTheme('ephe-dark', {
+            base: 'vs-dark',
+            inherit: true,
+            rules: [],
+            colors: {
+                'editor.background': '#1e1e1e',
+                'editor.foreground': '#d4d4d4',
+                'editorCursor.foreground': '#ffffff',
+                'editor.lineHighlightBackground': '#2a2a2a',
+                'editorLineNumber.foreground': '#858585',
+                'editor.selectionBackground': '#264f78',
+                'editor.inactiveSelectionBackground': '#3a3d41'
+            }
+        });
+
+        // Apply custom theme
+        monaco.editor.setTheme(isDarkMode ? 'ephe-dark' : 'ephe-light');
     };
 
     // Expose focus method to parent component through ref
@@ -422,9 +459,9 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
 
     return (
         // Container wrapper - controls the width constraints and horizontal centering
-        <div className="w-full max-w-2xl mx-auto relative h-full">
+        <div className="w-full max-w-2xl mx-auto relative h-full rounded-md overflow-hidden">
             {/* Placeholder element that shows when editor is empty */}
-            <div className="monaco-placeholder absolute left-0.5 text-gray-400 pointer-events-none">
+            <div className="monaco-placeholder text-md absolute left-0.5 text-gray-400 dark:text-gray-500 pointer-events-none z-[1]">
                 {placeholder}
             </div>
 
@@ -438,14 +475,8 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
                 onMount={handleEditorDidMount}
                 className="overflow-hidden"
                 loading=""
+                theme={isDarkMode ? "ephe-dark" : "ephe-light"}
             />
-
-            {/* Add CSS for strikethrough */}
-            <style jsx global>{`
-                .text-decoration-line-through {
-                    text-decoration: line-through;
-                }
-            `}</style>
         </div>
     );
 };

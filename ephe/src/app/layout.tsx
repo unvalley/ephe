@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { spaceMono } from "./fonts";
+import { ThemeProvider } from "../hooks/use-theme";
 
 export const metadata: Metadata = {
     title: "Ephe",
@@ -18,7 +19,9 @@ export default function RootLayout({
                 className={`
                     ${spaceMono.variable} antialiased h-full w-full`}
             >
-                {children}
+                <ThemeProvider>
+                    {children}
+                </ThemeProvider>
             </body>
         </html>
     );
