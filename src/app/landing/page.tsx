@@ -10,7 +10,7 @@ export default function LandingPage() {
             <div className="max-w-4xl w-full space-y-12">
                 <div className="space-y-4">
                     <h1 className="text-3xl font-normal flex items-center">
-                        <Avatar size={28} name="Georgia O" colors={["#6c788e", "#a6aec1", "#cfd5e1", "#ededf2", "#fcfdff"]} variant="marble" />
+                        <Avatar size={28} name="Georgia O" colors={["#6c788e", "#a6aec1", "#cfd5e1", "#ededf2", "#fcfdff"]} variant="marble" className="mr-2" />
 
                         Ephe - An ephemeral markdown paper
                     </h1>
