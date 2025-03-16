@@ -72,13 +72,33 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
             const contentValue = editor.getValue();
             const placeholderElement = document.querySelector('.monaco-placeholder');
 
-            if (placeholderElement) {
-                if (!contentValue.trim()) {
-                    placeholderElement.classList.remove('hidden');
-                } else {
-                    placeholderElement.classList.add('hidden');
-                }
+            if (!placeholderElement) return;
+
+            // Check if the editor is empty
+            const isEmpty = !contentValue || !contentValue.trim();
+
+            if (isEmpty) {
+                // Delay showing placeholder to avoid flickering during IME input
+                setTimeout(() => {
+                    const currentValue = editor.getValue();
+                    if (!currentValue || !currentValue.trim()) {
+                        showPlaceholder(placeholderElement);
+                    }
+                }, 300);
+            } else {
+                hidePlaceholder(placeholderElement);
             }
+        };
+
+        // Helper functions for placeholder visibility
+        const showPlaceholder = (element: Element) => {
+            element.classList.remove('opacity-0');
+            element.classList.add('opacity-100');
+        };
+
+        const hidePlaceholder = (element: Element) => {
+            element.classList.remove('opacity-100');
+            element.classList.add('opacity-0');
         };
 
         // Handle auto-complete for task list syntax
@@ -389,12 +409,21 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
 
         // Update placeholder and decorations on content change
         editor.onDidChangeModelContent(() => {
-            updatePlaceholder();
-            updateDecorations();
             const newContent = editor.getValue();
-            debouncedSetContent(newContent);
+            const isEmpty = !newContent || !newContent.trim();
+            const placeholderElement = document.querySelector('.monaco-placeholder');
 
-            // Use the debounced update for character count
+            if (placeholderElement) {
+                if (!isEmpty) {
+                    hidePlaceholder(placeholderElement);
+                } else {
+                    // If content is empty, show placeholder with delay
+                    setTimeout(updatePlaceholder, 300);
+                }
+            }
+
+            updateDecorations();
+            debouncedSetContent(newContent);
             debouncedCharCountUpdate(newContent);
         });
 
@@ -501,13 +530,16 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
     };
 
     // Determine if placeholder should be visible initially
-    const shouldShowPlaceholder = !isEditorLoading && !content.trim();
+    const shouldShowPlaceholder = !isEditorLoading && (!content || !content.trim());
 
     return (
         // Container wrapper - controls the width constraints and horizontal centering
         <div className="w-full max-w-2xl mx-auto relative h-full rounded-md overflow-hidden">
             {/* Placeholder element that shows when editor is empty */}
-            <div className={`monaco-placeholder text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] ${shouldShowPlaceholder ? '' : 'hidden'}`}>
+            <div
+                className={`monaco-placeholder text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 ${shouldShowPlaceholder ? 'opacity-100' : 'opacity-0'}`}
+                aria-hidden={!shouldShowPlaceholder}
+            >
                 {placeholder}
             </div>
 
