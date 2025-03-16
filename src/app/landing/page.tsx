@@ -36,7 +36,7 @@ export default function LandingPage() {
 
                 <div className="flex gap-4">
                     <Link
-                        href="/app"
+                        href="/"
                         className="inline-flex items-center justify-center border border-black dark:border-white rounded px-3 py-1 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
                     >
                         Start writing
