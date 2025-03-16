@@ -12,15 +12,15 @@ import { isTaskListLine, getTaskListIndentation, getCheckboxEndPosition, isEmpty
 const EDITOR_CONTENT_KEY = "editor-content";
 
 const WRITING_QUOTES = [
-    "The scariest moment is always just before you start. - Stephen King",
-    "Fill your paper with the breathings of your heart. - William Wordsworth",
-    "The pen is mightier than the sword. - Thomas Jefferson",
-    "The best way to predict the future is to invent it. - Alan Kay",
-    "The only way to do great work is to love what you do. - Steve Jobs",
-    "A word after a word after a word is power. - Margaret Atwood",
-    "Get things done. - David Allen",
-    "Later equals never. - LeBlanc's Law",
-    "Divide and conquer. - Julius Caesar",
+    "The scariest moment is always just before you start.",
+    "Fill your paper with the breathings of your heart.",
+    "The pen is mightier than the sword.",
+    "The best way to predict the future is to invent it.",
+    "The only way to do great work is to love what you do.",
+    "A word after a word after a word is power.",
+    "Get things done.",
+    "Later equals never.",
+    "Divide and conquer.",
 ];
 
 // Helper functions
@@ -65,47 +65,62 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
             }
         };
 
-        // Handle keyboard events
-        const handleKeyDown = (e: monaco.IKeyboardEvent): void => {
-            const model = editor.getModel();
-            if (!model) return;
+        // Handle auto-complete for task list syntax
+        const handleTaskListAutoComplete = (e: monaco.IKeyboardEvent, model: monaco.editor.ITextModel, position: monaco.Position): boolean => {
+            if (e.keyCode !== monaco.KeyCode.BracketLeft) return false;
 
-            const position = editor.getPosition();
-            if (!position) return;
+            const lineContent = model.getLineContent(position.lineNumber);
+            const textBeforeCursor = lineContent.substring(0, position.column - 1);
 
-            // Auto-complete task list syntax
-            if (e.keyCode === monaco.KeyCode.BracketLeft) {
-                const lineContent = model.getLineContent(position.lineNumber);
-                const textBeforeCursor = lineContent.substring(0, position.column - 1);
-
-                // Check if the user just typed "-["
-                if (textBeforeCursor.endsWith("-")) {
-                    e.preventDefault();
-                    editor.executeEdits('', [{
-                        range: {
-                            startLineNumber: position.lineNumber,
-                            startColumn: position.column - 1,
-                            endLineNumber: position.lineNumber,
-                            endColumn: position.column
-                        },
-                        text: "- [ ]"
-                    }]);
-                    return;
-                }
+            // Check if the user just typed "-["
+            if (textBeforeCursor.endsWith("-")) {
+                e.preventDefault();
+                editor.executeEdits('', [{
+                    range: {
+                        startLineNumber: position.lineNumber,
+                        startColumn: position.column - 1,
+                        endLineNumber: position.lineNumber,
+                        endColumn: position.column
+                    },
+                    text: "- [ ]"
+                }]);
+                return true;
             }
 
-            // Handle task list continuation on Enter key
-            if (e.keyCode === monaco.KeyCode.Enter) {
-                const lineContent = model.getLineContent(position.lineNumber);
+            return false;
+        };
 
-                if (!isTaskListLine(lineContent)) return;
+        // Handle empty list item removal
+        const handleEmptyListItemRemoval = (
+            e: monaco.IKeyboardEvent,
+            model: monaco.editor.ITextModel,
+            position: monaco.Position,
+            lineContent: string
+        ): boolean => {
+            // For task lists
+            if (isTaskListLine(lineContent) && isEmptyTaskListLine(lineContent)) {
+                e.preventDefault();
+                editor.executeEdits('', [{
+                    range: {
+                        startLineNumber: position.lineNumber,
+                        startColumn: 1,
+                        endLineNumber: position.lineNumber,
+                        endColumn: lineContent.length + 1
+                    },
+                    text: ''
+                }]);
+                return true;
+            }
 
-                const indentation = getTaskListIndentation(lineContent);
-                const checkboxEndPos = getCheckboxEndPosition(lineContent);
+            // For regular lists
+            const listItemRegex = /^(\s*)(-|\*|\d+\.)\s+(.*)$/;
+            const listMatch = lineContent.match(listItemRegex);
 
-                // If the line only contains the task list marker and nothing else, 
-                // remove the current line's task list marker
-                if (isEmptyTaskListLine(lineContent)) {
+            if (listMatch) {
+                const [, , , content] = listMatch;
+
+                // If the line is empty (just the list marker), remove the marker
+                if (!content.trim()) {
                     e.preventDefault();
                     editor.executeEdits('', [{
                         range: {
@@ -116,40 +131,138 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
                         },
                         text: ''
                     }]);
-                    return;
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        // Handle task list continuation
+        const handleTaskListContinuation = (
+            e: monaco.IKeyboardEvent,
+            model: monaco.editor.ITextModel,
+            position: monaco.Position,
+            lineContent: string
+        ): boolean => {
+            if (!isTaskListLine(lineContent)) return false;
+
+            const indentation = getTaskListIndentation(lineContent);
+            const checkboxEndPos = getCheckboxEndPosition(lineContent);
+
+            // If the cursor is after the checkbox
+            if (position.column > checkboxEndPos) {
+                // If the cursor is at the end of the line, add a new task list item
+                if (position.column > lineContent.length) {
+                    e.preventDefault();
+                    editor.executeEdits('', [{
+                        range: {
+                            startLineNumber: position.lineNumber,
+                            startColumn: position.column,
+                            endLineNumber: position.lineNumber,
+                            endColumn: position.column
+                        },
+                        text: `\n${indentation}- [ ] `
+                    }]);
+                } else {
+                    // If the cursor is in the middle of the line, just split the line
+                    e.preventDefault();
+                    const textBeforeCursor = lineContent.substring(0, position.column - 1);
+                    const textAfterCursor = lineContent.substring(position.column - 1);
+
+                    editor.executeEdits('', [{
+                        range: {
+                            startLineNumber: position.lineNumber,
+                            startColumn: 1,
+                            endLineNumber: position.lineNumber,
+                            endColumn: lineContent.length + 1
+                        },
+                        text: `${textBeforeCursor}\n${textAfterCursor}`
+                    }]);
+                }
+                return true;
+            }
+
+            return false;
+        };
+
+        // Handle regular list continuation
+        const handleRegularListContinuation = (
+            e: monaco.IKeyboardEvent,
+            model: monaco.editor.ITextModel,
+            position: monaco.Position,
+            lineContent: string
+        ): boolean => {
+            const listItemRegex = /^(\s*)(-|\*|\d+\.)\s+(.*)$/;
+            const listMatch = lineContent.match(listItemRegex);
+
+            if (!listMatch) return false;
+
+            const [, indentation, listMarker, content] = listMatch;
+
+            // If the cursor is at the end of the line, add a new list item
+            if (position.column > lineContent.length) {
+                e.preventDefault();
+
+                // For numbered lists, increment the number
+                let nextMarker = listMarker;
+                if (/^\d+\.$/.test(listMarker)) {
+                    const currentNumber = Number.parseInt(listMarker.replace('.', ''));
+                    nextMarker = `${currentNumber + 1}.`;
                 }
 
-                // If the cursor is after the checkbox
-                if (position.column > checkboxEndPos) {
-                    // If the cursor is at the end of the line, add a new task list item
-                    if (position.column > lineContent.length) {
-                        e.preventDefault();
-                        editor.executeEdits('', [{
-                            range: {
-                                startLineNumber: position.lineNumber,
-                                startColumn: position.column,
-                                endLineNumber: position.lineNumber,
-                                endColumn: position.column
-                            },
-                            text: `\n${indentation}- [ ] `
-                        }]);
-                    } else {
-                        // If the cursor is in the middle of the line, just split the line
-                        e.preventDefault();
-                        const textBeforeCursor = lineContent.substring(0, position.column - 1);
-                        const textAfterCursor = lineContent.substring(position.column - 1);
+                editor.executeEdits('', [{
+                    range: {
+                        startLineNumber: position.lineNumber,
+                        startColumn: position.column,
+                        endLineNumber: position.lineNumber,
+                        endColumn: position.column
+                    },
+                    text: `\n${indentation}${nextMarker} `
+                }]);
+            } else {
+                // If the cursor is in the middle of the line, just split the line
+                e.preventDefault();
+                const textBeforeCursor = lineContent.substring(0, position.column - 1);
+                const textAfterCursor = lineContent.substring(position.column - 1);
 
-                        editor.executeEdits('', [{
-                            range: {
-                                startLineNumber: position.lineNumber,
-                                startColumn: 1,
-                                endLineNumber: position.lineNumber,
-                                endColumn: lineContent.length + 1
-                            },
-                            text: `${textBeforeCursor}\n${textAfterCursor}`
-                        }]);
-                    }
-                }
+                editor.executeEdits('', [{
+                    range: {
+                        startLineNumber: position.lineNumber,
+                        startColumn: 1,
+                        endLineNumber: position.lineNumber,
+                        endColumn: lineContent.length + 1
+                    },
+                    text: `${textBeforeCursor}\n${textAfterCursor}`
+                }]);
+            }
+
+            return true;
+        };
+
+        // Handle keyboard events
+        const handleKeyDown = (e: monaco.IKeyboardEvent): void => {
+            const model = editor.getModel();
+            if (!model) return;
+
+            const position = editor.getPosition();
+            if (!position) return;
+
+            // Auto-complete task list syntax
+            if (handleTaskListAutoComplete(e, model, position)) return;
+
+            // Handle Enter key for list continuation
+            if (e.keyCode === monaco.KeyCode.Enter) {
+                const lineContent = model.getLineContent(position.lineNumber);
+
+                // Handle empty list item removal
+                if (handleEmptyListItemRemoval(e, model, position, lineContent)) return;
+
+                // Handle task list continuation
+                if (handleTaskListContinuation(e, model, position, lineContent)) return;
+
+                // Handle regular list continuation
+                if (handleRegularListContinuation(e, model, position, lineContent)) return;
             }
         };
 
