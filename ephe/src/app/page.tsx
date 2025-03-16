@@ -12,8 +12,8 @@ const MonacoEditor = dynamic(
     {
         ssr: false,
         loading: () => (
-            <div className="h-screen w-screen flex items-center justify-center">
-                Loading editor...
+            <div className="h-screen w-screen flex items-center justify-center pb-72" aria-label="loading">
+                <div className="animate-ping h-4 w-4 bg-gray-100 rounded-full" />
             </div>
         ),
     },
