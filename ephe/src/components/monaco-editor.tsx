@@ -199,6 +199,7 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
             const model = editor.getModel();
             if (!model) return;
 
+            // Clear previous decorations first
             const decorations: monaco.editor.IModelDeltaDecoration[] = [];
 
             for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
@@ -208,23 +209,29 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
 
                 if (checkedTaskMatch) {
                     const indentation = checkedTaskMatch[1] || '';
+                    const taskText = checkedTaskMatch[2];
+                    const checkboxEndPos = lineContent.indexOf(']') + 1;
 
-                    // Apply strikethrough to the entire line (including the checkbox)
+                    // Apply strikethrough only to the task text, not the checkbox
+                    // Use a specific decoration that doesn't persist on enter
                     decorations.push({
                         range: new monaco.Range(
                             lineNumber,
-                            1, // From the beginning of the line
+                            checkboxEndPos + 2, // Start after the checkbox and space
                             lineNumber,
                             lineContent.length + 1 // To the end of the line
                         ),
                         options: {
-                            inlineClassName: 'text-decoration-line-through text-gray-200'
+                            inlineClassName: 'text-decoration-line-through text-gray-200',
+                            isWholeLine: false,
+                            stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore
                         }
                     });
                 }
             }
 
-            editor.createDecorationsCollection(decorations);
+            // Replace all decorations each time
+            editor.deltaDecorations([], decorations);
         };
 
         // Update placeholder and decorations on content change
