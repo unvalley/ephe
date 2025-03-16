@@ -64,8 +64,8 @@ const EditorFooter = ({ charCount }: EditorFooterProps) => {
                     <Link href="/landing" className="hover:text-gray-900 dark:hover:text-gray-100">
                         Home
                     </Link>
-                    <a href="https://github.com/unvalley/ephe#README" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 dark:hover:text-gray-100">
-                        About
+                    <a href="https://github.com/unvalley/ephe" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 dark:hover:text-gray-100">
+                        GitHub
                     </a>
                     <button
                         type="button"
