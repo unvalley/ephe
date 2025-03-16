@@ -319,113 +319,101 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
 
         // Handle task checkbox toggle on click
         const handleTaskCheckboxToggle = (e: monaco.editor.IEditorMouseEvent): boolean | undefined => {
-            if (e.target.type !== monaco.editor.MouseTargetType.CONTENT_TEXT) {
+            try {
+                if (e.target.type !== monaco.editor.MouseTargetType.CONTENT_TEXT) {
+                    return;
+                }
+
+                const model = editor.getModel();
+                if (!model) return;
+
+                const position = e.target.position;
+                if (!position) return;
+
+                const lineContent = model.getLineContent(position.lineNumber);
+
+                if (!isTaskListLine(lineContent)) return;
+
+                // Find the exact position of the checkbox in the line
+                const checkboxStartIndex = lineContent.indexOf('- [');
+                if (checkboxStartIndex === -1) return;
+
+                // Calculate the column positions (Monaco columns start at 1, not 0)
+                const checkboxColumn = checkboxStartIndex + 3 + 1; // +3 for "- [", +1 for Monaco's 1-based columns
+
+                // Expand the click area slightly around the checkbox
+                const clickAreaStart = checkboxStartIndex + 1; // Start at the "-"
+                const clickAreaEnd = checkboxColumn + 1;       // End after the checkbox character
+
+                // Check if click is within the checkbox area
+                if (position.column >= clickAreaStart && position.column <= clickAreaEnd) {
+                    // Get the current state of the checkbox
+                    const isChecked = isCheckedTask(lineContent);
+
+                    // Toggle checkbox state
+                    const newState = isChecked ? ' ' : 'x';
+
+                    // Apply the edit to toggle checkbox - only change the checkbox character
+                    editor.executeEdits('', [{
+                        range: {
+                            startLineNumber: position.lineNumber,
+                            startColumn: checkboxColumn,
+                            endLineNumber: position.lineNumber,
+                            endColumn: checkboxColumn + 1
+                        },
+                        text: newState
+                    }]);
+
+                    // Return false to prevent default handling
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error in checkbox toggle:', error);
                 return;
-            }
-
-            const model = editor.getModel();
-            if (!model) return;
-
-            const position = e.target.position;
-            if (!position) return;
-
-            const lineContent = model.getLineContent(position.lineNumber);
-
-            if (!isTaskListLine(lineContent)) return;
-
-            // Find the exact position of the checkbox in the line
-            const checkboxStartIndex = lineContent.indexOf('- [');
-            if (checkboxStartIndex === -1) return;
-
-            // Calculate the column positions (Monaco columns start at 1, not 0)
-            const checkboxColumn = checkboxStartIndex + 3 + 1; // +3 for "- [", +1 for Monaco's 1-based columns
-
-            // Expand the click area slightly around the checkbox
-            const clickAreaStart = checkboxColumn - 1;
-            const clickAreaEnd = checkboxColumn + 1;
-
-            // Check if click is within the checkbox area
-            if (position.column >= clickAreaStart && position.column <= clickAreaEnd) {
-                // Get the current state of the checkbox
-                const isChecked = isCheckedTask(lineContent);
-
-                // Toggle checkbox state
-                const newState = isChecked ? ' ' : 'x';
-
-                // Apply the edit to toggle checkbox - only change the checkbox character
-                editor.executeEdits('', [{
-                    range: {
-                        startLineNumber: position.lineNumber,
-                        startColumn: checkboxColumn,
-                        endLineNumber: position.lineNumber,
-                        endColumn: checkboxColumn + 1
-                    },
-                    text: newState
-                }]);
-
-                // Return false to prevent default handling
-                return false;
             }
         };
 
         // Add decorations for checked tasks
         const updateDecorations = () => {
-            const model = editor.getModel();
-            if (!model) return;
+            try {
+                const model = editor.getModel();
+                if (!model) return;
 
-            const oldDecorations = editor.getModel()?.getAllDecorations() || [];
-            const decorations: monaco.editor.IModelDeltaDecoration[] = [];
+                const oldDecorations = editor.getModel()?.getAllDecorations() || [];
+                const decorations: monaco.editor.IModelDeltaDecoration[] = [];
 
-            for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
-                const lineContent = model.getLineContent(lineNumber);
+                for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
+                    const lineContent = model.getLineContent(lineNumber);
 
-                if (isTaskListLine(lineContent)) {
-                    // Find the checkbox position
-                    const checkboxMatch = lineContent.match(/^(\s*)- \[([ xX])\]/);
-                    if (checkboxMatch) {
-                        const indentation = checkboxMatch[1] || '';
-                        const checkboxStartColumn = indentation.length + 1;
-                        const checkboxEndColumn = checkboxStartColumn + 5; // "- [ ]" is 5 characters
-
-                        // Add decoration for the checkbox area to make it clickable
-                        decorations.push({
-                            range: new monaco.Range(
-                                lineNumber,
-                                checkboxStartColumn,
-                                lineNumber,
-                                checkboxEndColumn
-                            ),
-                            options: {
-                                inlineClassName: 'task-checkbox-clickable',
-                                stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore
-                            }
-                        });
-                    }
-
-                    // If it's a checked task, add the completed line style
-                    if (isCheckedTask(lineContent)) {
-                        decorations.push({
-                            range: new monaco.Range(
-                                lineNumber,
-                                1, // Start from beginning of line
-                                lineNumber,
-                                lineContent.length + 1 // To the end of the line
-                            ),
-                            options: {
-                                inlineClassName: 'task-completed-line',
-                                isWholeLine: true,
-                                stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore
-                            }
-                        });
+                    // Only process task list lines
+                    if (isTaskListLine(lineContent)) {
+                        // Add decoration for completed tasks
+                        if (isCheckedTask(lineContent)) {
+                            decorations.push({
+                                range: new monaco.Range(
+                                    lineNumber,
+                                    1, // Start from beginning of line
+                                    lineNumber,
+                                    lineContent.length + 1 // To the end of the line
+                                ),
+                                options: {
+                                    inlineClassName: 'task-completed-line',
+                                    isWholeLine: true,
+                                    stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore
+                                }
+                            });
+                        }
                     }
                 }
+
+                const oldIds = oldDecorations
+                    .filter(d => d.options.inlineClassName === 'task-completed-line')
+                    .map(d => d.id);
+
+                editor.deltaDecorations(oldIds, decorations);
+            } catch (error) {
+                console.error('Error updating decorations:', error);
             }
-
-            const oldIds = oldDecorations
-                .filter(d => d.options.inlineClassName === 'task-completed-line' || d.options.inlineClassName === 'task-checkbox-clickable')
-                .map(d => d.id);
-
-            editor.deltaDecorations(oldIds, decorations);
         };
 
         // Add event handlers
