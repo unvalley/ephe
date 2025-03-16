@@ -67,7 +67,7 @@ const EditorFooter = () => {
                         className="hover:text-gray-900 dark:hover:text-gray-100"
                         aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
                     >
-                        {isDark ? "Light" : "dark"}
+                        {isDark ? "Light" : "Dark"}
                     </button>
                 </nav>
                 <div className="flex items-center gap-2">
