@@ -58,7 +58,7 @@ const EditorFooter = ({ charCount }: EditorFooterProps) => {
     const isDark = theme === "dark";
 
     return (
-        <footer className="fixed inset-x-0 bottom-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm fira-code">
+        <footer className="fixed inset-x-0 bottom-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm space-mono">
             <div className="mx-auto px-2 py-0.5 text-sm text-gray-600 dark:text-gray-400 flex justify-between">
                 <nav className="flex gap-4">
                     <Link href="/landing" className="hover:text-gray-900 dark:hover:text-gray-100">
