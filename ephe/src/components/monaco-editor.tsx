@@ -330,7 +330,8 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
                     text: newState
                 }]);
 
-                updateDecorations();
+                // モデル変更イベントで自動的にデコレーションが更新されるため、
+                // ここでは明示的に呼び出さない
 
                 // Return false to prevent default handling
                 return false;
@@ -342,35 +343,38 @@ export const MonacoEditor = ({ editorRef }: MonacoEditorProps): React.ReactEleme
             const model = editor.getModel();
             if (!model) return;
 
-            // Clear previous decorations first
+            // 既存のデコレーションを保持する変数
+            const oldDecorations = editor.getModel()?.getAllDecorations() || [];
             const decorations: monaco.editor.IModelDeltaDecoration[] = [];
 
             for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
                 const lineContent = model.getLineContent(lineNumber);
 
                 if (isCheckedTask(lineContent)) {
-                    const checkboxEndPos = getCheckboxEndPosition(lineContent);
-
-                    // Apply strikethrough only to the task text, not the checkbox
-                    // Use a specific decoration that doesn't persist on enter
+                    // チェック済みタスクにデコレーションを追加
                     decorations.push({
                         range: new monaco.Range(
                             lineNumber,
-                            checkboxEndPos + 2, // Start after the checkbox and space
+                            1, // Start from beginning of line
                             lineNumber,
                             lineContent.length + 1 // To the end of the line
                         ),
                         options: {
-                            inlineClassName: 'text-decoration-line-through',
-                            isWholeLine: false,
+                            inlineClassName: 'task-completed-line',
+                            isWholeLine: true,
                             stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore
                         }
                     });
                 }
             }
 
-            // Replace all decorations each time
-            editor.createDecorationsCollection(decorations);
+            // すべてのデコレーションを一度削除し、新しいデコレーションを適用
+            const oldIds = oldDecorations
+                .filter(d => d.options.inlineClassName === 'task-completed-line')
+                .map(d => d.id);
+
+            // 古いデコレーションを削除し、新しいデコレーションを適用
+            editor.deltaDecorations(oldIds, decorations);
         };
 
         // Add event handlers

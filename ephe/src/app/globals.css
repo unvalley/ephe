@@ -50,9 +50,8 @@ html.dark {
 
 /* Style for completed tasks */
 .task-completed {
-  text-decoration: line-through;
   color: #6B7280; /* gray-500 */
-  opacity: 0.4;
+  opacity: 0.6;
 }
 
 /* Make the checkbox part clickable */
@@ -71,7 +70,6 @@ span.task-checkbox {
 }
 
 .task-text.completed {
-  text-decoration: line-through !important;
   color: #6B7280; /* gray-500 */
 }
 
@@ -101,15 +99,16 @@ span.task-checkbox {
   --vscode-focusBorder: var(--focus-border-dark) !important;
 }
 
-/* Text decoration for completed tasks */
-.text-decoration-line-through {
-  text-decoration: line-through;
+/* Styling for completed tasks - using opacity instead of strikethrough */
+.task-completed-line {
+  opacity: 0.75;
 }
 
-.dark .text-decoration-line-through {
-  color: #4B5563; /* gray-600 */
+.dark .task-completed-line {
+  color: #9CA3AF;
+  opacity: 0.8;
 }
 
-.text-decoration-line-through {
-  color: #E5E7EB; /* gray-200 */
+.light .task-completed-line {
+  color: #6B7280;
 }
