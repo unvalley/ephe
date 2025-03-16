@@ -40,6 +40,7 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
     const [placeholder, setPlaceholder] = useState<string>(getRandomQuote());
     const { theme } = useTheme();
     const isDarkMode = theme === "dark";
+    const [isEditorLoading, setIsEditorLoading] = useState(true);
 
     const debouncedSetContent = useDebouncedCallback(
         (newContent: string) => {
@@ -64,6 +65,7 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
         monaco: typeof import("monaco-editor")
     ) => {
         monacoRef.current = editor;
+        setIsEditorLoading(false);
 
         // Set up placeholder when editor is empty
         const updatePlaceholder = () => {
@@ -498,11 +500,14 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
         parameterHints: { enabled: false },
     };
 
+    // Determine if placeholder should be visible initially
+    const shouldShowPlaceholder = !isEditorLoading && !content.trim();
+
     return (
         // Container wrapper - controls the width constraints and horizontal centering
         <div className="w-full max-w-2xl mx-auto relative h-full rounded-md overflow-hidden">
             {/* Placeholder element that shows when editor is empty */}
-            <div className="monaco-placeholder text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1]">
+            <div className={`monaco-placeholder text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] ${shouldShowPlaceholder ? '' : 'hidden'}`}>
                 {placeholder}
             </div>
 
