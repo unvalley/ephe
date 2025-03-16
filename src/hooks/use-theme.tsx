@@ -12,7 +12,6 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-    // Initialize with system preference or stored preference
     const [theme, setTheme] = useState<Theme>("light");
     const [mounted, setMounted] = useState(false);
 
@@ -22,10 +21,8 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
         // Check for stored theme preference
         const storedTheme = sessionStorage.getItem("theme") as Theme | undefined;
 
-        // If no stored preference, check system preference
         if (!storedTheme) {
-            const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-            setTheme(systemPrefersDark ? "dark" : "light");
+            setTheme("light");
         } else {
             setTheme(storedTheme);
         }
