@@ -35,10 +35,10 @@ export default function Page() {
     return (
         // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
         <div
-            className="h-screen w-screen flex flex-col justify-center"
+            className="min-h-screen w-full flex flex-col justify-between"
             onClick={handlePageClick}
         >
-            <div className="flex-1 flex justify-center pt-16 pb-8 overflow-hidden">
+            <div className="flex-1 flex justify-center pt-12 sm:pt-16 pb-16 overflow-hidden">
                 <MonacoEditor
                     editorRef={editorRef}
                     onWordCountChange={setCharCount}
@@ -59,8 +59,8 @@ const EditorFooter = ({ charCount }: EditorFooterProps) => {
 
     return (
         <footer className="fixed inset-x-0 bottom-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm space-mono">
-            <div className="mx-auto px-2 py-0.5 text-sm text-gray-600 dark:text-gray-400 flex justify-between">
-                <nav className="flex gap-4">
+            <div className="mx-auto px-4 py-2 sm:py-0.5 text-sm text-gray-600 dark:text-gray-400 flex flex-col sm:flex-row justify-between">
+                <nav className="flex gap-4 justify-center sm:justify-start">
                     <Link href="/landing" className="hover:text-gray-900 dark:hover:text-gray-100">
                         Home
                     </Link>
@@ -79,7 +79,7 @@ const EditorFooter = ({ charCount }: EditorFooterProps) => {
                         {isDark ? "Light" : "Dark"}
                     </button>
                 </nav>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center sm:justify-end gap-2 mt-1 sm:mt-0">
                     <span className="text-gray-500">{charCount} chars</span>
                     <Avatar size={14} name="Georgia O" colors={["#6c788e", "#a6aec1", "#cfd5e1", "#ededf2", "#fcfdff"]} variant="marble" />
                     <span>Ephe v{EPHE_VERSION}</span>
