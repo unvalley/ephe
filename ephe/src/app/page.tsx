@@ -4,6 +4,7 @@ import Avatar from "boring-avatars";
 import dynamic from "next/dynamic";
 import { useRef, memo, useState } from "react";
 import { useTheme } from "../hooks/use-theme";
+import Link from "next/link";
 
 const EPHE_VERSION = "0.0.1";
 
@@ -60,9 +61,9 @@ const EditorFooter = ({ charCount }: EditorFooterProps) => {
         <footer className="fixed inset-x-0 bottom-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm fira-code">
             <div className="mx-auto px-2 py-0.5 text-sm text-gray-600 dark:text-gray-400 flex justify-between">
                 <nav className="flex gap-4">
-                    <a href="https://github.com/unvalley/ephe" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 dark:hover:text-gray-100">
+                    <Link href="/landing" className="hover:text-gray-900 dark:hover:text-gray-100">
                         Home
-                    </a>
+                    </Link>
                     <a href="https://github.com/unvalley/ephe#README" target="_blank" rel="noopener noreferrer" className="hover:text-gray-900 dark:hover:text-gray-100">
                         About
                     </a>
