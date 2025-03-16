@@ -341,9 +341,6 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
                     text: newState
                 }]);
 
-                // モデル変更イベントで自動的にデコレーションが更新されるため、
-                // ここでは明示的に呼び出さない
-
                 // Return false to prevent default handling
                 return false;
             }
@@ -354,7 +351,6 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
             const model = editor.getModel();
             if (!model) return;
 
-            // 既存のデコレーションを保持する変数
             const oldDecorations = editor.getModel()?.getAllDecorations() || [];
             const decorations: monaco.editor.IModelDeltaDecoration[] = [];
 
@@ -362,7 +358,6 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
                 const lineContent = model.getLineContent(lineNumber);
 
                 if (isCheckedTask(lineContent)) {
-                    // チェック済みタスクにデコレーションを追加
                     decorations.push({
                         range: new monaco.Range(
                             lineNumber,
@@ -379,12 +374,10 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
                 }
             }
 
-            // すべてのデコレーションを一度削除し、新しいデコレーションを適用
             const oldIds = oldDecorations
                 .filter(d => d.options.inlineClassName === 'task-completed-line')
                 .map(d => d.id);
 
-            // 古いデコレーションを削除し、新しいデコレーションを適用
             editor.deltaDecorations(oldIds, decorations);
         };
 
@@ -419,33 +412,42 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
         monaco.editor.defineTheme('ephe-light', {
             base: "vs",
             inherit: true,
-            rules: [],
+            rules: [
+                { token: 'comment', foreground: '#8a9aa9', fontStyle: 'italic' },
+                { token: 'keyword', foreground: '#5d5080' },
+                { token: 'string', foreground: '#457464' },
+                { token: 'number', foreground: '#a37a55' },
+                { token: 'type', foreground: '#44678a' },
+                { token: 'function', foreground: '#4a768f' },
+                { token: 'variable', foreground: '#566370' },
+                { token: 'constant', foreground: '#9e6b60' },
+                { token: 'operator', foreground: '#6d5e96' }
+            ],
             colors: {
-                'editor.background': "#ffffff",
-                'editor.foreground': '#000000',
-                'editorCursor.foreground': '#000000',
-                'editor.lineHighlightBackground': '#f5f5f5',
-                'editorLineNumber.foreground': '#999999',
-                'editor.selectionBackground': '#b3d4fc',
-                'editor.inactiveSelectionBackground': '#d1e4fd'
+                'editor.background': '#ffffff',
+                'editor.foreground': '#3a4550'
             }
         });
 
         monaco.editor.defineTheme('ephe-dark', {
             base: 'vs-dark',
             inherit: true,
-            rules: [],
+            rules: [
+                { token: 'comment', foreground: '#8a9aa9', fontStyle: 'italic' },
+                { token: 'keyword', foreground: '#a08cc0' },
+                { token: 'string', foreground: '#7fb49a' },
+                { token: 'number', foreground: '#c79d7f' },
+                { token: 'type', foreground: '#7a9cbf' },
+                { token: 'function', foreground: '#7c9cb3' },
+                { token: 'variable', foreground: '#d6d9dd' },
+                { token: 'constant', foreground: '#c99a90' },
+                { token: 'operator', foreground: '#a99ac6' }
+            ],
             colors: {
-                'editor.background': '#1e1e1e',
-                'editor.foreground': '#d4d4d4',
-                'editorCursor.foreground': '#ffffff',
-                'editor.lineHighlightBackground': '#2a2a2a',
-                'editorLineNumber.foreground': '#858585',
-                'editor.selectionBackground': '#264f78',
-                'editor.inactiveSelectionBackground': '#3a3d41'
+                'editor.background': '#121212',
+                'editor.foreground': '#d6d9dd'
             }
         });
-
         // Apply custom theme
         monaco.editor.setTheme(isDarkMode ? 'ephe-dark' : 'ephe-light');
     };
@@ -512,10 +514,10 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
                 defaultValue={content}
                 options={{
                     ...editorOptions,
-                    padding: { top: 4 }, // カーソルが上部で切れないようにパディングを追加
+                    padding: { top: 4 }, // Add padding to prevent cursor from being cut off at the top
                 }}
                 onMount={handleEditorDidMount}
-                className="overflow-visible" // overflow-hiddenからoverflow-visibleに変更
+                className="overflow-visible"
                 loading=""
                 theme={isDarkMode ? "ephe-dark" : "ephe-light"}
             />

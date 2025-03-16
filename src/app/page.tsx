@@ -35,7 +35,7 @@ export default function Page() {
     return (
         // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
         <div
-            className="h-screen w-screen flex flex-col justify-center dark:bg-gray-900 dark:text-gray-100"
+            className="h-screen w-screen flex flex-col justify-center"
             onClick={handlePageClick}
         >
             <div className="flex-1 flex justify-center pt-16 pb-8 overflow-hidden">

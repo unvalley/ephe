@@ -2,8 +2,8 @@
 
 /* CSS variables for theming */
 :root {
-  --focus-border-light: white;
-  --focus-border-dark: black;
+  --focus-border-light: #ffffff;
+  --focus-border-dark: #181818;
 }
 
 .monaco-editor .overflow-guard {
@@ -41,6 +41,7 @@ html {
 /* Dark mode transitions */
 html.dark {
   color-scheme: dark;
+  background-color: #121212;
 }
 
 /* Markdown syntax highlighting */
@@ -61,16 +62,6 @@ span.task-checkbox {
   display: inline-block;
   margin-right: 0.25rem;
   font-weight: normal;
-}
-
-/* Task text styling */
-.task-text {
-  flex: 1;
-  display: inline-block;
-}
-
-.task-text.completed {
-  color: #6B7280; /* gray-500 */
 }
 
 .monaco-editor {
