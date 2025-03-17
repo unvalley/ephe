@@ -5,56 +5,58 @@ import { createContext, useContext, useEffect, useState } from "react";
 type ColorTheme = "light" | "dark";
 
 type ThemeContextType = {
-    theme: ColorTheme;
-    toggleTheme: () => void;
-}
+  theme: ColorTheme;
+  toggleTheme: () => void;
+};
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-    const [theme, setTheme] = useState<ColorTheme>("light");
-    const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<ColorTheme>("light");
+  const [mounted, setMounted] = useState(false);
 
-    useEffect(() => {
-        setMounted(true);
-        const storedTheme = sessionStorage.getItem("theme") as ColorTheme | undefined;
+  useEffect(() => {
+    setMounted(true);
+    const storedTheme = sessionStorage.getItem("theme") as
+      | ColorTheme
+      | undefined;
 
-        if (!storedTheme) {
-            setTheme("light");
-        } else {
-            setTheme(storedTheme);
-        }
-    }, []);
+    if (!storedTheme) {
+      setTheme("light");
+    } else {
+      setTheme(storedTheme);
+    }
+  }, []);
 
-    useEffect(() => {
-        if (!mounted) return;
+  useEffect(() => {
+    if (!mounted) return;
 
-        // Apply theme to document
-        if (theme === "dark") {
-            document.documentElement.classList.add("dark");
-        } else {
-            document.documentElement.classList.remove("dark");
-        }
-    }, [theme, mounted]);
+    // Apply theme to document
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme, mounted]);
 
-    const toggleTheme = () => {
-        const newTheme = theme === "light" ? "dark" : "light";
-        setTheme(newTheme);
-        sessionStorage.setItem("theme", newTheme);
-    };
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    sessionStorage.setItem("theme", newTheme);
+  };
 
-    return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
-            {children}
-        </ThemeContext.Provider>
-    );
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 };
 
 export const useTheme = (): ThemeContextType => {
-    const context = useContext(ThemeContext);
-    // biome-ignore lint/suspicious/noDoubleEquals: undefined check
-    if (context == undefined) {
-        throw new Error("useTheme must be used within a ThemeProvider");
-    }
-    return context;
-}; 
+  const context = useContext(ThemeContext);
+  // biome-ignore lint/suspicious/noDoubleEquals: undefined check
+  if (context == undefined) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+  return context;
+};

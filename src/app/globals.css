@@ -10,7 +10,6 @@
   border-radius: 0.375rem;
 }
 
-
 /* Hide scrollbars completely */
 .monaco-editor .scrollbar {
   display: none !important;
@@ -22,8 +21,8 @@
 
 /* Make sure content is still scrollable */
 .monaco-editor .monaco-scrollable-element {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 .monaco-editor .monaco-scrollable-element::-webkit-scrollbar {
@@ -51,7 +50,7 @@ html.dark {
 
 /* Style for completed tasks */
 .task-completed {
-  color: #6B7280; /* gray-500 */
+  color: #6b7280; /* gray-500 */
   opacity: 0.6;
 }
 
@@ -96,12 +95,12 @@ span.task-checkbox {
 }
 
 .dark .task-completed-line {
-  color: #9CA3AF;
+  color: #9ca3af;
   opacity: 0.8;
 }
 
 .light .task-completed-line {
-  color: #6B7280;
+  color: #6b7280;
 }
 
 /* Add this to your globals.css file */

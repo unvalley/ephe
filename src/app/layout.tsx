@@ -4,25 +4,23 @@ import { spaceMono } from "./fonts";
 import { ThemeProvider } from "../hooks/use-theme";
 
 export const metadata: Metadata = {
-    title: "Ephe",
-    description: "An ephemeral note taking app",
+  title: "Ephe",
+  description: "An ephemeral note taking app",
 };
 
 export default function RootLayout({
-    children,
+  children,
 }: Readonly<{
-    children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-    return (
-        <html lang="en" className="h-full w-full">
-            <body
-                className={`
+  return (
+    <html lang="en" className="h-full w-full">
+      <body
+        className={`
                     ${spaceMono.variable} antialiased h-full w-full`}
-            >
-                <ThemeProvider>
-                    {children}
-                </ThemeProvider>
-            </body>
-        </html>
-    );
+      >
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
+    </html>
+  );
 }

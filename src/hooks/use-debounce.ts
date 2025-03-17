@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 /**
  * A hook that delays updating a value until after a specified delay has passed.
- * 
+ *
  * @param value The value to debounce
  * @param delay The delay in milliseconds
  * @returns The debounced value
@@ -27,15 +27,15 @@ export function useDebounce<T>(value: T, delay: number): T {
 
 /**
  * A hook that returns a debounced version of the provided function.
- * 
+ *
  * @param fn The function to debounce
  * @param delay The delay in milliseconds
  * @returns The debounced function
  */
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-export  function useDebouncedCallback<T extends (...args: any[]) => any>(
+export function useDebouncedCallback<T extends (...args: any[]) => any>(
   fn: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 

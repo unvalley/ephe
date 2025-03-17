@@ -24,12 +24,12 @@ export const isEmptyTaskListLine = (lineContent: string): boolean => {
  */
 export const getTaskListIndentation = (lineContent: string): string => {
   const match = lineContent.match(/^(\s*)- \[\s*([xX ])\s*\]/);
-  return match ? match[1] || '' : '';
+  return match ? match[1] || "" : "";
 };
 
 /**
  * Gets the position of the end of the checkbox in a task list line
  */
 export const getCheckboxEndPosition = (lineContent: string): number => {
-  return lineContent.indexOf(']') + 1;
-}; 
+  return lineContent.indexOf("]") + 1;
+};
