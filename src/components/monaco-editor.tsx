@@ -561,7 +561,7 @@ const editorOptions: EditorProps["options"] = {
     suggestOnTriggerCharacters: false,
     acceptSuggestionOnEnter: "off",
     tabCompletion: "off",
-    wordBasedSuggestions: false,
+    wordBasedSuggestions: "off",
     parameterHints: { enabled: false },
 };
 
