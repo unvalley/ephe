@@ -423,18 +423,8 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
         // Update placeholder and decorations on content change
         editor.onDidChangeModelContent(() => {
             const newContent = editor.getValue();
-            const isEmpty = !newContent || !newContent.trim();
-            const placeholderElement = document.querySelector('.monaco-placeholder');
 
-            if (placeholderElement) {
-                if (!isEmpty) {
-                    hidePlaceholder(placeholderElement);
-                } else {
-                    // If content is empty, show placeholder with delay
-                    setTimeout(updatePlaceholder, 300);
-                }
-            }
-
+            updatePlaceholder();
             updateDecorations();
             debouncedSetContent(newContent);
             debouncedCharCountUpdate(newContent);
