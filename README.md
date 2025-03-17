@@ -2,9 +2,9 @@
   <img src="./public/ephe.svg" width="80" height="80" alt="Ephe Logo">
 </p>
 
-# Ephe :  A piece of Ephemeral Markdown Paper.
+# Ephe :  An Ephemeral Markdown Paper.
 
-You can write ephemeral notes on this app. Ephe stores your notes on browser's local storage, nothing is sent to a server. No tracking, no ads, no login.
+You can write ephemeral notes on this app. Ephe stores your notes on browser's local storage, no tracking, no ads, no login.
 
 An alternative to Slack Direct Message to ourself.
 
@@ -16,6 +16,7 @@ An alternative to Slack Direct Message to ourself.
 
 ## Fun fact
 
+- Based on [Monaco Editor](https://github.com/microsoft/monaco-editor)
 - `-[` or `- [` automatically completes to `- [ ] `.
 
 ## Feature Requests are welcome
