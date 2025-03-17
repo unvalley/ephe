@@ -70,7 +70,7 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
     // \cmd
     const c1 = latex._c1.map((cmd) => {
       const item = newCompletionItem(
-        "\\" + cmd,
+        `\\${cmd}`,
         languages.CompletionItemKind.Function,
       );
       item.insertText = cmd;
@@ -79,7 +79,7 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
     // \cmd{$1}
     const c2 = latex._c2.map((cmd) => {
       const item = newCompletionItem(
-        "\\" + cmd,
+        `\\${cmd}`,
         languages.CompletionItemKind.Function,
       );
       item.insertText = new SnippetString(`${cmd}\{$1\}`).value;
@@ -91,7 +91,7 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
     // \cmd{$1}{$2}
     const c3 = latex._c3.map((cmd) => {
       const item = newCompletionItem(
-        "\\" + cmd,
+        `\\${cmd}`,
         languages.CompletionItemKind.Function,
       );
       item.insertText = new SnippetString(`${cmd}\{$1\}\{$2\}`).value;

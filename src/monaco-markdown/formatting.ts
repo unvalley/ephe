@@ -9,17 +9,17 @@ export function addKeybinding(
   name: string,
   fun: CallableFunction,
   keybindings: number[],
-  label?: string,
-  context?: string,
+  label: string,
+  context: string,
   contextMenuGroupId = "markdown.extension.editing",
 ) {
   editor.addAction({
-    contextMenuGroupId: contextMenuGroupId,
+    contextMenuGroupId,
     contextMenuOrder: 0,
-    id: "markdown.extension.editing." + name,
+    id: `markdown.extension.editing.${name}`,
     keybindingContext: context,
-    keybindings: keybindings,
-    label: label,
+    keybindings,
+    label,
     precondition: "",
     run(_: editor.ICodeEditor): void | Promise<void> {
       fun(editor);
@@ -35,6 +35,7 @@ export function activateFormatting(editor: TextEditor) {
     toggleBold,
     [KeyMod.CtrlCmd | KeyCode.KeyB],
     "Toggle bold",
+    "",
   );
   addKeybinding(
     editor,
@@ -42,6 +43,7 @@ export function activateFormatting(editor: TextEditor) {
     toggleItalic,
     [KeyMod.CtrlCmd | KeyCode.KeyI],
     "Toggle italic",
+    "",
   );
   addKeybinding(
     editor,
@@ -49,6 +51,7 @@ export function activateFormatting(editor: TextEditor) {
     toggleCodeSpan,
     [KeyMod.CtrlCmd | KeyCode.Backquote],
     "Toggle code span",
+    "",
   );
   addKeybinding(
     editor,
@@ -56,6 +59,7 @@ export function activateFormatting(editor: TextEditor) {
     toggleStrikethrough,
     [KeyMod.Alt | KeyCode.KeyS],
     "Toggle strikethrough",
+    "",
   );
   addKeybinding(
     editor,
@@ -63,6 +67,7 @@ export function activateFormatting(editor: TextEditor) {
     toggleMath,
     [KeyMod.CtrlCmd | KeyCode.KeyM],
     "Toggle math",
+    "",
   );
   addKeybinding(
     editor,
@@ -70,6 +75,7 @@ export function activateFormatting(editor: TextEditor) {
     toggleMathReverse,
     [KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyM],
     "Toggle math reverse",
+    "",
   );
   addKeybinding(
     editor,
@@ -77,6 +83,7 @@ export function activateFormatting(editor: TextEditor) {
     toggleHeadingUp,
     [KeyMod.WinCtrl | KeyMod.Shift | KeyCode.BracketLeft],
     "Heading up",
+    "",
   );
   addKeybinding(
     editor,
@@ -84,6 +91,7 @@ export function activateFormatting(editor: TextEditor) {
     toggleHeadingDown,
     [KeyMod.WinCtrl | KeyMod.Shift | KeyCode.BracketRight],
     "Heading down",
+    "",
   );
   addKeybinding(
     editor,
@@ -91,6 +99,7 @@ export function activateFormatting(editor: TextEditor) {
     toggleList,
     [KeyMod.CtrlCmd | KeyCode.KeyL],
     "Toggle list",
+    "",
   );
   // addKeybinding(editor, paste, [KeyMod.CtrlCmd | KeyCode.KEY_B], "Toggle bold");
 }
@@ -131,7 +140,7 @@ function toggleHeadingUp(editor: TextEditor) {
       editBuilder.insert(new Position(lineIndex, 0), "# ");
     } else if (lineText.startsWith(maxHeading)) {
       // Reset heading at 6 level
-      const deleteIndex = lineText.startsWith(maxHeading + " ")
+      const deleteIndex = lineText.startsWith(`${maxHeading} `)
         ? maxHeading.length + 1
         : maxHeading.length;
       editBuilder.delete(
@@ -163,7 +172,7 @@ function toggleHeadingDown(editor: TextEditor) {
       );
     } else {
       // No heading
-      editBuilder.insert(new Position(lineIndex, 0), maxHeading + " ");
+      editBuilder.insert(new Position(lineIndex, 0), `${maxHeading} `);
     }
   });
 }
@@ -185,9 +194,11 @@ enum MathBlockState {
 function getMathState(editor: TextEditor, cursor: Position): MathBlockState {
   if (getContext(editor, cursor, "$") === "$|$") {
     return MathBlockState.INLINE;
-  } else if (getContext(editor, cursor, "$$ ", " $$") === "$$ | $$") {
+  }
+  if (getContext(editor, cursor, "$$ ", " $$") === "$$ | $$") {
     return MathBlockState.SINGLE_DISPLAYED;
-  } else if (
+  }
+  if (
     editor.document.lineAt(cursor.line).text === "" &&
     cursor.line > 0 &&
     editor.document.lineAt(cursor.line - 1).text === "$$" &&
@@ -195,9 +206,8 @@ function getMathState(editor: TextEditor, cursor: Position): MathBlockState {
     editor.document.lineAt(cursor.line + 1).text === "$$"
   ) {
     return MathBlockState.MULTI_DISPLAYED;
-  } else {
-    return MathBlockState.NONE;
   }
+  return MathBlockState.NONE;
 }
 
 /**
@@ -328,7 +338,7 @@ function toggleList(editor: TextEditor) {
   const doc = editor.document;
   const batchEdit = new WorkspaceEdit();
 
-  editor.selections.forEach((selection) => {
+  for (const selection of editor.selections) {
     if (selection.isEmpty) {
       toggleListSingleLine(doc, selection.active.line, batchEdit);
     } else {
@@ -336,7 +346,7 @@ function toggleList(editor: TextEditor) {
         toggleListSingleLine(doc, i, batchEdit);
       }
     }
-  });
+  }
 
   return editor.applyEdit(batchEdit, []).then(() => fixMarker(editor));
 }
@@ -384,18 +394,6 @@ function toggleListSingleLine(
   }
 }
 
-// async function paste() {
-//     const editor = window.activeTextEditor;
-//     const selection = editor.selection;
-//     if (selection.isSingleLine && !isSingleLink(editor.document.getText(selection))) {
-//         const text = await env.clipboard.readText();
-//         if (isSingleLink(text)) {
-//             return commands.executeCommand("editor.action.insertSnippet", { "snippet": `[$TM_SELECTED_TEXT$0](${text})` });
-//         }
-//     }
-//     return commands.executeCommand("editor.action.clipboardPasteAction");
-// }
-
 /**
  * Creates Regexp to check if the text is a link (further detailes in the isSingleLink() documentation).
  *
@@ -411,36 +409,26 @@ function createLinkRegex(): RegExp {
 
   // Host patterns
   const hostname_re =
-    "[a-z" + ul + "0-9](?:[a-z" + ul + "0-9-]{0,61}[a-z" + ul + "0-9])?";
+    `[a-z${ul}0-9](?:[a-z${ul}0-9-]{0,61}[a-z${ul}0-9])?`;
   // Max length for domain name labels is 63 characters per RFC 1034 sec. 3.1
-  const domain_re = "(?:\\.(?!-)[a-z" + ul + "0-9-]{1,63})*";
+  const domain_re = `(?:\\.(?!-)[a-z${ul}0-9-]{1,63})*`;
 
   const tld_re =
-    "" +
-    "\\." + // dot
-    "(?!-)" + // can't start with a dash
-    "(?:[a-z" +
-    ul +
-    "-]{2,63}" + // domain label
-    "|xn--[a-z0-9]{1,59})" + // or punycode label
+    `\\.` + // dot
+    `(?!-)` + // can't start with a dash
+    `(?:[a-z${ul}-]{2,63}` + // domain label
+    `|xn--[a-z0-9]{1,59})` + // or punycode label
     // + '(?<!-)'                            // can't end with a dash
-    "\\.?"; // may have a trailing dot
+    `\\.?`; // may have a trailing dot
 
-  const host_re = "(" + hostname_re + domain_re + tld_re + "|localhost)";
+  const host_re = `(${hostname_re}${domain_re}${tld_re}|localhost)`;
   const pattern =
-    "" +
-    "^(?:[a-z0-9\\.\\-\\+]*)://" + // scheme is not validated (in django it is validated additionally)
-    "(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?" + // user: pass authentication
-    "(?:" +
-    ipv4_re +
-    "|" +
-    ipv6_re +
-    "|" +
-    host_re +
-    ")" +
-    "(?::\\d{2,5})?" + // port
-    "(?:[/?#][^\\s]*)?" + // resource path
-    "$"; // end of string
+    `^(?:[a-z0-9\\.\\-\\+]*)://` + // scheme is not validated (in django it is validated additionally)
+    `(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?` + // user: pass authentication
+    `(?:${ipv4_re}|${ipv6_re}|${host_re})` +
+    `(?::\\d{2,5})?` + // port
+    `(?:[/?#][^\\s]*)?` + // resource path
+    `$`; // end of string
 
   return new RegExp(pattern, "i");
 }
@@ -463,9 +451,7 @@ function styleByWrapping(
   startPattern: string,
   endPattern?: string,
 ) {
-  if (endPattern == undefined) {
-    endPattern = startPattern;
-  }
+  const actualEndPattern = endPattern === undefined ? startPattern : endPattern;
 
   const selections = editor.selections;
 
@@ -477,7 +463,7 @@ function styleByWrapping(
     const cursorPos = selection.active;
     const shift = shifts
       .map(([pos, s]) =>
-        selection.start.line == pos.line &&
+        selection.start.line === pos.line &&
         selection.start.character >= pos.character
           ? s
           : 0,
@@ -489,24 +475,25 @@ function styleByWrapping(
       if (
         startPattern !== "~~" &&
         getContext(editor, cursorPos, startPattern) ===
-          `${startPattern}text|${endPattern}`
+          `${startPattern}text|${actualEndPattern}`
       ) {
         // `**text|**` to `**text**|`
         const newCursorPos = cursorPos.with({
-          character: cursorPos.character + shift + endPattern.length,
+          character: cursorPos.character + shift + actualEndPattern.length,
         });
         newSelections[i] = new Selection(newCursorPos, newCursorPos);
         return;
-      } else if (
+      }
+      if (
         getContext(editor, cursorPos, startPattern) ===
-        `${startPattern}|${endPattern}`
+        `${startPattern}|${actualEndPattern}`
       ) {
         // `**|**` to `|`
         const start = cursorPos.with({
           character: cursorPos.character - startPattern.length,
         });
         const end = cursorPos.with({
-          character: cursorPos.character + endPattern.length,
+          character: cursorPos.character + actualEndPattern.length,
         });
         wrapRange(
           editor,
@@ -523,7 +510,7 @@ function styleByWrapping(
       } else {
         // Select word under cursor
         let wordRange = editor.document.getWordRangeAtPosition(cursorPos);
-        if (wordRange == undefined) {
+        if (wordRange === undefined) {
           wordRange = selection;
         }
         // One special case: toggle strikethrough in task list
@@ -532,14 +519,17 @@ function styleByWrapping(
           startPattern === "~~" &&
           /^\s*[\*\+\-] (\[[ x]\] )? */g.test(currentTextLine.text)
         ) {
-          wordRange = currentTextLine.range.with(
-            new Position(
-              cursorPos.line,
-              currentTextLine.text.match(/^\s*[\*\+\-] (\[[ x]\] )? */g)[0]
-                .length,
-            ),
-          );
+          const match = currentTextLine.text.match(/^\s*[\*\+\-] (\[[ x]\] )? */g);
+          if (match?.[0]) {
+            wordRange = currentTextLine.range.with(
+              new Position(
+                cursorPos.line,
+                match[0].length,
+              ),
+            );
+          }
         }
+
         wrapRange(
           editor,
           batchEdit,
@@ -602,13 +592,11 @@ function wrapRange(
   startPtn: string,
   endPtn?: string,
 ) {
-  if (endPtn == undefined) {
-    endPtn = startPtn;
-  }
+  const actualEndPtn = endPtn === undefined ? startPtn : endPtn;
 
   const text = editor.document.getText(range);
   const prevSelection = newSelections[i];
-  const ptnLength = (startPtn + endPtn).length;
+  const ptnLength = (startPtn + actualEndPtn).length;
 
   let newCursorPos = cursor.with({ character: cursor.character + shift });
   let newSelection: Selection;
@@ -626,7 +614,7 @@ function wrapRange(
     if (!isSelected) {
       if (!range.isEmpty) {
         // means quick styling
-        if (cursor.character == range.end.character) {
+        if (cursor.character === range.end.character) {
           newCursorPos = cursor.with({
             character: cursor.character + shift - ptnLength,
           });
@@ -654,7 +642,7 @@ function wrapRange(
     }
   } else {
     // add start/end patterns around range
-    wsEdit.replace(editor.document.uri, range, startPtn + text + endPtn);
+    wsEdit.replace(editor.document.uri, range, startPtn + text + actualEndPtn);
 
     shifts.push([range.end, ptnLength]);
 
@@ -662,7 +650,7 @@ function wrapRange(
     if (!isSelected) {
       if (!range.isEmpty) {
         // means quick styling
-        if (cursor.character == range.end.character) {
+        if (cursor.character === range.end.character) {
           newCursorPos = cursor.with({
             character: cursor.character + shift + ptnLength,
           });
@@ -698,10 +686,8 @@ function isWrapped(
   startPattern: string,
   endPattern?: string,
 ): boolean {
-  if (endPattern == undefined) {
-    endPattern = startPattern;
-  }
-  return text.startsWith(startPattern) && text.endsWith(endPattern);
+  const actualEndPattern = endPattern === undefined ? startPattern : endPattern;
+  return text.startsWith(startPattern) && text.endsWith(actualEndPattern);
 }
 
 function getContext(
@@ -710,12 +696,10 @@ function getContext(
   startPattern: string,
   endPattern?: string,
 ): string {
-  if (endPattern == undefined) {
-    endPattern = startPattern;
-  }
+  const actualEndPattern = endPattern === undefined ? startPattern : endPattern;
 
   let startPositionCharacter = cursorPos.character - startPattern.length;
-  const endPositionCharacter = cursorPos.character + endPattern.length;
+  const endPositionCharacter = cursorPos.character + actualEndPattern.length;
 
   if (startPositionCharacter < 0) {
     startPositionCharacter = 0;
@@ -738,12 +722,11 @@ function getContext(
     ),
   );
 
-  if (rightText == endPattern) {
-    if (leftText == startPattern) {
-      return `${startPattern}|${endPattern}`;
-    } else {
-      return `${startPattern}text|${endPattern}`;
+  if (rightText === actualEndPattern) {
+    if (leftText === startPattern) {
+      return `${startPattern}|${actualEndPattern}`;
     }
+    return `${startPattern}text|${actualEndPattern}`;
   }
   return "|";
 }

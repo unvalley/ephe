@@ -18,7 +18,7 @@ export class ErrorHandler {
     this.unexpectedErrorHandler = (e: any) => {
       setTimeout(() => {
         if (e.stack) {
-          throw new Error(e.message + "\n\n" + e.stack);
+          throw new Error(`${e.message}\n\n${e.stack}`);
         }
 
         throw e;
@@ -157,17 +157,15 @@ export function canceled(): Error {
 export function illegalArgument(name?: string): Error {
   if (name) {
     return new Error(`Illegal argument: ${name}`);
-  } else {
-    return new Error("Illegal argument");
-  }
+  } 
+  return new Error("Illegal argument");
 }
 
 export function illegalState(name?: string): Error {
   if (name) {
     return new Error(`Illegal state: ${name}`);
-  } else {
-    return new Error("Illegal state");
   }
+  return new Error("Illegal state");
 }
 
 export function readonly(name?: string): Error {

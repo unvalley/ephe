@@ -30,20 +30,17 @@ class MarkdownDocumentFormatter
     options: languages.FormattingOptions,
     _: CancellationToken,
   ): languages.TextEdit[] | Thenable<languages.TextEdit[]> {
-    const edits: languages.TextEdit[] = [];
     const document = new TextDocument(model);
     const tables = this.detectTables(document.getText());
-    if (tables !== null) {
-      tables.forEach((table) => {
-        edits.push({
+    if (tables == null) return []
+
+    const edits = tables.map((table) => {
+      return {
           range: TypeConverters.Range.from(this.getRange(document, table)),
           text: this.formatTable(table, document, options),
-        });
-      });
-      return edits;
-    } else {
-      return [];
-    }
+        };
+    });
+    return edits;
   }
 
   private detectTables(text: string) {
@@ -51,13 +48,7 @@ class MarkdownDocumentFormatter
     const contentLine = "\\|?.*\\|.*\\|?";
     const hyphenLine = "[ \\t]*\\|?( *:?-+:? *\\|)+( *:?-+:? *\\|?)[ \\t]*";
     const tableRegex = new RegExp(
-      contentLine +
-        lineBreak +
-        hyphenLine +
-        "(?:" +
-        lineBreak +
-        contentLine +
-        ")*",
+      `${contentLine}${lineBreak}${hyphenLine}(?:${lineBreak}${contentLine})*`,
       "g",
     );
     return text.match(tableRegex);
@@ -83,6 +74,7 @@ class MarkdownDocumentFormatter
     const doNormalize = true;
     const indentRegex = new RegExp(/^(\s*)\S/u);
     const match = text.match(indentRegex);
+    if (match == null) return ""
     const spacesInFirstLine = match[1].length;
     const tabStops = Math.round(spacesInFirstLine / options.tabSize);
     const spaces = doNormalize
@@ -120,7 +112,7 @@ class MarkdownDocumentFormatter
         row = row.slice(1);
       }
       if (!row.endsWith("|")) {
-        row = row + "|";
+        row = `${row}|`;
       }
 
       let field = null;
@@ -131,7 +123,7 @@ class MarkdownDocumentFormatter
         values.push(cell);
 
         // Ignore length of dash-line to enable width reduction
-        if (num != 1) {
+        if (num !== 1) {
           // Treat CJK characters as 2 English ones because of Unicode stuff
           const length = cjkRegex.test(cell)
             ? cell.length + cell.match(cjkRegex).length
@@ -150,25 +142,27 @@ class MarkdownDocumentFormatter
         //:---:
         colWidth[i] = Math.max(colWidth[i], 5);
         colAlign[i] = "c";
-        return ":" + "-".repeat(colWidth[i] - 2) + ":";
-      } else if (/:-+/.test(cell)) {
+        return `:${"-".repeat(colWidth[i] - 2)}:`;
+      }
+      if (/:-+/.test(cell)) {
         //:---
         colWidth[i] = Math.max(colWidth[i], 4);
         colAlign[i] = "l";
-        return ":" + "-".repeat(colWidth[i] - 1);
-      } else if (/-+:/.test(cell)) {
+        return `:${"-".repeat(colWidth[i] - 1)}`;
+      }
+      if (/-+:/.test(cell)) {
         //---:
         colWidth[i] = Math.max(colWidth[i], 4);
         colAlign[i] = "r";
-        return "-".repeat(colWidth[i] - 1) + ":";
-      } else if (/-+/.test(cell)) {
+        return `-${"-".repeat(colWidth[i] - 1)}:`;
+      }
+      if (/-+/.test(cell)) {
         //---
         colWidth[i] = Math.max(colWidth[i], 3);
         colAlign[i] = "l";
-        return "-".repeat(colWidth[i]);
-      } else {
-        colAlign[i] = "l";
+        return `-${"-".repeat(colWidth[i])}`;
       }
+      colAlign[i] = "l";
     });
 
     return lines
@@ -178,10 +172,9 @@ class MarkdownDocumentFormatter
           if (cjkRegex.test(cell)) {
             cellLength -= cell.match(cjkRegex).length;
           }
-          //return (cell + ' '.repeat(cellLength)).slice(0, cellLength);
           return this.alignText(cell, colAlign[i], cellLength);
         });
-        return indentation + "| " + cells.join(" | ") + " |";
+        return `${indentation}| ${cells.join(" | ")} |`;
       })
       .join(doc.eol === EndOfLine.LF ? "\n" : "\r\n");
   }
@@ -193,10 +186,11 @@ class MarkdownDocumentFormatter
         text +
         " ".repeat(length)
       ).slice(0, length);
-    } else if (align === "r") {
-      return (" ".repeat(length) + text).slice(-length);
-    } else {
-      return (text + " ".repeat(length)).slice(0, length);
     }
+    if (align === "r") {
+      return (" ".repeat(length) + text).slice(-length);
+    }
+    return (text + " ".repeat(length)).slice(0, length);
+  }
   }
 }

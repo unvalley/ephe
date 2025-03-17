@@ -1,7 +1,7 @@
 import type { TextDocument } from "./vscode-monaco";
 
-export function buildToc(doc: TextDocument): any {
-  let toc;
+export function buildToc(doc: TextDocument) {
+  let toc: { level: number; text: string }[] = [];
   const lines = doc
     .getText()
     .replace(/^```[\W\w]+?^```/gm, "") // Remove code blocks
@@ -29,11 +29,15 @@ export function buildToc(doc: TextDocument): any {
     })
     .map((lineText) => {
       const matches = /^(#+) (.*)/.exec(lineText);
+      if (!matches) {
+        return { level: 0, text: "" }; // Provide a default value if no match
+      }  
       return {
         level: matches[1].length,
         text: matches[2].replace(/#+$/, "").trim(),
       };
-    });
+    })
+    .filter(item => item.level > 0); // Filter out any invalid entries
 
   return toc;
 }

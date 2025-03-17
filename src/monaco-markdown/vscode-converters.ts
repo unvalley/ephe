@@ -100,7 +100,8 @@ export namespace EndOfLine {
   ): editor.EndOfLineSequence | undefined {
     if (eol === vscode.EndOfLine.CRLF) {
       return editor.EndOfLineSequence.CRLF;
-    } else if (eol === vscode.EndOfLine.LF) {
+    }
+    if (eol === vscode.EndOfLine.LF) {
       return editor.EndOfLineSequence.LF;
     }
     return undefined;
@@ -111,7 +112,8 @@ export namespace EndOfLine {
   ): vscode.EndOfLine | undefined {
     if (eol === editor.EndOfLineSequence.CRLF) {
       return vscode.EndOfLine.CRLF;
-    } else if (eol === editor.EndOfLineSequence.LF) {
+    }
+    if (eol === editor.EndOfLineSequence.LF) {
       return vscode.EndOfLine.LF;
     }
     return undefined;
@@ -137,7 +139,7 @@ export namespace WorkspaceEdit {
         }
       } else {
         // resource edits
-        throw new Error("Not implemented for " + uri);
+        throw new Error(`Not implemented for ${uri}`);
       }
     }
     return edits;

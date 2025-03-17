@@ -19,7 +19,7 @@ export function activateListEditing(editor: TextEditor) {
     [KeyCode.Enter],
     "",
     editorContext,
-    null,
+    "",
   );
   addKeybinding(
     editor,
@@ -28,7 +28,7 @@ export function activateListEditing(editor: TextEditor) {
     [KeyCode.Enter | KeyMod.CtrlCmd],
     "",
     editorContext,
-    null,
+    "",
   );
   addKeybinding(
     editor,
@@ -37,7 +37,7 @@ export function activateListEditing(editor: TextEditor) {
     [KeyCode.Enter | KeyMod.Shift],
     "",
     editorContext,
-    null,
+    "",
   );
   addKeybinding(
     editor,
@@ -46,7 +46,7 @@ export function activateListEditing(editor: TextEditor) {
     [KeyCode.Tab],
     "",
     editorContext,
-    null,
+    "",
   );
   addKeybinding(
     editor,
@@ -55,7 +55,7 @@ export function activateListEditing(editor: TextEditor) {
     [KeyCode.Tab | KeyMod.Shift],
     "",
     editorContext,
-    null,
+    "",
   );
   addKeybinding(
     editor,
@@ -64,7 +64,7 @@ export function activateListEditing(editor: TextEditor) {
     [KeyCode.Backspace],
     "",
     editorContext,
-    null,
+    "",
   );
 
   //

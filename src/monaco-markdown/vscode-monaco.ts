@@ -24,7 +24,7 @@ const _modeId2WordDefinition = new Map<string, RegExp>();
 
 export function setWordDefinitionFor(
   modeId: string,
-  wordDefinition: RegExp | undefined,
+  wordDefinition: RegExp,
 ): void {
   _modeId2WordDefinition.set(modeId, wordDefinition);
 }
@@ -423,17 +423,8 @@ export class TextEditor {
     return Promise.resolve(null);
   }
 
-  addAction(param: {
-    contextMenuOrder: number;
-    keybindingContext: string;
-    run(editor: editor.ICodeEditor): void | Promise<void>;
-    id: string;
-    label: string;
-    precondition: string;
-    contextMenuGroupId: string;
-    keybindings: number[];
-  }) {
-    this.editor.addAction(param);
+  addAction(descriptor: editor.IActionDescriptor) {
+    this.editor.addAction(descriptor);
   }
 
   executeCommand(commandId: string, ...rest: any[]): Promise<void> {
@@ -445,15 +436,16 @@ export class TextEditor {
       case "deleteLeft":
         this.editor.trigger("keyboard", commandId, undefined);
         return Promise.resolve();
-      default:
+      default: {
         const action = this.editor.getAction(commandId);
         if (action) {
           if (action.isSupported()) {
             return action.run();
           }
         } else {
-          new Error("unknown action id " + commandId);
+          new Error(`unknown action id ${commandId}`);
         }
+      }
     }
   }
 

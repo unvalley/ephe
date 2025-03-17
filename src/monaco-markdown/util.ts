@@ -11,9 +11,8 @@ export function isInFencedCodeBlock(
   const matches = textBefore.match(/^```[\w ]*$/gm);
   if (matches == null) {
     return false;
-  } else {
-    return matches.length % 2 != 0;
   }
+  return matches.length % 2 !== 0;
 }
 
 /* ┌─────────────────┐
