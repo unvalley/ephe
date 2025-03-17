@@ -363,34 +363,39 @@ function toggleListSingleLine(
       : lineText.indexOf(lineText.trim());
   const lineTextContent = lineText.substr(indentation);
 
+  const uri = doc.uri;
+  if (!uri) {
+    throw new Error("Document URI is not set");
+  }
+
   if (lineTextContent.startsWith("- ")) {
     wsEdit.replace(
-      doc.uri,
+      uri,
       new Range(line, indentation, line, indentation + 2),
       "* ",
     );
   } else if (lineTextContent.startsWith("* ")) {
     wsEdit.replace(
-      doc.uri,
+      uri,
       new Range(line, indentation, line, indentation + 2),
       "+ ",
     );
   } else if (lineTextContent.startsWith("+ ")) {
     wsEdit.replace(
-      doc.uri,
+      uri,
       new Range(line, indentation, line, indentation + 2),
       "1. ",
     );
   } else if (/^\d\. /.test(lineTextContent)) {
     wsEdit.replace(
-      doc.uri,
+      uri,
       new Range(line, indentation + 1, line, indentation + 2),
       ")",
     );
   } else if (/^\d\) /.test(lineTextContent)) {
-    wsEdit.delete(doc.uri, new Range(line, indentation, line, indentation + 3));
+    wsEdit.delete(uri, new Range(line, indentation, line, indentation + 3));
   } else {
-    wsEdit.insert(doc.uri, new Position(line, indentation), "- ");
+    wsEdit.insert(uri, new Position(line, indentation), "- ");
   }
 }
 
@@ -603,6 +608,7 @@ function wrapRange(
   if (isWrapped(text, startPtn)) {
     // remove start/end patterns from range
     wsEdit.replace(
+      // @ts-ignore
       editor.document.uri,
       range,
       text.substr(startPtn.length, text.length - ptnLength),
@@ -642,7 +648,11 @@ function wrapRange(
     }
   } else {
     // add start/end patterns around range
-    wsEdit.replace(editor.document.uri, range, startPtn + text + actualEndPtn);
+    const uri = editor.document.uri;
+    if (!uri) {
+      throw new Error("Document URI is not set");
+    }
+    wsEdit.replace(uri, range, `${startPtn}${text}${actualEndPtn}`);
 
     shifts.push([range.end, ptnLength]);
 

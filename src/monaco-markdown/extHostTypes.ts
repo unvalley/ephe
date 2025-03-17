@@ -474,11 +474,11 @@ export class TextEdit {
     return ret;
   }
 
-  protected _range: Range;
+  protected _range: Range | undefined;
   protected _newText: string | null;
-  protected _newEol: EndOfLine;
+  protected _newEol: EndOfLine = EndOfLine.LF;
 
-  get range(): Range {
+  get range(): Range | undefined {
     return this._range;
   }
 

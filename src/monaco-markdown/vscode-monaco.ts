@@ -62,8 +62,8 @@ function revealRangeInEditor(
 }
 
 export class TextDocument {
-  readonly uri: Uri;
-  readonly version: number;
+  readonly uri: Uri | undefined;
+  readonly version: number | undefined;
 
   readonly model: editor.ITextModel;
 
@@ -265,7 +265,11 @@ export class TextEditor {
   private _disposed = false;
 
   public get languageId(): string {
-    return getLanguageId(this.editor.getModel());
+    const model = this.editor.getModel();
+    if (!model) {
+      throw new Error("Model is not set");
+    }
+    return getLanguageId(model);
   }
 
   constructor(editor: editor.IStandaloneCodeEditor) {
@@ -273,11 +277,19 @@ export class TextEditor {
   }
 
   get document(): TextDocument {
-    return new TextDocument(this.editor.getModel());
+    const model = this.editor.getModel();
+    if (!model) {
+      throw new Error("Model is not set");
+    }
+    return new TextDocument(model);
   }
 
   get selection(): Selection {
-    return TypeConverters.Selection.to(this.editor.getSelection());
+    const selection = this.editor.getSelection();
+    if (!selection) {
+      throw new Error("Selection is not set");
+    }
+    return TypeConverters.Selection.to(selection);
   }
 
   set selection(value: Selection) {
@@ -285,9 +297,11 @@ export class TextEditor {
   }
 
   get selections(): Selection[] {
-    return this.editor
-      .getSelections()
-      .map((s) => TypeConverters.Selection.to(s));
+    const selections = this.editor.getSelections();
+    if (!selections) {
+      throw new Error("Selections are not set");
+    }
+    return selections.map((s) => TypeConverters.Selection.to(s));
   }
 
   set selections(value: Selection[]) {
@@ -297,9 +311,11 @@ export class TextEditor {
   }
 
   get visibleRanges(): Range[] {
-    return this.editor
-      .getVisibleRanges()
-      .map((r) => TypeConverters.Range.to(r));
+    const visibleRanges = this.editor.getVisibleRanges();
+    if (!visibleRanges) {
+      throw new Error("Visible ranges are not set");
+    }
+    return visibleRanges.map((r) => TypeConverters.Range.to(r));
   }
 
   edit(
@@ -324,6 +340,7 @@ export class TextEditor {
 
     // return when there is nothing to do
     if (editData.edits.length === 0 && !editData.setEndOfLine) {
+      // @ts-ignore
       return Promise.resolve(null);
     }
 
@@ -366,9 +383,11 @@ export class TextEditor {
       },
     );
 
-    this.editor
-      .getModel()
-      .pushEditOperations(
+    const model = this.editor.getModel();
+    if (!model) {
+      throw new Error("Model is not set");
+    }
+    model.pushEditOperations(
         this.editor.getSelections(),
         edits,
         (): _Selection[] => {
@@ -376,24 +395,10 @@ export class TextEditor {
         },
       );
 
-    return Promise.resolve(null);
+    return Promise.resolve();
   }
 
-  // insertSnippet(snippet: SnippetString, where?: Position | readonly Position[] | Range | readonly Range[], options: { undoStopBefore: boolean; undoStopAfter: boolean; } = {
-  //     undoStopBefore: true,
-  //     undoStopAfter: true
-  // }): Promise<boolean> {}
-
-  // hide(): void {
-  //     throw new Error("Not implemented")
-  // }
-
-  // @ts-ignore
-  // show(column?: ViewColumn): void {
-  //     throw new Error("Not implemented")
-  // }
-
-  revealRange(range: Range, revealType?: TextEditorRevealType): void {
+  revealRange(range: Range, revealType: TextEditorRevealType): void {
     revealRangeInEditor(
       this.editor,
       TypeConverters.Range.from(range),
@@ -401,25 +406,20 @@ export class TextEditor {
     );
   }
 
-  // @ts-ignore
-  // setDecorations(decorationType: TextEditorDecorationType, rangesOrOptions: Range[] | DecorationOptions[]): void {
-  //     throw new Error("Not implemented")
-  // }
-
   applyEdit(edit: WorkspaceEdit, newSelections?: Selection[]): Thenable<void> {
-    if (!newSelections) {
-      newSelections = [];
+    const model = this.editor.getModel();
+    if (!model) {
+      throw new Error("Model is not set");
     }
-    this.editor
-      .getModel()
-      .pushEditOperations(
+    model.pushEditOperations(
         this.editor.getSelections(),
         TypeConverters.WorkspaceEdit.from(edit),
         (): _Selection[] => {
-          return newSelections.map((s) => TypeConverters.Selection.from(s));
+          return newSelections?.map((s) => TypeConverters.Selection.from(s)) || [];
         },
       );
 
+    // @ts-ignore
     return Promise.resolve(null);
   }
 
@@ -427,6 +427,7 @@ export class TextEditor {
     this.editor.addAction(descriptor);
   }
 
+  // @ts-ignore
   executeCommand(commandId: string, ...rest: any[]): Promise<void> {
     switch (commandId) {
       case "type":
@@ -461,6 +462,7 @@ export class TextEditor {
 
 class UndefinedConfiguration {
   get<T>(_: string): T {
+    // @ts-ignore
     return undefined;
   }
 }
@@ -472,7 +474,7 @@ export interface ITextEditOperation {
 }
 
 export interface IEditData {
-  documentVersionId: number;
+  documentVersionId: number | undefined;
   edits: ITextEditOperation[];
   setEndOfLine: EndOfLine | undefined;
   undoStopBefore: boolean;
@@ -481,7 +483,7 @@ export interface IEditData {
 
 export class TextEditorEdit {
   private readonly _document: TextDocument;
-  private readonly _documentVersionId: number;
+  private readonly _documentVersionId: number | undefined;
   private readonly _undoStopBefore: boolean;
   private readonly _undoStopAfter: boolean;
   private _collectedEdits: ITextEditOperation[] = [];

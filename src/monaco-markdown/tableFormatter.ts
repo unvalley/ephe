@@ -126,6 +126,7 @@ class MarkdownDocumentFormatter
         if (num !== 1) {
           // Treat CJK characters as 2 English ones because of Unicode stuff
           const length = cjkRegex.test(cell)
+          // @ts-ignore
             ? cell.length + cell.match(cjkRegex).length
             : cell.length;
           colWidth[i] = colWidth[i] > length ? colWidth[i] : length;
@@ -137,6 +138,7 @@ class MarkdownDocumentFormatter
     });
 
     // Normalize the num of hyphen, use Math.max to determine minimum length based on dash-line format
+    // @ts-ignore
     lines[1] = lines[1].map((cell, i) => {
       if (/:-+:/.test(cell)) {
         //:---:
@@ -170,6 +172,7 @@ class MarkdownDocumentFormatter
         const cells = row.map((cell, i) => {
           let cellLength = colWidth[i];
           if (cjkRegex.test(cell)) {
+            // @ts-ignore
             cellLength -= cell.match(cjkRegex).length;
           }
           return this.alignText(cell, colAlign[i], cellLength);
@@ -191,6 +194,5 @@ class MarkdownDocumentFormatter
       return (" ".repeat(length) + text).slice(-length);
     }
     return (text + " ".repeat(length)).slice(0, length);
-  }
   }
 }

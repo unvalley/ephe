@@ -48,9 +48,14 @@ function newCompletionItem(
     filterText: undefined,
     insertTextRules: undefined,
     preselect: false,
-    range: undefined,
+    range: {
+        startLineNumber: 0,
+        startColumn: 0,
+        endLineNumber: 0,
+        endColumn: 0,
+    },
     sortText: undefined,
-    insertText: undefined,
+    insertText: "",
   };
 }
 
@@ -171,7 +176,7 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
           return completionList([]);
         }
       }
-    } else if (/\[[^\]]*?\]\[[^\]]*$/.test(lineTextBefore)) {
+    }if (/\[[^\]]*?\]\[[^\]]*$/.test(lineTextBefore)) {
       /* ┌───────────────────────┐
                │ Reference link labels │
                └───────────────────────┘ */
@@ -185,12 +190,16 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
         const usageCounts = lines.reduce((useCounts, currentLine) => {
           let match: RegExpExecArray;
           const pattern = /\[[^\]]+\]\[([^\]]*?)\]/g;
+          // @ts-ignore
+          // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
           while ((match = pattern.exec(currentLine)) !== null) {
             const usedRef = match[1];
             if (!useCounts.has(usedRef)) {
               useCounts.set(usedRef, 0);
             }
-            useCounts.set(usedRef, useCounts.get(usedRef) + 1);
+
+            const count = useCounts.get(usedRef) || 0;
+            useCounts.set(usedRef, count + 1);
           }
           return useCounts;
         }, new Map<string, number>());
@@ -205,19 +214,21 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
             const usages = usageCounts.get(ref) || 0;
             item.insertText = ref;
             item.documentation = { value: match[2] };
-            item.detail = usages === 1 ? `1 usage` : `${usages} usages`;
+            item.detail = usages === 1 ? "1 usage" : `${usages} usages`;
             // Prefer unused items
             item.sortText =
-              usages === 0 ? `0-${ref}` : (item.sortText = `1-${ref}`);
+              usages === 0 ? `0-${ref}` : `1-${ref}`;
             item.range = TypeConverters.Range.from(range);
             prev.push(item);
           }
           return prev;
-        }, []);
+        }, [] as languages.CompletionItem[]);
 
         res(completionList(refLabels));
       });
-    } else if (/\[[^\]]*\]\(#[^\)]*$/.test(lineTextBefore)) {
+    } 
+    
+    if (/\[[^\]]*\]\(#[^\)]*$/.test(lineTextBefore)) {
       /* ┌───────────────────────────┐
                │ Anchor tags from headings │
                └───────────────────────────┘ */
@@ -263,14 +274,14 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
         const headingCompletions: languages.CompletionItem[] = toc.reduce(
           (prev: languages.CompletionItem[], curr: any) => {
             const item = newCompletionItem(
-              "#" + slugify(curr.text),
+              `#${slugify(curr.text)}`,
               languages.CompletionItemKind.Reference,
             );
 
             const label =
               typeof item.label === "string" ? item.label : item.label.label;
             if (addClosingParen) {
-              item.insertText = label + ")";
+              item.insertText = `${label})`;
             } else {
               item.insertText = label;
             }
@@ -285,8 +296,8 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
 
         res(completionList(headingCompletions));
       });
-    } else {
-      return completionList([]);
     }
+
+    return completionList([]);
   }
 }

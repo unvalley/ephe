@@ -131,6 +131,9 @@ export namespace WorkspaceEdit {
         // text edits
 
         for (const e of uriOrEdits) {
+          if (!e.range) {
+            continue;
+          }
           edits.push({
             range: Range.from(e.range),
             text: e.newText,
