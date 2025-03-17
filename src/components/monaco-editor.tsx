@@ -138,18 +138,28 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
             lineContent: string
         ): boolean => {
             // For task lists
-            if (isTaskListLine(lineContent) && isEmptyTaskListLine(lineContent)) {
-                e.preventDefault();
-                editor.executeEdits('', [{
-                    range: {
-                        startLineNumber: position.lineNumber,
-                        startColumn: 1,
-                        endLineNumber: position.lineNumber,
-                        endColumn: lineContent.length + 1
-                    },
-                    text: ''
-                }]);
-                return true;
+            if (isTaskListLine(lineContent)) {
+                // Check if the line is empty (just the task list marker) or if cursor is at the end of the checkbox
+                const isEmptyTask = isEmptyTaskListLine(lineContent);
+                const checkboxEndPos = getCheckboxEndPosition(lineContent);
+                const isAtCheckboxEnd = position.column === checkboxEndPos + 1;
+
+                // If the line is empty or cursor is right after the checkbox with no content
+                if (isEmptyTask || (isAtCheckboxEnd && lineContent.trim().length === checkboxEndPos)) {
+                    e.preventDefault();
+
+                    // Remove the current task list marker completely (no newline)
+                    editor.executeEdits('', [{
+                        range: {
+                            startLineNumber: position.lineNumber,
+                            startColumn: 1,
+                            endLineNumber: position.lineNumber,
+                            endColumn: lineContent.length + 1
+                        },
+                        text: ''
+                    }]);
+                    return true;
+                }
             }
 
             // For regular lists
@@ -190,26 +200,77 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
             const indentation = getTaskListIndentation(lineContent);
             const checkboxEndPos = getCheckboxEndPosition(lineContent);
 
+            // Check if the line is empty (just the task list marker)
+            const checkboxMatch = lineContent.match(/^(\s*-\s\[\s?[xX]?\]\s)(.*)$/);
+            const textAfterCheckbox = checkboxMatch ? checkboxMatch[2] : '';
+            const isEmptyTask = !textAfterCheckbox || !textAfterCheckbox.trim();
+
             // If the cursor is after the checkbox
             if (position.column > checkboxEndPos) {
-                // If the cursor is at the end of the line, add a new task list item
+                // If the cursor is at the end of the line
                 if (position.column > lineContent.length) {
                     e.preventDefault();
-                    editor.executeEdits('', [{
-                        range: {
-                            startLineNumber: position.lineNumber,
-                            startColumn: position.column,
-                            endLineNumber: position.lineNumber,
-                            endColumn: position.column
-                        },
-                        text: `\n${indentation}- [ ] `
-                    }]);
-                } else {
-                    // If the cursor is in the middle of the line, just split the line
-                    e.preventDefault();
-                    const textBeforeCursor = lineContent.substring(0, position.column - 1);
-                    const textAfterCursor = lineContent.substring(position.column - 1);
 
+                    // If there's no text after the checkbox or it's just whitespace
+                    if (isEmptyTask) {
+                        // Remove the task list marker completely (no newline)
+                        editor.executeEdits('', [{
+                            range: {
+                                startLineNumber: position.lineNumber,
+                                startColumn: 1,
+                                endLineNumber: position.lineNumber,
+                                endColumn: lineContent.length + 1
+                            },
+                            text: ''
+                        }]);
+                    } else {
+                        // Add a new task list item with the same indentation
+                        editor.executeEdits('', [{
+                            range: {
+                                startLineNumber: position.lineNumber,
+                                startColumn: position.column,
+                                endLineNumber: position.lineNumber,
+                                endColumn: position.column
+                            },
+                            text: `\n${indentation}- [ ] `
+                        }]);
+                    }
+                    return true;
+                }
+                // If the cursor is in the middle of the line
+
+                e.preventDefault();
+                const textBeforeCursor = lineContent.substring(0, position.column - 1);
+                const textAfterCursor = lineContent.substring(position.column - 1);
+
+                // Check if there's any content after the cursor
+                if (!textAfterCursor.trim()) {
+                    // If there's no content after the cursor and the line is empty
+                    if (isEmptyTask) {
+                        // Remove the task list marker completely (no newline)
+                        editor.executeEdits('', [{
+                            range: {
+                                startLineNumber: position.lineNumber,
+                                startColumn: 1,
+                                endLineNumber: position.lineNumber,
+                                endColumn: lineContent.length + 1
+                            },
+                            text: ''
+                        }]);
+                    } else {
+                        // Just add a newline
+                        editor.executeEdits('', [{
+                            range: {
+                                startLineNumber: position.lineNumber,
+                                startColumn: position.column,
+                                endLineNumber: position.lineNumber,
+                                endColumn: lineContent.length + 1
+                            },
+                            text: '\n'
+                        }]);
+                    }
+                } else {
+                    // If there is content after the cursor, create a new task list item
                     editor.executeEdits('', [{
                         range: {
                             startLineNumber: position.lineNumber,
@@ -217,7 +278,7 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
                             endLineNumber: position.lineNumber,
                             endColumn: lineContent.length + 1
                         },
-                        text: `${textBeforeCursor}\n${textAfterCursor}`
+                        text: `${textBeforeCursor}\n${indentation}- [ ] ${textAfterCursor}`
                     }]);
                 }
                 return true;
