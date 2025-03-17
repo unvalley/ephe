@@ -505,42 +505,6 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
         }
     }, [editorRef]);
 
-    // Configure editor options
-    const editorOptions: EditorProps["options"] = {
-        minimap: { enabled: false },
-        lineNumbers: "off",
-        wordWrap: "on",
-        wrappingIndent: "same",
-        lineDecorationsWidth: 0,
-        lineNumbersMinChars: 0,
-        glyphMargin: false,
-        folding: false,
-        renderLineHighlight: "none",
-        scrollBeyondLastLine: false,
-        renderWhitespace: "none",
-        fontFamily: "monospace",
-        fontSize: 14,
-        contextmenu: false,
-        scrollbar: {
-            vertical: "auto",
-            horizontal: "auto",
-            verticalScrollbarSize: 0,
-            horizontalScrollbarSize: 0,
-            verticalSliderSize: 0,
-            horizontalSliderSize: 0,
-            alwaysConsumeMouseWheel: false
-        },
-        overviewRulerBorder: false,
-        overviewRulerLanes: 0,
-        hideCursorInOverviewRuler: true,
-        renderValidationDecorations: "off",
-        quickSuggestions: true,
-        suggestOnTriggerCharacters: false,
-        acceptSuggestionOnEnter: "off",
-        tabCompletion: "off",
-        wordBasedSuggestions: "off",
-        parameterHints: { enabled: false },
-    };
 
     // Determine if placeholder should be visible initially
     const shouldShowPlaceholder = !isEditorLoading && (!content || !content.trim());
@@ -573,6 +537,42 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
             />
         </div>
     );
+};
+
+const editorOptions: EditorProps["options"] = {
+    minimap: { enabled: false },
+    lineNumbers: "off",
+    wordWrap: "on",
+    wrappingIndent: "same",
+    lineDecorationsWidth: 0,
+    lineNumbersMinChars: 0,
+    glyphMargin: false,
+    folding: false,
+    renderLineHighlight: "none",
+    scrollBeyondLastLine: false,
+    renderWhitespace: "none",
+    fontFamily: "monospace",
+    fontSize: 14,
+    contextmenu: false,
+    scrollbar: {
+        vertical: "auto",
+        horizontal: "auto",
+        verticalScrollbarSize: 0,
+        horizontalScrollbarSize: 0,
+        verticalSliderSize: 0,
+        horizontalSliderSize: 0,
+        alwaysConsumeMouseWheel: false
+    },
+    overviewRulerBorder: false,
+    overviewRulerLanes: 0,
+    hideCursorInOverviewRuler: true,
+    renderValidationDecorations: "off",
+    quickSuggestions: true,
+    suggestOnTriggerCharacters: false,
+    acceptSuggestionOnEnter: "off",
+    tabCompletion: "off",
+    wordBasedSuggestions: false,
+    parameterHints: { enabled: false },
 };
 
 // Need to use default export since this is a CSR component loaded with dynamic import
