@@ -90,17 +90,6 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
             }
         };
 
-        // Helper functions for placeholder visibility
-        const showPlaceholder = (element: Element) => {
-            element.classList.remove('opacity-0');
-            element.classList.add('opacity-100');
-        };
-
-        const hidePlaceholder = (element: Element) => {
-            element.classList.remove('opacity-100');
-            element.classList.add('opacity-0');
-        };
-
         // Handle auto-complete for task list syntax
         const handleTaskListAutoComplete = (e: monaco.IKeyboardEvent, model: monaco.editor.ITextModel, position: monaco.Position): boolean => {
             if (e.keyCode !== monaco.KeyCode.BracketLeft) return false;
@@ -305,14 +294,8 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
             // Handle Enter key for list continuation
             if (e.keyCode === monaco.KeyCode.Enter) {
                 const lineContent = model.getLineContent(position.lineNumber);
-
-                // Handle empty list item removal
                 if (handleEmptyListItemRemoval(e, model, position, lineContent)) return;
-
-                // Handle task list continuation
                 if (handleTaskListContinuation(e, model, position, lineContent)) return;
-
-                // Handle regular list continuation
                 if (handleRegularListContinuation(e, model, position, lineContent)) return;
             }
         };
@@ -527,6 +510,17 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
             />
         </div>
     );
+};
+
+// Helper functions for placeholder visibility
+const showPlaceholder = (element: Element) => {
+    element.classList.remove('opacity-0');
+    element.classList.add('opacity-100');
+};
+
+const hidePlaceholder = (element: Element) => {
+    element.classList.remove('opacity-100');
+    element.classList.add('opacity-0');
 };
 
 const editorOptions: EditorProps["options"] = {
