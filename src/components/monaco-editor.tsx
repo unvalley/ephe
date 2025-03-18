@@ -253,6 +253,7 @@ const editorOptions: EditorProps["options"] = {
   minimap: { enabled: false },
   lineNumbers: "off",
   wordWrap: "on",
+  wordBreak: "normal",
   wrappingIndent: "same",
   lineDecorationsWidth: 0,
   lineNumbersMinChars: 0,
@@ -261,7 +262,7 @@ const editorOptions: EditorProps["options"] = {
   renderLineHighlight: "none",
   scrollBeyondLastLine: false,
   renderWhitespace: "none",
-  //   fontFamily: "monospace",
+  fontFamily: "monospace", // cause problems?
   fontSize: 14,
   contextmenu: false,
   scrollbar: {
@@ -272,6 +273,13 @@ const editorOptions: EditorProps["options"] = {
     verticalSliderSize: 0,
     horizontalSliderSize: 0,
     alwaysConsumeMouseWheel: false,
+  },
+  guides: {
+    bracketPairs: false,
+    bracketPairsHorizontal: false,
+    indentation: false,
+    highlightActiveIndentation: false,
+    highlightActiveBracketPair: false,
   },
   overviewRulerBorder: false,
   overviewRulerLanes: 0,
