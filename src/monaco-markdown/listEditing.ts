@@ -2,7 +2,13 @@ import type { TextEditor, TextEditorEdit } from "./vscode-monaco";
 
 import { isInFencedCodeBlock } from "./util";
 import { KeyCode, KeyMod, type Thenable } from "monaco-editor";
-import { Position, WorkspaceEdit, Range, Selection, TextEditorRevealType } from "./extHostTypes";
+import {
+  Position,
+  WorkspaceEdit,
+  Range,
+  Selection,
+  TextEditorRevealType,
+} from "./extHostTypes";
 import { addKeybinding } from "./formatting";
 
 function onShiftTabKey(editor: TextEditor) {
@@ -139,7 +145,7 @@ function onEnterKey(editor: TextEditor, modifiers?: string) {
         editor.revealRange(editor.selection, TextEditorRevealType.Default);
       });
   }
-  
+
   if (
     // @ts-ignore
     // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
@@ -168,7 +174,7 @@ function onEnterKey(editor: TextEditor, modifiers?: string) {
       });
   }
 
-  if ( 
+  if (
     // @ts-ignore
     // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
     (matches = /^(\s*)([0-9]+)([.)])( +)((\[[ x]\] +)?)/.exec(
@@ -176,8 +182,9 @@ function onEnterKey(editor: TextEditor, modifiers?: string) {
     )) !== null
   ) {
     // Ordered list
-    const maybeConfig = editor
-      .getConfiguration("markdown.extension.orderedList");
+    const maybeConfig = editor.getConfiguration(
+      "markdown.extension.orderedList",
+    );
     const config = maybeConfig?.get<string>("marker") || "";
 
     let marker = "1";
@@ -240,7 +247,7 @@ function onTabKey(editor: TextEditor, modifiers?: string) {
   ) {
     if (modifiers === "shift") {
       return outdent(editor).then(() => fixMarker(editor));
-    } 
+    }
     return indent(editor).then(() => fixMarker(editor));
   }
   return asNormal(editor, "tab", modifiers);
@@ -306,7 +313,8 @@ function asNormal(
       });
     case "tab": {
       const maybeConfig = editor.getConfiguration("emmet");
-      const config = maybeConfig?.get<boolean>("triggerExpansionOnTab") || false;
+      const config =
+        maybeConfig?.get<boolean>("triggerExpansionOnTab") || false;
       if (config) {
         return editor.executeCommand("editor.emmet.action.expandAbbreviation");
       }
@@ -354,11 +362,7 @@ function indent(editor: TextEditor): Thenable<void> {
           if (!uri) {
             throw new Error("Document URI is not set");
           }
-          edit.insert(
-            uri,
-            new Position(i, 0),
-            " ".repeat(indentationSize),
-          );
+          edit.insert(uri, new Position(i, 0), " ".repeat(indentationSize));
         }
       }
       return editor.applyEdit(edit);
@@ -428,7 +432,7 @@ function tryDetermineIndentationSize(
     const lineText = editor.document.lineAt(line).text;
     let matches: RegExpExecArray | null = null;
     if (
-        // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
+      // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
       (matches = /^(\s*)(([-+*]|[0-9]+[.)]) +)(\[[ x]\] +)?/.exec(lineText)) !==
       null
     ) {
@@ -481,7 +485,7 @@ function lookUpwardForMarker(
       if (leadingSpace.length === currentIndentation) {
         return Number(marker) + 1;
       }
-      
+
       if (
         (!leadingSpace.includes("\t") &&
           leadingSpace.length + matches[2].length <= currentIndentation) ||

@@ -413,8 +413,7 @@ function createLinkRegex(): RegExp {
   const ipv6_re = "\\[[0-9a-f:\\.]+\\]"; // simple regex (in django it is validated additionally)
 
   // Host patterns
-  const hostname_re =
-    `[a-z${ul}0-9](?:[a-z${ul}0-9-]{0,61}[a-z${ul}0-9])?`;
+  const hostname_re = `[a-z${ul}0-9](?:[a-z${ul}0-9-]{0,61}[a-z${ul}0-9])?`;
   // Max length for domain name labels is 63 characters per RFC 1034 sec. 3.1
   const domain_re = `(?:\\.(?!-)[a-z${ul}0-9-]{1,63})*`;
 
@@ -524,13 +523,12 @@ function styleByWrapping(
           startPattern === "~~" &&
           /^\s*[\*\+\-] (\[[ x]\] )? */g.test(currentTextLine.text)
         ) {
-          const match = currentTextLine.text.match(/^\s*[\*\+\-] (\[[ x]\] )? */g);
+          const match = currentTextLine.text.match(
+            /^\s*[\*\+\-] (\[[ x]\] )? */g,
+          );
           if (match?.[0]) {
             wordRange = currentTextLine.range.with(
-              new Position(
-                cursorPos.line,
-                match[0].length,
-              ),
+              new Position(cursorPos.line, match[0].length),
             );
           }
         }

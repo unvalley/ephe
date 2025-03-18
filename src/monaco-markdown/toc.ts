@@ -31,13 +31,13 @@ export function buildToc(doc: TextDocument) {
       const matches = /^(#+) (.*)/.exec(lineText);
       if (!matches) {
         return { level: 0, text: "" }; // Provide a default value if no match
-      }  
+      }
       return {
         level: matches[1].length,
         text: matches[2].replace(/#+$/, "").trim(),
       };
     })
-    .filter(item => item.level > 0); // Filter out any invalid entries
+    .filter((item) => item.level > 0); // Filter out any invalid entries
 
   return toc;
 }

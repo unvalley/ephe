@@ -49,10 +49,10 @@ function newCompletionItem(
     insertTextRules: undefined,
     preselect: false,
     range: {
-        startLineNumber: 0,
-        startColumn: 0,
-        endLineNumber: 0,
-        endColumn: 0,
+      startLineNumber: 0,
+      startColumn: 0,
+      endLineNumber: 0,
+      endColumn: 0,
     },
     sortText: undefined,
     insertText: "",
@@ -176,7 +176,8 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
           return completionList([]);
         }
       }
-    }if (/\[[^\]]*?\]\[[^\]]*$/.test(lineTextBefore)) {
+    }
+    if (/\[[^\]]*?\]\[[^\]]*$/.test(lineTextBefore)) {
       /* ┌───────────────────────┐
                │ Reference link labels │
                └───────────────────────┘ */
@@ -216,8 +217,7 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
             item.documentation = { value: match[2] };
             item.detail = usages === 1 ? "1 usage" : `${usages} usages`;
             // Prefer unused items
-            item.sortText =
-              usages === 0 ? `0-${ref}` : `1-${ref}`;
+            item.sortText = usages === 0 ? `0-${ref}` : `1-${ref}`;
             item.range = TypeConverters.Range.from(range);
             prev.push(item);
           }
@@ -226,8 +226,8 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
 
         res(completionList(refLabels));
       });
-    } 
-    
+    }
+
     if (/\[[^\]]*\]\(#[^\)]*$/.test(lineTextBefore)) {
       /* ┌───────────────────────────┐
                │ Anchor tags from headings │

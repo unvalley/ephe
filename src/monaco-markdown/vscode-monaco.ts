@@ -388,12 +388,12 @@ export class TextEditor {
       throw new Error("Model is not set");
     }
     model.pushEditOperations(
-        this.editor.getSelections(),
-        edits,
-        (): _Selection[] => {
-          return [];
-        },
-      );
+      this.editor.getSelections(),
+      edits,
+      (): _Selection[] => {
+        return [];
+      },
+    );
 
     return Promise.resolve();
   }
@@ -412,12 +412,14 @@ export class TextEditor {
       throw new Error("Model is not set");
     }
     model.pushEditOperations(
-        this.editor.getSelections(),
-        TypeConverters.WorkspaceEdit.from(edit),
-        (): _Selection[] => {
-          return newSelections?.map((s) => TypeConverters.Selection.from(s)) || [];
-        },
-      );
+      this.editor.getSelections(),
+      TypeConverters.WorkspaceEdit.from(edit),
+      (): _Selection[] => {
+        return (
+          newSelections?.map((s) => TypeConverters.Selection.from(s)) || []
+        );
+      },
+    );
 
     // @ts-ignore
     return Promise.resolve(null);

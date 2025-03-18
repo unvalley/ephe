@@ -32,13 +32,13 @@ class MarkdownDocumentFormatter
   ): languages.TextEdit[] | Thenable<languages.TextEdit[]> {
     const document = new TextDocument(model);
     const tables = this.detectTables(document.getText());
-    if (tables == null) return []
+    if (tables == null) return [];
 
     const edits = tables.map((table) => {
       return {
-          range: TypeConverters.Range.from(this.getRange(document, table)),
-          text: this.formatTable(table, document, options),
-        };
+        range: TypeConverters.Range.from(this.getRange(document, table)),
+        text: this.formatTable(table, document, options),
+      };
     });
     return edits;
   }
@@ -74,7 +74,7 @@ class MarkdownDocumentFormatter
     const doNormalize = true;
     const indentRegex = new RegExp(/^(\s*)\S/u);
     const match = text.match(indentRegex);
-    if (match == null) return ""
+    if (match == null) return "";
     const spacesInFirstLine = match[1].length;
     const tabStops = Math.round(spacesInFirstLine / options.tabSize);
     const spaces = doNormalize
@@ -126,8 +126,8 @@ class MarkdownDocumentFormatter
         if (num !== 1) {
           // Treat CJK characters as 2 English ones because of Unicode stuff
           const length = cjkRegex.test(cell)
-          // @ts-ignore
-            ? cell.length + cell.match(cjkRegex).length
+            ? // @ts-ignore
+              cell.length + cell.match(cjkRegex).length
             : cell.length;
           colWidth[i] = colWidth[i] > length ? colWidth[i] : length;
         }
