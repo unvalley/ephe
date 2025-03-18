@@ -3,14 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocalStorage } from "../hooks/use-local-storage";
 import { useDebouncedCallback } from "../hooks/use-debounce";
-import type * as monaco from "monaco-editor";
+import * as monaco from "monaco-editor";
 import { Editor } from "@monaco-editor/react";
 import type { EditorProps } from "@monaco-editor/react";
 import type React from "react";
 import { isTaskListLine, isCheckedTask } from "./task-list-utils";
 import { useTheme } from "../hooks/use-theme";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
-import { KeyCode } from "monaco-editor";
 
 const markdownExtension = new MonacoMarkdownExtension();
 
@@ -74,69 +73,6 @@ export const MonacoEditor = ({
     // Initialize markdown extension
     markdownExtension.activate(editor);
 
-    // Handle task checkbox toggle on click
-    const handleTaskCheckboxToggle = (
-      e: monaco.editor.IEditorMouseEvent,
-      model: monaco.editor.ITextModel | null,
-    ): boolean | undefined => {
-      try {
-        if (e.target.type !== monaco.editor.MouseTargetType.CONTENT_TEXT) {
-          return;
-        }
-
-        if (!model) return;
-
-        const position = e.target.position;
-        if (!position) return;
-
-        const lineContent = model.getLineContent(position.lineNumber);
-
-        if (!isTaskListLine(lineContent)) return;
-
-        // Find the exact position of the checkbox in the line
-        const checkboxStartIndex = lineContent.indexOf("- [");
-        if (checkboxStartIndex === -1) return;
-
-        // Calculate the column positions (Monaco columns start at 1, not 0)
-        const checkboxColumn = checkboxStartIndex + 3 + 1; // +3 for "- [", +1 for Monaco's 1-based columns
-
-        // Expand the click area slightly around the checkbox
-        const clickAreaStart = checkboxStartIndex + 1; // Start at the "-"
-        const clickAreaEnd = checkboxColumn + 1; // End after the checkbox character
-
-        // Check if click is within the checkbox area
-        if (
-          position.column >= clickAreaStart &&
-          position.column <= clickAreaEnd
-        ) {
-          // Get the current state of the checkbox
-          const isChecked = isCheckedTask(lineContent);
-
-          // Toggle checkbox state
-          const newState = isChecked ? " " : "x";
-
-          // Apply the edit to toggle checkbox - only change the checkbox character
-          editor.executeEdits("", [
-            {
-              range: {
-                startLineNumber: position.lineNumber,
-                startColumn: checkboxColumn,
-                endLineNumber: position.lineNumber,
-                endColumn: checkboxColumn + 1,
-              },
-              text: newState,
-            },
-          ]);
-
-          // Return false to prevent default handling
-          return false;
-        }
-      } catch (error) {
-        console.error("Error in checkbox toggle:", error);
-        return;
-      }
-    };
-
     // Add decorations for checked tasks
     const updateDecorations = (model: monaco.editor.ITextModel | null) => {
       if (!model) return;
@@ -185,10 +121,12 @@ export const MonacoEditor = ({
     };
 
     // Add event handlers
-    editor.onKeyDown((e) =>
-      handleKeyDown(e, editor, editor.getModel(), editor.getPosition()),
+    editor.onKeyDown((event) =>
+      handleKeyDown(event, editor, editor.getModel(), editor.getPosition()),
     );
-    editor.onMouseDown((e) => handleTaskCheckboxToggle(e, editor.getModel()));
+    editor.onMouseDown((event) =>
+      handleTaskCheckboxToggle(event, editor, editor.getModel()),
+    );
 
     // Update placeholder and decorations on content change
     editor.onDidChangeModelContent(() => {
@@ -386,7 +324,7 @@ const handleTaskListAutoComplete = (
   position: monaco.Position | null,
 ): boolean => {
   if (!model || !position) return false;
-  if (e.keyCode !== KeyCode.BracketLeft) return false;
+  if (e.keyCode !== monaco.KeyCode.BracketLeft) return false;
 
   const lineContent = model.getLineContent(position.lineNumber);
   const textBeforeCursor = lineContent.substring(0, position.column - 1);
@@ -427,5 +365,66 @@ const handleTaskListAutoComplete = (
 
   return false;
 };
+
+// Handle task checkbox toggle on click
+const handleTaskCheckboxToggle = (
+  e: monaco.editor.IEditorMouseEvent,
+  editor: monaco.editor.IStandaloneCodeEditor,
+  model: monaco.editor.ITextModel | null,
+): boolean | undefined => {
+  try {
+    if (e.target.type !== monaco.editor.MouseTargetType.CONTENT_TEXT) {
+      return;
+    }
+
+    if (!model) return;
+
+    const position = e.target.position;
+    if (!position) return;
+
+    const lineContent = model.getLineContent(position.lineNumber);
+    if (!isTaskListLine(lineContent)) return;
+
+    // Find the exact position of the checkbox in the line
+    const checkboxStartIndex = lineContent.indexOf("- [");
+    if (checkboxStartIndex === -1) return;
+
+    // Calculate the column positions (Monaco columns start at 1, not 0)
+    const checkboxColumn = checkboxStartIndex + 3 + 1; // +3 for "- [", +1 for Monaco's 1-based columns
+
+    // Expand the click area slightly around the checkbox
+    const clickAreaStart = checkboxStartIndex + 1; // Start at the "-"
+    const clickAreaEnd = checkboxColumn + 1; // End after the checkbox character
+
+    // Check if click is within the checkbox area
+    if (position.column >= clickAreaStart && position.column <= clickAreaEnd) {
+      // Get the current state of the checkbox
+      const isChecked = isCheckedTask(lineContent);
+
+      // Toggle checkbox state
+      const newState = isChecked ? " " : "x";
+
+      // Apply the edit to toggle checkbox - only change the checkbox character
+      editor.executeEdits("", [
+        {
+          range: {
+            startLineNumber: position.lineNumber,
+            startColumn: checkboxColumn,
+            endLineNumber: position.lineNumber,
+            endColumn: checkboxColumn + 1,
+          },
+          text: newState,
+        },
+      ]);
+
+      // Return false to prevent default handling
+      return false;
+    }
+  } catch (error) {
+    console.error("Error in checkbox toggle:", error);
+    return;
+  }
+};
+
 // Need to use default export since this is a CSR component loaded with dynamic import
 export default MonacoEditor;
