@@ -7,15 +7,10 @@ import type * as monaco from "monaco-editor";
 import { Editor } from "@monaco-editor/react";
 import type { EditorProps } from "@monaco-editor/react";
 import type React from "react";
-import {
-  isTaskListLine,
-  getTaskListIndentation,
-  getCheckboxEndPosition,
-  isEmptyTaskListLine,
-  isCheckedTask,
-} from "./task-list-utils";
+import { isTaskListLine, isCheckedTask } from "./task-list-utils";
 import { useTheme } from "../hooks/use-theme";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
+import { KeyCode } from "monaco-editor";
 
 const markdownExtension = new MonacoMarkdownExtension();
 
@@ -79,107 +74,16 @@ export const MonacoEditor = ({
     // Initialize markdown extension
     markdownExtension.activate(editor);
 
-    // Set up placeholder when editor is empty
-    const updatePlaceholder = () => {
-      const contentValue = editor.getValue();
-      const placeholderElement = document.querySelector(".monaco-placeholder");
-
-      if (!placeholderElement) return;
-
-      // Check if the editor is empty
-      const isEmpty = !contentValue || !contentValue.trim();
-
-      if (isEmpty) {
-        // Delay showing placeholder to avoid flickering during IME input
-        setTimeout(() => {
-          const currentValue = editor.getValue();
-          if (!currentValue || !currentValue.trim()) {
-            showPlaceholder(placeholderElement);
-          }
-        }, 300);
-      } else {
-        hidePlaceholder(placeholderElement);
-      }
-    };
-
-    // Handle auto-complete for task list syntax
-    const handleTaskListAutoComplete = (
-      e: monaco.IKeyboardEvent,
-      model: monaco.editor.ITextModel,
-      position: monaco.Position,
-    ): boolean => {
-      if (e.keyCode !== monaco.KeyCode.BracketLeft) return false;
-
-      const lineContent = model.getLineContent(position.lineNumber);
-      const textBeforeCursor = lineContent.substring(0, position.column - 1);
-
-      // Check if the user just typed "-["
-      if (textBeforeCursor.endsWith("-")) {
-        e.preventDefault();
-        editor.executeEdits("", [
-          {
-            range: {
-              startLineNumber: position.lineNumber,
-              startColumn: position.column - 1,
-              endLineNumber: position.lineNumber,
-              endColumn: position.column,
-            },
-            text: "- [ ] ",
-          },
-        ]);
-        return true;
-      }
-
-      // Check if the user just typed "- ["
-      if (textBeforeCursor.endsWith("- ")) {
-        e.preventDefault();
-        editor.executeEdits("", [
-          {
-            range: {
-              startLineNumber: position.lineNumber,
-              startColumn: position.column,
-              endLineNumber: position.lineNumber,
-              endColumn: position.column,
-            },
-            text: "[ ] ",
-          },
-        ]);
-        return true;
-      }
-
-      return false;
-    };
-
-    // Handle keyboard events
-    const handleKeyDown = (e: monaco.IKeyboardEvent): void => {
-      const model = editor.getModel();
-      if (!model) return;
-
-      const position = editor.getPosition();
-      if (!position) return;
-
-      // Auto-complete task list syntax
-      if (handleTaskListAutoComplete(e, model, position)) return;
-
-      // Handle Enter key for list continuation
-      if (e.keyCode === monaco.KeyCode.Enter) {
-        const lineContent = model.getLineContent(position.lineNumber);
-        // if (handleEmptyListItemRemoval(e, model, position, lineContent)) return;
-        // if (handleTaskListContinuation(e, model, position, lineContent)) return;
-        // if (handleRegularListContinuation(e, model, position, lineContent)) return;
-      }
-    };
-
     // Handle task checkbox toggle on click
     const handleTaskCheckboxToggle = (
       e: monaco.editor.IEditorMouseEvent,
+      model: monaco.editor.ITextModel | null,
     ): boolean | undefined => {
       try {
         if (e.target.type !== monaco.editor.MouseTargetType.CONTENT_TEXT) {
           return;
         }
 
-        const model = editor.getModel();
         if (!model) return;
 
         const position = e.target.position;
@@ -234,12 +138,10 @@ export const MonacoEditor = ({
     };
 
     // Add decorations for checked tasks
-    const updateDecorations = () => {
+    const updateDecorations = (model: monaco.editor.ITextModel | null) => {
+      if (!model) return;
       try {
-        const model = editor.getModel();
-        if (!model) return;
-
-        const oldDecorations = editor.getModel()?.getAllDecorations() || [];
+        const oldDecorations = model.getAllDecorations() || [];
         const decorations: monaco.editor.IModelDeltaDecoration[] = [];
 
         for (
@@ -283,22 +185,25 @@ export const MonacoEditor = ({
     };
 
     // Add event handlers
-    editor.onKeyDown(handleKeyDown);
-    editor.onMouseDown(handleTaskCheckboxToggle);
+    editor.onKeyDown((e) =>
+      handleKeyDown(e, editor, editor.getModel(), editor.getPosition()),
+    );
+    editor.onMouseDown((e) => handleTaskCheckboxToggle(e, editor.getModel()));
 
     // Update placeholder and decorations on content change
     editor.onDidChangeModelContent(() => {
-      const newContent = editor.getValue();
+      const value = editor.getValue();
+      const model = editor.getModel();
 
-      updatePlaceholder();
-      updateDecorations();
-      debouncedSetContent(newContent);
-      debouncedCharCountUpdate(newContent);
+      updatePlaceholder(value);
+      updateDecorations(model);
+      debouncedSetContent(value);
+      debouncedCharCountUpdate(value);
     });
 
     // Initial setup
-    updatePlaceholder();
-    updateDecorations();
+    updatePlaceholder(editor.getValue());
+    updateDecorations(editor.getModel());
 
     // Initial character count - direct calculation for initial load
     if (onWordCountChange) {
@@ -418,7 +323,7 @@ const editorOptions: EditorProps["options"] = {
   renderLineHighlight: "none",
   scrollBeyondLastLine: false,
   renderWhitespace: "none",
-  fontFamily: "monospace",
+  //   fontFamily: "monospace",
   fontSize: 14,
   contextmenu: false,
   scrollbar: {
@@ -434,12 +339,93 @@ const editorOptions: EditorProps["options"] = {
   overviewRulerLanes: 0,
   hideCursorInOverviewRuler: true,
   renderValidationDecorations: "off",
-  quickSuggestions: true,
+  quickSuggestions: false,
   suggestOnTriggerCharacters: false,
   acceptSuggestionOnEnter: "off",
   tabCompletion: "off",
   parameterHints: { enabled: false },
 };
 
+// Set up placeholder when editor is empty
+const updatePlaceholder = (editorValue: string) => {
+  const placeholderElement = document.querySelector(".monaco-placeholder");
+  if (!placeholderElement) return;
+
+  const isContentEmpty = !editorValue || !editorValue.trim();
+  if (isContentEmpty) {
+    // Delay showing placeholder to avoid flickering during IME input
+    setTimeout(() => {
+      if (!editorValue || !editorValue.trim()) {
+        showPlaceholder(placeholderElement);
+      }
+    }, 300);
+  } else {
+    hidePlaceholder(placeholderElement);
+  }
+};
+
+// Handle keyboard events
+const handleKeyDown = (
+  e: monaco.IKeyboardEvent,
+  editor: monaco.editor.IStandaloneCodeEditor,
+  model: monaco.editor.ITextModel | null,
+  position: monaco.Position | null,
+): void => {
+  if (!model) return;
+
+  // Auto-complete task list syntax
+  handleTaskListAutoComplete(e, editor, model, position);
+  return;
+};
+
+// Handle auto-complete for task list syntax
+const handleTaskListAutoComplete = (
+  e: monaco.IKeyboardEvent,
+  editor: monaco.editor.IStandaloneCodeEditor,
+  model: monaco.editor.ITextModel | null,
+  position: monaco.Position | null,
+): boolean => {
+  if (!model || !position) return false;
+  if (e.keyCode !== KeyCode.BracketLeft) return false;
+
+  const lineContent = model.getLineContent(position.lineNumber);
+  const textBeforeCursor = lineContent.substring(0, position.column - 1);
+
+  // Check if the user just typed "-["
+  if (textBeforeCursor.endsWith("-")) {
+    e.preventDefault();
+    editor.executeEdits("", [
+      {
+        range: {
+          startLineNumber: position.lineNumber,
+          startColumn: position.column - 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        },
+        text: "- [ ] ",
+      },
+    ]);
+    return true;
+  }
+
+  // Check if the user just typed "- ["
+  if (textBeforeCursor.endsWith("- ")) {
+    e.preventDefault();
+    editor.executeEdits("", [
+      {
+        range: {
+          startLineNumber: position.lineNumber,
+          startColumn: position.column,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        },
+        text: "[ ] ",
+      },
+    ]);
+    return true;
+  }
+
+  return false;
+};
 // Need to use default export since this is a CSR component loaded with dynamic import
 export default MonacoEditor;
