@@ -27,7 +27,11 @@ export const MonacoEditor = ({
   editorRef,
   onWordCountChange,
 }: MonacoEditorProps): React.ReactElement => {
-  const [content, setContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, "");
+  const [localStorageContent, setLocalStorageContent] = useLocalStorage<string>(
+    EDITOR_CONTENT_KEY,
+    "",
+  );
+
   const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [placeholder, _] = useState<string>(getRandomQuote());
   const [isTocVisible, setIsTocVisible] = useState<boolean>(true);
@@ -37,8 +41,8 @@ export const MonacoEditor = ({
   const [loadingEditor, setLoadingEditor] = useState(true);
 
   const debouncedSetContent = useDebouncedCallback((newContent: string) => {
-    setContent(newContent);
-  }, 400);
+    setLocalStorageContent(newContent);
+  }, 300);
 
   const debouncedCharCountUpdate = useDebouncedCallback(
     (text: string) => {
@@ -64,7 +68,7 @@ export const MonacoEditor = ({
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
       // You could trigger a manual save here if needed
       const value = editor.getValue();
-      setContent(value); // Force immediate save to localStorage
+      setLocalStorageContent(value); // Force immediate save to localStorage
     });
 
     // Add decorations for checked tasks
@@ -199,7 +203,8 @@ export const MonacoEditor = ({
   }, [editorRef]);
 
   // Determine if placeholder should be visible initially
-  const shouldShowPlaceholder = !loadingEditor && (!content || !content.trim());
+  const shouldShowPlaceholder =
+    !loadingEditor && (!localStorageContent || !localStorageContent.trim());
 
   // Handle TOC item click
   const handleTocItemClick = (line: number) => {
@@ -236,7 +241,7 @@ export const MonacoEditor = ({
             height="100%"
             width="100%"
             defaultLanguage="markdown"
-            defaultValue={content}
+            defaultValue={localStorageContent}
             options={{
               ...editorOptions,
               padding: { top: 4 }, // Add padding to prevent cursor from being cut off
@@ -248,10 +253,9 @@ export const MonacoEditor = ({
           />
         </div>
 
-        {/* Table of Contents */}
         <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
           <TableOfContents
-            content={content}
+            content={monacoRef.current?.getValue() || ""} // for instant update
             onItemClick={handleTocItemClick}
             isVisible={isTocVisible}
           />
