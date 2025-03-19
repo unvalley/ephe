@@ -14,6 +14,7 @@ import {
 import { EDITOR_CONTENT_KEY, getRandomQuote } from "../features/monaco";
 import { useTheme } from "../hooks/use-theme";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
+import { TableOfContents } from "./toc";
 
 const markdownExtension = new MonacoMarkdownExtension();
 
@@ -29,6 +30,7 @@ export const MonacoEditor = ({
   const [content, setContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, "");
   const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [placeholder, _] = useState<string>(getRandomQuote());
+  const [isTocVisible, setIsTocVisible] = useState<boolean>(true);
 
   const { theme } = useTheme();
   const isDarkMode = theme === "dark";
@@ -192,32 +194,90 @@ export const MonacoEditor = ({
   // Determine if placeholder should be visible initially
   const shouldShowPlaceholder = !loadingEditor && (!content || !content.trim());
 
+  // Handle TOC item click
+  const handleTocItemClick = (line: number) => {
+    if (monacoRef.current) {
+      monacoRef.current.revealLineInCenter(line + 1);
+      monacoRef.current.setPosition({ lineNumber: line + 1, column: 1 });
+      monacoRef.current.focus();
+    }
+  };
+
+  // Toggle TOC visibility
+  const toggleToc = () => {
+    setIsTocVisible(!isTocVisible);
+  };
+
   return (
-    // Container wrapper - controls the width constraints and horizontal centering
-    <div className="w-full max-w-2xl mx-auto relative h-full rounded-md overflow-hidden px-4 sm:px-6 md:px-0">
-      {/* Placeholder element that shows when editor is empty */}
-      <div
-        className={`monaco-placeholder text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 px-4 sm:px-2 ${shouldShowPlaceholder ? "opacity-100" : "opacity-0"}`}
-        aria-hidden={!shouldShowPlaceholder}
-      >
-        {placeholder}
+    // Container wrapper with TOC
+    <div className="w-full max-w-5xl mx-auto relative h-full">
+      {/* Main content area with editor and TOC */}
+      <div className="flex justify-center relative h-full">
+        {/* Editor container */}
+        <div className="w-full max-w-2xl relative rounded-md overflow-hidden px-4 sm:px-6 md:px-0">
+          {/* Placeholder element that shows when editor is empty */}
+          <div
+            className={`monaco-placeholder pointer-events-none ${shouldShowPlaceholder ? "opacity-100" : "opacity-0"}`}
+            aria-hidden={!shouldShowPlaceholder}
+          >
+            {placeholder}
+          </div>
+
+          {/* Monaco Editor wrapper */}
+          <Editor
+            height="100%"
+            width="100%"
+            defaultLanguage="markdown"
+            defaultValue={content}
+            options={{
+              ...editorOptions,
+              padding: { top: 4 }, // Add padding to prevent cursor from being cut off
+            }}
+            onMount={handleEditorDidMount}
+            className="overflow-visible"
+            loading=""
+            theme={isDarkMode ? "ephe-dark" : "ephe-light"}
+          />
+        </div>
+
+        {/* Table of Contents */}
+        <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
+          <TableOfContents
+            content={content}
+            onItemClick={handleTocItemClick}
+            isVisible={isTocVisible}
+          />
+        </div>
       </div>
 
-      {/* Monaco Editor wrapper */}
-      <Editor
-        height="100%"
-        width="100%"
-        defaultLanguage="markdown"
-        defaultValue={content}
-        options={{
-          ...editorOptions,
-          padding: { top: 4 }, // Add padding to prevent cursor from being cut off
-        }}
-        onMount={handleEditorDidMount}
-        className="overflow-visible"
-        loading=""
-        theme={isDarkMode ? "ephe-dark" : "ephe-light"}
-      />
+      {/* TOC toggle button */}
+      <button
+        type="button"
+        onClick={toggleToc}
+        className={"toc-toggle-button cursor-pointer"}
+        title={
+          isTocVisible ? "Hide table of contents" : "Show table of contents"
+        }
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+          className="text-gray-500 dark:text-gray-400"
+        >
+          <title>Table of Contents</title>
+          <line x1="21" y1="6" x2="3" y2="6" />
+          <line x1="15" y1="12" x2="3" y2="12" />
+          <line x1="17" y1="18" x2="3" y2="18" />
+        </svg>
+      </button>
     </div>
   );
 };
