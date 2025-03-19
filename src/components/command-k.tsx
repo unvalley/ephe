@@ -39,9 +39,7 @@ export const CommandMenu = ({ open, onClose, onOpen }: CommandMenuProps) => {
 
   useEffect(() => {
     if (open) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 0);
+      inputRef.current?.focus();
     }
   }, [open]);
 
