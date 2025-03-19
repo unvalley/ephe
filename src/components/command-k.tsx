@@ -2,6 +2,7 @@
 
 import { Command } from "cmdk";
 import React, { useEffect, useRef } from "react";
+import { useTheme } from "../hooks/use-theme";
 
 type CommandMenuProps = {
   open: boolean;
@@ -11,6 +12,7 @@ type CommandMenuProps = {
 
 export const CommandMenu = ({ open, onClose, onOpen }: CommandMenuProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const { toggleTheme, toggleTargetTheme } = useTheme();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -73,18 +75,17 @@ export const CommandMenu = ({ open, onClose, onOpen }: CommandMenuProps) => {
           </Command.Empty>
 
           <Command.Item
-            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
             onSelect={() => {
-              // Toggle dark mode
-              document.documentElement.classList.toggle("dark");
+              toggleTheme();
               onClose?.();
             }}
           >
-            Toggle theme
+            Switch to {toggleTargetTheme} mode
           </Command.Item>
 
           <Command.Item
-            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
             onSelect={() => {
               window.open("https://github.com/unvalley/ephe", "_blank");
               onClose?.();
@@ -94,21 +95,21 @@ export const CommandMenu = ({ open, onClose, onOpen }: CommandMenuProps) => {
           </Command.Item>
 
           <Command.Item
-            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
             onSelect={() => {
               onClose?.();
             }}
           >
-            Format document
+            Format document (WIP)
           </Command.Item>
 
           <Command.Item
-            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
             onSelect={() => {
               onClose?.();
             }}
           >
-            Show previous tasks
+            Show previous tasks (WIP)
           </Command.Item>
         </Command.List>
       </Command>

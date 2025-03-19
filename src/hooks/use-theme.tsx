@@ -7,6 +7,7 @@ type ColorTheme = "light" | "dark";
 type ThemeContextType = {
   theme: ColorTheme;
   toggleTheme: () => void;
+  toggleTargetTheme: ColorTheme;
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -43,7 +44,9 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     sessionStorage.setItem("theme", newTheme);
   };
 
-  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
+  const toggleTargetTheme = theme === "light" ? "dark" : "light";
+
+  return <ThemeContext.Provider value={{ theme, toggleTheme, toggleTargetTheme }}>{children}</ThemeContext.Provider>;
 };
 
 export const useTheme = (): ThemeContextType => {

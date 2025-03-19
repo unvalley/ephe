@@ -46,8 +46,7 @@ type EditorFooterProps = {
 };
 
 const EditorFooter = ({ charCount }: EditorFooterProps) => {
-  const { theme, toggleTheme } = useTheme();
-  const isDark = theme === "dark";
+  const { toggleTheme, toggleTargetTheme } = useTheme();
 
   return (
     <footer className="fixed inset-x-0 bottom-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm space-mono">
@@ -71,9 +70,9 @@ const EditorFooter = ({ charCount }: EditorFooterProps) => {
               toggleTheme();
             }}
             className="hover:text-gray-900 dark:hover:text-gray-100"
-            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            aria-label={`Switch to ${toggleTargetTheme} mode`}
           >
-            {isDark ? "Light" : "Dark"}
+            {toggleTargetTheme === "light" ? "Light" : "Dark"}
           </button>
         </nav>
         <div className="flex items-center gap-2">
