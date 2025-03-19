@@ -124,10 +124,6 @@ span.task-checkbox {
   background-color: transparent;
   border-radius: 0.375rem;
   padding: 0.5rem;
-
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
 }
 
 .dark .toc-container {

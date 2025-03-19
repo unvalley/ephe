@@ -25,21 +25,18 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
   const prevContentRef = useRef<string>("");
   const updateTimeoutRef = useRef<number | null>(null);
 
-  // 差分解析のためのメモ化関数 - 変更があった部分だけを解析
   const parseTocItems = useCallback(
     (content: string, prevContent: string): TocItem[] => {
       if (!content) return [];
-
-      // 前回と同じコンテンツなら再計算しない
       if (content === prevContent) {
         return tocItems;
       }
 
-      // 最適化: 行単位で差分を検出して部分的に更新
+      // PERF: partial update by line
       const newLines = content.split("\n");
       const prevLines = prevContent ? prevContent.split("\n") : [];
 
-      // 既存のTOCアイテムをマップとして保持（行番号をキーとする）
+      // PERF: keep existing items in a map (by line number)
       const existingItemsMap = new Map<number, TocItem>();
       for (const item of tocItems) {
         existingItemsMap.set(item.line, item);
@@ -48,18 +45,17 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
       const items: TocItem[] = [];
       let hasChanges = false;
 
-      // 各行を処理
       for (let i = 0; i < newLines.length; i++) {
         const line = newLines[i];
 
-        // 前回と同じ行で、既存のTOCアイテムがある場合は再利用
+        // PERF: reuse existing items if the line is the same
         if (i < prevLines.length && line === prevLines[i] && existingItemsMap.has(i)) {
           // biome-ignore lint/style/noNonNullAssertion: <explanation>
           items.push(existingItemsMap.get(i)!);
           continue;
         }
 
-        // 見出し行かどうかをチェック
+        // check if the line is a heading
         const match = HEADING_REGEX.exec(line);
         if (match) {
           hasChanges = true;
@@ -89,7 +85,6 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
       cancelAnimationFrame(updateTimeoutRef.current);
     }
 
-    // 更新をスケジュール
     updateTimeoutRef.current = requestAnimationFrame(() => {
       const newItems = parseTocItems(content, prevContentRef.current);
       setTocItems(newItems);
@@ -125,15 +120,11 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
         {tocItems.map((item) => (
           <li
             key={item.line}
-            className={`cursor-pointer py-1 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 ${
-              isDarkMode ? "text-gray-400 hover:text-gray-200" : "text-gray-500 hover:text-gray-800"
-            }`}
+            className={`cursor-pointer py-1 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 break-words whitespace-normal
+                ${isDarkMode ? "text-gray-400 hover:text-gray-200" : "text-gray-500 hover:text-gray-800"}`}
             style={{
               paddingLeft: `${(item.level - 1) * 0.75 + 0.5}rem`,
-              wordBreak: "break-word",
-              overflowWrap: "break-word",
-              whiteSpace: "normal",
-              lineHeight: "1.3",
+              lineHeight: 1.3,
             }}
             onClick={() => handleItemClick(item.line)}
             onKeyDown={() => {}}
@@ -143,5 +134,35 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
         ))}
       </ul>
     </div>
+  );
+};
+
+export const TableOfContentsButton = ({ isVisible, toggleToc }: { isVisible: boolean; toggleToc: () => void }) => {
+  return (
+    <button
+      type="button"
+      onClick={toggleToc}
+      className={"toc-toggle-button cursor-pointer"}
+      title={isVisible ? "Hide table of contents" : "Show table of contents"}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        className="text-gray-500 dark:text-gray-400"
+      >
+        <title>Table of Contents</title>
+        <line x1="21" y1="6" x2="3" y2="6" />
+        <line x1="15" y1="12" x2="3" y2="12" />
+        <line x1="17" y1="18" x2="3" y2="18" />
+      </svg>
+    </button>
   );
 };

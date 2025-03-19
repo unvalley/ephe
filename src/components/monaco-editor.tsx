@@ -11,12 +11,13 @@ import { isTaskListLine, isCheckedTask } from "../features/monaco/task-list-util
 import { EDITOR_CONTENT_KEY, getRandomQuote } from "../features/monaco";
 import { useTheme } from "../hooks/use-theme";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
-import { TableOfContents } from "./toc";
+import { TableOfContents, TableOfContentsButton } from "./toc";
+import { CommandMenu } from "./command-k";
 
 const markdownExtension = new MonacoMarkdownExtension();
 
 type MonacoEditorProps = {
-  editorRef?: React.RefObject<{ focus: () => void } | undefined>;
+  editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
   onWordCountChange?: (count: number) => void;
 };
 
@@ -30,6 +31,7 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
   const { theme } = useTheme();
   const isDarkMode = theme === "dark";
   const [loadingEditor, setLoadingEditor] = useState(true);
+  const [commandMenuOpen, setCommandMenuOpen] = useState(false);
 
   const debouncedSetContent = useDebouncedCallback((newContent: string) => {
     setLocalStorageContent(newContent);
@@ -52,6 +54,9 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
     editor: monaco.editor.IStandaloneCodeEditor,
     monaco: typeof import("monaco-editor"),
   ) => {
+    if (editorRef) {
+      editorRef.current = editor;
+    }
     monacoRef.current = editor;
     setLoadingEditor(false);
 
@@ -60,9 +65,14 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
 
     // Add key binding for Cmd+S / Ctrl+S to prevent browser save dialog
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      // You could trigger a manual save here if needed
+      // Force save to localStorage
       const value = editor.getValue();
-      setLocalStorageContent(value); // Force immediate save to localStorage
+      setLocalStorageContent(value);
+    });
+
+    // Add key binding for Cmd+K / Ctrl+K to open the command menu
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
+      setCommandMenuOpen(true);
     });
 
     // Add decorations for checked tasks
@@ -179,11 +189,10 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
   };
 
   // Expose focus method to parent component through ref
+  // TODO: need this?
   useEffect(() => {
     if (editorRef && monacoRef.current) {
-      editorRef.current = {
-        focus: () => monacoRef.current?.focus(),
-      };
+      editorRef.current = monacoRef.current;
     }
   }, [editorRef]);
 
@@ -205,75 +214,56 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
   };
 
   return (
-    // Container wrapper with TOC
-    <div className="w-full max-w-5xl mx-auto relative h-full">
-      {/* Main content area with editor and TOC */}
-      <div className="flex justify-center relative h-full">
-        {/* Editor container */}
-        <div className="w-full max-w-2xl relative rounded-md overflow-hidden px-4 sm:px-6 md:px-0">
-          {/* Placeholder element that shows when editor is empty */}
+    <>
+      <CommandMenu
+        open={commandMenuOpen}
+        onClose={() => setCommandMenuOpen(false)}
+        onOpen={() => setCommandMenuOpen(true)}
+      />
+      <div className="w-full max-w-5xl mx-auto relative h-full">
+        {/* Main content area with editor and TOC */}
 
-          <div
-            className={`text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 px-4 sm:px-2 ${shouldShowPlaceholder ? "opacity-100" : "opacity-0"}`}
-            aria-hidden={!shouldShowPlaceholder}
-          >
-            {placeholder}
+        <div className="flex justify-center relative h-full">
+          {/* Editor container */}
+          <div className="w-full max-w-2xl relative rounded-md overflow-hidden px-4 sm:px-6 md:px-0">
+            {/* Placeholder element that shows when editor is empty */}
+
+            <div
+              className={`text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 px-4 sm:px-2 ${shouldShowPlaceholder ? "opacity-100" : "opacity-0"}`}
+              aria-hidden={!shouldShowPlaceholder}
+            >
+              {placeholder}
+            </div>
+
+            {/* Monaco Editor wrapper */}
+            <Editor
+              height="100%"
+              width="100%"
+              defaultLanguage="markdown"
+              defaultValue={localStorageContent}
+              options={{
+                ...editorOptions,
+                padding: { top: 4 }, // Add padding to prevent cursor from being cut off
+              }}
+              onMount={handleEditorDidMount}
+              className="overflow-visible"
+              loading=""
+              theme={isDarkMode ? "ephe-dark" : "ephe-light"}
+            />
           </div>
 
-          {/* Monaco Editor wrapper */}
-          <Editor
-            height="100%"
-            width="100%"
-            defaultLanguage="markdown"
-            defaultValue={localStorageContent}
-            options={{
-              ...editorOptions,
-              padding: { top: 4 }, // Add padding to prevent cursor from being cut off
-            }}
-            onMount={handleEditorDidMount}
-            className="overflow-visible"
-            loading=""
-            theme={isDarkMode ? "ephe-dark" : "ephe-light"}
-          />
+          {/* Only show TOC when there is content */}
+          {editorContent.trim() && (
+            <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
+              <TableOfContents content={editorContent} onItemClick={handleTocItemClick} isVisible={isTocVisible} />
+            </div>
+          )}
         </div>
 
-        {/* Only show TOC when there is content */}
-        {editorContent.trim() && (
-          <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
-            <TableOfContents content={editorContent} onItemClick={handleTocItemClick} isVisible={isTocVisible} />
-          </div>
-        )}
+        {/* Only show TOC toggle button when there is content */}
+        {editorContent.trim() && <TableOfContentsButton isVisible={isTocVisible} toggleToc={toggleToc} />}
       </div>
-
-      {/* Only show TOC toggle button when there is content */}
-      {editorContent.trim() && (
-        <button
-          type="button"
-          onClick={toggleToc}
-          className={"toc-toggle-button cursor-pointer"}
-          title={isTocVisible ? "Hide table of contents" : "Show table of contents"}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            className="text-gray-500 dark:text-gray-400"
-          >
-            <title>Table of Contents</title>
-            <line x1="21" y1="6" x2="3" y2="6" />
-            <line x1="15" y1="12" x2="3" y2="12" />
-            <line x1="17" y1="18" x2="3" y2="18" />
-          </svg>
-        </button>
-      )}
-    </div>
+    </>
   );
 };
 
@@ -476,6 +466,3 @@ const handleTaskCheckboxToggle = (
     return;
   }
 };
-
-// Need to use default export since this is a CSR component loaded with dynamic import
-export default MonacoEditor;

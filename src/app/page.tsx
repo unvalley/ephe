@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRef, memo, useState } from "react";
 import { useTheme } from "../hooks/use-theme";
 import Link from "next/link";
+import type * as monaco from "monaco-editor";
 
 const EPHE_VERSION = "0.0.1";
 
@@ -19,7 +20,7 @@ const MonacoEditor = dynamic(() => import("../components/monaco-editor").then((m
 });
 
 export default function Page() {
-  const editorRef = useRef<{ focus: () => void } | undefined>(undefined);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [charCount, setCharCount] = useState<number>(0);
 
   // Focus the editor when clicking anywhere in the page container
@@ -30,15 +31,8 @@ export default function Page() {
   };
 
   return (
-    <div
-      className="h-screen w-screen flex flex-col justify-center"
-      onClick={handlePageClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          handlePageClick();
-        }
-      }}
-    >
+    // biome-ignore lint/a11y/useKeyWithClickEvents:
+    <div className="h-screen w-screen flex flex-col justify-center" onClick={handlePageClick}>
       <div className="flex-1 flex justify-center pt-16 pb-8 overflow-hidden">
         <MonacoEditor editorRef={editorRef} onWordCountChange={setCharCount} />
       </div>
