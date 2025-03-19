@@ -17,7 +17,7 @@ import * as latex from "./latex";
 
 let completionActivated = false;
 
-export function activateCompletion(editor: TextEditor) {
+export const activateCompletion = (editor: TextEditor) => {
   if (!completionActivated) {
     //TODO: remove provider when context is disposed
     const provider = new MdCompletionItemProvider();
@@ -25,18 +25,18 @@ export function activateCompletion(editor: TextEditor) {
 
     completionActivated = true;
   }
-}
+};
 
-function completionList(
+const completionList = (
   items: languages.CompletionItem[],
-): languages.CompletionList {
+): languages.CompletionList => {
   return { suggestions: items.map((v, _) => Object.assign({}, v)) };
-}
+};
 
-function newCompletionItem(
+const newCompletionItem = (
   text: string,
   kind: languages.CompletionItemKind,
-): languages.CompletionItem {
+): languages.CompletionItem => {
   return {
     label: text,
     kind: kind,
@@ -57,7 +57,7 @@ function newCompletionItem(
     sortText: undefined,
     insertText: "",
   };
-}
+};
 
 class MdCompletionItemProvider implements languages.CompletionItemProvider {
   triggerCharacters = ["(", "\\", "/", "[", "#"];
@@ -117,17 +117,17 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
 
     this.mathCompletions = [...c1, ...c2, ...c3, envSnippet];
     // Sort
-    this.mathCompletions.forEach((item) => {
+
+    for (const item of this.mathCompletions) {
       item.sortText = (
         typeof item.label === "string" ? item.label : item.label.label
       ).replace(/[a-zA-Z]/g, (c) => {
         if (/[a-z]/.test(c)) {
           return `0${c}`;
-        } else {
-          return `1${c.toLowerCase()}`;
         }
+        return `1${c.toLowerCase()}`;
       });
-    });
+    }
   }
 
   provideCompletionItems(
@@ -157,26 +157,25 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
       ) {
         // Complete math functions (inline math)
         return completionList(this.mathCompletions);
-      } else {
-        const textBefore = document.getText(
-          new Range(new Position(0, 0), position),
-        );
-        const textAfter = document
-          .getText()
-          .substr(document.offsetAt(position));
-
-        if (
-          (matches = textBefore.match(/\$\$/g)) !== null &&
-          matches.length % 2 !== 0 &&
-          textAfter.includes("$$")
-        ) {
-          // Complete math functions ($$ ... $$)
-          return completionList(this.mathCompletions);
-        } else {
-          return completionList([]);
-        }
       }
+
+      const textBefore = document.getText(
+        new Range(new Position(0, 0), position),
+      );
+      const textAfter = document.getText().substr(document.offsetAt(position));
+
+      if (
+        (matches = textBefore.match(/\$\$/g)) !== null &&
+        matches.length % 2 !== 0 &&
+        textAfter.includes("$$")
+      ) {
+        // Complete math functions ($$ ... $$)
+        return completionList(this.mathCompletions);
+      }
+
+      return completionList([]);
     }
+
     if (/\[[^\]]*?\]\[[^\]]*$/.test(lineTextBefore)) {
       /* ┌───────────────────────┐
                │ Reference link labels │
@@ -186,6 +185,7 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
         position.with({ character: startIndex + 1 }),
         position,
       );
+
       return new Promise((res, _) => {
         const lines = document.getText().split(/\r?\n/);
         const usageCounts = lines.reduce((useCounts, currentLine) => {
@@ -252,7 +252,7 @@ class MdCompletionItemProvider implements languages.CompletionItemProvider {
         let toReplace = 0;
         while (
           toReplace < lineTextAfter.length &&
-          " \t\n\r\v".indexOf(lineTextAfter.charAt(toReplace)) != -1
+          " \t\n\r\v".indexOf(lineTextAfter.charAt(toReplace)) !== -1
         ) {
           toReplace++;
         }

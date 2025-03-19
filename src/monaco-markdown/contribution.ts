@@ -16,24 +16,25 @@ interface ILangImpl {
 
 const languageDefinitions: { [languageId: string]: ILang } = {};
 
-function _loadLanguage(languageId: string): Promise<void> {
+
+const languagePromises: { [languageId: string]: Promise<void> } = {};
+
+export const loadLanguage = (languageId: string): Promise<void> => {
+  if (!languagePromises[languageId]) {
+    languagePromises[languageId] = loadLanguageInternal(languageId);
+  }
+  return languagePromises[languageId];
+};
+
+const loadLanguageInternal = (languageId: string): Promise<void> => {
   const loader = languageDefinitions[languageId].loader;
   return loader().then((mod) => {
     languages.setMonarchTokensProvider(languageId, mod.language);
     languages.setLanguageConfiguration(languageId, mod.conf);
   });
-}
+};
 
-const languagePromises: { [languageId: string]: Promise<void> } = {};
-
-export function loadLanguage(languageId: string): Promise<void> {
-  if (!languagePromises[languageId]) {
-    languagePromises[languageId] = _loadLanguage(languageId);
-  }
-  return languagePromises[languageId];
-}
-
-export function registerLanguage(def: ILang): void {
+export const registerLanguage = (def: ILang): void => {
   const languageId = def.id;
 
   languageDefinitions[languageId] = def;
