@@ -60,6 +60,13 @@ export const MonacoEditor = ({
     // Initialize markdown extension
     markdownExtension.activate(editor);
 
+    // Add key binding for Cmd+S / Ctrl+S to prevent browser save dialog
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+      // You could trigger a manual save here if needed
+      const value = editor.getValue();
+      setContent(value); // Force immediate save to localStorage
+    });
+
     // Add decorations for checked tasks
     const updateDecorations = (model: monaco.editor.ITextModel | null) => {
       if (!model) return;
