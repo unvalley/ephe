@@ -1,36 +1,21 @@
 "use client";
 
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useLocalStorage } from "../hooks/use-local-storage";
 import { useDebouncedCallback } from "../hooks/use-debounce";
 import * as monaco from "monaco-editor";
 import { Editor } from "@monaco-editor/react";
 import type { EditorProps } from "@monaco-editor/react";
-import type React from "react";
-import { isTaskListLine, isCheckedTask } from "./task-list-utils";
+import {
+  isTaskListLine,
+  isCheckedTask,
+} from "../features/monaco/task-list-utils";
+import { EDITOR_CONTENT_KEY, getRandomQuote } from "../features/monaco";
 import { useTheme } from "../hooks/use-theme";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
 
 const markdownExtension = new MonacoMarkdownExtension();
-
-const EDITOR_CONTENT_KEY = "editor-content";
-
-const WRITING_QUOTES = [
-  "The scariest moment is always just before you start.",
-  "Fill your paper with the breathings of your heart.",
-  "The pen is mightier than the sword.",
-  "The best way to predict the future is to invent it.",
-  "The only way to do great work is to love what you do.",
-  "A word after a word after a word is power.",
-  "Get things done.",
-  "Later equals never.",
-  "Divide and conquer.",
-];
-
-// Helper functions
-const getRandomQuote = (): string => {
-  return WRITING_QUOTES[Math.floor(Math.random() * WRITING_QUOTES.length)];
-};
 
 type MonacoEditorProps = {
   editorRef?: React.RefObject<{ focus: () => void } | undefined>;
@@ -43,16 +28,16 @@ export const MonacoEditor = ({
 }: MonacoEditorProps): React.ReactElement => {
   const [content, setContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, "");
   const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const [placeholder, setPlaceholder] = useState<string>(getRandomQuote());
+  const [placeholder, _] = useState<string>(getRandomQuote());
+
   const { theme } = useTheme();
   const isDarkMode = theme === "dark";
-  const [isEditorLoading, setIsEditorLoading] = useState(true);
+  const [loadingEditor, setLoadingEditor] = useState(true);
 
   const debouncedSetContent = useDebouncedCallback((newContent: string) => {
     setContent(newContent);
   }, 400);
 
-  // Create a debounced function for character count updates
   const debouncedCharCountUpdate = useDebouncedCallback(
     (text: string) => {
       if (onWordCountChange) {
@@ -68,7 +53,7 @@ export const MonacoEditor = ({
     monaco: typeof import("monaco-editor"),
   ) => {
     monacoRef.current = editor;
-    setIsEditorLoading(false);
+    setLoadingEditor(false);
 
     // Initialize markdown extension
     markdownExtension.activate(editor);
@@ -205,8 +190,7 @@ export const MonacoEditor = ({
   }, [editorRef]);
 
   // Determine if placeholder should be visible initially
-  const shouldShowPlaceholder =
-    !isEditorLoading && (!content || !content.trim());
+  const shouldShowPlaceholder = !loadingEditor && (!content || !content.trim());
 
   return (
     // Container wrapper - controls the width constraints and horizontal centering

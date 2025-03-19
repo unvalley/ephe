@@ -36,10 +36,14 @@ export default function Page() {
   };
 
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
     <div
       className="h-screen w-screen flex flex-col justify-center"
       onClick={handlePageClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          handlePageClick();
+        }
+      }}
     >
       <div className="flex-1 flex justify-center pt-16 pb-8 overflow-hidden">
         <MonacoEditor editorRef={editorRef} onWordCountChange={setCharCount} />

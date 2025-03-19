@@ -5,7 +5,7 @@ import {
   isEmptyTaskListLine,
   getTaskListIndentation,
   getCheckboxEndPosition,
-} from "./task-list-utils";
+} from "../features/monaco/task-list-utils";
 
 describe("Task List Utilities", () => {
   describe("isTaskListLine", () => {
