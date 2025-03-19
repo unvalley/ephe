@@ -7,10 +7,7 @@ import { useDebouncedCallback } from "../hooks/use-debounce";
 import * as monaco from "monaco-editor";
 import { Editor } from "@monaco-editor/react";
 import type { EditorProps } from "@monaco-editor/react";
-import {
-  isTaskListLine,
-  isCheckedTask,
-} from "../features/monaco/task-list-utils";
+import { isTaskListLine, isCheckedTask } from "../features/monaco/task-list-utils";
 import { EDITOR_CONTENT_KEY, getRandomQuote } from "../features/monaco";
 import { useTheme } from "../hooks/use-theme";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
@@ -23,14 +20,8 @@ type MonacoEditorProps = {
   onWordCountChange?: (count: number) => void;
 };
 
-export const MonacoEditor = ({
-  editorRef,
-  onWordCountChange,
-}: MonacoEditorProps): React.ReactElement => {
-  const [localStorageContent, setLocalStorageContent] = useLocalStorage<string>(
-    EDITOR_CONTENT_KEY,
-    "",
-  );
+export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps): React.ReactElement => {
+  const [localStorageContent, setLocalStorageContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, "");
 
   const monacoRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [placeholder, _] = useState<string>(getRandomQuote());
@@ -52,6 +43,9 @@ export const MonacoEditor = ({
     },
     50, // Faster updates for character count
   );
+
+  // Add state to track editor content
+  const [editorContent, setEditorContent] = useState<string>(localStorageContent);
 
   // Handle editor mounting
   const handleEditorDidMount = (
@@ -78,11 +72,7 @@ export const MonacoEditor = ({
         const oldDecorations = model.getAllDecorations() || [];
         const decorations: monaco.editor.IModelDeltaDecoration[] = [];
 
-        for (
-          let lineNumber = 1;
-          lineNumber <= model.getLineCount();
-          lineNumber++
-        ) {
+        for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
           const lineContent = model.getLineContent(lineNumber);
 
           // Only process task list lines
@@ -99,9 +89,7 @@ export const MonacoEditor = ({
                 options: {
                   inlineClassName: "task-completed-line",
                   isWholeLine: true,
-                  stickiness:
-                    monaco.editor.TrackedRangeStickiness
-                      .GrowsOnlyWhenTypingBefore,
+                  stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore,
                 },
               });
             }
@@ -119,18 +107,15 @@ export const MonacoEditor = ({
     };
 
     // Add event handlers
-    editor.onKeyDown((event) =>
-      handleKeyDown(event, editor, editor.getModel(), editor.getPosition()),
-    );
-    editor.onMouseDown((event) =>
-      handleTaskCheckboxToggle(event, editor, editor.getModel()),
-    );
+    editor.onKeyDown((event) => handleKeyDown(event, editor, editor.getModel(), editor.getPosition()));
+    editor.onMouseDown((event) => handleTaskCheckboxToggle(event, editor, editor.getModel()));
 
-    // Update placeholder and decorations on content change
+    // Update editor content state when content changes
     editor.onDidChangeModelContent(() => {
       const value = editor.getValue();
       const model = editor.getModel();
 
+      setEditorContent(value);
       updatePlaceholder(value);
       updateDecorations(model);
       debouncedSetContent(value);
@@ -203,8 +188,7 @@ export const MonacoEditor = ({
   }, [editorRef]);
 
   // Determine if placeholder should be visible initially
-  const shouldShowPlaceholder =
-    !loadingEditor && (!localStorageContent || !localStorageContent.trim());
+  const shouldShowPlaceholder = !loadingEditor && (!localStorageContent || !localStorageContent.trim());
 
   // Handle TOC item click
   const handleTocItemClick = (line: number) => {
@@ -253,43 +237,42 @@ export const MonacoEditor = ({
           />
         </div>
 
-        <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
-          <TableOfContents
-            content={monacoRef.current?.getValue() || ""} // for instant update
-            onItemClick={handleTocItemClick}
-            isVisible={isTocVisible}
-          />
-        </div>
+        {/* Only show TOC when there is content */}
+        {editorContent.trim() && (
+          <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
+            <TableOfContents content={editorContent} onItemClick={handleTocItemClick} isVisible={isTocVisible} />
+          </div>
+        )}
       </div>
 
-      {/* TOC toggle button */}
-      <button
-        type="button"
-        onClick={toggleToc}
-        className={"toc-toggle-button cursor-pointer"}
-        title={
-          isTocVisible ? "Hide table of contents" : "Show table of contents"
-        }
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-          className="text-gray-500 dark:text-gray-400"
+      {/* Only show TOC toggle button when there is content */}
+      {editorContent.trim() && (
+        <button
+          type="button"
+          onClick={toggleToc}
+          className={"toc-toggle-button cursor-pointer"}
+          title={isTocVisible ? "Hide table of contents" : "Show table of contents"}
         >
-          <title>Table of Contents</title>
-          <line x1="21" y1="6" x2="3" y2="6" />
-          <line x1="15" y1="12" x2="3" y2="12" />
-          <line x1="17" y1="18" x2="3" y2="18" />
-        </svg>
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            className="text-gray-500 dark:text-gray-400"
+          >
+            <title>Table of Contents</title>
+            <line x1="21" y1="6" x2="3" y2="6" />
+            <line x1="15" y1="12" x2="3" y2="12" />
+            <line x1="17" y1="18" x2="3" y2="18" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 };
@@ -346,6 +329,10 @@ const editorOptions: EditorProps["options"] = {
   acceptSuggestionOnEnter: "off",
   tabCompletion: "off",
   parameterHints: { enabled: false },
+  selectionHighlight: false,
+  renderControlCharacters: false,
+  renderLineHighlightOnlyWhenFocus: true,
+  maxTokenizationLineLength: 5000,
 };
 
 // Set up placeholder when editor is empty
