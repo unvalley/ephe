@@ -47,21 +47,7 @@ export const language = <languages.IMonarchLanguage>{
   jsescapes: /\\(?:[btnfr\\"']|[0-7][0-7]?|[0-3][0-7]{2})/,
 
   // non matched elements
-  empty: [
-    "area",
-    "base",
-    "basefont",
-    "br",
-    "col",
-    "frame",
-    "hr",
-    "img",
-    "input",
-    "isindex",
-    "link",
-    "meta",
-    "param",
-  ],
+  empty: ["area", "base", "basefont", "br", "col", "frame", "hr", "img", "input", "isindex", "link", "meta", "param"],
 
   latexKeywords: all,
 
@@ -70,10 +56,7 @@ export const language = <languages.IMonarchLanguage>{
   tokenizer: {
     root: [
       // headers (with #)
-      [
-        /^(\s{0,3})(#+)((?:[^\\#]|@escapes)+)((?:#+)?)/,
-        ["white", "keyword", "keyword", "keyword"],
-      ],
+      [/^(\s{0,3})(#+)((?:[^\\#]|@escapes)+)((?:#+)?)/, ["white", "keyword", "keyword", "keyword"]],
 
       // headers (with =)
       [/^\s*(=+|\-+)\s*$/, "keyword"],
@@ -91,16 +74,10 @@ export const language = <languages.IMonarchLanguage>{
       [/^(\t|[ ]{4})[^ ].*$/, "string"],
 
       // code block (3 tilde)
-      [
-        /^\s*~~~\s*((?:\w|[\/\-#])+)?\s*$/,
-        { token: "string", next: "@codeblock" },
-      ],
+      [/^\s*~~~\s*((?:\w|[\/\-#])+)?\s*$/, { token: "string", next: "@codeblock" }],
 
       // github style code blocks (with backticks and language)
-      [
-        /^\s*```\s*((?:\w|[\/\-#])+).*$/,
-        { token: "string", next: "@codeblockgh", nextEmbedded: "$1" },
-      ],
+      [/^\s*```\s*((?:\w|[\/\-#])+).*$/, { token: "string", next: "@codeblockgh", nextEmbedded: "$1" }],
 
       // github style code blocks (with backticks but no language)
       [/^\s*```\s*$/, { token: "string", next: "@codeblock" }],
@@ -120,10 +97,7 @@ export const language = <languages.IMonarchLanguage>{
 
     // github style code blocks
     codeblockgh: [
-      [
-        /```\s*$/,
-        { token: "variable.source", next: "@pop", nextEmbedded: "@pop" },
-      ],
+      [/```\s*$/, { token: "variable.source", next: "@pop", nextEmbedded: "@pop" }],
       [/[^`]+/, "variable.source"],
     ],
 
@@ -141,10 +115,7 @@ export const language = <languages.IMonarchLanguage>{
 
       // links
       [/\{+[^}]+\}+/, "string.target"],
-      [
-        /(!?\[)((?:[^\]\\]|@escapes)*)(\]\([^\)]+\))/,
-        ["string.link", "", "string.link"],
-      ],
+      [/(!?\[)((?:[^\]\\]|@escapes)*)(\]\([^\)]+\))/, ["string.link", "", "string.link"]],
       [/(!?\[)((?:[^\]\\]|@escapes)*)(\])/, "string.link"],
 
       //inline math
@@ -222,10 +193,7 @@ export const language = <languages.IMonarchLanguage>{
           "string.html",
         ],
       ],
-      [
-        /(\w+)(\s*=\s*)("[^"]*"|'[^']*')/,
-        ["attribute.name.html", "delimiter.html", "string.html"],
-      ],
+      [/(\w+)(\s*=\s*)("[^"]*"|'[^']*')/, ["attribute.name.html", "delimiter.html", "string.html"]],
       [/\w+/, "attribute.name.html"],
       [/\/>/, "tag", "@pop"],
       [
@@ -259,31 +227,19 @@ export const language = <languages.IMonarchLanguage>{
 
     embeddedStyle: [
       [/[^<]+/, ""],
-      [
-        /<\/style\s*>/,
-        { token: "@rematch", next: "@pop", nextEmbedded: "@pop" },
-      ],
+      [/<\/style\s*>/, { token: "@rematch", next: "@pop", nextEmbedded: "@pop" }],
       [/</, ""],
     ],
 
     embeddedScript: [
       [/[^<]+/, ""],
-      [
-        /<\/script\s*>/,
-        { token: "@rematch", next: "@pop", nextEmbedded: "@pop" },
-      ],
+      [/<\/script\s*>/, { token: "@rematch", next: "@pop", nextEmbedded: "@pop" }],
       [/</, ""],
     ],
 
-    math: [
-      [/(\${2})/, { token: "comment.math", next: "@pop", bracket: "@close" }],
-      { include: "latex" },
-    ],
+    math: [[/(\${2})/, { token: "comment.math", next: "@pop", bracket: "@close" }], { include: "latex" }],
 
-    mathInline: [
-      [/\${1,2}/, { token: "comment.math", next: "@pop", bracket: "@close" }],
-      { include: "latex" },
-    ],
+    mathInline: [[/\${1,2}/, { token: "comment.math", next: "@pop", bracket: "@close" }], { include: "latex" }],
 
     latex: [
       [/(\\begin)({)/, ["keyword", { token: "", next: "latexBeginArg" }]],

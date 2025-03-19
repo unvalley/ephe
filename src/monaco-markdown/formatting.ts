@@ -29,30 +29,9 @@ export function addKeybinding(
 }
 
 export function activateFormatting(editor: TextEditor) {
-  addKeybinding(
-    editor,
-    "toggleBold",
-    toggleBold,
-    [KeyMod.CtrlCmd | KeyCode.KeyB],
-    "Toggle bold",
-    "",
-  );
-  addKeybinding(
-    editor,
-    "toggleItalic",
-    toggleItalic,
-    [KeyMod.CtrlCmd | KeyCode.KeyI],
-    "Toggle italic",
-    "",
-  );
-  addKeybinding(
-    editor,
-    "toggleCodeSpan",
-    toggleCodeSpan,
-    [KeyMod.CtrlCmd | KeyCode.Backquote],
-    "Toggle code span",
-    "",
-  );
+  addKeybinding(editor, "toggleBold", toggleBold, [KeyMod.CtrlCmd | KeyCode.KeyB], "Toggle bold", "");
+  addKeybinding(editor, "toggleItalic", toggleItalic, [KeyMod.CtrlCmd | KeyCode.KeyI], "Toggle italic", "");
+  addKeybinding(editor, "toggleCodeSpan", toggleCodeSpan, [KeyMod.CtrlCmd | KeyCode.Backquote], "Toggle code span", "");
   addKeybinding(
     editor,
     "toggleStrikethrough",
@@ -61,14 +40,7 @@ export function activateFormatting(editor: TextEditor) {
     "Toggle strikethrough",
     "",
   );
-  addKeybinding(
-    editor,
-    "toggleMath",
-    toggleMath,
-    [KeyMod.CtrlCmd | KeyCode.KeyM],
-    "Toggle math",
-    "",
-  );
+  addKeybinding(editor, "toggleMath", toggleMath, [KeyMod.CtrlCmd | KeyCode.KeyM], "Toggle math", "");
   addKeybinding(
     editor,
     "toggleMathReverse",
@@ -93,14 +65,7 @@ export function activateFormatting(editor: TextEditor) {
     "Heading down",
     "",
   );
-  addKeybinding(
-    editor,
-    "toggleList",
-    toggleList,
-    [KeyMod.CtrlCmd | KeyCode.KeyL],
-    "Toggle list",
-    "",
-  );
+  addKeybinding(editor, "toggleList", toggleList, [KeyMod.CtrlCmd | KeyCode.KeyL], "Toggle list", "");
   // addKeybinding(editor, paste, [KeyMod.CtrlCmd | KeyCode.KEY_B], "Toggle bold");
 }
 
@@ -140,15 +105,8 @@ function toggleHeadingUp(editor: TextEditor) {
       editBuilder.insert(new Position(lineIndex, 0), "# ");
     } else if (lineText.startsWith(maxHeading)) {
       // Reset heading at 6 level
-      const deleteIndex = lineText.startsWith(`${maxHeading} `)
-        ? maxHeading.length + 1
-        : maxHeading.length;
-      editBuilder.delete(
-        new Range(
-          new Position(lineIndex, 0),
-          new Position(lineIndex, deleteIndex),
-        ),
-      );
+      const deleteIndex = lineText.startsWith(`${maxHeading} `) ? maxHeading.length + 1 : maxHeading.length;
+      editBuilder.delete(new Range(new Position(lineIndex, 0), new Position(lineIndex, deleteIndex)));
     } else {
       editBuilder.insert(new Position(lineIndex, 0), "#");
     }
@@ -162,14 +120,10 @@ function toggleHeadingDown(editor: TextEditor) {
   editor.edit((editBuilder) => {
     if (lineText.startsWith("# ")) {
       // Heading level 1
-      editBuilder.delete(
-        new Range(new Position(lineIndex, 0), new Position(lineIndex, 2)),
-      );
+      editBuilder.delete(new Range(new Position(lineIndex, 0), new Position(lineIndex, 2)));
     } else if (lineText.startsWith("#")) {
       // Heading (but not level 1)
-      editBuilder.delete(
-        new Range(new Position(lineIndex, 0), new Position(lineIndex, 1)),
-      );
+      editBuilder.delete(new Range(new Position(lineIndex, 0), new Position(lineIndex, 1)));
     } else {
       // No heading
       editBuilder.insert(new Position(lineIndex, 0), `${maxHeading} `);
@@ -244,10 +198,7 @@ function setMathState(
           );
           break;
         case MathBlockState.MULTI_DISPLAYED:
-          rangeToBeDeleted = new Range(
-            new Position(cursor.line - 1, 0),
-            new Position(cursor.line + 1, 2),
-          );
+          rangeToBeDeleted = new Range(new Position(cursor.line - 1, 0), new Position(cursor.line + 1, 2));
           break;
       }
       editBuilder.delete(rangeToBeDeleted);
@@ -283,16 +234,10 @@ function setMathState(
               newPosition = newCursor;
               break;
             case MathBlockState.INLINE:
-              newPosition = newCursor.with(
-                newCursor.line,
-                newCursor.character - 1,
-              );
+              newPosition = newCursor.with(newCursor.line, newCursor.character - 1);
               break;
             case MathBlockState.SINGLE_DISPLAYED:
-              newPosition = newCursor.with(
-                newCursor.line,
-                newCursor.character - 3,
-              );
+              newPosition = newCursor.with(newCursor.line, newCursor.character - 3);
               break;
             case MathBlockState.MULTI_DISPLAYED:
               newPosition = newCursor.with(newCursor.line - 1, 0);
@@ -326,12 +271,7 @@ function _toggleMath(editor: TextEditor, transTable: MathBlockState[]) {
 
   const oldMathBlockState = getMathState(editor, cursor);
   const currentStateIndex = transTable.indexOf(oldMathBlockState);
-  setMathState(
-    editor,
-    cursor,
-    oldMathBlockState,
-    transTable[(currentStateIndex + 1) % transTable.length],
-  );
+  setMathState(editor, cursor, oldMathBlockState, transTable[(currentStateIndex + 1) % transTable.length]);
 }
 
 function toggleList(editor: TextEditor) {
@@ -351,16 +291,9 @@ function toggleList(editor: TextEditor) {
   return editor.applyEdit(batchEdit, []).then(() => fixMarker(editor));
 }
 
-function toggleListSingleLine(
-  doc: TextDocument,
-  line: number,
-  wsEdit: WorkspaceEdit,
-) {
+function toggleListSingleLine(doc: TextDocument, line: number, wsEdit: WorkspaceEdit) {
   const lineText = doc.lineAt(line).text;
-  const indentation =
-    lineText.trim().length === 0
-      ? lineText.length
-      : lineText.indexOf(lineText.trim());
+  const indentation = lineText.trim().length === 0 ? lineText.length : lineText.indexOf(lineText.trim());
   const lineTextContent = lineText.substr(indentation);
 
   const uri = doc.uri;
@@ -369,29 +302,13 @@ function toggleListSingleLine(
   }
 
   if (lineTextContent.startsWith("- ")) {
-    wsEdit.replace(
-      uri,
-      new Range(line, indentation, line, indentation + 2),
-      "* ",
-    );
+    wsEdit.replace(uri, new Range(line, indentation, line, indentation + 2), "* ");
   } else if (lineTextContent.startsWith("* ")) {
-    wsEdit.replace(
-      uri,
-      new Range(line, indentation, line, indentation + 2),
-      "+ ",
-    );
+    wsEdit.replace(uri, new Range(line, indentation, line, indentation + 2), "+ ");
   } else if (lineTextContent.startsWith("+ ")) {
-    wsEdit.replace(
-      uri,
-      new Range(line, indentation, line, indentation + 2),
-      "1. ",
-    );
+    wsEdit.replace(uri, new Range(line, indentation, line, indentation + 2), "1. ");
   } else if (/^\d\. /.test(lineTextContent)) {
-    wsEdit.replace(
-      uri,
-      new Range(line, indentation + 1, line, indentation + 2),
-      ")",
-    );
+    wsEdit.replace(uri, new Range(line, indentation + 1, line, indentation + 2), ")");
   } else if (/^\d\) /.test(lineTextContent)) {
     wsEdit.delete(uri, new Range(line, indentation, line, indentation + 3));
   } else {
@@ -408,8 +325,7 @@ function createLinkRegex(): RegExp {
   // unicode letters range(must not be a raw string)
   const ul = "\\u00a1-\\uffff";
   // IP patterns
-  const ipv4_re =
-    "(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}";
+  const ipv4_re = "(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}";
   const ipv6_re = "\\[[0-9a-f:\\.]+\\]"; // simple regex (in django it is validated additionally)
 
   // Host patterns
@@ -450,11 +366,7 @@ export function isSingleLink(text: string): boolean {
   return singleLinkRegex.test(text);
 }
 
-function styleByWrapping(
-  editor: TextEditor,
-  startPattern: string,
-  endPattern?: string,
-) {
+function styleByWrapping(editor: TextEditor, startPattern: string, endPattern?: string) {
   const actualEndPattern = endPattern === undefined ? startPattern : endPattern;
 
   const selections = editor.selections;
@@ -466,20 +378,14 @@ function styleByWrapping(
   selections.forEach((selection, i) => {
     const cursorPos = selection.active;
     const shift = shifts
-      .map(([pos, s]) =>
-        selection.start.line === pos.line &&
-        selection.start.character >= pos.character
-          ? s
-          : 0,
-      )
+      .map(([pos, s]) => (selection.start.line === pos.line && selection.start.character >= pos.character ? s : 0))
       .reduce((a, b) => a + b, 0);
 
     if (selection.isEmpty) {
       // No selected text
       if (
         startPattern !== "~~" &&
-        getContext(editor, cursorPos, startPattern) ===
-          `${startPattern}text|${actualEndPattern}`
+        getContext(editor, cursorPos, startPattern) === `${startPattern}text|${actualEndPattern}`
       ) {
         // `**text|**` to `**text**|`
         const newCursorPos = cursorPos.with({
@@ -488,10 +394,7 @@ function styleByWrapping(
         newSelections[i] = new Selection(newCursorPos, newCursorPos);
         return;
       }
-      if (
-        getContext(editor, cursorPos, startPattern) ===
-        `${startPattern}|${actualEndPattern}`
-      ) {
+      if (getContext(editor, cursorPos, startPattern) === `${startPattern}|${actualEndPattern}`) {
         // `**|**` to `|`
         const start = cursorPos.with({
           character: cursorPos.character - startPattern.length,
@@ -519,47 +422,18 @@ function styleByWrapping(
         }
         // One special case: toggle strikethrough in task list
         const currentTextLine = editor.document.lineAt(cursorPos.line);
-        if (
-          startPattern === "~~" &&
-          /^\s*[\*\+\-] (\[[ x]\] )? */g.test(currentTextLine.text)
-        ) {
-          const match = currentTextLine.text.match(
-            /^\s*[\*\+\-] (\[[ x]\] )? */g,
-          );
+        if (startPattern === "~~" && /^\s*[\*\+\-] (\[[ x]\] )? */g.test(currentTextLine.text)) {
+          const match = currentTextLine.text.match(/^\s*[\*\+\-] (\[[ x]\] )? */g);
           if (match?.[0]) {
-            wordRange = currentTextLine.range.with(
-              new Position(cursorPos.line, match[0].length),
-            );
+            wordRange = currentTextLine.range.with(new Position(cursorPos.line, match[0].length));
           }
         }
 
-        wrapRange(
-          editor,
-          batchEdit,
-          shifts,
-          newSelections,
-          i,
-          shift,
-          cursorPos,
-          wordRange,
-          false,
-          startPattern,
-        );
+        wrapRange(editor, batchEdit, shifts, newSelections, i, shift, cursorPos, wordRange, false, startPattern);
       }
     } else {
       // Text selected
-      wrapRange(
-        editor,
-        batchEdit,
-        shifts,
-        newSelections,
-        i,
-        shift,
-        cursorPos,
-        selection,
-        true,
-        startPattern,
-      );
+      wrapRange(editor, batchEdit, shifts, newSelections, i, shift, cursorPos, selection, true, startPattern);
     }
   });
 
@@ -689,21 +563,12 @@ function wrapRange(
   newSelections[i] = newSelection;
 }
 
-function isWrapped(
-  text: string,
-  startPattern: string,
-  endPattern?: string,
-): boolean {
+function isWrapped(text: string, startPattern: string, endPattern?: string): boolean {
   const actualEndPattern = endPattern === undefined ? startPattern : endPattern;
   return text.startsWith(startPattern) && text.endsWith(actualEndPattern);
 }
 
-function getContext(
-  editor: TextEditor,
-  cursorPos: Position,
-  startPattern: string,
-  endPattern?: string,
-): string {
+function getContext(editor: TextEditor, cursorPos: Position, startPattern: string, endPattern?: string): string {
   const actualEndPattern = endPattern === undefined ? startPattern : endPattern;
 
   let startPositionCharacter = cursorPos.character - startPattern.length;
@@ -714,20 +579,10 @@ function getContext(
   }
 
   const leftText = editor.document.getText(
-    new Range(
-      cursorPos.line,
-      startPositionCharacter,
-      cursorPos.line,
-      cursorPos.character,
-    ),
+    new Range(cursorPos.line, startPositionCharacter, cursorPos.line, cursorPos.character),
   );
   const rightText = editor.document.getText(
-    new Range(
-      cursorPos.line,
-      cursorPos.character,
-      cursorPos.line,
-      endPositionCharacter,
-    ),
+    new Range(cursorPos.line, cursorPos.character, cursorPos.line, endPositionCharacter),
   );
 
   if (rightText === actualEndPattern) {

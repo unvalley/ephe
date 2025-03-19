@@ -44,9 +44,7 @@ export class ErrorHandler {
     this.listeners.splice(this.listeners.indexOf(listener), 1);
   }
 
-  public setUnexpectedErrorHandler(
-    newUnexpectedErrorHandler: (e: any) => void,
-  ): void {
+  public setUnexpectedErrorHandler(newUnexpectedErrorHandler: (e: any) => void): void {
     this.unexpectedErrorHandler = newUnexpectedErrorHandler;
   }
 
@@ -67,9 +65,7 @@ export class ErrorHandler {
 
 export const errorHandler = new ErrorHandler();
 
-export function setUnexpectedErrorHandler(
-  newUnexpectedErrorHandler: (e: any) => void,
-): void {
+export function setUnexpectedErrorHandler(newUnexpectedErrorHandler: (e: any) => void): void {
   errorHandler.setUnexpectedErrorHandler(newUnexpectedErrorHandler);
 }
 
@@ -138,11 +134,7 @@ const canceledName = "Canceled";
  * Checks if the given error is a promise in canceled state
  */
 export function isPromiseCanceledError(error: any): boolean {
-  return (
-    error instanceof Error &&
-    error.name === canceledName &&
-    error.message === canceledName
-  );
+  return error instanceof Error && error.name === canceledName && error.message === canceledName;
 }
 
 /**

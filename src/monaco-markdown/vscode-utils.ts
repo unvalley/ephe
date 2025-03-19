@@ -1,12 +1,7 @@
 export function regExpLeadsToEndlessLoop(regexp: RegExp): boolean {
   // Exit early if it's one of these special cases which are meant to match
   // against an empty string
-  if (
-    regexp.source === "^" ||
-    regexp.source === "^$" ||
-    regexp.source === "$" ||
-    regexp.source === "^\\s*$"
-  ) {
+  if (regexp.source === "^" || regexp.source === "^$" || regexp.source === "$" || regexp.source === "^\\s*$") {
     return false;
   }
 

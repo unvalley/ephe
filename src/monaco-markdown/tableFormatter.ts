@@ -1,12 +1,6 @@
 // https://github.github.com/gfm/#tables-extension-
 
-import {
-  type CancellationToken,
-  type editor,
-  languages,
-  type Thenable,
-  Range as _Range,
-} from "monaco-editor";
+import { type CancellationToken, type editor, languages, type Thenable, Range as _Range } from "monaco-editor";
 import { TextDocument, type TextEditor } from "./vscode-monaco";
 
 import { EndOfLine, Range } from "./extHostTypes";
@@ -14,17 +8,12 @@ import { EndOfLine, Range } from "./extHostTypes";
 import * as TypeConverters from "./vscode-converters";
 
 export function activateTableFormatter(editor: TextEditor) {
-  languages.registerDocumentFormattingEditProvider(
-    editor.languageId,
-    new MarkdownDocumentFormatter(),
-  );
+  languages.registerDocumentFormattingEditProvider(editor.languageId, new MarkdownDocumentFormatter());
 }
 
 export function deactivate() {}
 
-class MarkdownDocumentFormatter
-  implements languages.DocumentFormattingEditProvider
-{
+class MarkdownDocumentFormatter implements languages.DocumentFormattingEditProvider {
   public provideDocumentFormattingEdits(
     model: editor.ITextModel,
     options: languages.FormattingOptions,
@@ -47,10 +36,7 @@ class MarkdownDocumentFormatter
     const lineBreak = "\\r?\\n";
     const contentLine = "\\|?.*\\|.*\\|?";
     const hyphenLine = "[ \\t]*\\|?( *:?-+:? *\\|)+( *:?-+:? *\\|?)[ \\t]*";
-    const tableRegex = new RegExp(
-      `${contentLine}${lineBreak}${hyphenLine}(?:${lineBreak}${contentLine})*`,
-      "g",
-    );
+    const tableRegex = new RegExp(`${contentLine}${lineBreak}${hyphenLine}(?:${lineBreak}${contentLine})*`, "g");
     return text.match(tableRegex);
   }
 
@@ -66,10 +52,7 @@ class MarkdownDocumentFormatter
    * In case of `markdown.extension.table.normalizeIndentation` is `enabled` it is rounded to the closest multiple of
    * the configured `tabSize`.
    */
-  private getTableIndentation(
-    text: string,
-    options: languages.FormattingOptions,
-  ) {
+  private getTableIndentation(text: string, options: languages.FormattingOptions) {
     // let doNormalize = workspace.getConfiguration('markdown.extension.tableFormatter').get<boolean>('normalizeIndentation');
     const doNormalize = true;
     const indentRegex = new RegExp(/^(\s*)\S/u);
@@ -77,17 +60,11 @@ class MarkdownDocumentFormatter
     if (match == null) return "";
     const spacesInFirstLine = match[1].length;
     const tabStops = Math.round(spacesInFirstLine / options.tabSize);
-    const spaces = doNormalize
-      ? " ".repeat(options.tabSize * tabStops)
-      : " ".repeat(spacesInFirstLine);
+    const spaces = doNormalize ? " ".repeat(options.tabSize * tabStops) : " ".repeat(spacesInFirstLine);
     return spaces;
   }
 
-  private formatTable(
-    text: string,
-    doc: TextDocument,
-    options: languages.FormattingOptions,
-  ) {
+  private formatTable(text: string, doc: TextDocument, options: languages.FormattingOptions) {
     const indentation = this.getTableIndentation(text, options);
 
     const rows: string[] = [];
@@ -184,11 +161,7 @@ class MarkdownDocumentFormatter
 
   private alignText(text: string, align: string, length: number) {
     if (align === "c" && length > text.length) {
-      return (
-        " ".repeat(Math.floor((length - text.length) / 2)) +
-        text +
-        " ".repeat(length)
-      ).slice(0, length);
+      return (" ".repeat(Math.floor((length - text.length) / 2)) + text + " ".repeat(length)).slice(0, length);
     }
     if (align === "r") {
       return (" ".repeat(length) + text).slice(-length);

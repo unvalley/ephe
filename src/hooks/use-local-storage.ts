@@ -10,10 +10,7 @@ import { useState, useEffect } from "react";
  * @param initialValue The initial value to use if no value is stored
  * @returns A stateful value and a function to update it
  */
-export const useLocalStorage = <T>(
-  key: string,
-  initialValue: T,
-): [T, (value: T) => void] => {
+export const useLocalStorage = <T>(key: string, initialValue: T): [T, (value: T) => void] => {
   // Initialize state with value from localStorage or initialValue
   const [storedValue, setStoredValue] = useState<T>(() => {
     if (typeof window === "undefined") {

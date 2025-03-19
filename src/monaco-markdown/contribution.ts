@@ -16,7 +16,6 @@ interface ILangImpl {
 
 const languageDefinitions: { [languageId: string]: ILang } = {};
 
-
 const languagePromises: { [languageId: string]: Promise<void> } = {};
 
 export const loadLanguage = (languageId: string): Promise<void> => {
@@ -42,4 +41,4 @@ export const registerLanguage = (def: ILang): void => {
   languages.onLanguage(languageId, () => {
     loadLanguage(languageId);
   });
-}
+};

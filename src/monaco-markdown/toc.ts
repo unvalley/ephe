@@ -18,20 +18,20 @@ export const buildToc = (document: TextDocument): TocEntry[] => {
   for (let i = 0; i < lineCount; i++) {
     const lineText = document.lineAt(i).text;
     const match = lineText.match(/^(#{1,6})\s+(.+)$/);
-    
+
     if (match) {
       const level = match[1].length;
       const text = match[2].trim();
       const slug = slugify(text);
-      
+
       toc.push({
         level,
         text,
         slug,
-        line: i
+        line: i,
       });
     }
   }
 
   return toc;
-}
+};

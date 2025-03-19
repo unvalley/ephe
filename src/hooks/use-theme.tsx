@@ -17,9 +17,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     setMounted(true);
-    const storedTheme = sessionStorage.getItem("theme") as
-      | ColorTheme
-      | undefined;
+    const storedTheme = sessionStorage.getItem("theme") as ColorTheme | undefined;
 
     if (!storedTheme) {
       setTheme("light");
@@ -45,11 +43,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     sessionStorage.setItem("theme", newTheme);
   };
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
 };
 
 export const useTheme = (): ThemeContextType => {

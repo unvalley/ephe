@@ -26,28 +26,15 @@ export interface SelectionLike extends RangeLike {
 
 export namespace Selection {
   export function to(selection: _Selection): vscode.Selection {
-    const {
-      selectionStartLineNumber,
-      selectionStartColumn,
-      positionLineNumber,
-      positionColumn,
-    } = selection;
-    const start = new vscode.Position(
-      selectionStartLineNumber - 1,
-      selectionStartColumn - 1,
-    );
+    const { selectionStartLineNumber, selectionStartColumn, positionLineNumber, positionColumn } = selection;
+    const start = new vscode.Position(selectionStartLineNumber - 1, selectionStartColumn - 1);
     const end = new vscode.Position(positionLineNumber - 1, positionColumn - 1);
     return new vscode.Selection(start, end);
   }
 
   export function from(selection: SelectionLike): _Selection {
     const { anchor, active } = selection;
-    return new _Selection(
-      anchor.line + 1,
-      anchor.character + 1,
-      active.line + 1,
-      active.character + 1,
-    );
+    return new _Selection(anchor.line + 1, anchor.character + 1, active.line + 1, active.character + 1);
   }
 }
 export namespace Range {
@@ -59,12 +46,7 @@ export namespace Range {
       return undefined;
     }
     const { start, end } = range;
-    return new _Range(
-      start.line + 1,
-      start.character + 1,
-      end.line + 1,
-      end.character + 1,
-    );
+    return new _Range(start.line + 1, start.character + 1, end.line + 1, end.character + 1);
   }
 
   export function to(range: undefined): vscode.Range;
@@ -75,12 +57,7 @@ export namespace Range {
       return undefined;
     }
     const { startLineNumber, startColumn, endLineNumber, endColumn } = range;
-    return new vscode.Range(
-      startLineNumber - 1,
-      startColumn - 1,
-      endLineNumber - 1,
-      endColumn - 1,
-    );
+    return new vscode.Range(startLineNumber - 1, startColumn - 1, endLineNumber - 1, endColumn - 1);
   }
 }
 
@@ -95,9 +72,7 @@ export namespace Position {
 }
 
 export namespace EndOfLine {
-  export function from(
-    eol: vscode.EndOfLine,
-  ): editor.EndOfLineSequence | undefined {
+  export function from(eol: vscode.EndOfLine): editor.EndOfLineSequence | undefined {
     if (eol === vscode.EndOfLine.CRLF) {
       return editor.EndOfLineSequence.CRLF;
     }
@@ -107,9 +82,7 @@ export namespace EndOfLine {
     return undefined;
   }
 
-  export function to(
-    eol: editor.EndOfLineSequence,
-  ): vscode.EndOfLine | undefined {
+  export function to(eol: editor.EndOfLineSequence): vscode.EndOfLine | undefined {
     if (eol === editor.EndOfLineSequence.CRLF) {
       return vscode.EndOfLine.CRLF;
     }
@@ -121,9 +94,7 @@ export namespace EndOfLine {
 }
 
 export namespace WorkspaceEdit {
-  export function from(
-    value: vscode.WorkspaceEdit,
-  ): editor.IIdentifiedSingleEditOperation[] {
+  export function from(value: vscode.WorkspaceEdit): editor.IIdentifiedSingleEditOperation[] {
     const edits: editor.IIdentifiedSingleEditOperation[] = [];
     for (const entry of value._allEntries()) {
       const [uri, uriOrEdits] = entry;

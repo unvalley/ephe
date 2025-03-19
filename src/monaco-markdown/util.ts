@@ -1,9 +1,6 @@
 import type { TextDocument } from "./vscode-monaco";
 
-export function isInFencedCodeBlock(
-  doc: TextDocument,
-  lineNum: number,
-): boolean {
+export function isInFencedCodeBlock(doc: TextDocument, lineNum: number): boolean {
   let inCodeBlock = false;
   let codeBlockStart = -1;
 
@@ -67,11 +64,11 @@ function textInHtml(text: string) {
 export function slugify(text: string): string {
   return text
     .toLowerCase()
-    .replace(/\s+/g, '-')       // Replace spaces with -
-    .replace(/[^\w\-]+/g, '')   // Remove all non-word chars
-    .replace(/\-\-+/g, '-')     // Replace multiple - with single -
-    .replace(/^-+/, '')         // Trim - from start of text
-    .replace(/-+$/, '');        // Trim - from end of text
+    .replace(/\s+/g, "-") // Replace spaces with -
+    .replace(/[^\w\-]+/g, "") // Remove all non-word chars
+    .replace(/\-\-+/g, "-") // Replace multiple - with single -
+    .replace(/^-+/, "") // Trim - from start of text
+    .replace(/-+$/, ""); // Trim - from end of text
 }
 
 // Converted from `/[^\p{Word}\- ]/u`

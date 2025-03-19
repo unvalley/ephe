@@ -17,9 +17,7 @@ export default function LandingPage() {
               className="mr-2"
             />
             Ephe
-            <span className="hidden sm:inline">
-              &nbsp;-&nbsp;An ephemeral markdown paper
-            </span>
+            <span className="hidden sm:inline">&nbsp;-&nbsp;An ephemeral markdown paper</span>
           </h1>
 
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
@@ -27,8 +25,8 @@ export default function LandingPage() {
           </p>
 
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-            Ephe stores your notes on browser's local storage, nothing is sent
-            to a server. No tracking, no ads, no login.
+            Ephe stores your notes on browser's local storage, nothing is sent to a server. No tracking, no ads, no
+            login.
           </p>
         </div>
 
@@ -36,14 +34,9 @@ export default function LandingPage() {
           <h2 className="text-xl sm:text-2xl font-normal">Why Ephe?</h2>
 
           <ul className="text-sm sm:text-base text-gray-600 dark:text-gray-400 space-y-2">
-            <li>
-              - Traditional to-do apps can be time-consuming and quickly
-              overwhelming.
-            </li>
+            <li>- Traditional to-do apps can be time-consuming and quickly overwhelming.</li>
             <li>- A single page is all you need to organize your day.</li>
-            <li>
-              - Focus on easily capturing your todos, thoughts, and ideas.
-            </li>
+            <li>- Focus on easily capturing your todos, thoughts, and ideas.</li>
           </ul>
         </div>
 
@@ -66,10 +59,7 @@ export default function LandingPage() {
 
       <footer className="mt-20 sm:mt-40 text-gray-600 dark:text-gray-400 text-center text-sm sm:text-base">
         This project is built by{" "}
-        <Link
-          href="https://github.com/unvalley"
-          className="text-blue-400 hover:underline"
-        >
+        <Link href="https://github.com/unvalley" className="text-blue-400 hover:underline">
           unvalley
         </Link>
       </footer>

@@ -2,13 +2,7 @@ import type { TextEditor, TextEditorEdit } from "./vscode-monaco";
 
 import { isInFencedCodeBlock } from "./util";
 import { KeyCode, KeyMod, type Thenable } from "monaco-editor";
-import {
-  Position,
-  WorkspaceEdit,
-  Range,
-  Selection,
-  TextEditorRevealType,
-} from "./extHostTypes";
+import { Position, WorkspaceEdit, Range, Selection, TextEditorRevealType } from "./extHostTypes";
 import { addKeybinding } from "./formatting";
 
 function onShiftTabKey(editor: TextEditor) {
@@ -16,62 +10,13 @@ function onShiftTabKey(editor: TextEditor) {
 }
 
 export function activateListEditing(editor: TextEditor) {
-  const editorContext =
-    "editorTextFocus && !editorReadonly && !suggestWidgetVisible";
-  addKeybinding(
-    editor,
-    "onEnterKey",
-    onEnterKey,
-    [KeyCode.Enter],
-    "",
-    editorContext,
-    "",
-  );
-  addKeybinding(
-    editor,
-    "onCtrlEnterKey",
-    onCtrlEnterKey,
-    [KeyCode.Enter | KeyMod.CtrlCmd],
-    "",
-    editorContext,
-    "",
-  );
-  addKeybinding(
-    editor,
-    "onShiftEnterKey",
-    onShiftEnterKey,
-    [KeyCode.Enter | KeyMod.Shift],
-    "",
-    editorContext,
-    "",
-  );
-  addKeybinding(
-    editor,
-    "onTabKey",
-    onTabKey,
-    [KeyCode.Tab],
-    "",
-    editorContext,
-    "",
-  );
-  addKeybinding(
-    editor,
-    "onShiftTabKey",
-    onShiftTabKey,
-    [KeyCode.Tab | KeyMod.Shift],
-    "",
-    editorContext,
-    "",
-  );
-  addKeybinding(
-    editor,
-    "onBackspaceKey",
-    onBackspaceKey,
-    [KeyCode.Backspace],
-    "",
-    editorContext,
-    "",
-  );
+  const editorContext = "editorTextFocus && !editorReadonly && !suggestWidgetVisible";
+  addKeybinding(editor, "onEnterKey", onEnterKey, [KeyCode.Enter], "", editorContext, "");
+  addKeybinding(editor, "onCtrlEnterKey", onCtrlEnterKey, [KeyCode.Enter | KeyMod.CtrlCmd], "", editorContext, "");
+  addKeybinding(editor, "onShiftEnterKey", onShiftEnterKey, [KeyCode.Enter | KeyMod.Shift], "", editorContext, "");
+  addKeybinding(editor, "onTabKey", onTabKey, [KeyCode.Tab], "", editorContext, "");
+  addKeybinding(editor, "onShiftTabKey", onShiftTabKey, [KeyCode.Tab | KeyMod.Shift], "", editorContext, "");
+  addKeybinding(editor, "onBackspaceKey", onBackspaceKey, [KeyCode.Backspace], "", editorContext, "");
 
   //
   // context.subscriptions.push(
@@ -104,18 +49,12 @@ function onEnterKey(editor: TextEditor, modifiers?: string) {
     lineBreakPos = line.range.end;
   }
 
-  if (
-    modifiers === "shift" ||
-    isInFencedCodeBlock(editor.document, cursorPos.line)
-  ) {
+  if (modifiers === "shift" || isInFencedCodeBlock(editor.document, cursorPos.line)) {
     return asNormal(editor, "enter", modifiers);
   }
 
   // If it's an empty list item, remove it
-  if (
-    /^(>|([-+*]|[0-9]+[.)])( +\[[ x]\])?)$/.test(textBeforeCursor.trim()) &&
-    textAfterCursor.trim().length === 0
-  ) {
+  if (/^(>|([-+*]|[0-9]+[.)])( +\[[ x]\])?)$/.test(textBeforeCursor.trim()) && textAfterCursor.trim().length === 0) {
     return editor
       .edit((editBuilder: TextEditorEdit) => {
         editBuilder.delete(line.range);
@@ -154,18 +93,12 @@ function onEnterKey(editor: TextEditor, modifiers?: string) {
     // Unordered list
     return editor
       .edit((editBuilder: TextEditorEdit) => {
-        editBuilder.insert(
-          lineBreakPos,
-          `\n${matches[1].replace("[x]", "[ ]")}`,
-        );
+        editBuilder.insert(lineBreakPos, `\n${matches[1].replace("[x]", "[ ]")}`);
       })
       .then(() => {
         // Fix cursor position
         if (modifiers === "ctrl" && !cursorPos.isEqual(lineBreakPos)) {
-          const newCursorPos = cursorPos.with(
-            line.lineNumber + 1,
-            matches[1].length,
-          );
+          const newCursorPos = cursorPos.with(line.lineNumber + 1, matches[1].length);
           editor.selection = new Selection(newCursorPos, newCursorPos);
         }
       })
@@ -177,14 +110,10 @@ function onEnterKey(editor: TextEditor, modifiers?: string) {
   if (
     // @ts-ignore
     // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-    (matches = /^(\s*)([0-9]+)([.)])( +)((\[[ x]\] +)?)/.exec(
-      textBeforeCursor,
-    )) !== null
+    (matches = /^(\s*)([0-9]+)([.)])( +)((\[[ x]\] +)?)/.exec(textBeforeCursor)) !== null
   ) {
     // Ordered list
-    const maybeConfig = editor.getConfiguration(
-      "markdown.extension.orderedList",
-    );
+    const maybeConfig = editor.getConfiguration("markdown.extension.orderedList");
     const config = maybeConfig?.get<string>("marker") || "";
 
     let marker = "1";
@@ -198,12 +127,9 @@ function onEnterKey(editor: TextEditor, modifiers?: string) {
       marker = String(Number(previousMarker) + 1);
     }
     // Add enough trailing spaces so that the text is aligned with the previous list item, but always keep at least one space
-    trailingSpace = " ".repeat(
-      Math.max(1, textIndent - (marker + delimiter).length),
-    );
+    trailingSpace = " ".repeat(Math.max(1, textIndent - (marker + delimiter).length));
 
-    const toBeAdded =
-      leadingSpace + marker + delimiter + trailingSpace + gfmCheckbox;
+    const toBeAdded = leadingSpace + marker + delimiter + trailingSpace + gfmCheckbox;
     return editor
       .edit(
         (editBuilder: TextEditorEdit) => {
@@ -214,10 +140,7 @@ function onEnterKey(editor: TextEditor, modifiers?: string) {
       .then(() => {
         // Fix cursor position
         if (modifiers === "ctrl" && !cursorPos.isEqual(lineBreakPos)) {
-          const newCursorPos = cursorPos.with(
-            line.lineNumber + 1,
-            toBeAdded.length,
-          );
+          const newCursorPos = cursorPos.with(line.lineNumber + 1, toBeAdded.length);
           editor.selection = new Selection(newCursorPos, newCursorPos);
         }
       })
@@ -256,18 +179,14 @@ function onTabKey(editor: TextEditor, modifiers?: string) {
 function onBackspaceKey(editor: TextEditor) {
   const cursor = editor.selection.active;
   const document = editor.document;
-  const textBeforeCursor = document
-    .lineAt(cursor.line)
-    .text.substr(0, cursor.character);
+  const textBeforeCursor = document.lineAt(cursor.line).text.substr(0, cursor.character);
 
   if (isInFencedCodeBlock(document, cursor.line)) {
     return asNormal(editor, "backspace");
   }
 
   if (!editor.selection.isEmpty) {
-    return asNormal(editor, "backspace")?.then(() =>
-      fixMarker(editor, findNextMarkerLineNumber(editor)),
-    );
+    return asNormal(editor, "backspace")?.then(() => fixMarker(editor, findNextMarkerLineNumber(editor)));
   }
   if (/^\s+([-+*]|[0-9]+[.)]) $/.test(textBeforeCursor)) {
     // e.g. textBeforeCursor === `  - `, `   1. `
@@ -277,31 +196,20 @@ function onBackspaceKey(editor: TextEditor) {
     // e.g. textBeforeCursor === `- `, `1. `
     return editor
       .edit((editBuilder: TextEditorEdit) => {
-        editBuilder.replace(
-          new Range(cursor.with({ character: 0 }), cursor),
-          " ".repeat(textBeforeCursor.length),
-        );
+        editBuilder.replace(new Range(cursor.with({ character: 0 }), cursor), " ".repeat(textBeforeCursor.length));
       })
       .then(() => fixMarker(editor, findNextMarkerLineNumber(editor)));
   }
   if (/^\s*([-+*]|[0-9]+[.)]) +(\[[ x]\] )$/.test(textBeforeCursor)) {
     // e.g. textBeforeCursor === `- [ ]`, `1. [x]`, `  - [x]`
-    return deleteRange(
-      editor,
-      new Range(
-        cursor.with({ character: textBeforeCursor.length - 4 }),
-        cursor,
-      ),
-    ).then(() => fixMarker(editor, findNextMarkerLineNumber(editor)));
+    return deleteRange(editor, new Range(cursor.with({ character: textBeforeCursor.length - 4 }), cursor)).then(() =>
+      fixMarker(editor, findNextMarkerLineNumber(editor)),
+    );
   }
   return asNormal(editor, "backspace");
 }
 
-function asNormal(
-  editor: TextEditor,
-  key: string,
-  modifiers?: string,
-): Thenable<void> | undefined {
+function asNormal(editor: TextEditor, key: string, modifiers?: string): Thenable<void> | undefined {
   switch (key) {
     case "enter":
       if (modifiers === "ctrl") {
@@ -313,8 +221,7 @@ function asNormal(
       });
     case "tab": {
       const maybeConfig = editor.getConfiguration("emmet");
-      const config =
-        maybeConfig?.get<boolean>("triggerExpansionOnTab") || false;
+      const config = maybeConfig?.get<boolean>("triggerExpansionOnTab") || false;
       if (config) {
         return editor.executeCommand("editor.emmet.action.expandAbbreviation");
       }
@@ -345,16 +252,11 @@ function indent(editor: TextEditor): Thenable<void> {
       const indentationSize = tryDetermineIndentationSize(
         editor,
         selection.start.line,
-        editor.document.lineAt(selection.start.line)
-          .firstNonWhitespaceCharacterIndex,
+        editor.document.lineAt(selection.start.line).firstNonWhitespaceCharacterIndex,
       );
       const edit = new WorkspaceEdit();
       for (let i = selection.start.line; i <= selection.end.line; i++) {
-        if (
-          i === selection.end.line &&
-          !selection.isEmpty &&
-          selection.end.character === 0
-        ) {
+        if (i === selection.end.line && !selection.isEmpty && selection.end.character === 0) {
           break;
         }
         if (editor.document.lineAt(i).text.length !== 0) {
@@ -385,16 +287,11 @@ function outdent(editor: TextEditor): Thenable<void> {
       const indentationSize = tryDetermineIndentationSize(
         editor,
         selection.start.line,
-        editor.document.lineAt(selection.start.line)
-          .firstNonWhitespaceCharacterIndex,
+        editor.document.lineAt(selection.start.line).firstNonWhitespaceCharacterIndex,
       );
       const edit = new WorkspaceEdit();
       for (let i = selection.start.line; i <= selection.end.line; i++) {
-        if (
-          i === selection.end.line &&
-          !selection.isEmpty &&
-          selection.end.character === 0
-        ) {
+        if (i === selection.end.line && !selection.isEmpty && selection.end.character === 0) {
           break;
         }
         const lineText = editor.document.lineAt(i).text;
@@ -402,18 +299,14 @@ function outdent(editor: TextEditor): Thenable<void> {
         if (lineText.trim().length === 0) {
           maxOutdentSize = lineText.length;
         } else {
-          maxOutdentSize =
-            editor.document.lineAt(i).firstNonWhitespaceCharacterIndex;
+          maxOutdentSize = editor.document.lineAt(i).firstNonWhitespaceCharacterIndex;
         }
         if (maxOutdentSize > 0) {
           const uri = editor.document.uri;
           if (!uri) {
             throw new Error("Document URI is not set");
           }
-          edit.delete(
-            uri,
-            new Range(i, 0, i, Math.min(indentationSize, maxOutdentSize)),
-          );
+          edit.delete(uri, new Range(i, 0, i, Math.min(indentationSize, maxOutdentSize)));
         }
       }
       return editor.applyEdit(edit);
@@ -423,18 +316,13 @@ function outdent(editor: TextEditor): Thenable<void> {
   return editor.executeCommand("editor.action.outdentLines");
 }
 
-function tryDetermineIndentationSize(
-  editor: TextEditor,
-  line: number,
-  currentIndentation: number,
-) {
+function tryDetermineIndentationSize(editor: TextEditor, line: number, currentIndentation: number) {
   while (--line >= 0) {
     const lineText = editor.document.lineAt(line).text;
     let matches: RegExpExecArray | null = null;
     if (
       // biome-ignore lint/suspicious/noAssignInExpressions: <explanation>
-      (matches = /^(\s*)(([-+*]|[0-9]+[.)]) +)(\[[ x]\] +)?/.exec(lineText)) !==
-      null
+      (matches = /^(\s*)(([-+*]|[0-9]+[.)]) +)(\[[ x]\] +)?/.exec(lineText)) !== null
     ) {
       if (matches[1].length <= currentIndentation) {
         return matches[2].length;
@@ -470,11 +358,7 @@ function findNextMarkerLineNumber(editor: TextEditor, line?: number): number {
  *
  * @returns the fixed marker number
  */
-function lookUpwardForMarker(
-  editor: TextEditor,
-  line: number,
-  currentIndentation: number,
-): number {
+function lookUpwardForMarker(editor: TextEditor, line: number, currentIndentation: number): number {
   while (--line >= 0) {
     const lineText = editor.document.lineAt(line).text;
     let matches: RegExpExecArray | null = null;
@@ -487,10 +371,8 @@ function lookUpwardForMarker(
       }
 
       if (
-        (!leadingSpace.includes("\t") &&
-          leadingSpace.length + matches[2].length <= currentIndentation) ||
-        (leadingSpace.includes("\t") &&
-          leadingSpace.length + 1 <= currentIndentation)
+        (!leadingSpace.includes("\t") && leadingSpace.length + matches[2].length <= currentIndentation) ||
+        (leadingSpace.includes("\t") && leadingSpace.length + 1 <= currentIndentation)
       ) {
         return 1;
       }
@@ -546,19 +428,10 @@ export function fixMarker(editor: TextEditor, line?: number): Promise<boolean> {
             return;
           }
           // Add enough trailing spaces so that the text is still aligned at the same indentation level as it was previously, but always keep at least one space
-          fixedMarkerString +=
-            delimiter +
-            " ".repeat(
-              Math.max(1, listIndent - (fixedMarkerString + delimiter).length),
-            );
+          fixedMarkerString += delimiter + " ".repeat(Math.max(1, listIndent - (fixedMarkerString + delimiter).length));
 
           editBuilder.replace(
-            new Range(
-              line,
-              leadingSpace.length,
-              line,
-              leadingSpace.length + listIndent,
-            ),
+            new Range(line, leadingSpace.length, line, leadingSpace.length + listIndent),
             fixedMarkerString,
           );
         },
@@ -574,10 +447,7 @@ export function fixMarker(editor: TextEditor, line?: number): Promise<boolean> {
           }
           if (/^\s*$/.test(nextLineText)) {
             nextLine++;
-          } else if (
-            listIndent <= 4 &&
-            !nextLineText.startsWith(indentString)
-          ) {
+          } else if (listIndent <= 4 && !nextLineText.startsWith(indentString)) {
             return;
           } else {
             nextLine++;

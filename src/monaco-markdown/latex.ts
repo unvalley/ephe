@@ -207,15 +207,7 @@ const annotation1 = [
 ];
 const verticalLayout0 = ["atop"];
 const verticalLayout2 = ["stackrel", "overset", "underset", "raisebox"];
-const overlap1 = [
-  "mathllap",
-  "mathrlap",
-  "mathclap",
-  "llap",
-  "rlap",
-  "clap",
-  "smash",
-];
+const overlap1 = ["mathllap", "mathrlap", "mathclap", "llap", "rlap", "clap", "smash"];
 const spacing0 = [
   "thinspace",
   "medspace",
@@ -228,17 +220,7 @@ const spacing0 = [
   "nobreakspace",
   "negthickspace",
 ];
-const spacing1 = [
-  "kern",
-  "mkern",
-  "mskip",
-  "hskip",
-  "hspace",
-  "hspace*",
-  "phantom",
-  "hphantom",
-  "vphantom",
-];
+const spacing1 = ["kern", "mkern", "mskip", "hskip", "hspace", "hspace*", "phantom", "hphantom", "vphantom"];
 const logicAndSetTheory0 = [
   "forall",
   "complement",
@@ -706,16 +688,7 @@ const extensibleArrows1 = [
   "xmapsto",
   "xlongequal",
 ];
-const classAssignment1 = [
-  "mathbin",
-  "mathclose",
-  "mathinner",
-  "mathop",
-  "mathopen",
-  "mathord",
-  "mathpunct",
-  "mathrel",
-];
+const classAssignment1 = ["mathbin", "mathclose", "mathinner", "mathop", "mathopen", "mathord", "mathpunct", "mathrel"];
 const color2 = ["color", "textcolor", "colorbox"];
 const font0 = ["rm", "bf", "it", "sf", "tt"];
 const font1 = [
@@ -742,27 +715,8 @@ const font1 = [
   "mathcal",
   "mathscr",
 ];
-const size0 = [
-  "Huge",
-  "huge",
-  "LARGE",
-  "Large",
-  "large",
-  "normalsize",
-  "small",
-  "footnotesize",
-  "scriptsize",
-  "tiny",
-];
-const style0 = [
-  "displaystyle",
-  "textstyle",
-  "scriptstyle",
-  "scriptscriptstyle",
-  "limits",
-  "nolimits",
-  "verb",
-];
+const size0 = ["Huge", "huge", "LARGE", "Large", "large", "normalsize", "small", "footnotesize", "scriptsize", "tiny"];
+const style0 = ["displaystyle", "textstyle", "scriptstyle", "scriptscriptstyle", "limits", "nolimits", "verb"];
 const symbolsAndPunctuation0 = [
   "cdots",
   "LaTeX",
@@ -878,14 +832,7 @@ export const _c2 = Array.from(
   ]),
 );
 
-export const _c3 = Array.from(
-  new Set([
-    ...verticalLayout2,
-    ...binomialCoefficients2,
-    ...fractions2,
-    ...color2,
-  ]),
-);
+export const _c3 = Array.from(new Set([...verticalLayout2, ...binomialCoefficients2, ...fractions2, ...color2]));
 
 export const _begin = ["begin", "end"];
 

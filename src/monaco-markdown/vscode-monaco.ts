@@ -1,19 +1,6 @@
-import {
-  EndOfLine,
-  Position,
-  Range,
-  type Selection,
-  TextEditorRevealType,
-  type WorkspaceEdit,
-} from "./extHostTypes";
+import { EndOfLine, Position, Range, type Selection, TextEditorRevealType, type WorkspaceEdit } from "./extHostTypes";
 
-import {
-  editor,
-  type Selection as _Selection,
-  type IRange,
-  type Uri,
-  type Thenable,
-} from "monaco-editor";
+import { editor, type Selection as _Selection, type IRange, type Uri, type Thenable } from "monaco-editor";
 import { regExpLeadsToEndlessLoop } from "./vscode-utils";
 import { ensureValidWordDefinition, getWordAtText } from "./wordHelper";
 
@@ -22,10 +9,7 @@ import type { TextLine } from "./vscode-common";
 
 const _modeId2WordDefinition = new Map<string, RegExp>();
 
-export function setWordDefinitionFor(
-  modeId: string,
-  wordDefinition: RegExp,
-): void {
+export function setWordDefinitionFor(modeId: string, wordDefinition: RegExp): void {
   _modeId2WordDefinition.set(modeId, wordDefinition);
 }
 
@@ -33,11 +17,7 @@ export function getWordDefinitionFor(modeId: string): RegExp | undefined {
   return _modeId2WordDefinition.get(modeId);
 }
 
-function revealRangeInEditor(
-  _editor: editor.ICodeEditor,
-  range: IRange,
-  revealType: TextEditorRevealType,
-): void {
+function revealRangeInEditor(_editor: editor.ICodeEditor, range: IRange, revealType: TextEditorRevealType): void {
   switch (revealType) {
     case TextEditorRevealType.Default:
     case undefined:
@@ -47,10 +27,7 @@ function revealRangeInEditor(
       _editor.revealRangeInCenter(range, editor.ScrollType.Smooth);
       break;
     case TextEditorRevealType.InCenterIfOutsideViewport:
-      _editor.revealRangeInCenterIfOutsideViewport(
-        range,
-        editor.ScrollType.Smooth,
-      );
+      _editor.revealRangeInCenterIfOutsideViewport(range, editor.ScrollType.Smooth);
       break;
     case TextEditorRevealType.AtTop:
       _editor.revealRangeAtTop(range, editor.ScrollType.Smooth);
@@ -134,16 +111,11 @@ export class TextDocument {
     }
 
     let result = this._textLines[line];
-    if (
-      !result ||
-      result.lineNumber !== line ||
-      result.text !== this._lines[line]
-    ) {
+    if (!result || result.lineNumber !== line || result.text !== this._lines[line]) {
       const text = this._lines[line];
       const firstNonWhitespaceCharacterIndex = /^(\s*)/.exec(text)![1].length;
       const range = new Range(line, 0, line, text.length);
-      const rangeIncludingLineBreak =
-        line < this._lines.length - 1 ? new Range(line, 0, line + 1, 0) : range;
+      const rangeIncludingLineBreak = line < this._lines.length - 1 ? new Range(line, 0, line + 1, 0) : range;
 
       result = Object.freeze({
         lineNumber: line,
@@ -219,10 +191,7 @@ export class TextDocument {
     return new Position(line, character);
   }
 
-  getWordRangeAtPosition(
-    _position: Position,
-    regexp?: RegExp,
-  ): Range | undefined {
+  getWordRangeAtPosition(_position: Position, regexp?: RegExp): Range | undefined {
     const position = this.validatePosition(_position);
 
     if (!regexp) {
@@ -244,12 +213,7 @@ export class TextDocument {
     );
 
     if (wordAtText) {
-      return new Range(
-        position.line,
-        wordAtText.startColumn - 1,
-        position.line,
-        wordAtText.endColumn - 1,
-      );
+      return new Range(position.line, wordAtText.startColumn - 1, position.line, wordAtText.endColumn - 1);
     }
     return undefined;
   }
@@ -305,9 +269,7 @@ export class TextEditor {
   }
 
   set selections(value: Selection[]) {
-    this.editor.setSelections(
-      value.map((s) => TypeConverters.Selection.from(s)),
-    );
+    this.editor.setSelections(value.map((s) => TypeConverters.Selection.from(s)));
   }
 
   get visibleRanges(): Range[] {
@@ -326,9 +288,7 @@ export class TextEditor {
     },
   ): Promise<void> {
     if (this._disposed) {
-      return Promise.reject(
-        new Error("TextEditor#edit not possible on closed editors"),
-      );
+      return Promise.reject(new Error("TextEditor#edit not possible on closed editors"));
     }
     const edit = new TextEditorEdit(this.document, options);
     callback(edit);
@@ -373,37 +333,27 @@ export class TextEditor {
     }
 
     // prepare data for serialization
-    const edits = editData.edits.map(
-      (edit): editor.IIdentifiedSingleEditOperation => {
-        return {
-          range: TypeConverters.Range.from(edit.range),
-          text: edit.text,
-          forceMoveMarkers: edit.forceMoveMarkers,
-        };
-      },
-    );
+    const edits = editData.edits.map((edit): editor.IIdentifiedSingleEditOperation => {
+      return {
+        range: TypeConverters.Range.from(edit.range),
+        text: edit.text,
+        forceMoveMarkers: edit.forceMoveMarkers,
+      };
+    });
 
     const model = this.editor.getModel();
     if (!model) {
       throw new Error("Model is not set");
     }
-    model.pushEditOperations(
-      this.editor.getSelections(),
-      edits,
-      (): _Selection[] => {
-        return [];
-      },
-    );
+    model.pushEditOperations(this.editor.getSelections(), edits, (): _Selection[] => {
+      return [];
+    });
 
     return Promise.resolve();
   }
 
   revealRange(range: Range, revealType: TextEditorRevealType): void {
-    revealRangeInEditor(
-      this.editor,
-      TypeConverters.Range.from(range),
-      revealType,
-    );
+    revealRangeInEditor(this.editor, TypeConverters.Range.from(range), revealType);
   }
 
   applyEdit(edit: WorkspaceEdit, newSelections?: Selection[]): Thenable<void> {
@@ -411,15 +361,9 @@ export class TextEditor {
     if (!model) {
       throw new Error("Model is not set");
     }
-    model.pushEditOperations(
-      this.editor.getSelections(),
-      TypeConverters.WorkspaceEdit.from(edit),
-      (): _Selection[] => {
-        return (
-          newSelections?.map((s) => TypeConverters.Selection.from(s)) || []
-        );
-      },
-    );
+    model.pushEditOperations(this.editor.getSelections(), TypeConverters.WorkspaceEdit.from(edit), (): _Selection[] => {
+      return newSelections?.map((s) => TypeConverters.Selection.from(s)) || [];
+    });
 
     // @ts-ignore
     return Promise.resolve(null);
@@ -492,10 +436,7 @@ export class TextEditorEdit {
   private _setEndOfLine: EndOfLine | undefined = undefined;
   private _finalized = false;
 
-  constructor(
-    document: TextDocument,
-    options: { undoStopBefore: boolean; undoStopAfter: boolean },
-  ) {
+  constructor(document: TextDocument, options: { undoStopBefore: boolean; undoStopAfter: boolean }) {
     this._document = document;
     this._documentVersionId = document.version;
     this._undoStopBefore = options.undoStopBefore;
@@ -552,11 +493,7 @@ export class TextEditorEdit {
     this._pushEdit(range, null, true);
   }
 
-  private _pushEdit(
-    range: Range,
-    text: string | null,
-    forceMoveMarkers: boolean,
-  ): void {
+  private _pushEdit(range: Range, text: string | null, forceMoveMarkers: boolean): void {
     const validRange = this._document.validateRange(range);
     this._collectedEdits.push({
       range: validRange,

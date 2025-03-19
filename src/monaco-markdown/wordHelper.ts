@@ -29,9 +29,7 @@ function createWordRegExp(allowInWords = ""): RegExp {
 // catches numbers (including floating numbers) in the first group, and alphanum in the second
 export const DEFAULT_WORD_REGEXP = createWordRegExp();
 
-export function ensureValidWordDefinition(
-  wordDefinition?: RegExp | null,
-): RegExp {
+export function ensureValidWordDefinition(wordDefinition?: RegExp | null): RegExp {
   let result: RegExp = DEFAULT_WORD_REGEXP;
 
   if (wordDefinition && wordDefinition instanceof RegExp) {

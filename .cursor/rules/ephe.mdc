@@ -1,0 +1,15 @@
+---
+description: jjjjjjjjj
+globs: 
+---
+
+## General Rule
+
+- Write comments in English
+
+
+## TypeScript and React Rule
+
+- Use strict types
+- Use arrow functions
+- Write tests (vitest) with feature implementations

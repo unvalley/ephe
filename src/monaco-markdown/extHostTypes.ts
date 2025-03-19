@@ -129,10 +129,7 @@ export class Position {
   translate(change: { lineDelta?: number; characterDelta?: number }): Position;
   translate(lineDelta?: number, characterDelta?: number): Position;
   translate(
-    lineDeltaOrChange:
-      | number
-      | undefined
-      | { lineDelta?: number; characterDelta?: number },
+    lineDeltaOrChange: number | undefined | { lineDelta?: number; characterDelta?: number },
     characterDelta = 0,
   ): Position {
     if (lineDeltaOrChange === null || characterDelta === null) {
@@ -145,14 +142,8 @@ export class Position {
     } else if (typeof lineDeltaOrChange === "number") {
       lineDelta = lineDeltaOrChange;
     } else {
-      lineDelta =
-        typeof lineDeltaOrChange.lineDelta === "number"
-          ? lineDeltaOrChange.lineDelta
-          : 0;
-      characterDelta =
-        typeof lineDeltaOrChange.characterDelta === "number"
-          ? lineDeltaOrChange.characterDelta
-          : 0;
+      lineDelta = typeof lineDeltaOrChange.lineDelta === "number" ? lineDeltaOrChange.lineDelta : 0;
+      characterDelta = typeof lineDeltaOrChange.characterDelta === "number" ? lineDeltaOrChange.characterDelta : 0;
     }
 
     if (lineDelta === 0 && characterDelta === 0) {
@@ -177,12 +168,8 @@ export class Position {
     } else if (typeof lineOrChange === "number") {
       line = lineOrChange;
     } else {
-      line =
-        typeof lineOrChange.line === "number" ? lineOrChange.line : this.line;
-      character =
-        typeof lineOrChange.character === "number"
-          ? lineOrChange.character
-          : this.character;
+      line = typeof lineOrChange.line === "number" ? lineOrChange.line : this.line;
+      character = typeof lineOrChange.character === "number" ? lineOrChange.character : this.character;
     }
 
     if (line === this.line && character === this.character) {
@@ -204,10 +191,7 @@ export class Range {
     if (!thing) {
       return false;
     }
-    return (
-      Position.isPosition((<Range>thing).start) &&
-      Position.isPosition(<Range>thing.end)
-    );
+    return Position.isPosition((<Range>thing).start) && Position.isPosition(<Range>thing.end);
   }
 
   protected _start: Position;
@@ -222,12 +206,7 @@ export class Range {
   }
 
   constructor(start: Position, end: Position);
-  constructor(
-    startLine: number,
-    startColumn: number,
-    endLine: number,
-    endColumn: number,
-  );
+  constructor(startLine: number, startColumn: number, endLine: number, endColumn: number);
   constructor(
     startLineOrStart: number | Position,
     startColumnOrEnd: number | Position,
@@ -245,10 +224,7 @@ export class Range {
     ) {
       start = new Position(startLineOrStart, startColumnOrEnd);
       end = new Position(endLine, endColumn);
-    } else if (
-      startLineOrStart instanceof Position &&
-      startColumnOrEnd instanceof Position
-    ) {
+    } else if (startLineOrStart instanceof Position && startColumnOrEnd instanceof Position) {
       start = startLineOrStart;
       end = startColumnOrEnd;
     }
@@ -268,10 +244,7 @@ export class Range {
 
   contains(positionOrRange: Position | Range): boolean {
     if (positionOrRange instanceof Range) {
-      return (
-        this.contains(positionOrRange._start) &&
-        this.contains(positionOrRange._end)
-      );
+      return this.contains(positionOrRange._start) && this.contains(positionOrRange._end);
     } else if (positionOrRange instanceof Position) {
       if (positionOrRange.isBefore(this._start)) {
         return false;
@@ -321,10 +294,7 @@ export class Range {
 
   with(change: { start?: Position; end?: Position }): Range;
   with(start?: Position, end?: Position): Range;
-  with(
-    startOrChange: Position | undefined | { start?: Position; end?: Position },
-    end: Position = this.end,
-  ): Range {
+  with(startOrChange: Position | undefined | { start?: Position; end?: Position }, end: Position = this.end): Range {
     if (startOrChange === null || end === null) {
       throw illegalArgument();
     }
@@ -379,12 +349,7 @@ export class Selection extends Range {
   }
 
   constructor(anchor: Position, active: Position);
-  constructor(
-    anchorLine: number,
-    anchorColumn: number,
-    activeLine: number,
-    activeColumn: number,
-  );
+  constructor(anchorLine: number, anchorColumn: number, activeLine: number, activeColumn: number);
   constructor(
     anchorLineOrAnchor: number | Position,
     anchorColumnOrActive: number | Position,
@@ -402,10 +367,7 @@ export class Selection extends Range {
     ) {
       anchor = new Position(anchorLineOrAnchor, anchorColumnOrActive);
       active = new Position(activeLine, activeColumn);
-    } else if (
-      anchorLineOrAnchor instanceof Position &&
-      anchorColumnOrActive instanceof Position
-    ) {
+    } else if (anchorLineOrAnchor instanceof Position && anchorColumnOrActive instanceof Position) {
       anchor = anchorLineOrAnchor;
       active = anchorColumnOrActive;
     }
@@ -447,10 +409,7 @@ export class TextEdit {
     if (!thing) {
       return false;
     }
-    return (
-      Range.isRange(<TextEdit>thing) &&
-      typeof (<TextEdit>thing).newText === "string"
-    );
+    return Range.isRange(<TextEdit>thing) && typeof (<TextEdit>thing).newText === "string";
   }
 
   static replace(range: Range, newText: string): TextEdit {
@@ -466,10 +425,7 @@ export class TextEdit {
   }
 
   static setEndOfLine(eol: EndOfLine): TextEdit {
-    const ret = new TextEdit(
-      new Range(new Position(0, 0), new Position(0, 0)),
-      "",
-    );
+    const ret = new TextEdit(new Range(new Position(0, 0), new Position(0, 0)), "");
     ret.newEol = eol;
     return ret;
   }
@@ -548,25 +504,15 @@ export interface IFileTextEdit {
 export class WorkspaceEdit {
   private _edits = new Array<IFileOperation | IFileTextEdit>();
 
-  renameFile(
-    from: Uri,
-    to: Uri,
-    options?: { overwrite?: boolean; ignoreIfExists?: boolean },
-  ): void {
+  renameFile(from: Uri, to: Uri, options?: { overwrite?: boolean; ignoreIfExists?: boolean }): void {
     this._edits.push({ _type: 1, from, to, options });
   }
 
-  createFile(
-    uri: Uri,
-    options?: { overwrite?: boolean; ignoreIfExists?: boolean },
-  ): void {
+  createFile(uri: Uri, options?: { overwrite?: boolean; ignoreIfExists?: boolean }): void {
     this._edits.push({ _type: 1, from: undefined, to: uri, options });
   }
 
-  deleteFile(
-    uri: Uri,
-    options?: { recursive?: boolean; ignoreIfNotExists?: boolean },
-  ): void {
+  deleteFile(uri: Uri, options?: { recursive?: boolean; ignoreIfNotExists?: boolean }): void {
     this._edits.push({ _type: 1, from: uri, to: undefined, options });
   }
 
@@ -614,10 +560,7 @@ export class WorkspaceEdit {
   get(uri: Uri): TextEdit[] {
     const res: TextEdit[] = [];
     for (const candidate of this._edits) {
-      if (
-        candidate._type === 2 &&
-        candidate.uri.toString() === uri.toString()
-      ) {
+      if (candidate._type === 2 && candidate.uri.toString() === uri.toString()) {
         res.push(candidate.edit);
       }
     }
@@ -640,8 +583,7 @@ export class WorkspaceEdit {
   }
 
   _allEntries(): ([Uri, TextEdit[]] | [Uri?, Uri?, IFileOperationOptions?])[] {
-    const res: ([Uri, TextEdit[]] | [Uri?, Uri?, IFileOperationOptions?])[] =
-      [];
+    const res: ([Uri, TextEdit[]] | [Uri?, Uri?, IFileOperationOptions?])[] = [];
     for (const edit of this._edits) {
       if (edit._type === 1) {
         res.push([edit.from, edit.to, edit.options]);
@@ -731,10 +673,7 @@ export class SnippetString {
     return this;
   }
 
-  appendVariable(
-    name: string,
-    defaultValue?: string | ((snippet: SnippetString) => any),
-  ): SnippetString {
+  appendVariable(name: string, defaultValue?: string | ((snippet: SnippetString) => any)): SnippetString {
     if (typeof defaultValue === "function") {
       const nested = new SnippetString();
       nested._tabstop = this._tabstop;
