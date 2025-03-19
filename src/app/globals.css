@@ -211,20 +211,3 @@ span.task-checkbox {
   }
 }
 
-/* Monaco editor placeholder */
-.monaco-placeholder {
-  position: absolute;
-  left: 0.125rem;
-  top: 0.25rem;
-  z-index: 1;
-  transition: opacity 0.3s;
-  padding: 0 1rem;
-}
-
-.dark .monaco-placeholder {
-  color: #6b7280; /* text-gray-500 */
-}
-
-.light .monaco-placeholder {
-  color: #9ca3af; /* text-gray-400 */
-}

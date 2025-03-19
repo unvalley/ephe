@@ -216,8 +216,9 @@ export const MonacoEditor = ({
         {/* Editor container */}
         <div className="w-full max-w-2xl relative rounded-md overflow-hidden px-4 sm:px-6 md:px-0">
           {/* Placeholder element that shows when editor is empty */}
+
           <div
-            className={`monaco-placeholder pointer-events-none ${shouldShowPlaceholder ? "opacity-100" : "opacity-0"}`}
+            className={`text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 px-4 sm:px-2 ${shouldShowPlaceholder ? "opacity-100" : "opacity-0"}`}
             aria-hidden={!shouldShowPlaceholder}
           >
             {placeholder}
