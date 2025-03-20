@@ -35,8 +35,6 @@ export const applyTaskCheckboxDecorations = (
       const startColumn = checkboxStartIndex + 1; // Start at the "-"
       const endColumn = startColumn + 5; // End after the checkbox character (covers "- [ ]" or "- [x]")
 
-      console.log(startColumn, endColumn);
-
       decorations.push({
         range: new monaco.Range(lineNumber, startColumn, lineNumber, endColumn),
         options: {
