@@ -308,15 +308,16 @@ const EditorFooter = ({ charCount }: EditorFooterProps) => {
             {toggleTargetTheme === "light" ? "Light" : "Dark"}
           </button>
         </nav>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-500">{charCount} chars</span>
+        <div className="flex items-center space-x-2 min-w-0">
+          <span className="text-gray-500 whitespace-nowrap">{charCount} chars</span>
           <Avatar
-            size={14}
+            size={12}
             name="Georgia O"
             colors={["#6c788e", "#a6aec1", "#cfd5e1", "#ededf2", "#fcfdff"]}
             variant="marble"
+            className="flex-shrink-0"
           />
-          <span>Ephe v{EPHE_VERSION}</span>
+          <span className="whitespace-nowrap">Ephe v{EPHE_VERSION}</span>
         </div>
       </div>
     </footer>
