@@ -13,6 +13,42 @@ export const hidePlaceholder = (element: Element) => {
   element.classList.add("opacity-0");
 };
 
+// Add a new function to create decorations for task checkboxes
+export const applyTaskCheckboxDecorations = (
+  editor: monaco.editor.IStandaloneCodeEditor,
+  model: monaco.editor.ITextModel | null,
+): void => {
+  if (!model) return;
+
+  const decorations: monaco.editor.IModelDeltaDecoration[] = [];
+  const lineCount = model.getLineCount();
+
+  for (let lineNumber = 1; lineNumber <= lineCount; lineNumber++) {
+    const lineContent = model.getLineContent(lineNumber);
+
+    if (isTaskListLine(lineContent)) {
+      // Find the checkbox position
+      const checkboxStartIndex = lineContent.indexOf("- [");
+      if (checkboxStartIndex === -1) continue;
+
+      // Calculate the column positions
+      const startColumn = checkboxStartIndex + 1; // Start at the "-"
+      const endColumn = startColumn + 5; // End after the checkbox character (covers "- [ ]" or "- [x]")
+
+      console.log(startColumn, endColumn);
+
+      decorations.push({
+        range: new monaco.Range(lineNumber, startColumn, lineNumber, endColumn),
+        options: {
+          inlineClassName: "cursor-pointer",
+        },
+      });
+    }
+  }
+
+  editor.createDecorationsCollection(decorations);
+};
+
 export const editorOptions: EditorProps["options"] = {
   minimap: { enabled: false },
   lineNumbers: "off",
@@ -170,7 +206,7 @@ export const handleTaskCheckboxToggle = (
 
     // Expand the click area slightly around the checkbox
     const clickAreaStart = checkboxStartIndex + 1; // Start at the "-"
-    const clickAreaEnd = checkboxColumn + 1; // End after the checkbox character
+    const clickAreaEnd = checkboxColumn + 3; // End after the checkbox character
 
     // Check if click is within the checkbox area
     if (position.column >= clickAreaStart && position.column <= clickAreaEnd) {

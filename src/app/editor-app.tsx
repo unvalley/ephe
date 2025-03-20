@@ -16,6 +16,7 @@ import {
   handleKeyDown,
   handleTaskCheckboxToggle,
   updatePlaceholder,
+  applyTaskCheckboxDecorations,
 } from "../features/monaco/editor-utils";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
 
@@ -120,6 +121,9 @@ export const EditorApp = () => {
           .map((d) => d.id);
 
         editor.deltaDecorations(oldIds, decorations);
+
+        // Add call to createTaskCheckboxDecorations to handle checkbox hover styles
+        applyTaskCheckboxDecorations(editor, model);
       } catch (error) {
         console.error("Error updating decorations:", error);
       }
@@ -140,6 +144,9 @@ export const EditorApp = () => {
       debouncedSetContent(value);
       debouncedCharCountUpdate(value);
     });
+
+    // Initialize decorations on mount
+    applyTaskCheckboxDecorations(editor, editor.getModel());
 
     // Initial setup
     updatePlaceholder(editor.getValue());
