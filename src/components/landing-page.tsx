@@ -1,9 +1,8 @@
 "use client";
 
 import Avatar from "boring-avatars";
-import Link from "next/link";
 
-export default function LandingPage() {
+export const LandingPage = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-6 font-mono">
       <div className="max-w-4xl w-full space-y-8 sm:space-y-12">
@@ -40,29 +39,22 @@ export default function LandingPage() {
           </ul>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <Link
+        <div className="mt-8">
+          <a
             href="/"
-            className="inline-flex items-center justify-center border border-black dark:border-white rounded px-3 py-2 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors text-sm sm:text-base"
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
-            Start writing
-          </Link>
-
-          <Link
-            href="https://github.com/unvalley/ephe#README"
-            className="inline-flex items-center justify-center border border-black dark:border-white rounded px-3 py-2 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors text-sm sm:text-base"
-          >
-            Go GitHub
-          </Link>
+            Start Writing
+          </a>
         </div>
       </div>
 
       <footer className="mt-20 sm:mt-40 text-gray-600 dark:text-gray-400 text-center text-sm sm:text-base">
         This project is built by{" "}
-        <Link href="https://github.com/unvalley" className="text-blue-400 hover:underline">
+        <a href="https://github.com/unvalley" className="text-blue-400 hover:underline">
           unvalley
-        </Link>
+        </a>
       </footer>
     </div>
   );
-}
+};

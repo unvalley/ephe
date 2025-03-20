@@ -2,31 +2,35 @@
   "name": "ephe",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "biome lint .",
     "test": "vitest"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
+    "@tailwindcss/vite": "^4.0.14",
     "boring-avatars": "^1.11.2",
     "cmdk": "^1.1.1",
     "monaco-editor": "^0.47.0",
-    "next": "15.2.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^6.22.0"
   },
   "devDependencies": {
-    "@cloudflare/next-on-pages": "^1.13.10",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.0.14",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.31",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vite": "^6",
     "vitest": "latest"
   }
 }
