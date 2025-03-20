@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  isTaskListLine,
-  isCheckedTask,
-} from "./task-list-utils";
+import { isTaskListLine, isCheckedTask } from "./task-list-utils";
 
 describe("Task List Utilities", () => {
   describe("isTaskListLine", () => {
