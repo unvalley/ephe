@@ -11,7 +11,12 @@ import { isTaskListLine, isCheckedTask } from "../features/monaco/task-list-util
 import { Editor } from "@monaco-editor/react";
 import { CommandMenu } from "../components/command-k";
 import { TableOfContents, TableOfContentsButton } from "../components/toc";
-import { editorOptions, handleKeyDown, handleTaskCheckboxToggle, updatePlaceholder } from "../components/monaco-editor";
+import {
+  editorOptions,
+  handleKeyDown,
+  handleTaskCheckboxToggle,
+  updatePlaceholder,
+} from "../features/monaco/editor-utils";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
 
 const EPHE_VERSION = "0.0.1";
@@ -76,7 +81,7 @@ export const EditorApp = () => {
 
     // Add key binding for Cmd+K / Ctrl+K to open the command menu
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
-      setCommandMenuOpen(true);
+      setCommandMenuOpen((prev) => !prev);
     });
 
     // Add decorations for checked tasks

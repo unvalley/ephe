@@ -1,6 +1,6 @@
 import * as monaco from "monaco-editor";
 import type { EditorProps } from "@monaco-editor/react";
-import { isTaskListLine, isCheckedTask } from "../features/monaco/task-list-utils";
+import { isTaskListLine, isCheckedTask } from "./task-list-utils";
 
 // Helper functions for placeholder visibility
 export const showPlaceholder = (element: Element) => {
