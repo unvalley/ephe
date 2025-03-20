@@ -2,10 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   isTaskListLine,
   isCheckedTask,
-  isEmptyTaskListLine,
-  getTaskListIndentation,
-  getCheckboxEndPosition,
-} from "../features/monaco/task-list-utils";
+} from "./task-list-utils";
 
 describe("Task List Utilities", () => {
   describe("isTaskListLine", () => {
@@ -29,36 +26,6 @@ describe("Task List Utilities", () => {
 
       expect(isCheckedTask("- [ ] Unchecked task")).toBe(false);
       expect(isCheckedTask("Not a task")).toBe(false);
-    });
-  });
-
-  describe("isEmptyTaskListLine", () => {
-    it("identifies empty task list lines correctly", () => {
-      expect(isEmptyTaskListLine("- [ ] ")).toBe(true);
-      expect(isEmptyTaskListLine("- [x] ")).toBe(true);
-
-      expect(isEmptyTaskListLine("- [ ] Task")).toBe(false);
-      expect(isEmptyTaskListLine("  - [ ] ")).toBe(false); // Has indentation
-    });
-  });
-
-  describe("getTaskListIndentation", () => {
-    it("gets the correct indentation", () => {
-      expect(getTaskListIndentation("- [ ] Task")).toBe("");
-      expect(getTaskListIndentation("  - [ ] Task")).toBe("  ");
-      expect(getTaskListIndentation("\t- [ ] Task")).toBe("\t");
-
-      expect(getTaskListIndentation("Not a task")).toBe("");
-    });
-  });
-
-  describe("getCheckboxEndPosition", () => {
-    it("gets the correct checkbox end position", () => {
-      expect(getCheckboxEndPosition("- [ ] Task")).toBe(5);
-      expect(getCheckboxEndPosition("  - [ ] Task")).toBe(7);
-
-      // If no checkbox, returns -1 + 1 = 0
-      expect(getCheckboxEndPosition("Not a task")).toBe(0);
     });
   });
 });

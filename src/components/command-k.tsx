@@ -1,7 +1,7 @@
 "use client";
 
 import { Command } from "cmdk";
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useTheme } from "../hooks/use-theme";
 
 type CommandMenuProps = {
