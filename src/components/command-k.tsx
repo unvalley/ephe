@@ -89,7 +89,7 @@ export const CommandMenu = ({ open, onClose, onOpen }: CommandMenuProps) => {
               onClose?.();
             }}
           >
-            Got to GitHub
+            Go to GitHub
           </Command.Item>
 
           <Command.Item
