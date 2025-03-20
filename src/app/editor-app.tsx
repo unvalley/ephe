@@ -224,50 +224,47 @@ export const EditorApp = () => {
     <div className="h-screen w-screen flex flex-col justify-center" onClick={handlePageClick}>
       <div className="flex-1 flex-row pt-16 pb-8">
         <div className="w-full max-w-5xl mx-auto relative h-full">
-          <>
-            <div className="flex justify-center relative h-full">
-              {/* Editor container */}
-              <div className="w-full max-w-2xl relative px-4 sm:px-6 md:px-2">
-                <div
-                  className={`text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 px-4 sm:px-2 ${shouldShowPlaceholder ? "opacity-100" : "opacity-0"}`}
-                  aria-hidden={!shouldShowPlaceholder}
-                >
-                  {placeholder}
-                </div>
-                <Editor
-                  height="100%"
-                  width="100%"
-                  defaultLanguage="markdown"
-                  defaultValue={localStorageContent}
-                  options={{
-                    ...editorOptions,
-                    padding: { top: 4 }, // Add padding to prevent cursor from being cut off
-                  }}
-                  onMount={handleEditorDidMount}
-                  className="overflow-visible"
-                  loading=""
-                  theme={isDarkMode ? "ephe-dark" : "ephe-light"}
-                />
+          <div className="flex justify-center h-full">
+            <div className="w-full max-w-2xl relative px-4 sm:px-6 md:px-2">
+              <div
+                className={`text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 px-4 sm:px-2 ${shouldShowPlaceholder ? "opacity-100" : "opacity-0"}`}
+                aria-hidden={!shouldShowPlaceholder}
+              >
+                {placeholder}
               </div>
+              <Editor
+                height="100%"
+                width="100%"
+                defaultLanguage="markdown"
+                defaultValue={localStorageContent}
+                options={{
+                  ...editorOptions,
+                  padding: { top: 4 }, // Add padding to prevent cursor from being cut off
+                }}
+                onMount={handleEditorDidMount}
+                className="overflow-visible"
+                loading=""
+                theme={isDarkMode ? "ephe-dark" : "ephe-light"}
+              />
             </div>
+          </div>
 
-            {/* Only show TOC when there is content */}
-            {editorContent.trim() && (
-              <>
-                <TableOfContentsButton isVisible={isTocVisible} toggleToc={toggleToc} />
-                <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
-                  <TableOfContents isVisible={isTocVisible} content={editorContent} onItemClick={handleTocItemClick} />
-                </div>
-              </>
-            )}
+          {/* Only show TOC when there is content */}
+          {editorContent.trim() && (
+            <>
+              <TableOfContentsButton isVisible={isTocVisible} toggleToc={toggleToc} />
+              <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
+                <TableOfContents isVisible={isTocVisible} content={editorContent} onItemClick={handleTocItemClick} />
+              </div>
+            </>
+          )}
 
-            <CommandMenu
-              editorContent={editorContent}
-              open={commandMenuOpen}
-              onClose={() => setCommandMenuOpen(false)}
-              onOpen={() => setCommandMenuOpen(true)}
-            />
-          </>
+          <CommandMenu
+            editorContent={editorContent}
+            open={commandMenuOpen}
+            onClose={() => setCommandMenuOpen(false)}
+            onOpen={() => setCommandMenuOpen(true)}
+          />
         </div>
       </div>
       <MemoizedEditorFooter charCount={charCount} />

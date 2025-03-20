@@ -4,7 +4,7 @@ import Avatar from "boring-avatars";
 
 export const LandingPage = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-6 font-mono">
+    <div className="antialiased min-h-screen flex flex-col items-center justify-center px-4 py-6 font-mono">
       <div className="max-w-4xl w-full space-y-8 sm:space-y-12">
         <div className="space-y-3 sm:space-y-4">
           <h1 className="text-2xl sm:text-3xl font-normal flex items-center">
@@ -39,12 +39,18 @@ export const LandingPage = () => {
           </ul>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 flex gap-2">
           <a
             href="/"
             className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
           >
             Start Writing
+          </a>
+          <a
+            href="https://github.com/unvalley/ephe"
+            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            GitHub
           </a>
         </div>
       </div>

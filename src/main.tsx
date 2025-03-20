@@ -1,9 +1,10 @@
+import "./app/globals.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
-import App from "./App";
-import "./app/globals.css";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "./hooks/use-theme";
+import { LandingPage } from "./components/landing-page";
+import { EditorContainer } from "./app/editor-container";
 
 const root = document.getElementById("root");
 if (!root) {
@@ -14,7 +15,10 @@ ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <ThemeProvider>
       <BrowserRouter>
-        <App />
+        <Routes>
+          <Route path="/" element={<EditorContainer />} />
+          <Route path="/landing" element={<LandingPage />} />
+        </Routes>
       </BrowserRouter>
     </ThemeProvider>
   </React.StrictMode>,
