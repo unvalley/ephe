@@ -8,9 +8,10 @@ type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;
   onOpen?: () => void;
+  editorContent: string;
 };
 
-export const CommandMenu = ({ open, onClose, onOpen }: CommandMenuProps) => {
+export const CommandMenu = ({ open, onClose, onOpen, editorContent }: CommandMenuProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toggleTheme, toggleTargetTheme } = useTheme();
 
@@ -42,6 +43,25 @@ export const CommandMenu = ({ open, onClose, onOpen }: CommandMenuProps) => {
       inputRef.current?.focus();
     }
   }, [open]);
+
+  // Function to export markdown content
+  const handleExportMarkdown = () => {
+    const blob = new Blob([editorContent], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const date = new Date().toISOString().split("T")[0];
+    a.href = url;
+    a.download = `ephe_${date}.md`;
+
+    // Trigger the download
+    document.body.appendChild(a);
+    a.click();
+
+    // Clean up
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    onClose?.();
+  };
 
   return (
     <>
@@ -80,6 +100,13 @@ export const CommandMenu = ({ open, onClose, onOpen }: CommandMenuProps) => {
             }}
           >
             Switch to {toggleTargetTheme} mode
+          </Command.Item>
+
+          <Command.Item
+            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+            onSelect={handleExportMarkdown}
+          >
+            Export as Markdown
           </Command.Item>
 
           <Command.Item

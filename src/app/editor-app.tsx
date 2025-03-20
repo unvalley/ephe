@@ -262,6 +262,7 @@ export const EditorApp = () => {
             )}
 
             <CommandMenu
+              editorContent={editorContent}
               open={commandMenuOpen}
               onClose={() => setCommandMenuOpen(false)}
               onOpen={() => setCommandMenuOpen(true)}
