@@ -30,7 +30,7 @@
     "postcss": "^8.4.31",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vite": "^5.0.10",
+    "vite": "^6",
     "vitest": "latest"
   }
 }

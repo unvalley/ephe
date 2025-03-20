@@ -1,9 +1,8 @@
 "use client";
 
 import Avatar from "boring-avatars";
-import { Link } from "react-router-dom";
 
-export default function LandingPage() {
+export const LandingPage = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-6 font-mono">
       <div className="max-w-4xl w-full space-y-8 sm:space-y-12">
@@ -58,4 +57,4 @@ export default function LandingPage() {
       </footer>
     </div>
   );
-}
+};
