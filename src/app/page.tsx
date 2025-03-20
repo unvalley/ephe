@@ -33,8 +33,10 @@ export default function Page() {
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents:
     <div className="h-screen w-screen flex flex-col justify-center" onClick={handlePageClick}>
-      <div className="flex-1 flex justify-center pt-16 pb-8 overflow-hidden">
-        <MonacoEditor editorRef={editorRef} onWordCountChange={setCharCount} />
+      <div className="flex-1 flex-row pt-16 pb-8">
+        <div className="w-full max-w-5xl mx-auto relative h-full">
+          <MonacoEditor editorRef={editorRef} onWordCountChange={setCharCount} />
+        </div>
       </div>
       <MemoizedEditorFooter charCount={charCount} />
     </div>

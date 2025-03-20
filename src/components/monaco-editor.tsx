@@ -215,54 +215,47 @@ export const MonacoEditor = ({ editorRef, onWordCountChange }: MonacoEditorProps
 
   return (
     <>
+      <div className="flex justify-center relative h-full">
+        {/* Editor container */}
+        <div className="w-full max-w-2xl relative rounded-md overflow-hidden px-4 sm:px-6 md:px-0">
+          <div
+            className={`text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 px-4 sm:px-2 ${shouldShowPlaceholder ? "opacity-100" : "opacity-0"}`}
+            aria-hidden={!shouldShowPlaceholder}
+          >
+            {placeholder}
+          </div>
+          <Editor
+            height="100%"
+            width="100%"
+            defaultLanguage="markdown"
+            defaultValue={localStorageContent}
+            options={{
+              ...editorOptions,
+              padding: { top: 4 }, // Add padding to prevent cursor from being cut off
+            }}
+            onMount={handleEditorDidMount}
+            className="overflow-visible"
+            loading=""
+            theme={isDarkMode ? "ephe-dark" : "ephe-light"}
+          />
+        </div>
+      </div>
+
+      {/* Only show TOC when there is content */}
+      {editorContent.trim() && (
+        <>
+          <TableOfContentsButton isVisible={isTocVisible} toggleToc={toggleToc} />
+          <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
+            <TableOfContents isVisible={isTocVisible} content={editorContent} onItemClick={handleTocItemClick} />
+          </div>
+        </>
+      )}
+
       <CommandMenu
         open={commandMenuOpen}
         onClose={() => setCommandMenuOpen(false)}
         onOpen={() => setCommandMenuOpen(true)}
       />
-      <div className="w-full max-w-5xl mx-auto relative h-full">
-        {/* Main content area with editor and TOC */}
-
-        <div className="flex justify-center relative h-full">
-          {/* Editor container */}
-          <div className="w-full max-w-2xl relative rounded-md overflow-hidden px-4 sm:px-6 md:px-0">
-            {/* Placeholder element that shows when editor is empty */}
-
-            <div
-              className={`text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 px-4 sm:px-2 ${shouldShowPlaceholder ? "opacity-100" : "opacity-0"}`}
-              aria-hidden={!shouldShowPlaceholder}
-            >
-              {placeholder}
-            </div>
-
-            {/* Monaco Editor wrapper */}
-            <Editor
-              height="100%"
-              width="100%"
-              defaultLanguage="markdown"
-              defaultValue={localStorageContent}
-              options={{
-                ...editorOptions,
-                padding: { top: 4 }, // Add padding to prevent cursor from being cut off
-              }}
-              onMount={handleEditorDidMount}
-              className="overflow-visible"
-              loading=""
-              theme={isDarkMode ? "ephe-dark" : "ephe-light"}
-            />
-          </div>
-
-          {/* Only show TOC when there is content */}
-          {editorContent.trim() && (
-            <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
-              <TableOfContents content={editorContent} onItemClick={handleTocItemClick} isVisible={isTocVisible} />
-            </div>
-          )}
-        </div>
-
-        {/* Only show TOC toggle button when there is content */}
-        {editorContent.trim() && <TableOfContentsButton isVisible={isTocVisible} toggleToc={toggleToc} />}
-      </div>
     </>
   );
 };
