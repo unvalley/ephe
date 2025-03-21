@@ -221,8 +221,8 @@ export const EditorApp = () => {
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents:
-    <div className="h-screen w-screen flex flex-col justify-center" onClick={handlePageClick}>
-      <div className="flex-1 pt-16 pb-8">
+    <div className="h-screen w-screen flex flex-col" onClick={handlePageClick}>
+      <div className="flex-1 pt-16 pb-8 overflow-hidden">
         <div className="mx-auto h-full max-w-5xl">
           <div className="flex justify-center h-full">
             <div className="w-full max-w-2xl px-4 sm:px-6 md:px-2 relative">
@@ -239,7 +239,6 @@ export const EditorApp = () => {
                 defaultValue={localStorageContent}
                 options={{
                   ...editorOptions,
-                  padding: { top: 4 }, // Add padding to prevent cursor from being cut off
                 }}
                 onMount={handleEditorDidMount}
                 className="overflow-visible"
