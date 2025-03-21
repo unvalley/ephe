@@ -51,6 +51,7 @@ export const editorOptions: EditorProps["options"] = {
   minimap: { enabled: false },
   lineNumbers: "off",
   wordWrap: "on",
+  wordWrapColumn: 100,
   wordBreak: "normal",
   wrappingIndent: "same",
   lineDecorationsWidth: 0,
@@ -92,6 +93,7 @@ export const editorOptions: EditorProps["options"] = {
   renderControlCharacters: false,
   renderLineHighlightOnlyWhenFocus: true,
   maxTokenizationLineLength: 5000,
+  padding: { top: 4 }, // Add padding to prevent cursor from being cut off
 };
 
 // Set up placeholder when editor is empty
