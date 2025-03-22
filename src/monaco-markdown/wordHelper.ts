@@ -14,7 +14,7 @@ export const USUAL_WORD_SEPARATORS = "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?";
  * The default would look like this:
  * /(-?\d*\.\d\w*)|([^\`\~\!\@\#\$\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g
  */
-function createWordRegExp(allowInWords = ""): RegExp {
+const createWordRegExp = (allowInWords = ""): RegExp => {
   let source = "(-?\\d*\\.\\d\\w*)|([^";
   for (const sep of USUAL_WORD_SEPARATORS) {
     if (allowInWords.indexOf(sep) >= 0) {
@@ -24,12 +24,12 @@ function createWordRegExp(allowInWords = ""): RegExp {
   }
   source += "\\s]+)";
   return new RegExp(source, "g");
-}
+};
 
 // catches numbers (including floating numbers) in the first group, and alphanum in the second
 export const DEFAULT_WORD_REGEXP = createWordRegExp();
 
-export function ensureValidWordDefinition(wordDefinition?: RegExp | null): RegExp {
+export const ensureValidWordDefinition = (wordDefinition?: RegExp | null): RegExp => {
   let result: RegExp = DEFAULT_WORD_REGEXP;
 
   if (wordDefinition && wordDefinition instanceof RegExp) {
@@ -53,14 +53,14 @@ export function ensureValidWordDefinition(wordDefinition?: RegExp | null): RegEx
   result.lastIndex = 0;
 
   return result;
-}
+};
 
-function getWordAtPosFast(
+const getWordAtPosFast = (
   column: number,
   wordDefinition: RegExp,
   text: string,
   textOffset: number,
-): editor.IWordAtPosition | null {
+): editor.IWordAtPosition | null => {
   // find whitespace enclosed text around column and match from there
 
   const pos = column - 1 - textOffset;
@@ -80,14 +80,14 @@ function getWordAtPosFast(
   }
 
   return null;
-}
+};
 
-function getWordAtPosSlow(
+const getWordAtPosSlow = (
   column: number,
   wordDefinition: RegExp,
   text: string,
   textOffset: number,
-): editor.IWordAtPosition | null {
+): editor.IWordAtPosition | null => {
   // matches all words starting at the beginning
   // of the input until it finds a match that encloses
   // the desired column. slow but correct
@@ -113,14 +113,14 @@ function getWordAtPosSlow(
   }
 
   return null;
-}
+};
 
-export function getWordAtText(
+export const getWordAtText = (
   column: number,
   wordDefinition: RegExp,
   text: string,
   textOffset: number,
-): editor.IWordAtPosition | null {
+): editor.IWordAtPosition | null => {
   // if `words` can contain whitespace character we have to use the slow variant
   // otherwise we use the fast variant of finding a word
   wordDefinition.lastIndex = 0;
@@ -142,4 +142,4 @@ export function getWordAtText(
   wordDefinition.lastIndex = 0;
 
   return ret;
-}
+};

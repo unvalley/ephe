@@ -4,7 +4,7 @@ import { fixMarker } from "./listEditing";
 import type { TextDocument, TextEditor } from "./vscode-monaco";
 import { Position, Selection, Range, WorkspaceEdit } from "./extHostTypes";
 
-export function addKeybinding(
+export const addKeybinding = (
   editor: TextEditor,
   name: string,
   fun: CallableFunction,
@@ -12,7 +12,7 @@ export function addKeybinding(
   label: string,
   context: string,
   contextMenuGroupId = "markdown.extension.editing",
-) {
+) => {
   editor.addAction({
     contextMenuGroupId,
     contextMenuOrder: 0,
@@ -28,7 +28,7 @@ export function addKeybinding(
   });
 }
 
-export function activateFormatting(editor: TextEditor) {
+export const activateFormatting = (editor: TextEditor) => {
   addKeybinding(editor, "toggleBold", toggleBold, [KeyMod.CtrlCmd | KeyCode.KeyB], "Toggle bold", "");
   addKeybinding(editor, "toggleItalic", toggleItalic, [KeyMod.CtrlCmd | KeyCode.KeyI], "Toggle italic", "");
   addKeybinding(editor, "toggleCodeSpan", toggleCodeSpan, [KeyMod.CtrlCmd | KeyCode.Backquote], "Toggle code span", "");
@@ -76,26 +76,26 @@ const singleLinkRegex: RegExp = createLinkRegex();
 
 // Return Promise because need to chain operations in unit tests
 
-function toggleBold(editor: TextEditor) {
+const toggleBold = (editor: TextEditor) => {
   return styleByWrapping(editor, "**");
-}
+};
 
-function toggleItalic(editor: TextEditor) {
+const toggleItalic = (editor: TextEditor) => {
   // let indicator = workspace.getConfiguration('markdown.extension.italic').get<string>('indicator');
   return styleByWrapping(editor, "*");
-}
+};
 
-function toggleCodeSpan(editor: TextEditor) {
+const toggleCodeSpan = (editor: TextEditor) => {
   return styleByWrapping(editor, "`");
-}
+};
 
-function toggleStrikethrough(editor: TextEditor) {
+const toggleStrikethrough = (editor: TextEditor) => {
   return styleByWrapping(editor, "~~");
-}
+};
 
 const maxHeading = "######";
 
-function toggleHeadingUp(editor: TextEditor) {
+const toggleHeadingUp = (editor: TextEditor) => {
   const lineIndex = editor.selection.active.line;
   const lineText = editor.document.lineAt(lineIndex).text;
 
@@ -111,9 +111,9 @@ function toggleHeadingUp(editor: TextEditor) {
       editBuilder.insert(new Position(lineIndex, 0), "#");
     }
   });
-}
+};
 
-function toggleHeadingDown(editor: TextEditor) {
+const toggleHeadingDown = (editor: TextEditor) => {
   const lineIndex = editor.selection.active.line;
   const lineText = editor.document.lineAt(lineIndex).text;
 
@@ -129,7 +129,7 @@ function toggleHeadingDown(editor: TextEditor) {
       editBuilder.insert(new Position(lineIndex, 0), `${maxHeading} `);
     }
   });
-}
+};
 
 enum MathBlockState {
   // State 1: not in any others states
@@ -145,7 +145,7 @@ enum MathBlockState {
   MULTI_DISPLAYED = 3,
 }
 
-function getMathState(editor: TextEditor, cursor: Position): MathBlockState {
+const getMathState = (editor: TextEditor, cursor: Position): MathBlockState => {
   if (getContext(editor, cursor, "$") === "$|$") {
     return MathBlockState.INLINE;
   }
@@ -257,24 +257,24 @@ const transTable = [
 
 const reverseTransTable = new Array(...transTable).reverse();
 
-function toggleMath(editor: TextEditor) {
+const toggleMath = (editor: TextEditor) => {
   _toggleMath(editor, transTable);
-}
+};
 
-function toggleMathReverse(editor: TextEditor) {
+const toggleMathReverse = (editor: TextEditor) => {
   _toggleMath(editor, reverseTransTable);
-}
+};
 
-function _toggleMath(editor: TextEditor, transTable: MathBlockState[]) {
+const _toggleMath = (editor: TextEditor, transTable: MathBlockState[]) => {
   if (!editor.selection.isEmpty) return;
   const cursor = editor.selection.active;
 
   const oldMathBlockState = getMathState(editor, cursor);
   const currentStateIndex = transTable.indexOf(oldMathBlockState);
   setMathState(editor, cursor, oldMathBlockState, transTable[(currentStateIndex + 1) % transTable.length]);
-}
+};
 
-function toggleList(editor: TextEditor) {
+const toggleList = (editor: TextEditor) => {
   const doc = editor.document;
   const batchEdit = new WorkspaceEdit();
 
@@ -289,7 +289,7 @@ function toggleList(editor: TextEditor) {
   }
 
   return editor.applyEdit(batchEdit, []).then(() => fixMarker(editor));
-}
+};
 
 function toggleListSingleLine(doc: TextDocument, line: number, wsEdit: WorkspaceEdit) {
   const lineText = doc.lineAt(line).text;

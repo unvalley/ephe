@@ -22,6 +22,8 @@ export class MonacoMarkdownExtension {
       /(-?\d*\.\d\w*)|([^\!\@\#\%\^\&\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s\，\。\《\》\？\；\：\‘\“\’\”\（\）\【\】\、]+)/g,
     );
   }
+
+
 }
 
 activateMarkdownMath();

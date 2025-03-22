@@ -1,6 +1,6 @@
 import type { TextDocument } from "./vscode-monaco";
 
-export function isInFencedCodeBlock(doc: TextDocument, lineNum: number): boolean {
+export const isInFencedCodeBlock = (doc: TextDocument, lineNum: number): boolean => {
   let inCodeBlock = false;
   let codeBlockStart = -1;
 
@@ -23,7 +23,7 @@ export function isInFencedCodeBlock(doc: TextDocument, lineNum: number): boolean
   }
 
   return false;
-}
+};
 
 /* ┌─────────────────┐
    │ Text Extraction │
@@ -33,26 +33,26 @@ export function isInFencedCodeBlock(doc: TextDocument, lineNum: number): boolean
  * For example: [text](link) -> text
  * @param text
  */
-export function extractText(text: string) {
+export const extractText = (text: string) => {
   return textInHtml(textInMd(text));
-}
+};
 
 // [text](link) -> text. In case there are links in heading (#83)
 // 💩
-function textInMd(text: string) {
+const textInMd = (text: string) => {
   return text.replace(/\[([^\]]+?)\]\([^\)]+?\)/g, (_, g1) => g1);
-}
+};
 
 // Convert HTML entities (#175)
 // Strip HTML tags (#179)
 // 💩
-function textInHtml(text: string) {
+const textInHtml = (text: string) => {
   return text
-    .replace(/(&emsp;)/g, (_) => " ")
+    .replace(/(&emsp;)/g, (_) => " ")
     .replace(/(<!--[^>]*?-->)/g, "") // remove <!-- HTML comments -->
     .replace(/<span[^>]*>(.*?)<\/span>/g, (_, g1) => g1) // remove <span>
     .replace(/ +/g, " ");
-}
+};
 
 /* ┌─────────┐
    │ Slugify │
@@ -61,7 +61,7 @@ function textInHtml(text: string) {
 /**
  * Convert a string to a slug for use in anchors
  */
-export function slugify(text: string): string {
+export const slugify = (text: string): string => {
   return text
     .toLowerCase()
     .replace(/\s+/g, "-") // Replace spaces with -
@@ -69,7 +69,7 @@ export function slugify(text: string): string {
     .replace(/\-\-+/g, "-") // Replace multiple - with single -
     .replace(/^-+/, "") // Trim - from start of text
     .replace(/-+$/, ""); // Trim - from end of text
-}
+};
 
 // Converted from `/[^\p{Word}\- ]/u`
 // `\p{Word}` => ASCII plus Letter (Ll/Lm/Lo/Lt/Lu), Mark (Mc/Me/Mn), Number (Nd/Nl/No), Connector_Punctuation (Pc)
