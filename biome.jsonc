@@ -11,7 +11,15 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "suspicious": {
+        "noDoubleEquals": {
+            "level": "error",
+            "options": {
+                "ignoreNull": true
+            }
+        }
+      }
     }
   },
   "formatter": {

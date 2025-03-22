@@ -216,6 +216,19 @@ export const handleTaskCheckboxToggle = (
       // Toggle checkbox state
       const newState = isChecked ? " " : "x";
 
+      // If task is being checked (not unchecked), save it
+      if (newState === "x") {
+        // Import dynamically to avoid circular dependencies
+        import("../tasks/task-storage").then(({ saveCompletedTask }) => {
+          // Extract task text (everything after the checkbox)
+          const taskText = lineContent.substring(checkboxStartIndex + 5).trim();
+          saveCompletedTask({
+            text: taskText,
+            originalLine: lineContent,
+          });
+        });
+      }
+
       // Apply the edit to toggle checkbox - only change the checkbox character
       editor.executeEdits("", [
         {
