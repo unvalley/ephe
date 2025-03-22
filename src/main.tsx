@@ -1,10 +1,10 @@
-import "./page/globals.css";
+import "./app/globals.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "./hooks/use-theme";
 import { LandingPage } from "./components/landing-page";
-import { EditorContainer } from "./page/editor-container";
+import { EditorContainer } from "./app/editor-container";
 import { CompletedTasksPage } from "./components/completed-tasks";
 
 const root = document.getElementById("root");
