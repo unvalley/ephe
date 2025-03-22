@@ -5,6 +5,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "./hooks/use-theme";
 import { LandingPage } from "./components/landing-page";
 import { EditorContainer } from "./app/editor-container";
+import { CompletedTasksPage } from "./components/completed-tasks";
 
 const root = document.getElementById("root");
 if (!root) {
@@ -13,13 +14,14 @@ if (!root) {
 
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
-    <ThemeProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <ThemeProvider>
         <Routes>
           <Route path="/" element={<EditorContainer />} />
           <Route path="/landing" element={<LandingPage />} />
+          <Route path="/completed-tasks" element={<CompletedTasksPage />} />
         </Routes>
-      </BrowserRouter>
-    </ThemeProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   </React.StrictMode>,
 );

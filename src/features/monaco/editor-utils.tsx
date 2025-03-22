@@ -216,6 +216,34 @@ export const handleTaskCheckboxToggle = (
       // Toggle checkbox state
       const newState = isChecked ? " " : "x";
 
+      // Extract task text (everything after the checkbox)
+      const taskText = lineContent.substring(checkboxStartIndex + 5).trim();
+
+      // Find the section this task belongs to
+      import("./task-section-utils").then(({ findTaskSection }) => {
+        const section = model ? findTaskSection(model, position.lineNumber) : undefined;
+
+        // Generate a unique identifier for this task
+        import("../tasks/task-storage").then(
+          ({ generateTaskIdentifier, saveCompletedTask, deleteCompletedTaskByIdentifier }) => {
+            const taskIdentifier = generateTaskIdentifier(taskText, checkboxStartIndex, position.lineNumber);
+
+            if (newState === "x") {
+              // If task is being checked, save it
+              saveCompletedTask({
+                text: taskText,
+                originalLine: lineContent,
+                taskIdentifier,
+                section, // Add section information
+              });
+            } else {
+              // If task is being unchecked, remove it from completed tasks
+              deleteCompletedTaskByIdentifier(taskIdentifier);
+            }
+          },
+        );
+      });
+
       // Apply the edit to toggle checkbox - only change the checkbox character
       editor.executeEdits("", [
         {

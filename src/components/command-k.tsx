@@ -136,6 +136,16 @@ export const CommandMenu = ({ open, onClose, onOpen, editorContent }: CommandMen
           >
             Show previous tasks (WIP)
           </Command.Item>
+
+          <Command.Item
+            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+            onSelect={() => {
+              window.location.href = "/completed-tasks";
+              onClose?.();
+            }}
+          >
+            View completed tasks
+          </Command.Item>
         </Command.List>
       </Command>
     </>
