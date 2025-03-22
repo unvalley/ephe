@@ -226,12 +226,7 @@ export const handleTaskCheckboxToggle = (
         // Generate a unique identifier for this task
         import("../tasks/task-storage").then(
           ({ generateTaskIdentifier, saveCompletedTask, deleteCompletedTaskByIdentifier }) => {
-            const taskIdentifier = generateTaskIdentifier(
-              taskText,
-              lineContent,
-              checkboxStartIndex,
-              position.lineNumber,
-            );
+            const taskIdentifier = generateTaskIdentifier(taskText, checkboxStartIndex, position.lineNumber);
 
             if (newState === "x") {
               // If task is being checked, save it

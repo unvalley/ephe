@@ -16,7 +16,7 @@ const COMPLETED_TASKS_KEY = 'ephe-completed-tasks';
 /**
  * Generate a unique identifier for a task based on its content and position
  */
-export const generateTaskIdentifier = (text: string, lineContent: string, checkboxIndex: number, lineNumber: number): string => {
+export const generateTaskIdentifier = (text: string,checkboxIndex: number, lineNumber: number): string => {
   // Combine task text, line number, and checkbox position to create a unique identifier
   // This ensures that identical tasks on different lines are treated as separate tasks
   return `${text.trim()}_line${lineNumber}_pos${checkboxIndex}`;

@@ -1,6 +1,7 @@
 /**
  * Utility functions for detecting task sections in markdown
  */
+import type * as monaco from "monaco-editor";
 
 /**
  * Find the section heading that a task belongs to
