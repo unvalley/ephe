@@ -20,7 +20,6 @@ export const CompletedTasksPage = () => {
   const [tasksByDate, setTasksByDate] = useState<Record<string, CompletedTask[]>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filter, setFilter] = useState<DateFilter>({});
-  const { theme } = useTheme();
 
   // Get available years, months, and days from all tasks
   const [availableYears, setAvailableYears] = useState<number[]>([]);
@@ -99,23 +98,6 @@ export const CompletedTasksPage = () => {
     purgeCompletedTasks();
     setTasksByDate({});
     setShowPurgeConfirm(false);
-  };
-
-  // Generate markdown content from tasks
-  const generateMarkdownContent = () => {
-    let content = "";
-
-    for (const date of sortedDates) {
-      content += `## ${formatDate(date)}\n\n`;
-
-      for (const task of tasksByDate[date]) {
-        content += `- [x] ${task.text}\n`;
-      }
-
-      content += "\n";
-    }
-
-    return content;
   };
 
   // タスクをセクションごとにグループ化する関数

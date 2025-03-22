@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTheme } from "../hooks/use-theme";
 import Avatar from "boring-avatars";
 
@@ -8,7 +9,7 @@ type FooterProps = {
 
 const EPHE_VERSION = "0.0.1";
 
-export const Footer = ({ charCount, pageName }: FooterProps) => {
+const _Footer = ({ charCount, pageName }: FooterProps) => {
   const { toggleTheme, toggleTargetTheme } = useTheme();
 
   return (
@@ -62,3 +63,5 @@ export const Footer = ({ charCount, pageName }: FooterProps) => {
     </footer>
   );
 };
+
+export const Footer = memo(_Footer);
