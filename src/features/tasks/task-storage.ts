@@ -7,14 +7,25 @@ export interface CompletedTask {
   text: string;
   completedAt: string; // ISO string
   originalLine: string;
+  taskIdentifier?: string; // Unique identifier for the task
+  section?: string; // Section name the task belongs to
 }
 
 const COMPLETED_TASKS_KEY = 'ephe-completed-tasks';
 
 /**
+ * Generate a unique identifier for a task based on its content and position
+ */
+export const generateTaskIdentifier = (text: string, lineContent: string, checkboxIndex: number, lineNumber: number): string => {
+  // Combine task text, line number, and checkbox position to create a unique identifier
+  // This ensures that identical tasks on different lines are treated as separate tasks
+  return `${text.trim()}_line${lineNumber}_pos${checkboxIndex}`;
+};
+
+/**
  * Save a completed task to localStorage
  */
-export const saveCompletedTask = (task: Omit<CompletedTask, 'id' | 'completedAt'>): void => {
+export const saveCompletedTask = (task: Omit<CompletedTask, 'id' | 'completedAt'> & { taskIdentifier?: string }): void => {
   try {
     const now = new Date();
     const id = `task-${now.getTime()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -27,6 +38,18 @@ export const saveCompletedTask = (task: Omit<CompletedTask, 'id' | 'completedAt'
     
     const existingTasksJson = localStorage.getItem(COMPLETED_TASKS_KEY);
     const existingTasks: CompletedTask[] = existingTasksJson ? JSON.parse(existingTasksJson) : [];
+    
+    // Check if this task already exists in the completed tasks
+    if (task.taskIdentifier) {
+      const taskExists = existingTasks.some(existingTask => 
+        existingTask.taskIdentifier === task.taskIdentifier
+      );
+      
+      // If task already exists, don't add it again
+      if (taskExists) {
+        return;
+      }
+    }
     
     localStorage.setItem(
       COMPLETED_TASKS_KEY, 
@@ -99,6 +122,19 @@ export const deleteCompletedTask = (taskId: string): void => {
     localStorage.setItem(COMPLETED_TASKS_KEY, JSON.stringify(updatedTasks));
   } catch (error) {
     console.error('Error deleting completed task:', error);
+  }
+};
+
+/**
+ * Delete a completed task by its unique identifier
+ */
+export const deleteCompletedTaskByIdentifier = (taskIdentifier: string): void => {
+  try {
+    const tasks = getCompletedTasks();
+    const updatedTasks = tasks.filter(task => task.taskIdentifier !== taskIdentifier);
+    localStorage.setItem(COMPLETED_TASKS_KEY, JSON.stringify(updatedTasks));
+  } catch (error) {
+    console.error('Error deleting completed task by identifier:', error);
   }
 };
 

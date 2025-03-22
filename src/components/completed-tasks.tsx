@@ -118,6 +118,22 @@ export const CompletedTasksPage = () => {
     return content;
   };
 
+  // タスクをセクションごとにグループ化する関数
+  const groupTasksBySection = (tasks: CompletedTask[]): Record<string, CompletedTask[]> => {
+    const tasksBySection: Record<string, CompletedTask[]> = {};
+
+    for (const task of tasks) {
+      // セクションがない場合は "No Section" として表示
+      const section = task.section || "No Section";
+      if (!tasksBySection[section]) {
+        tasksBySection[section] = [];
+      }
+      tasksBySection[section].push(task);
+    }
+
+    return tasksBySection;
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -240,36 +256,53 @@ export const CompletedTasksPage = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               {/* Editor-like view */}
               <div className="font-mono text-sm p-4 h-[60vh] overflow-auto whitespace-pre-wrap">
-                {sortedDates.map((date) => (
-                  <div key={date} className="mb-6">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">{formatDate(date)}</h2>
-                    <div className="space-y-1">
-                      {tasksByDate[date].map((task) => (
-                        <div key={task.id} className="flex group">
-                          <div className="flex-1 flex items-start">
-                            <span className="inline-block mr-2 text-green-500 opacity-80">- [x]</span>
-                            <span className="text-gray-700 dark:text-gray-300 opacity-80">{task.text}</span>
-                            <span className="ml-2 text-xs text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {new Date(task.completedAt).toLocaleTimeString(undefined, {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: true,
-                              })}
-                            </span>
+                {sortedDates.map((date) => {
+                  const tasksBySection = groupTasksBySection(tasksByDate[date]);
+                  const sections = Object.keys(tasksBySection);
+
+                  return (
+                    <div key={date} className="mb-6">
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">{formatDate(date)}</h2>
+
+                      {sections.map((section) => (
+                        <div key={section} className="mb-4">
+                          <h3 className="text-md font-medium text-gray-800 dark:text-gray-200 mb-1">
+                            {section === "No Section" ? "Tasks without section" : section}
+                          </h3>
+                          <div className="space-y-1 pl-4">
+                            {tasksBySection[section].map((task) => (
+                              <div key={task.id} className="flex group">
+                                <div className="flex-1 flex items-start">
+                                  <span className="inline-block mr-2 text-green-500 opacity-80">- [x]</span>
+                                  <div>
+                                    <span className="text-gray-700 dark:text-gray-300 opacity-80">{task.text}</span>
+
+                                    {/* セクション情報は既にグループ化されているので、ここでは表示しない */}
+                                    <span className="ml-2 text-xs text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      {new Date(task.completedAt).toLocaleTimeString(undefined, {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        hour12: true,
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => handleDeleteTask(task.id)}
+                                  className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 transition-opacity transition-colors"
+                                  aria-label="Delete task"
+                                  type="button"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
                           </div>
-                          <button
-                            onClick={() => handleDeleteTask(task.id)}
-                            className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 transition-opacity transition-colors"
-                            aria-label="Delete task"
-                            type="button"
-                          >
-                            ×
-                          </button>
                         </div>
                       ))}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
