@@ -1,0 +1,110 @@
+/**
+ * Snapshot management for version control
+ */
+
+import { saveHistoryItem, getHistoryItemsByType, deleteHistoryItem } from './history-storage';
+import type { SnapshotHistoryItem } from './history-types';
+
+/**
+ * Create a snapshot of the current editor content
+ */
+export const createSnapshot = (
+  content: string, 
+  title: string, 
+  description?: string,
+  tags?: string[]
+): void => {
+  saveHistoryItem({
+    type: 'snapshot',
+    content,
+    title,
+    description,
+    tags,
+    charCount: content.length
+  });
+};
+
+/**
+ * Get all snapshots
+ */
+export const getSnapshots = (): SnapshotHistoryItem[] => {
+  return getHistoryItemsByType<SnapshotHistoryItem>('snapshot');
+};
+
+/**
+ * Get a specific snapshot by ID
+ */
+export const getSnapshotById = (id: string): SnapshotHistoryItem | undefined => {
+  const snapshots = getSnapshots();
+  return snapshots.find(snapshot => snapshot.id === id);
+};
+
+/**
+ * Delete a snapshot by ID
+ */
+export const deleteSnapshot = (id: string): void => {
+  deleteHistoryItem(id);
+};
+
+/**
+ * Compare two snapshots and return the differences
+ */
+export const compareSnapshots = (
+  snapshotId1: string, 
+  snapshotId2: string
+): { additions: string[], deletions: string[] } | null => {
+  const snapshot1 = getSnapshotById(snapshotId1);
+  const snapshot2 = getSnapshotById(snapshotId2);
+  
+  if (!snapshot1 || !snapshot2) return null;
+  
+  const lines1 = snapshot1.content.split('\n');
+  const lines2 = snapshot2.content.split('\n');
+  
+  // Simple line-by-line diff
+  const additions = lines2.filter(line => !lines1.includes(line));
+  const deletions = lines1.filter(line => !lines2.includes(line));
+  
+  return { additions, deletions };
+};
+
+/**
+ * Create an automatic snapshot of the current editor content
+ */
+export const createAutoSnapshot = (
+  content: string,
+  title: string,
+  description?: string,
+  tags?: string[]
+): void => {
+  // 自動スナップショットの数を制限する（最新の10個だけ保持）
+  const autoSnapshots = getSnapshots().filter(s => 
+    s.tags?.includes('auto-save') || s.tags?.includes('auto')
+  );
+  
+  // 10個以上ある場合は古いものから削除
+  if (autoSnapshots.length >= 10) {
+    // 日付でソートして古いものを特定
+    const sortedSnapshots = [...autoSnapshots].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+    
+    // 削除する必要がある数を計算
+    const toDelete = sortedSnapshots.slice(0, autoSnapshots.length - 9);
+    
+    // 古いスナップショットを削除
+    for (const snapshot of toDelete) {
+      deleteSnapshot(snapshot.id);
+    }
+  }
+  
+  // 新しいスナップショットを作成
+  saveHistoryItem({
+    type: 'snapshot',
+    content,
+    title,
+    description,
+    tags,
+    charCount: content.length
+  });
+}; 

@@ -222,7 +222,7 @@ export const CompletedTasksPage = () => {
 
           {sortedDates.length === 0 ? (
             <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <p className="text-gray-500 dark:text-gray-400">No completed tasks found.</p>
+              <p className="text-gray-500 dark:text-gray-400">Empty.</p>
               {Object.keys(filter).length > 0 && (
                 <p className="mt-2 text-gray-500 dark:text-gray-400">
                   Try adjusting your filters or{" "}

@@ -224,24 +224,26 @@ export const handleTaskCheckboxToggle = (
         const section = model ? findTaskSection(model, position.lineNumber) : undefined;
 
         // Generate a unique identifier for this task
-        import("../tasks/task-storage").then(
-          ({ generateTaskIdentifier, saveCompletedTask, deleteCompletedTaskByIdentifier }) => {
-            const taskIdentifier = generateTaskIdentifier(taskText, checkboxStartIndex, position.lineNumber);
+        import("../tasks/task-storage").then(({ generateTaskIdentifier }) => {
+          const taskIdentifier = generateTaskIdentifier(taskText, checkboxStartIndex, position.lineNumber);
 
-            if (newState === "x") {
-              // If task is being checked, save it
-              saveCompletedTask({
+          if (newState === "x") {
+            // If task is being checked, save it to history
+            import("../tasks/task-history-adapter").then(({ saveTaskToHistory }) => {
+              saveTaskToHistory({
                 text: taskText,
                 originalLine: lineContent,
                 taskIdentifier,
-                section, // Add section information
+                section,
               });
-            } else {
-              // If task is being unchecked, remove it from completed tasks
-              deleteCompletedTaskByIdentifier(taskIdentifier);
-            }
-          },
-        );
+            });
+          } else {
+            // If task is being unchecked, remove it from history
+            import("../tasks/task-history-adapter").then(({ deleteTaskFromHistoryByIdentifier }) => {
+              deleteTaskFromHistoryByIdentifier(taskIdentifier);
+            });
+          }
+        });
       });
 
       // Apply the edit to toggle checkbox - only change the checkbox character
