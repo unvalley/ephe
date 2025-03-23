@@ -297,16 +297,23 @@ export const HistoryPage = () => {
   // Render history items for a specific date
   const renderHistoryItems = (date: string, items: HistoryItem[]) => {
     const itemsByType = groupItemsByType(items);
-    const historyItemTypes: HistoryItemType[] = ["snapshot", "task"];
+    const limit = 5; // 初期表示数
 
     return (
       <div key={date} className="mb-6">
         <div className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(date)}</div>
-        {historyItemTypes.map((historyItemType) => {
-          const typeItems = itemsByType[historyItemType];
-          const limit = 5;
+
+        {Object.entries(itemsByType).map(([historyItemType, typeItems]) => {
+          if (filter.types && !filter.types.includes(historyItemType)) {
+            return null;
+          }
+
           const isExpanded = expandedTypes[`${date}-${historyItemType}`] || false;
           const displayItems = isExpanded ? typeItems : typeItems.slice(0, limit);
+
+          if (typeItems.length === 0) {
+            return null;
+          }
 
           return (
             <div key={historyItemType} className="mb-4">
@@ -314,25 +321,17 @@ export const HistoryPage = () => {
                 {historyItemType === "task" ? "Completed Tasks" : "Snapshots"}
               </div>
               <div className="space-y-2 pl-2 border-l-2 border-gray-200 dark:border-gray-600">
-                {typeItems.length > 0 ? (
-                  <>
-                    {displayItems.map((item) => (
-                      <div key={isSnapshot(item) ? item.id : (item as CompletedTask).id}>{renderHistoryItem(item)}</div>
-                    ))}
-                    {typeItems.length > limit && (
-                      <button
-                        onClick={() => toggleTypeExpansion(`${date}-${historyItemType}`)}
-                        className="mt-2 text-sm focus:outline-none"
-                        type="button"
-                      >
-                        {isExpanded ? "Show less" : `Show ${typeItems.length - limit} more...`}
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-gray-500 dark:text-gray-400 italic">
-                    No {historyItemType === "task" ? "completed tasks" : "snapshots"} on this day.
-                  </div>
+                {displayItems.map((item) => (
+                  <div key={isSnapshot(item) ? item.id : (item as CompletedTask).id}>{renderHistoryItem(item)}</div>
+                ))}
+                {typeItems.length > limit && (
+                  <button
+                    onClick={() => toggleTypeExpansion(`${date}-${historyItemType}`)}
+                    className="mt-2 text-sm focus:outline-none"
+                    type="button"
+                  >
+                    {isExpanded ? "Show less" : `Show ${typeItems.length - limit} more...`}
+                  </button>
                 )}
               </div>
             </div>
