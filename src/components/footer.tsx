@@ -1,27 +1,29 @@
+"use client";
+
+import { Link } from "react-router-dom";
 import { memo } from "react";
 import { useTheme } from "../hooks/use-theme";
 import Avatar from "boring-avatars";
 
-type FooterProps = {
+interface FooterProps {
   charCount?: number;
-  pageName?: "Editor" | "Completed";
-};
+}
 
 const EPHE_VERSION = "0.0.1";
 
-const _Footer = ({ charCount, pageName }: FooterProps) => {
+const _Footer = ({ charCount }: FooterProps) => {
   const { toggleTheme, toggleTargetTheme } = useTheme();
 
   return (
     <footer className="fixed inset-x-0 bottom-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm space-mono">
       <div className="mx-auto px-2 py-0.5 text-sm text-gray-600 dark:text-gray-400 flex justify-between">
         <nav className="flex gap-4">
-          <a href="/" className="hover:text-gray-900 dark:hover:text-gray-100">
-            Editor
-          </a>
-          <a href="/completed-tasks" className="hover:text-gray-900 dark:hover:text-gray-100">
-            Completed
-          </a>
+          <Link to="/" className="hover:text-gray-900 dark:hover:text-gray-100">
+            Home
+          </Link>
+          <Link to="/history" className={"hover:text-gray-900 dark:hover:text-gray-100"}>
+            History
+          </Link>
           <button
             type="button"
             onClick={(e) => {
@@ -35,8 +37,8 @@ const _Footer = ({ charCount, pageName }: FooterProps) => {
           </button>
         </nav>
         <div className="flex items-center space-x-2 min-w-0">
-          {pageName === "Editor" && charCount !== undefined && (
-            <span className="text-gray-500 whitespace-nowrap">{charCount} chars</span>
+          {charCount !== undefined && (
+            <span className="text-gray-500 whitespace-nowrap">{charCount.toLocaleString()} chars</span>
           )}
           <a
             href="https://github.com/unvalley/ephe"
@@ -54,9 +56,9 @@ const _Footer = ({ charCount, pageName }: FooterProps) => {
               variant="marble"
               className="flex-shrink-0"
             />
-            <a href="/landing" className="hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap">
+            <Link to="/" className="hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap">
               Ephe v{EPHE_VERSION}
-            </a>
+            </Link>
           </>
         </div>
       </div>

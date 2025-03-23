@@ -2,58 +2,44 @@
  * Task storage utilities for saving and retrieving completed tasks
  */
 
-export interface CompletedTask {
-  id: string;
-  text: string;
-  completedAt: string; // ISO string
-  originalLine: string;
-  taskIdentifier?: string; // Unique identifier for the task
-  section?: string; // Section name the task belongs to
-}
-
+// LocalStorage key for completed tasks
 const COMPLETED_TASKS_KEY = 'ephe-completed-tasks';
 
+// Completed task type
+export type CompletedTask = {
+  id: string;
+  content: string;
+  completedAt: string; // ISO string
+  originalLine: string;
+  taskIdentifier: string; // Unique identifier for the task
+  section: string | undefined; // Section name the task belongs to
+};
+
 /**
- * Generate a unique identifier for a task based on its content and position
+ * Generate a unique identifier for a task based on its content
  */
-export const generateTaskIdentifier = (text: string,checkboxIndex: number, lineNumber: number): string => {
-  // Combine task text, line number, and checkbox position to create a unique identifier
-  // This ensures that identical tasks on different lines are treated as separate tasks
-  return `${text.trim()}_line${lineNumber}_pos${checkboxIndex}`;
+export const generateTaskIdentifier = (taskContent: string): string => {
+  // Simple hash function
+  let hash = 0;
+  for (let i = 0; i < taskContent.length; i++) {
+    const char = taskContent.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return `task-${Math.abs(hash)}`;
 };
 
 /**
  * Save a completed task to localStorage
  */
-export const saveCompletedTask = (task: Omit<CompletedTask, 'id' | 'completedAt'> & { taskIdentifier?: string }): void => {
+export const saveCompletedTask = (task: CompletedTask): void => {
   try {
-    const now = new Date();
-    const id = `task-${now.getTime()}-${Math.random().toString(36).substring(2, 9)}`;
-    
-    const completedTask: CompletedTask = {
-      ...task,
-      id,
-      completedAt: now.toISOString(),
-    };
-    
     const existingTasksJson = localStorage.getItem(COMPLETED_TASKS_KEY);
     const existingTasks: CompletedTask[] = existingTasksJson ? JSON.parse(existingTasksJson) : [];
     
-    // Check if this task already exists in the completed tasks
-    if (task.taskIdentifier) {
-      const taskExists = existingTasks.some(existingTask => 
-        existingTask.taskIdentifier === task.taskIdentifier
-      );
-      
-      // If task already exists, don't add it again
-      if (taskExists) {
-        return;
-      }
-    }
-    
     localStorage.setItem(
       COMPLETED_TASKS_KEY, 
-      JSON.stringify([completedTask, ...existingTasks])
+      JSON.stringify([task, ...existingTasks])
     );
   } catch (error) {
     console.error('Error saving completed task:', error);
@@ -74,7 +60,7 @@ export const getCompletedTasks = (): CompletedTask[] => {
 };
 
 /**
- * Group tasks by date (YYYY-MM-DD) with optional filtering
+ * Get completed tasks grouped by date (YYYY-MM-DD)
  */
 export const getTasksByDate = (filter?: { year?: number; month?: number; day?: number }): Record<string, CompletedTask[]> => {
   const tasks = getCompletedTasks();
@@ -97,7 +83,7 @@ export const getTasksByDate = (filter?: { year?: number; month?: number; day?: n
     return true;
   });
   
-  // Group filtered tasks by date using local timezone
+  // Group filtered tasks by date
   for (const task of filteredTasks) {
     const date = new Date(task.completedAt);
     // Format date as YYYY-MM-DD in local timezone

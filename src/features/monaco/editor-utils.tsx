@@ -1,6 +1,9 @@
 import * as monaco from "monaco-editor";
 import type { EditorProps } from "@monaco-editor/react";
 import { isTaskListLine, isCheckedTask } from "./task-list-utils";
+import { generateTaskIdentifier } from "../tasks/task-storage";
+import { findTaskSection } from "./task-section-utils";
+import { saveCompletedTask, deleteCompletedTaskByIdentifier } from "../tasks/task-storage";
 
 // Helper functions for placeholder visibility
 export const showPlaceholder = (element: Element) => {
@@ -210,39 +213,29 @@ export const handleTaskCheckboxToggle = (
 
     // Check if click is within the checkbox area
     if (position.column >= clickAreaStart && position.column <= clickAreaEnd) {
-      // Get the current state of the checkbox
       const isChecked = isCheckedTask(lineContent);
-
-      // Toggle checkbox state
       const newState = isChecked ? " " : "x";
 
-      // Extract task text (everything after the checkbox)
-      const taskText = lineContent.substring(checkboxStartIndex + 5).trim();
+      // - [ ] = 5 characters
+      const taskContent = lineContent.substring(checkboxStartIndex + 5).trim();
 
-      // Find the section this task belongs to
-      import("./task-section-utils").then(({ findTaskSection }) => {
-        const section = model ? findTaskSection(model, position.lineNumber) : undefined;
+      const section = model ? findTaskSection(model, position.lineNumber) : undefined;
+      const taskIdentifier = generateTaskIdentifier(taskContent);
 
-        // Generate a unique identifier for this task
-        import("../tasks/task-storage").then(
-          ({ generateTaskIdentifier, saveCompletedTask, deleteCompletedTaskByIdentifier }) => {
-            const taskIdentifier = generateTaskIdentifier(taskText, checkboxStartIndex, position.lineNumber);
-
-            if (newState === "x") {
-              // If task is being checked, save it
-              saveCompletedTask({
-                text: taskText,
-                originalLine: lineContent,
-                taskIdentifier,
-                section, // Add section information
-              });
-            } else {
-              // If task is being unchecked, remove it from completed tasks
-              deleteCompletedTaskByIdentifier(taskIdentifier);
-            }
-          },
-        );
-      });
+      if (newState === "x") {
+        // If task is being checked, save it to history
+        saveCompletedTask({
+          id: taskIdentifier,
+          content: taskContent,
+          originalLine: lineContent,
+          taskIdentifier,
+          section,
+          completedAt: new Date().toISOString(),
+        });
+      } else {
+        // If task is being unchecked, remove it from history
+        deleteCompletedTaskByIdentifier(taskIdentifier);
+      }
 
       // Apply the edit to toggle checkbox - only change the checkbox character
       editor.executeEdits("", [

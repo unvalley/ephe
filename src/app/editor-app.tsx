@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useTheme } from "../hooks/use-theme";
 import type * as monaco from "monaco-editor";
 import { useLocalStorage } from "../hooks/use-local-storage";
@@ -19,8 +19,16 @@ import {
 } from "../features/monaco/editor-utils";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
 import { Footer } from "../components/footer";
+import { ToastContainer, showToast } from "../components/toast";
+import { createAutoSnapshot } from "../features/snapshots/snapshot-manager";
+import { getSnapshots } from "../features/snapshots/snapshot-storage";
 
 const markdownExtension = new MonacoMarkdownExtension();
+
+// スナップショットダイアログを遅延ロード
+const SnapshotDialog = lazy(() =>
+  import("../components/snapshot-dialog").then((module) => ({ default: module.SnapshotDialog })),
+);
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -56,7 +64,46 @@ export const EditorApp = () => {
   );
 
   // Add state to track editor content
-  const [editorContent, setEditorContent] = useState<string>(localStorageContent);
+  const [editorContent, setEditorContent] = useState<string>(
+    typeof localStorageContent === "string" ? localStorageContent : "",
+  );
+
+  // Add state to track snapshot dialog
+  const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
+
+  const createAutoSave = (content: string) => {
+    if (!content || content.trim().length === 0) return;
+
+    // Check if the latest snapshot was created within the last 10 minutes
+    const snapshots = getSnapshots();
+    const latestSnapshot = snapshots[0];
+    if (latestSnapshot && new Date().getTime() - new Date(latestSnapshot.timestamp).getTime() < 10 * 60 * 1000) {
+      return;
+    }
+
+    createAutoSnapshot({
+      content,
+      title: new Date().toLocaleString(), // TODO: use random name
+      description: "Automatically created when leaving the editor",
+    });
+
+    showToast("Snapshot saved successfully", "success");
+  };
+
+  // Create a snapshot when the editor is blurred
+  useEffect(() => {
+    const handleBlur = () => {
+      if (editorRef.current) {
+        const content = editorRef.current.getValue();
+        createAutoSave(content);
+      }
+    };
+
+    window.addEventListener("blur", handleBlur);
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, []);
 
   // Handle editor mounting
   const handleEditorDidMount = (
@@ -71,16 +118,30 @@ export const EditorApp = () => {
     // Initialize markdown extension
     markdownExtension.activate(editor);
 
-    // Add key binding for Cmd+S / Ctrl+S to prevent browser save dialog
+    // Add key binding for Cmd+S / Ctrl+S to save and create snapshot
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
       // Force save to localStorage
       const value = editor.getValue();
       setLocalStorageContent(value);
+
+      // Create automatic snapshot on save
+      createAutoSnapshot({
+        content: value,
+        title: new Date().toLocaleString(), // TODO: use random name
+        description: "Manually saved from command menu",
+      });
+
+      showToast("Snapshot saved successfully", "success");
     });
 
     // Add key binding for Cmd+K / Ctrl+K to open the command menu
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
       setCommandMenuOpen((prev) => !prev);
+    });
+
+    // Add key binding for Cmd+Shift+S / Ctrl+Shift+S to open custom snapshot dialog
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyS, () => {
+      setSnapshotDialogOpen(true);
     });
 
     // Add decorations for checked tasks
@@ -204,18 +265,18 @@ export const EditorApp = () => {
   const shouldShowPlaceholder = !loadingEditor && (!localStorageContent || !localStorageContent.trim());
 
   // Handle TOC item click
-  const handleTocItemClick = (line: number) => {
+  const handleTocItemClick = useCallback((line: number) => {
     if (editorRef.current) {
       editorRef.current.revealLineInCenter(line + 1);
       editorRef.current.setPosition({ lineNumber: line + 1, column: 1 });
       editorRef.current.focus();
     }
-  };
+  }, []);
 
   // Toggle TOC visibility
-  const toggleToc = () => {
+  const toggleToc = useCallback(() => {
     setIsTocVisible(!isTocVisible);
-  };
+  }, [isTocVisible]);
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents:
@@ -265,6 +326,18 @@ export const EditorApp = () => {
         </div>
       </div>
       <Footer charCount={charCount} />
+
+      {snapshotDialogOpen && (
+        <Suspense fallback={<div className="loading-spinner" />}>
+          <SnapshotDialog
+            isOpen={snapshotDialogOpen}
+            onClose={() => setSnapshotDialogOpen(false)}
+            editorContent={editorContent}
+          />
+        </Suspense>
+      )}
+
+      <ToastContainer />
     </div>
   );
 };
