@@ -14,11 +14,13 @@ export const createSnapshot = (
   description?: string,
 ): void => {
   saveHistoryItem({
+    id: "",
     type: 'snapshot',
     content,
     title,
-    description,
-    charCount: content.length
+    description: description || "",
+    charCount: content.length,
+    timestamp: new Date().toISOString()
   });
 };
 
@@ -32,9 +34,9 @@ export const getSnapshots = (): SnapshotHistoryItem[] => {
 /**
  * Get a specific snapshot by ID
  */
-export const getSnapshotById = (id: string): SnapshotHistoryItem | undefined => {
+export const getSnapshotById = (id: string): SnapshotHistoryItem | null => {
   const snapshots = getSnapshots();
-  return snapshots.find(snapshot => snapshot.id === id);
+  return snapshots.find(snapshot => snapshot.id === id) || null;
 };
 
 /**
@@ -69,36 +71,39 @@ export const compareSnapshots = (
 /**
  * Create an automatic snapshot of the current editor content
  */
-export const createAutoSnapshot = (
-  content: string,
-  title: string,
-  description?: string,
-): void => {
-  // スナップショットの数を制限する（最新の10個だけ保持）
+export const createAutoSnapshot = ({
+    content, title, description = "",
+}: {
+    content: string;
+    title: string;
+    description?: string;
+}): void => {
+  // Limit the number of snapshots (keep only the latest 10)
   const snapshots = getSnapshots()
   
-  // 10個以上ある場合は古いものから削除
+  // If there are more than 10, delete the oldest ones
   if (snapshots.length >= 10) {
-    // 日付でソートして古いものを特定
+    // Sort by date to find the oldest ones
     const sortedSnapshots = [...snapshots].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
     
-    // 削除する必要がある数を計算
+    // Calculate the number of snapshots to delete
     const toDelete = sortedSnapshots.slice(0, snapshots.length - 9);
     
-    // 古いスナップショットを削除
+    // Delete the oldest snapshots
     for (const snapshot of toDelete) {
       deleteSnapshot(snapshot.id);
     }
   }
   
-  // 新しいスナップショットを作成
   saveHistoryItem({
-    type: 'snapshot',
+    id: "",
+    type: "snapshot",
     content,
     title,
     description,
-    charCount: content.length
+    charCount: content.length,
+    timestamp: new Date().toISOString(),
   });
-}; 
+};

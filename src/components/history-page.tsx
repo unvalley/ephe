@@ -14,8 +14,6 @@ import type {
   SnapshotHistoryItem,
 } from "../features/history/history-types";
 import { Footer } from "./footer";
-import { useNavigate } from "react-router-dom";
-import { EDITOR_CONTENT_KEY } from "../features/monaco";
 import { SnapshotDiff } from "./snapshot-diff";
 import { SnapshotViewer } from "./snapshot-viewer";
 
@@ -39,8 +37,6 @@ export const HistoryPage = () => {
   // Confirmation modal state
   const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
   const [purgeType, setPurgeType] = useState<HistoryItemType | "all">("all");
-
-  const navigate = useNavigate();
 
   // New state for snapshot comparison dialog
   const [diffDialogOpen, setDiffDialogOpen] = useState(false);
@@ -71,12 +67,12 @@ export const HistoryPage = () => {
     const months = new Set<number>();
     const days = new Set<number>();
 
-    Object.keys(allHistory).forEach((dateStr) => {
+    for (const dateStr of Object.keys(allHistory)) {
       const [year, month, day] = dateStr.split("-").map(Number);
       years.add(year);
       months.add(month);
       days.add(day);
-    });
+    }
 
     setAvailableYears(Array.from(years).sort((a, b) => b - a));
     setAvailableMonths(Array.from(months).sort((a, b) => a - b));
@@ -115,7 +111,7 @@ export const HistoryPage = () => {
   };
 
   // Update a specific filter
-  const updateFilter = (key: keyof DateFilter, value: any) => {
+  const updateFilter = (key: keyof DateFilter, value: number | string | string[] | undefined) => {
     setFilter((prev) => ({
       ...prev,
       [key]: value,
@@ -150,8 +146,8 @@ export const HistoryPage = () => {
     }
 
     // タスクセクションがない場合は空の配列を追加
-    if (!itemsByType["task"]) {
-      itemsByType["task"] = [];
+    if (!itemsByType.task) {
+      itemsByType.task = [];
     }
 
     return itemsByType;
@@ -164,40 +160,23 @@ export const HistoryPage = () => {
   };
 
   // Handle restoring a snapshot
-  const handleRestoreSnapshot = (snapshot: SnapshotHistoryItem) => {
-    // 現在のエディタ内容を取得
-    const currentContent = localStorage.getItem(EDITOR_CONTENT_KEY) || "";
+  //   const handleRestoreSnapshot = (snapshot: SnapshotHistoryItem) => {
+  //     const currentContent = localStorage.getItem(EDITOR_CONTENT_KEY) || "";
 
-    // 現在の内容が空でない場合、自動バックアップを作成
-    if (currentContent.trim().length > 0) {
-      import("../features/history/snapshot-manager").then(({ createAutoSnapshot }) => {
-        const now = new Date();
-        const formattedDate = now.toLocaleString();
-        createAutoSnapshot(
-          currentContent,
-          `Backup before restore - ${formattedDate}`,
-          "Automatically created before restoring a snapshot",
-          ["auto-backup"],
-        );
-      });
-    }
-
-    // ローカルストレージにスナップショットの内容を保存
-    localStorage.setItem(EDITOR_CONTENT_KEY, snapshot.content);
-
-    // トースト通知を表示
-    import("../components/toast").then(({ showToast }) => {
-      showToast("Snapshot content restored to editor", "success");
-    });
-
-    // エディタページに戻る
-    navigate("/");
-  };
-
-  // Handle comparing snapshots
-  const handleCompareSnapshots = () => {
-    setDiffDialogOpen(true);
-  };
+  //     // Create a backup snapshot before restoring
+  //     if (currentContent.trim().length > 0) {
+  //       const now = new Date();
+  //       const formattedDate = now.toLocaleString();
+  //       createAutoSnapshot({
+  //         content: currentContent,
+  //         title: `Backup before restore - ${formattedDate}`,
+  //         description: "Automatically created before restoring a snapshot",
+  //       });
+  //     }
+  //     localStorage.setItem(EDITOR_CONTENT_KEY, snapshot.content);
+  //     showToast("Snapshot content restored to editor", "success");
+  //     navigate("/");
+  //   };
 
   // Render a history item based on its type
   const renderHistoryItem = (item: HistoryItem) => {
@@ -211,7 +190,7 @@ export const HistoryPage = () => {
             <div className="flex-1 flex items-start">
               <span className="inline-block mr-2 text-green-500 opacity-80">- [x]</span>
               <div>
-                <span className="text-gray-700 dark:text-gray-300 opacity-80">{taskItem.text}</span>
+                <span className="text-gray-700 dark:text-gray-300 opacity-80">{taskItem.content}</span>
                 {taskItem.section && (
                   <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">in {taskItem.section},</span>
                 )}
@@ -238,6 +217,11 @@ export const HistoryPage = () => {
                 <span
                   className="text-gray-700 dark:text-gray-300 opacity-80 cursor-pointer"
                   onClick={() => handleViewSnapshot(snapshotItem)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleViewSnapshot(snapshotItem);
+                    }
+                  }}
                 >
                   - {snapshotItem.title}
                 </span>
@@ -245,20 +229,12 @@ export const HistoryPage = () => {
             </div>
             <div className="flex">
               <button
-                onClick={() => handleRestoreSnapshot(snapshotItem)}
-                className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-blue-500 dark:hover:text-blue-400 transition-opacity transition-colors"
-                aria-label="Restore snapshot"
-                type="button"
-              >
-                ↺
-              </button>
-              <button
                 onClick={() => handleDeleteItem(item.id)}
                 className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 transition-opacity transition-colors"
                 aria-label="Delete snapshot"
                 type="button"
               >
-                ×
+                delete
               </button>
             </div>
           </div>

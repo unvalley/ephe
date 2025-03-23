@@ -10,19 +10,21 @@ import {
   deleteHistoryItemByIdentifier,
   purgeHistoryItemsByType
 } from '../history/history-storage';
-import { TaskHistoryItem, HistoryItemType } from '../history/history-types';
+import type { TaskHistoryItem } from '../history/history-types';
 import type { CompletedTask } from './task-storage';
 
 /**
  * Save a completed task to history
  */
-export const saveTaskToHistory = (task: Omit<CompletedTask, 'id' | 'completedAt'>): void => {
+export const saveTaskToHistory = (task: CompletedTask): void => {
   saveHistoryItem({
+    id: task.id,
     type: 'task',
-    text: task.text,
+    content: task.content,
     originalLine: task.originalLine,
     taskIdentifier: task.taskIdentifier,
-    section: task.section
+    section: task.section,
+    timestamp: task.completedAt
   });
 };
 
@@ -35,7 +37,7 @@ export const getTasksFromHistory = (): CompletedTask[] => {
   // Convert from history format to task format
   return taskItems.map(item => ({
     id: item.id,
-    text: item.text,
+    content: item.content,
     completedAt: item.timestamp,
     originalLine: item.originalLine,
     taskIdentifier: item.taskIdentifier,
@@ -62,7 +64,7 @@ export const getTasksByDateFromHistory = (filter?: { year?: number; month?: numb
         const taskItem = item as TaskHistoryItem;
         return {
           id: taskItem.id,
-          text: taskItem.text,
+          content: taskItem.content,
           completedAt: taskItem.timestamp,
           originalLine: taskItem.originalLine,
           taskIdentifier: taskItem.taskIdentifier,
@@ -93,4 +95,4 @@ export const deleteTaskFromHistoryByIdentifier = (taskIdentifier: string): void 
  */
 export const purgeTasksFromHistory = (): void => {
   purgeHistoryItemsByType('task');
-}; 
+};

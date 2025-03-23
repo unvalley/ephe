@@ -7,6 +7,7 @@ import { EDITOR_CONTENT_KEY } from "../features/monaco";
 import { useNavigate } from "react-router-dom";
 import type * as monaco from "monaco-editor";
 import { showToast } from "./toast";
+import { createAutoSnapshot } from "../features/history/snapshot-manager";
 
 interface SnapshotViewerProps {
   isOpen: boolean;
@@ -42,7 +43,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
 
   const formattedDate = new Date(snapshot.timestamp).toLocaleString();
 
-  // スナップショットをファイルとしてエクスポートする関数
+  // Export the snapshot as a file
   const handleExport = () => {
     if (!snapshot) return;
 
@@ -58,7 +59,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
     document.body.appendChild(a);
     a.click();
 
-    // クリーンアップ
+    // Clean up
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
@@ -69,15 +70,12 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
     const currentContent = localStorage.getItem(EDITOR_CONTENT_KEY) || "";
 
     if (currentContent.trim().length > 0) {
-      import("../features/history/snapshot-manager").then(({ createAutoSnapshot }) => {
-        const now = new Date();
-        const formattedDate = now.toLocaleString();
-        createAutoSnapshot(
-          currentContent,
-          `Backup before restore - ${formattedDate}`,
-          "Automatically created before restoring a snapshot",
-          ["auto-backup"],
-        );
+      const now = new Date();
+      const formattedDate = now.toLocaleString();
+      createAutoSnapshot({
+        content: currentContent,
+        title: `Backup before restore - ${formattedDate}`,
+        description: "Automatically created before restoring a snapshot",
       });
     }
 

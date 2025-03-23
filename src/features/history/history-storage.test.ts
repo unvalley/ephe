@@ -2,11 +2,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   saveHistoryItem,
   getHistoryItems,
-  getHistoryItemsByType,
-  getHistoryItemsByDate,
-  deleteHistoryItem,
-  purgeHistoryItemsByType,
-  purgeAllHistoryItems,
 } from './history-storage';
 
 describe('History Storage', () => {
@@ -43,9 +38,13 @@ describe('History Storage', () => {
 
   it('should save a history item', () => {
     const item = {
+      id: 'test-id-1',
       type: 'task' as const,
-      text: 'Test task',
+      content: 'Test task',
       originalLine: '- [ ] Test task',
+      timestamp: new Date().toISOString(),
+      taskIdentifier: 'test-task-1',
+      section: 'test-section',
     };
 
     saveHistoryItem(item);
@@ -54,7 +53,7 @@ describe('History Storage', () => {
     const savedItems = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]');
     expect(savedItems.length).toBe(1);
     expect(savedItems[0].type).toBe('task');
-    expect(savedItems[0].text).toBe('Test task');
+    expect(savedItems[0].content).toBe('Test task');
     expect(savedItems[0].id).toBeDefined();
     expect(savedItems[0].timestamp).toBeDefined();
   });
@@ -64,14 +63,19 @@ describe('History Storage', () => {
       {
         id: 'test-id-1',
         type: 'task',
-        text: 'Test task',
+        content: 'Test task',
         originalLine: '- [ ] Test task',
         timestamp: new Date().toISOString(),
+        taskIdentifier: 'test-task-1',
+        section: 'test-section',
       },
       {
         id: 'test-id-2',
-        type: 'edit',
-        changeDescription: 'Test edit',
+        type: 'snapshot',
+        content: 'Test snapshot',
+        title: 'Test snapshot',
+        description: 'Test snapshot description',
+        charCount: 10,
         timestamp: new Date().toISOString(),
       },
     ];
@@ -81,6 +85,4 @@ describe('History Storage', () => {
     const result = getHistoryItems();
     expect(result).toEqual(mockItems);
   });
-
-  // 他のテストケースも同様に実装
 }); 

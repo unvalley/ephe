@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
+import { useRef, useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useTheme } from "../hooks/use-theme";
 import type * as monaco from "monaco-editor";
 import { useLocalStorage } from "../hooks/use-local-storage";
@@ -20,6 +20,7 @@ import {
 import { MonacoMarkdownExtension } from "../monaco-markdown";
 import { Footer } from "../components/footer";
 import { ToastContainer, showToast } from "../components/toast";
+import { createAutoSnapshot } from "../features/history/snapshot-manager";
 
 const markdownExtension = new MonacoMarkdownExtension();
 
@@ -72,16 +73,18 @@ export const EditorApp = () => {
   const createAutoSave = (content: string) => {
     if (!content || content.trim().length === 0) return;
 
-    import("../features/history/snapshot-manager").then(({ createAutoSnapshot }) => {
-      const now = new Date();
-      const formattedDate = now.toLocaleString();
-      createAutoSnapshot(content, formattedDate, "Automatically created when leaving the editor", ["auto-save"]);
-
-      showToast("Snapshot saved successfully", "success");
+    const now = new Date();
+    const formattedDate = now.toLocaleString();
+    createAutoSnapshot({
+      content,
+      title: formattedDate,
+      description: "Automatically created when leaving the editor",
     });
+
+    showToast("Snapshot saved successfully", "success");
   };
 
-  // フォーカスが離れたときのスナップショット作成
+  // Create a snapshot when the editor is blurred
   useEffect(() => {
     const handleBlur = () => {
       if (editorRef.current) {
@@ -91,7 +94,6 @@ export const EditorApp = () => {
     };
 
     window.addEventListener("blur", handleBlur);
-
     return () => {
       window.removeEventListener("blur", handleBlur);
     };
@@ -117,14 +119,13 @@ export const EditorApp = () => {
       setLocalStorageContent(value);
 
       // Create automatic snapshot on save
-      import("../features/history/snapshot-manager").then(({ createAutoSnapshot }) => {
-        const now = new Date();
-        const formattedDate = now.toLocaleString();
-        createAutoSnapshot(value, `${formattedDate}`, "Manually saved from command menu", ["auto-save"]);
-
-        // トースト通知を表示
-        showToast("Snapshot saved successfully", "success");
+      createAutoSnapshot({
+        content: value,
+        title: new Date().toLocaleString(),
+        description: "Manually saved from command menu",
       });
+
+      showToast("Snapshot saved successfully", "success");
     });
 
     // Add key binding for Cmd+K / Ctrl+K to open the command menu

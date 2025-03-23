@@ -13,7 +13,7 @@ const HISTORY_STORAGE_KEY = 'ephe-history';
 /**
  * Save a history item to localStorage
  */
-export const saveHistoryItem = (item: Omit<HistoryItem, 'id' | 'timestamp'>): void => {
+export const saveHistoryItem = (item: HistoryItem): void => {
   try {
     const now = new Date();
     const id = `history-${now.getTime()}-${Math.random().toString(36).substring(2, 9)}`;

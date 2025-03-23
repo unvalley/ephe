@@ -256,7 +256,7 @@ export const CompletedTasksPage = () => {
                                 <div className="flex-1 flex items-start">
                                   <span className="inline-block mr-2 text-green-500 opacity-80">- [x]</span>
                                   <div>
-                                    <span className="text-gray-700 dark:text-gray-300 opacity-80">{task.text}</span>
+                                    <span className="text-gray-700 dark:text-gray-300 opacity-80">{task.content}</span>
 
                                     {/* セクション情報は既にグループ化されているので、ここでは表示しない */}
                                     <span className="ml-2 text-xs text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">

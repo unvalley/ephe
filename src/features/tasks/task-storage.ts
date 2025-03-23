@@ -2,13 +2,17 @@
  * Task storage utilities for saving and retrieving completed tasks
  */
 
-export interface CompletedTask {
+export type CompletedTask = {
   id: string;
-  text: string;
+  // - [ ] content
+  // ------^^^^^^^
+  content: string;
   completedAt: string; // ISO string
+  // - [ ] content
+  // ^^^^^^^^^^^^^
   originalLine: string;
-  taskIdentifier?: string; // Unique identifier for the task
-  section?: string; // Section name the task belongs to
+  taskIdentifier: string; // Unique identifier for the task
+  section: string | undefined; // Section name the task belongs to
 }
 
 const COMPLETED_TASKS_KEY = 'ephe-completed-tasks';
@@ -16,10 +20,10 @@ const COMPLETED_TASKS_KEY = 'ephe-completed-tasks';
 /**
  * Generate a unique identifier for a task based on its content and position
  */
-export const generateTaskIdentifier = (text: string,checkboxIndex: number, lineNumber: number): string => {
+export const generateTaskIdentifier = (text: string, checkboxIndex: number, lineNumber: number) => {
   // Combine task text, line number, and checkbox position to create a unique identifier
   // This ensures that identical tasks on different lines are treated as separate tasks
-  return `${text.trim()}_line${lineNumber}_pos${checkboxIndex}`;
+  return `${text.trim()}_line${lineNumber}_pos${checkboxIndex}` as const;
 };
 
 /**
