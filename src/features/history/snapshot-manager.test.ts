@@ -22,16 +22,14 @@ describe('Snapshot Manager', () => {
     const content = 'Test content';
     const title = 'Test snapshot';
     const description = 'Test description';
-    const tags = ['test'];
 
-    createSnapshot(content, title, description, tags);
+    createSnapshot(content, title, description);
 
     expect(saveHistoryItem).toHaveBeenCalledWith({
       type: 'snapshot',
       content,
       title,
       description,
-      tags,
       charCount: content.length,
     });
   });

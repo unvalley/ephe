@@ -1,18 +1,17 @@
 "use client";
 
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { memo } from "react";
 import { useTheme } from "../hooks/use-theme";
 import Avatar from "boring-avatars";
 
 interface FooterProps {
-  pageName?: string;
   charCount?: number;
 }
 
 const EPHE_VERSION = "0.0.1";
 
-const _Footer = ({ pageName, charCount }: FooterProps) => {
+const _Footer = ({ charCount }: FooterProps) => {
   const { toggleTheme, toggleTargetTheme } = useTheme();
 
   return (

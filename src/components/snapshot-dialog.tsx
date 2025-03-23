@@ -11,9 +11,6 @@ interface SnapshotDialogProps {
 export const SnapshotDialog = ({ isOpen, onClose, editorContent }: SnapshotDialogProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [tags, setTags] = useState("");
-
-  const tagSuggestions = ["important", "draft", "final", "idea", "version"];
 
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
@@ -34,20 +31,12 @@ export const SnapshotDialog = ({ isOpen, onClose, editorContent }: SnapshotDialo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    createSnapshot(
-      editorContent,
-      title,
-      description || undefined,
-      tags ? tags.split(",").map((tag) => tag.trim()) : undefined,
-    );
+    createSnapshot(editorContent, title, description || undefined);
 
-    // トースト通知を表示
-    showToast(`Snapshot "${title}" created successfully`, "success");
+    showToast("Snapshot created successfully", "success");
 
-    // Reset form and close dialog
     setTitle("");
     setDescription("");
-    setTags("");
     onClose();
   };
 
@@ -85,41 +74,6 @@ export const SnapshotDialog = ({ isOpen, onClose, editorContent }: SnapshotDialo
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               rows={3}
             />
-          </div>
-
-          <div className="mb-4">
-            <label htmlFor="snapshot-tags" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Tags (comma separated, optional)
-            </label>
-            <input
-              id="snapshot-tags"
-              type="text"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-              placeholder="draft, important, idea"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-1 mt-1">
-            {tagSuggestions.map((tag) => (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => {
-                  const currentTags = tags
-                    .split(",")
-                    .map((t) => t.trim())
-                    .filter((t) => t);
-                  if (!currentTags.includes(tag)) {
-                    setTags(currentTags.length > 0 ? `${tags}, ${tag}` : tag);
-                  }
-                }}
-                className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-              >
-                {tag}
-              </button>
-            ))}
           </div>
 
           <div className="flex justify-end space-x-3 mt-6">

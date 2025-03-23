@@ -12,14 +12,12 @@ export const createSnapshot = (
   content: string, 
   title: string, 
   description?: string,
-  tags?: string[]
 ): void => {
   saveHistoryItem({
     type: 'snapshot',
     content,
     title,
     description,
-    tags,
     charCount: content.length
   });
 };
@@ -75,22 +73,19 @@ export const createAutoSnapshot = (
   content: string,
   title: string,
   description?: string,
-  tags?: string[]
 ): void => {
-  // 自動スナップショットの数を制限する（最新の10個だけ保持）
-  const autoSnapshots = getSnapshots().filter(s => 
-    s.tags?.includes('auto-save') || s.tags?.includes('auto')
-  );
+  // スナップショットの数を制限する（最新の10個だけ保持）
+  const snapshots = getSnapshots()
   
   // 10個以上ある場合は古いものから削除
-  if (autoSnapshots.length >= 10) {
+  if (snapshots.length >= 10) {
     // 日付でソートして古いものを特定
-    const sortedSnapshots = [...autoSnapshots].sort(
+    const sortedSnapshots = [...snapshots].sort(
       (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
     );
     
     // 削除する必要がある数を計算
-    const toDelete = sortedSnapshots.slice(0, autoSnapshots.length - 9);
+    const toDelete = sortedSnapshots.slice(0, snapshots.length - 9);
     
     // 古いスナップショットを削除
     for (const snapshot of toDelete) {
@@ -104,7 +99,6 @@ export const createAutoSnapshot = (
     content,
     title,
     description,
-    tags,
     charCount: content.length
   });
 }; 

@@ -131,7 +131,7 @@ export const CompletedTasksPage = () => {
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Completed Tasks</h1>
+              <h1 className="text-xltext-gray-900 dark:text-gray-100">Completed Tasks</h1>
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Your completed tasks in the editor.</p>
             </div>
 
@@ -149,7 +149,7 @@ export const CompletedTasksPage = () => {
 
           {/* Filter controls */}
           <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Filter Tasks</h2>
+            <h2 className="text-sm text-gray-700 dark:text-gray-300 mb-3">Filter Tasks</h2>
             <div className="flex flex-wrap items-center gap-4">
               <div className="w-full sm:w-auto">
                 <label htmlFor="year-filter" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
@@ -243,7 +243,7 @@ export const CompletedTasksPage = () => {
 
                   return (
                     <div key={date} className="mb-6">
-                      <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">{formatDate(date)}</h2>
+                      <h2 className="text-lg text-gray-900 dark:text-gray-100 mb-2">{formatDate(date)}</h2>
 
                       {sections.map((section) => (
                         <div key={section} className="mb-4">
@@ -318,7 +318,7 @@ export const CompletedTasksPage = () => {
         </div>
       )}
 
-      <Footer pageName="Completed" />
+      <Footer />
     </div>
   );
 };

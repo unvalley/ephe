@@ -52,7 +52,6 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
     const a = document.createElement("a");
     a.href = url;
 
-    // ファイル名を生成（タイトルから無効な文字を削除）
     const fileName = `${snapshot.title.replace(/[/\\?%*:|"<>]/g, "-")}.md`;
     a.download = fileName;
 
@@ -106,22 +105,10 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
             </p>
           </div>
 
-          {snapshot.tags && snapshot.tags.length > 0 && (
-            <div className="flex gap-1">
-              {snapshot.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400"
+            type="button"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -130,6 +117,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
+              <title>Close</title>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -181,6 +169,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
             <button
               onClick={handleRestore}
               className="px-4 py-2 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+              type="button"
             >
               Restore
             </button>
@@ -188,6 +177,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
             <button
               onClick={handleExport}
               className="px-4 py-2 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+              type="button"
             >
               Export
             </button>
@@ -197,6 +187,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
             <button
               onClick={handleDelete}
               className="px-4 py-2 text-sm rounded-md bg-gray-100 text-red-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-red-400 dark:hover:bg-gray-600 transition-colors"
+              type="button"
             >
               Delete
             </button>
@@ -204,6 +195,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
             <button
               onClick={onClose}
               className="px-4 py-2 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+              type="button"
             >
               Close
             </button>

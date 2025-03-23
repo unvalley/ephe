@@ -165,17 +165,33 @@ export const HistoryPage = () => {
 
   // Handle restoring a snapshot
   const handleRestoreSnapshot = (snapshot: SnapshotHistoryItem) => {
-    console.log("handleRestoreSnapshot", snapshot);
-    // Restore the snapshot content to the editor
+    // 現在のエディタ内容を取得
+    const currentContent = localStorage.getItem(EDITOR_CONTENT_KEY) || "";
+
+    // 現在の内容が空でない場合、自動バックアップを作成
+    if (currentContent.trim().length > 0) {
+      import("../features/history/snapshot-manager").then(({ createAutoSnapshot }) => {
+        const now = new Date();
+        const formattedDate = now.toLocaleString();
+        createAutoSnapshot(
+          currentContent,
+          `Backup before restore - ${formattedDate}`,
+          "Automatically created before restoring a snapshot",
+          ["auto-backup"],
+        );
+      });
+    }
+
+    // ローカルストレージにスナップショットの内容を保存
     localStorage.setItem(EDITOR_CONTENT_KEY, snapshot.content);
 
-    // Navigate to the editor
-    navigate("/");
-
-    // Show a toast notification
+    // トースト通知を表示
     import("../components/toast").then(({ showToast }) => {
-      showToast("Snapshot restored to editor", "success");
+      showToast("Snapshot content restored to editor", "success");
     });
+
+    // エディタページに戻る
+    navigate("/");
   };
 
   // Handle comparing snapshots
@@ -191,20 +207,24 @@ export const HistoryPage = () => {
       case "task": {
         const taskItem = item as TaskHistoryItem;
         return (
-          <div className="flex items-center justify-between py-1 group">
-            <div className="flex items-center">
-              <span className="text-xs text-gray-500 dark:text-gray-400 w-16">{time}</span>
-              <span className="ml-2">
-                <span className="text-green-600 dark:text-green-400">✓</span> {taskItem.text}
-              </span>
+          <div className="flex group">
+            <div className="flex-1 flex items-start">
+              <span className="inline-block mr-2 text-green-500 opacity-80">- [x]</span>
+              <div>
+                <span className="text-gray-700 dark:text-gray-300 opacity-80">{taskItem.text}</span>
+                {taskItem.section && (
+                  <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">in {taskItem.section},</span>
+                )}
+                <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">at {time}</span>
+              </div>
             </div>
             <button
               onClick={() => handleDeleteItem(item.id)}
-              className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-              aria-label="Delete"
+              className="ml-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+              aria-label="Delete task"
               type="button"
             >
-              ×
+              x
             </button>
           </div>
         );
@@ -212,19 +232,34 @@ export const HistoryPage = () => {
       case "snapshot": {
         const snapshotItem = item as SnapshotHistoryItem;
         return (
-          <div className="flex items-center justify-between py-1 group">
-            <div className="flex items-center">
-              <span
-                className="ml-2 cursor-pointer text-gray-500 dark:text-gray-400"
-                onClick={() => handleViewSnapshot(snapshotItem)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleViewSnapshot(snapshotItem);
-                  }
-                }}
+          <div className="flex group">
+            <div className="flex-1 flex items-start">
+              <div>
+                <span
+                  className="text-gray-700 dark:text-gray-300 opacity-80 cursor-pointer"
+                  onClick={() => handleViewSnapshot(snapshotItem)}
+                >
+                  - {snapshotItem.title}
+                </span>
+              </div>
+            </div>
+            <div className="flex">
+              <button
+                onClick={() => handleRestoreSnapshot(snapshotItem)}
+                className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-blue-500 dark:hover:text-blue-400 transition-opacity transition-colors"
+                aria-label="Restore snapshot"
+                type="button"
               >
-                {snapshotItem.title}
-              </span>
+                ↺
+              </button>
+              <button
+                onClick={() => handleDeleteItem(item.id)}
+                className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 transition-opacity transition-colors"
+                aria-label="Delete snapshot"
+                type="button"
+              >
+                ×
+              </button>
             </div>
           </div>
         );
@@ -234,14 +269,13 @@ export const HistoryPage = () => {
 
   const sortedDates = Object.keys(historyByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
-  // renderHistoryItems 関数を修正
   const renderHistoryItems = (date: string, items: HistoryItem[]) => {
     const itemsByType = groupItemsByType(items);
     const types = Object.keys(itemsByType);
 
     return (
       <div key={date} className="mb-6">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">{formatDate(date)}</h2>
+        <h2 className="text-md text-gray-900 dark:text-gray-100 mb-2">{formatDate(date)}</h2>
 
         {types.map((type) => {
           const typeItems = itemsByType[type];
@@ -251,20 +285,8 @@ export const HistoryPage = () => {
 
           return (
             <div key={type} className="mb-4">
-              <div className="flex items-center mb-1">
-                <h3 className="text-md font-semibold text-gray-800 dark:text-gray-200 capitalize">
-                  {type === "task" ? "Completed Tasks" : type === "snapshot" ? "Snapshots" : type}
-                </h3>
-                {type === "snapshot" && (
-                  <button
-                    onClick={handleCompareSnapshots}
-                    className="ml-2 text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
-                    type="button"
-                  >
-                    Compare
-                  </button>
-                )}
-              </div>
+              {type === "task" && <div className="text-gray-800 dark:text-gray-200 mb-1">Completed Tasks</div>}
+              {type === "snapshot" && <div className="text-gray-800 dark:text-gray-200 mb-1">Snapshots</div>}
               <div className="space-y-1 pl-4">
                 {typeItems.length > 0 ? (
                   <>
@@ -277,13 +299,13 @@ export const HistoryPage = () => {
                         className="mt-2 text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none"
                         type="button"
                       >
-                        {isExpanded ? `Show less` : `Show ${typeItems.length - limit} more...`}
+                        {isExpanded ? "Show less" : `Show ${typeItems.length - limit} more...`}
                       </button>
                     )}
                   </>
                 ) : (
                   <div className="text-gray-500 dark:text-gray-400 italic">
-                    No {type === "task" ? "completed tasks" : type === "edit" ? "edits" : "snapshots"} on this day.
+                    No {type === "task" ? "completed tasks" : "snapshots"} on this day.
                   </div>
                 )}
               </div>
@@ -303,27 +325,32 @@ export const HistoryPage = () => {
   }
 
   return (
-    <div className="min-h-screen pt-16 pb-8">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl text-gray-900 dark:text-gray-100">History</h2>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => {
-                    setPurgeType("all");
-                    setShowPurgeConfirm(true);
-                  }}
-                  className="px-3 py-1.5 text-sm rounded-md bg-gray-100 text-red-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-red-400 dark:hover:bg-gray-600 transition-colors focus:outline-none"
-                  type="button"
-                >
-                  Delete All
-                </button>
-              </div>
+    <div className="h-screen w-screen flex flex-col antialiased bg-white dark:bg-gray-900">
+      <div className="flex-1 pt-16 pb-8 overflow-auto">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-lg text-gray-900 dark:text-gray-100">History</h1>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Your completed tasks and snapshots.</p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
+            {/* Purge button */}
+            {Object.keys(historyByDate).length > 0 && (
+              <button
+                onClick={() => {
+                  setPurgeType("all");
+                  setShowPurgeConfirm(true);
+                }}
+                className="px-3 py-1.5 text-sm rounded-md bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors focus:outline-none"
+                type="button"
+              >
+                Delete All
+              </button>
+            )}
+          </div>
+
+          <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="w-full sm:w-auto">
                 <label htmlFor="year-filter" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
                   Year
@@ -422,8 +449,8 @@ export const HistoryPage = () => {
           </div>
 
           {sortedDates.length === 0 ? (
-            <div className="text-center py-12 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <p className="text-gray-500 dark:text-gray-400">Snapshots and Completed tasks are empty.</p>
+            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <p className="text-gray-500 dark:text-gray-400">Empty.</p>
               {Object.keys(filter).length > 0 && (
                 <p className="mt-2 text-gray-500 dark:text-gray-400">
                   Try adjusting your filters or{" "}
@@ -435,10 +462,9 @@ export const HistoryPage = () => {
               )}
             </div>
           ) : (
-            <div className="dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="font-mono text-sm p-4 h-[60vh] overflow-auto whitespace-pre-wrap">
                 {sortedDates.map((date) => {
-                  // 日付ごとのアイテムを取得
                   const items = historyByDate[date];
                   return renderHistoryItems(date, items);
                 })}
@@ -452,11 +478,9 @@ export const HistoryPage = () => {
       {showPurgeConfirm && (
         <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">Confirm Clear History</h3>
+            <h3 className="text-lg text-gray-900 dark:text-gray-100 mb-3">Confirm Deletion</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {purgeType === "all"
-                ? "Are you sure you want to clear all history? This action cannot be undone."
-                : `Are you sure you want to clear all ${purgeType} history? This action cannot be undone.`}
+              Are you sure you want to delete all history? This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">
               <button
@@ -471,20 +495,16 @@ export const HistoryPage = () => {
                 className="px-4 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 transition-colors"
                 type="button"
               >
-                Clear
+                Delete All
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Snapshot Comparison Dialog */}
       <SnapshotDiff isOpen={diffDialogOpen} onClose={() => setDiffDialogOpen(false)} />
-
-      {/* Snapshot Viewer */}
       <SnapshotViewer isOpen={viewerOpen} onClose={() => setViewerOpen(false)} snapshot={selectedSnapshot} />
-
-      <Footer pageName="History" />
+      <Footer />
     </div>
   );
 };

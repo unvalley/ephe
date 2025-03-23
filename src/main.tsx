@@ -7,6 +7,7 @@ import { LandingPage } from "./components/landing-page";
 import { EditorContainer } from "./app/editor-container";
 import { HistoryPage } from "./components/history-page";
 import { ToastContainer } from "./components/toast";
+import { CompletedTasksPage } from "./components/completed-tasks";
 
 const root = document.getElementById("root");
 if (!root) {
@@ -21,6 +22,7 @@ ReactDOM.createRoot(root).render(
           <Route path="/" element={<EditorContainer />} />
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/history" element={<HistoryPage />} />
+          <Route path="/completed-tasks" element={<CompletedTasksPage />} />
         </Routes>
         <ToastContainer />
       </BrowserRouter>

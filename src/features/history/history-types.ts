@@ -25,7 +25,6 @@ export interface SnapshotHistoryItem extends BaseHistoryItem {
   content: string;
   title: string;
   description?: string;
-  tags?: string[];
   charCount: number;
 }
 
