@@ -1,19 +1,19 @@
 import { useState, useRef, useEffect } from "react";
-import type { SnapshotHistoryItem } from "../features/history/history-types";
+import type { Snapshot } from "../features/snapshots/snapshot-types";
 import { Editor } from "@monaco-editor/react";
 import { useTheme } from "../hooks/use-theme";
-import { deleteHistoryItem } from "../features/history/history-storage";
+import { deleteSnapshot } from "../features/snapshots/snapshot-storage";
 import { EDITOR_CONTENT_KEY } from "../features/monaco";
 import { useNavigate } from "react-router-dom";
 import type * as monaco from "monaco-editor";
 import { showToast } from "./toast";
-import { createAutoSnapshot } from "../features/history/snapshot-manager";
+import { createAutoSnapshot } from "../features/snapshots/snapshot-manager";
 
-interface SnapshotViewerProps {
+type SnapshotViewerProps = {
   isOpen: boolean;
   onClose: () => void;
-  snapshot: SnapshotHistoryItem | null;
-}
+  snapshot: Snapshot | null;
+};
 
 export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProps) => {
   const { theme } = useTheme();
@@ -88,7 +88,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
 
   const handleDelete = () => {
     if (!snapshot) return;
-    deleteHistoryItem(snapshot.id);
+    deleteSnapshot(snapshot.id);
     onClose();
   };
 

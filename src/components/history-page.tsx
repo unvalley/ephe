@@ -1,33 +1,37 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getSnapshotsByDate, purgeAllSnapshots, deleteSnapshot } from "../features/snapshots/snapshot-storage";
+import type { Snapshot } from "../features/snapshots/snapshot-types";
 import {
-  getHistoryItemsByDate,
-  purgeAllHistoryItems,
-  deleteHistoryItem,
-  purgeHistoryItemsByType,
-} from "../features/history/history-storage";
-import type {
-  HistoryItem,
-  HistoryItemType,
-  TaskHistoryItem,
-  SnapshotHistoryItem,
-} from "../features/history/history-types";
+  getTasksByDate,
+  deleteCompletedTask,
+  purgeCompletedTasks,
+  type CompletedTask,
+} from "../features/tasks/task-storage";
 import { Footer } from "./footer";
 import { SnapshotDiff } from "./snapshot-diff";
 import { SnapshotViewer } from "./snapshot-viewer";
+import { EDITOR_CONTENT_KEY } from "../features/monaco";
+import { useNavigate } from "react-router-dom";
+import { showToast } from "./toast";
+import { createAutoSnapshot } from "../features/snapshots/snapshot-manager";
 
 type DateFilter = {
   year?: number;
   month?: number;
   day?: number;
-  types?: HistoryItemType[];
+  types?: string[];
 };
+
+type HistoryItem = Snapshot | CompletedTask;
+type HistoryItemType = "snapshot" | "task";
 
 export const HistoryPage = () => {
   const [historyByDate, setHistoryByDate] = useState<Record<string, HistoryItem[]>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filter, setFilter] = useState<DateFilter>({});
+  const navigate = useNavigate();
 
   // Get available years, months, and days from all history
   const [availableYears, setAvailableYears] = useState<number[]>([]);
@@ -42,7 +46,7 @@ export const HistoryPage = () => {
   const [diffDialogOpen, setDiffDialogOpen] = useState(false);
 
   // New state for snapshot viewer
-  const [selectedSnapshot, setSelectedSnapshot] = useState<SnapshotHistoryItem | null>(null);
+  const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
 
   // State to track expanded types
@@ -84,8 +88,12 @@ export const HistoryPage = () => {
     setHistoryByDate(getHistoryItemsByDate(filter));
   }, [filter]);
 
-  const handleDeleteItem = (itemId: string) => {
-    deleteHistoryItem(itemId);
+  const handleDeleteItem = (itemId: string, itemType: HistoryItemType) => {
+    if (itemType === "snapshot") {
+      deleteSnapshot(itemId);
+    } else {
+      deleteCompletedTask(itemId);
+    }
     // Refresh history with current filter
     setHistoryByDate(getHistoryItemsByDate(filter));
   };
@@ -121,157 +129,209 @@ export const HistoryPage = () => {
   // Purge history
   const handlePurgeHistory = () => {
     if (purgeType === "all") {
-      purgeAllHistoryItems();
+      purgeAllSnapshots();
+      purgeCompletedTasks();
+    } else if (purgeType === "snapshot") {
+      purgeAllSnapshots();
     } else {
-      purgeHistoryItemsByType(purgeType);
+      purgeCompletedTasks();
     }
     setHistoryByDate(getHistoryItemsByDate(filter));
     setShowPurgeConfirm(false);
   };
 
+  // Get combined history items by date
+  const getHistoryItemsByDate = (filter?: DateFilter): Record<string, HistoryItem[]> => {
+    const snapshotsByDate = getSnapshotsByDate(filter);
+    const tasksByDate = getTasksByDate(filter);
+
+    const combinedHistory: Record<string, HistoryItem[]> = {};
+
+    // Add snapshots
+    if (!filter?.types || filter.types.includes("snapshot")) {
+      for (const date in snapshotsByDate) {
+        if (!combinedHistory[date]) {
+          combinedHistory[date] = [];
+        }
+        combinedHistory[date].push(...snapshotsByDate[date]);
+      }
+    }
+
+    // Add tasks
+    if (!filter?.types || filter.types.includes("task")) {
+      for (const date in tasksByDate) {
+        if (!combinedHistory[date]) {
+          combinedHistory[date] = [];
+        }
+        combinedHistory[date].push(...tasksByDate[date]);
+      }
+    }
+
+    // Sort items by timestamp
+    for (const date in combinedHistory) {
+      combinedHistory[date].sort((a, b) => {
+        const timeA = a.hasOwnProperty("timestamp") ? (a as Snapshot).timestamp : (a as CompletedTask).completedAt;
+        const timeB = b.hasOwnProperty("timestamp") ? (b as Snapshot).timestamp : (b as CompletedTask).completedAt;
+        return new Date(timeB).getTime() - new Date(timeA).getTime();
+      });
+    }
+
+    return combinedHistory;
+  };
+
   // Group history items by type
   const groupItemsByType = (items: HistoryItem[]): Record<string, HistoryItem[]> => {
-    const itemsByType: Record<string, HistoryItem[]> = {};
+    const itemsByType: Record<string, HistoryItem[]> = {
+      snapshot: [],
+      task: [],
+    };
 
     // アイテムをタイプごとに分類
     for (const item of items) {
-      if (!itemsByType[item.type]) {
-        itemsByType[item.type] = [];
+      if (item.hasOwnProperty("content") && item.hasOwnProperty("title")) {
+        itemsByType.snapshot.push(item as Snapshot);
+      } else {
+        itemsByType.task.push(item as CompletedTask);
       }
-      itemsByType[item.type].push(item);
     }
 
-    for (const type of Object.keys(itemsByType)) {
-      itemsByType[type].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    }
-
-    // タスクセクションがない場合は空の配列を追加
-    if (!itemsByType.task) {
-      itemsByType.task = [];
-    }
+    // Sort by timestamp
+    itemsByType.snapshot.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    itemsByType.task.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
 
     return itemsByType;
   };
 
   // Handle viewing a snapshot
-  const handleViewSnapshot = (snapshot: SnapshotHistoryItem) => {
+  const handleViewSnapshot = (snapshot: Snapshot) => {
     setSelectedSnapshot(snapshot);
     setViewerOpen(true);
   };
 
-  // Handle restoring a snapshot
-  //   const handleRestoreSnapshot = (snapshot: SnapshotHistoryItem) => {
-  //     const currentContent = localStorage.getItem(EDITOR_CONTENT_KEY) || "";
-
-  //     // Create a backup snapshot before restoring
-  //     if (currentContent.trim().length > 0) {
-  //       const now = new Date();
-  //       const formattedDate = now.toLocaleString();
-  //       createAutoSnapshot({
-  //         content: currentContent,
-  //         title: `Backup before restore - ${formattedDate}`,
-  //         description: "Automatically created before restoring a snapshot",
-  //       });
-  //     }
-  //     localStorage.setItem(EDITOR_CONTENT_KEY, snapshot.content);
-  //     showToast("Snapshot content restored to editor", "success");
-  //     navigate("/");
-  //   };
-
   // Render a history item based on its type
   const renderHistoryItem = (item: HistoryItem) => {
-    const time = new Date(item.timestamp).toLocaleTimeString();
+    // Check if item is a snapshot
+    if (item.hasOwnProperty("title") && item.hasOwnProperty("charCount")) {
+      const snapshot = item as Snapshot;
+      const time = new Date(snapshot.timestamp).toLocaleTimeString();
 
-    switch (item.type) {
-      case "task": {
-        const taskItem = item as TaskHistoryItem;
-        return (
-          <div className="flex group">
-            <div className="flex-1 flex items-start">
-              <span className="inline-block mr-2 text-green-500 opacity-80">- [x]</span>
-              <div>
-                <span className="text-gray-700 dark:text-gray-300 opacity-80">{taskItem.content}</span>
-                {taskItem.section && (
-                  <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">in {taskItem.section},</span>
-                )}
-                <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">at {time}</span>
-              </div>
+      return (
+        <div className="flex group">
+          <div className="flex-1 flex items-start">
+            <div>
+              <span
+                className="text-gray-700 dark:text-gray-300 opacity-80 cursor-pointer"
+                onClick={() => handleViewSnapshot(snapshot)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleViewSnapshot(snapshot);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+              >
+                {snapshot.title}
+              </span>
+              <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">
+                {snapshot.charCount.toLocaleString()} chars, at {time}
+              </span>
             </div>
+          </div>
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2">
             <button
-              onClick={() => handleDeleteItem(item.id)}
-              className="ml-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400"
-              aria-label="Delete task"
+              onClick={() => {
+                // Load the snapshot content into the editor
+                localStorage.setItem(EDITOR_CONTENT_KEY, snapshot.content);
+
+                // Create a backup of the current content
+                createAutoSnapshot({
+                  content: snapshot.content,
+                  title: "Restored from history",
+                  description: `Restored from snapshot: ${snapshot.title}`,
+                });
+
+                // Navigate to editor
+                navigate("/");
+                showToast("Snapshot restored to editor", "success");
+              }}
+              className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-300"
+              aria-label="Restore snapshot"
+              type="button"
+            >
+              restore
+            </button>
+            <button
+              onClick={() => handleDeleteItem(snapshot.id, "snapshot")}
+              className="text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+              aria-label="Delete snapshot"
               type="button"
             >
               x
             </button>
           </div>
-        );
-      }
-      case "snapshot": {
-        const snapshotItem = item as SnapshotHistoryItem;
-        return (
-          <div className="flex group">
-            <div className="flex-1 flex items-start">
-              <div>
-                <span
-                  className="text-gray-700 dark:text-gray-300 opacity-80 cursor-pointer"
-                  onClick={() => handleViewSnapshot(snapshotItem)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleViewSnapshot(snapshotItem);
-                    }
-                  }}
-                >
-                  - {snapshotItem.title}
-                </span>
-              </div>
-            </div>
-            <div className="flex">
-              <button
-                onClick={() => handleDeleteItem(item.id)}
-                className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 hover:text-red-500 dark:hover:text-red-400 transition-opacity transition-colors"
-                aria-label="Delete snapshot"
-                type="button"
-              >
-                delete
-              </button>
-            </div>
-          </div>
-        );
-      }
+        </div>
+      );
     }
+
+    // It's a task
+    const task = item as CompletedTask;
+    const time = new Date(task.completedAt).toLocaleTimeString();
+
+    return (
+      <div className="flex group">
+        <div className="flex-1 flex items-start">
+          <span className="inline-block mr-2 text-green-500 opacity-80">- [x]</span>
+          <div>
+            <span className="text-gray-700 dark:text-gray-300 opacity-80">{task.content}</span>
+            {task.section && <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">in {task.section},</span>}
+            <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">at {time}</span>
+          </div>
+        </div>
+        <button
+          onClick={() => handleDeleteItem(task.id, "task")}
+          className="ml-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+          aria-label="Delete task"
+          type="button"
+        >
+          x
+        </button>
+      </div>
+    );
   };
 
+  // Get sorted dates
   const sortedDates = Object.keys(historyByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
+  // Render history items for a specific date
   const renderHistoryItems = (date: string, items: HistoryItem[]) => {
     const itemsByType = groupItemsByType(items);
     const types = Object.keys(itemsByType);
 
     return (
       <div key={date} className="mb-6">
-        <h2 className="text-md text-gray-900 dark:text-gray-100 mb-2">{formatDate(date)}</h2>
-
+        <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-2">{formatDate(date)}</h3>
         {types.map((type) => {
           const typeItems = itemsByType[type];
-          const isExpanded = expandedTypes[type] || false;
-          const limit = 3; // 初期表示数
+          const limit = 5;
+          const isExpanded = expandedTypes[`${date}-${type}`] || false;
           const displayItems = isExpanded ? typeItems : typeItems.slice(0, limit);
 
           return (
-            <div key={type} className="mb-4">
-              {type === "task" && <div className="text-gray-800 dark:text-gray-200 mb-1">Completed Tasks</div>}
-              {type === "snapshot" && <div className="text-gray-800 dark:text-gray-200 mb-1">Snapshots</div>}
-              <div className="space-y-1 pl-4">
+            <div key={`${date}-${type}`} className="mb-4">
+              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 capitalize">
+                {type === "task" ? "Completed Tasks" : "Snapshots"}
+              </h4>
+              <div className="space-y-2 pl-4">
                 {typeItems.length > 0 ? (
                   <>
                     {displayItems.map((item) => (
-                      <div key={item.id}>{renderHistoryItem(item)}</div>
+                      <div key={item.hasOwnProperty("timestamp") ? (item as Snapshot).id : (item as CompletedTask).id}>
+                        {renderHistoryItem(item)}
+                      </div>
                     ))}
                     {typeItems.length > limit && (
                       <button
-                        onClick={() => toggleTypeExpansion(type)}
+                        onClick={() => toggleTypeExpansion(`${date}-${type}`)}
                         className="mt-2 text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none"
                         type="button"
                       >

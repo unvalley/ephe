@@ -20,7 +20,7 @@ import {
 import { MonacoMarkdownExtension } from "../monaco-markdown";
 import { Footer } from "../components/footer";
 import { ToastContainer, showToast } from "../components/toast";
-import { createAutoSnapshot } from "../features/history/snapshot-manager";
+import { createAutoSnapshot } from "../features/snapshots/snapshot-manager";
 
 const markdownExtension = new MonacoMarkdownExtension();
 

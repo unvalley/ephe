@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { createSnapshot } from "../features/history/snapshot-manager";
+import { createSnapshot } from "../features/snapshots/snapshot-manager";
 import { showToast } from "./toast";
 
-interface SnapshotDialogProps {
+type SnapshotDialogProps = {
   isOpen: boolean;
   onClose: () => void;
   editorContent: string;
-}
+};
 
 export const SnapshotDialog = ({ isOpen, onClose, editorContent }: SnapshotDialogProps) => {
   const [title, setTitle] = useState("");

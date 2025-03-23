@@ -1,9 +1,9 @@
 import * as monaco from "monaco-editor";
 import type { EditorProps } from "@monaco-editor/react";
 import { isTaskListLine, isCheckedTask } from "./task-list-utils";
-import { deleteTaskFromHistoryByIdentifier, saveTaskToHistory } from "../tasks/task-history-adapter";
 import { generateTaskIdentifier } from "../tasks/task-storage";
 import { findTaskSection } from "./task-section-utils";
+import { saveCompletedTask, deleteCompletedTaskByIdentifier } from "../tasks/task-storage";
 
 // Helper functions for placeholder visibility
 export const showPlaceholder = (element: Element) => {
@@ -220,11 +220,11 @@ export const handleTaskCheckboxToggle = (
       const taskContent = lineContent.substring(checkboxStartIndex + 5).trim();
 
       const section = model ? findTaskSection(model, position.lineNumber) : undefined;
-      const taskIdentifier = generateTaskIdentifier(taskContent, checkboxStartIndex, position.lineNumber);
+      const taskIdentifier = generateTaskIdentifier(taskContent);
 
       if (newState === "x") {
         // If task is being checked, save it to history
-        saveTaskToHistory({
+        saveCompletedTask({
           id: taskIdentifier,
           content: taskContent,
           originalLine: lineContent,
@@ -234,7 +234,7 @@ export const handleTaskCheckboxToggle = (
         });
       } else {
         // If task is being unchecked, remove it from history
-        deleteTaskFromHistoryByIdentifier(taskIdentifier);
+        deleteCompletedTaskByIdentifier(taskIdentifier);
       }
 
       // Apply the edit to toggle checkbox - only change the checkbox character
