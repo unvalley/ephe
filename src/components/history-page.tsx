@@ -27,6 +27,16 @@ type DateFilter = {
 type HistoryItem = Snapshot | CompletedTask;
 type HistoryItemType = "snapshot" | "task";
 
+// Type guard to check if an item is a Snapshot
+const isSnapshot = (item: HistoryItem): item is Snapshot => {
+  return "title" in item && "charCount" in item;
+};
+
+// Type guard to check if an item is a CompletedTask
+const isCompletedTask = (item: HistoryItem): item is CompletedTask => {
+  return "completedAt" in item && !("charCount" in item);
+};
+
 export const HistoryPage = () => {
   const [historyByDate, setHistoryByDate] = useState<Record<string, HistoryItem[]>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -170,8 +180,8 @@ export const HistoryPage = () => {
     // Sort items by timestamp
     for (const date in combinedHistory) {
       combinedHistory[date].sort((a, b) => {
-        const timeA = a.hasOwnProperty("timestamp") ? (a as Snapshot).timestamp : (a as CompletedTask).completedAt;
-        const timeB = b.hasOwnProperty("timestamp") ? (b as Snapshot).timestamp : (b as CompletedTask).completedAt;
+        const timeA = isSnapshot(a) ? a.timestamp : a.completedAt;
+        const timeB = isSnapshot(b) ? b.timestamp : b.completedAt;
         return new Date(timeB).getTime() - new Date(timeA).getTime();
       });
     }
@@ -181,24 +191,14 @@ export const HistoryPage = () => {
 
   // Group history items by type
   const groupItemsByType = (items: HistoryItem[]): Record<string, HistoryItem[]> => {
-    const itemsByType: Record<string, HistoryItem[]> = {
-      snapshot: [],
-      task: [],
+    const itemsByType: { snapshot: Snapshot[]; task: CompletedTask[] } = {
+      snapshot: items
+        .filter(isSnapshot)
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+      task: items
+        .filter(isCompletedTask)
+        .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()),
     };
-
-    // アイテムをタイプごとに分類
-    for (const item of items) {
-      if (item.hasOwnProperty("content") && item.hasOwnProperty("title")) {
-        itemsByType.snapshot.push(item as Snapshot);
-      } else {
-        itemsByType.task.push(item as CompletedTask);
-      }
-    }
-
-    // Sort by timestamp
-    itemsByType.snapshot.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    itemsByType.task.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
-
     return itemsByType;
   };
 
@@ -208,36 +208,33 @@ export const HistoryPage = () => {
     setViewerOpen(true);
   };
 
+  // Get sorted dates
+  const sortedDates = Object.keys(historyByDate).sort((a, b) => {
+    return new Date(b).getTime() - new Date(a).getTime();
+  });
+
   // Render a history item based on its type
   const renderHistoryItem = (item: HistoryItem) => {
     // Check if item is a snapshot
-    if (item.hasOwnProperty("title") && item.hasOwnProperty("charCount")) {
-      const snapshot = item as Snapshot;
-      const time = new Date(snapshot.timestamp).toLocaleTimeString();
+    if (isSnapshot(item)) {
+      const snapshot = item;
 
       return (
         <div className="flex group">
           <div className="flex-1 flex items-start">
             <div>
-              <span
-                className="text-gray-700 dark:text-gray-300 opacity-80 cursor-pointer"
+              {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
+              <div
+                className="cursor-pointer text-xs text-gray-700 dark:text-gray-300 opacity-80"
                 onClick={() => handleViewSnapshot(snapshot)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleViewSnapshot(snapshot);
-                  }
-                }}
                 role="button"
                 tabIndex={0}
               >
-                {snapshot.title}
-              </span>
-              <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">
-                {snapshot.charCount.toLocaleString()} chars, at {time}
-              </span>
+                - {snapshot.title}
+              </div>
             </div>
           </div>
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex space-x-2">
+          <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => {
                 // Load the snapshot content into the editor
@@ -254,19 +251,17 @@ export const HistoryPage = () => {
                 navigate("/");
                 showToast("Snapshot restored to editor", "success");
               }}
-              className="text-green-500 hover:text-green-600 dark:text-green-400 dark:hover:text-green-300"
-              aria-label="Restore snapshot"
+              className="text-xs px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
               type="button"
             >
-              restore
+              Restore
             </button>
             <button
               onClick={() => handleDeleteItem(snapshot.id, "snapshot")}
-              className="text-gray-400 hover:text-red-500 dark:hover:text-red-400"
-              aria-label="Delete snapshot"
+              className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
               type="button"
             >
-              x
+              Delete
             </button>
           </div>
         </div>
@@ -280,59 +275,54 @@ export const HistoryPage = () => {
     return (
       <div className="flex group">
         <div className="flex-1 flex items-start">
-          <span className="inline-block mr-2 text-green-500 opacity-80">- [x]</span>
           <div>
-            <span className="text-gray-700 dark:text-gray-300 opacity-80">{task.content}</span>
+            <span className="text-gray-700 dark:text-gray-300 opacity-80">- [x] {task.content}</span>
             {task.section && <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">in {task.section},</span>}
             <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">at {time}</span>
           </div>
         </div>
-        <button
-          onClick={() => handleDeleteItem(task.id, "task")}
-          className="ml-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-          aria-label="Delete task"
-          type="button"
-        >
-          x
-        </button>
+        <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => handleDeleteItem(task.id, "task")}
+            className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+            type="button"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     );
   };
 
-  // Get sorted dates
-  const sortedDates = Object.keys(historyByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-
   // Render history items for a specific date
   const renderHistoryItems = (date: string, items: HistoryItem[]) => {
     const itemsByType = groupItemsByType(items);
-    const types = Object.keys(itemsByType);
+    const historyItemTypes: HistoryItemType[] = ["snapshot", "task"];
 
     return (
       <div key={date} className="mb-6">
-        <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-2">{formatDate(date)}</h3>
-        {types.map((type) => {
-          const typeItems = itemsByType[type];
+        <div className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(date)}</div>
+        {historyItemTypes.map((historyItemType) => {
+          const typeItems = itemsByType[historyItemType];
           const limit = 5;
-          const isExpanded = expandedTypes[`${date}-${type}`] || false;
+          const isExpanded = expandedTypes[`${date}-${historyItemType}`] || false;
           const displayItems = isExpanded ? typeItems : typeItems.slice(0, limit);
 
           return (
-            <div key={`${date}-${type}`} className="mb-4">
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 capitalize">
-                {type === "task" ? "Completed Tasks" : "Snapshots"}
-              </h4>
-              <div className="space-y-2 pl-4">
+            <div key={historyItemType} className="mb-4">
+              <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+                {historyItemType === "task" ? "Completed Tasks" : "Snapshots"}
+              </div>
+              <div className="space-y-2 pl-2 border-l-2 border-gray-200 dark:border-gray-600">
                 {typeItems.length > 0 ? (
                   <>
                     {displayItems.map((item) => (
-                      <div key={item.hasOwnProperty("timestamp") ? (item as Snapshot).id : (item as CompletedTask).id}>
-                        {renderHistoryItem(item)}
-                      </div>
+                      <div key={isSnapshot(item) ? item.id : (item as CompletedTask).id}>{renderHistoryItem(item)}</div>
                     ))}
                     {typeItems.length > limit && (
                       <button
-                        onClick={() => toggleTypeExpansion(`${date}-${type}`)}
-                        className="mt-2 text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 focus:outline-none"
+                        onClick={() => toggleTypeExpansion(`${date}-${historyItemType}`)}
+                        className="mt-2 text-sm focus:outline-none"
                         type="button"
                       >
                         {isExpanded ? "Show less" : `Show ${typeItems.length - limit} more...`}
@@ -341,7 +331,7 @@ export const HistoryPage = () => {
                   </>
                 ) : (
                   <div className="text-gray-500 dark:text-gray-400 italic">
-                    No {type === "task" ? "completed tasks" : "snapshots"} on this day.
+                    No {historyItemType === "task" ? "completed tasks" : "snapshots"} on this day.
                   </div>
                 )}
               </div>
@@ -355,7 +345,7 @@ export const HistoryPage = () => {
   if (isLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100" />
       </div>
     );
   }
