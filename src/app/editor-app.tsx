@@ -21,6 +21,7 @@ import { MonacoMarkdownExtension } from "../monaco-markdown";
 import { Footer } from "../components/footer";
 import { ToastContainer, showToast } from "../components/toast";
 import { createAutoSnapshot } from "../features/snapshots/snapshot-manager";
+import { getSnapshots } from "../features/snapshots/snapshot-storage";
 
 const markdownExtension = new MonacoMarkdownExtension();
 
@@ -73,11 +74,16 @@ export const EditorApp = () => {
   const createAutoSave = (content: string) => {
     if (!content || content.trim().length === 0) return;
 
-    const now = new Date();
-    const formattedDate = now.toLocaleString();
+    // Check if the latest snapshot was created within the last 10 minutes
+    const snapshots = getSnapshots();
+    const latestSnapshot = snapshots[0];
+    if (latestSnapshot && new Date().getTime() - new Date(latestSnapshot.timestamp).getTime() < 10 * 60 * 1000) {
+      return;
+    }
+
     createAutoSnapshot({
       content,
-      title: formattedDate,
+      title: new Date().toLocaleString(), // TODO: use random name
       description: "Automatically created when leaving the editor",
     });
 
@@ -121,7 +127,7 @@ export const EditorApp = () => {
       // Create automatic snapshot on save
       createAutoSnapshot({
         content: value,
-        title: new Date().toLocaleString(),
+        title: new Date().toLocaleString(), // TODO: use random name
         description: "Manually saved from command menu",
       });
 

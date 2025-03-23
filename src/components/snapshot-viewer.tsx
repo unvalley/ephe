@@ -7,7 +7,6 @@ import { EDITOR_CONTENT_KEY } from "../features/monaco";
 import { useNavigate } from "react-router-dom";
 import type * as monaco from "monaco-editor";
 import { showToast } from "./toast";
-import { createAutoSnapshot } from "../features/snapshots/snapshot-manager";
 
 type SnapshotViewerProps = {
   isOpen: boolean;

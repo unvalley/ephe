@@ -15,7 +15,6 @@ import { SnapshotViewer } from "./snapshot-viewer";
 import { EDITOR_CONTENT_KEY } from "../features/monaco";
 import { useNavigate } from "react-router-dom";
 import { showToast } from "./toast";
-import { createAutoSnapshot } from "../features/snapshots/snapshot-manager";
 
 type DateFilter = {
   year?: number;
