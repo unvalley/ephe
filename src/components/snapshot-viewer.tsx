@@ -66,22 +66,9 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
 
   const handleRestore = () => {
     if (!snapshot) return;
-
-    const currentContent = localStorage.getItem(EDITOR_CONTENT_KEY) || "";
-
-    if (currentContent.trim().length > 0) {
-      const now = new Date();
-      const formattedDate = now.toLocaleString();
-      createAutoSnapshot({
-        content: currentContent,
-        title: `Backup before restore - ${formattedDate}`,
-        description: "Automatically created before restoring a snapshot",
-      });
-    }
-
     localStorage.setItem(EDITOR_CONTENT_KEY, snapshot.content);
 
-    showToast("Snapshot content restored to editor", "success");
+    showToast("Snapshot restored", "success");
     navigate("/");
     onClose();
   };

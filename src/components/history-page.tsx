@@ -240,13 +240,6 @@ export const HistoryPage = () => {
                 // Load the snapshot content into the editor
                 localStorage.setItem(EDITOR_CONTENT_KEY, snapshot.content);
 
-                // Create a backup of the current content
-                createAutoSnapshot({
-                  content: snapshot.content,
-                  title: "Restored from history",
-                  description: `Restored from snapshot: ${snapshot.title}`,
-                });
-
                 // Navigate to editor
                 navigate("/");
                 showToast("Snapshot restored to editor", "success");
