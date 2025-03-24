@@ -3,6 +3,7 @@
 import { Command } from "cmdk";
 import { useEffect, useRef } from "react";
 import { useTheme } from "../hooks/use-theme";
+import { useNavigate } from "react-router-dom";
 
 type CommandMenuProps = {
   open: boolean;
@@ -14,7 +15,7 @@ type CommandMenuProps = {
 export const CommandMenu = ({ open, onClose, onOpen, editorContent }: CommandMenuProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toggleTheme, toggleTargetTheme } = useTheme();
-
+  const navigate = useNavigate();
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
@@ -131,20 +132,11 @@ export const CommandMenu = ({ open, onClose, onOpen, editorContent }: CommandMen
           <Command.Item
             className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
             onSelect={() => {
+              navigate("/history");
               onClose?.();
             }}
           >
-            Show previous tasks (WIP)
-          </Command.Item>
-
-          <Command.Item
-            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
-            onSelect={() => {
-              window.location.href = "/completed-tasks";
-              onClose?.();
-            }}
-          >
-            View completed tasks
+            View History
           </Command.Item>
         </Command.List>
       </Command>
