@@ -258,3 +258,49 @@ export const handleTaskCheckboxToggle = (
     return;
   }
 };
+
+export const epheLight = {
+  name: "ephe-light",
+  theme: {
+    base: "vs",
+    inherit: true,
+    rules: [
+      { token: "comment", foreground: "#8a9aa9", fontStyle: "italic" },
+      { token: "keyword", foreground: "#5d5080" },
+      { token: "string", foreground: "#457464" },
+      { token: "number", foreground: "#a37a55" },
+      { token: "type", foreground: "#44678a" },
+      { token: "function", foreground: "#4a768f" },
+      { token: "variable", foreground: "#566370" },
+      { token: "constant", foreground: "#9e6b60" },
+      { token: "operator", foreground: "#6d5e96" },
+    ],
+    colors: {
+      "editor.background": "#ffffff",
+      "editor.foreground": "#3a4550",
+    },
+  } as monaco.editor.IStandaloneThemeData,
+} as const;
+
+export const epheDark = {
+  name: "ephe-dark",
+  theme: {
+    base: "vs-dark",
+    inherit: true,
+    rules: [
+      { token: "comment", foreground: "#8a9aa9", fontStyle: "italic" },
+      { token: "keyword", foreground: "#a08cc0" },
+      { token: "string", foreground: "#7fb49a" },
+      { token: "number", foreground: "#c79d7f" },
+      { token: "type", foreground: "#7a9cbf" },
+      { token: "function", foreground: "#7c9cb3" },
+      { token: "variable", foreground: "#d6d9dd" },
+      { token: "constant", foreground: "#c99a90" },
+      { token: "operator", foreground: "#a99ac6" },
+    ],
+    colors: {
+      "editor.background": "#121212",
+      "editor.foreground": "#d6d9dd",
+    },
+  } as monaco.editor.IStandaloneThemeData,
+} as const;

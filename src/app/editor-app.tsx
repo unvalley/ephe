@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useRef, useState, useCallback, Suspense } from "react";
 import { useTheme } from "../hooks/use-theme";
 import type * as monaco from "monaco-editor";
 import { useLocalStorage } from "../hooks/use-local-storage";
@@ -16,19 +16,16 @@ import {
   handleTaskCheckboxToggle,
   updatePlaceholder,
   applyTaskCheckboxDecorations,
+  epheLight,
+  epheDark,
 } from "../features/monaco/editor-utils";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
 import { Footer } from "../components/footer";
 import { ToastContainer, showToast } from "../components/toast";
 import { createAutoSnapshot } from "../features/snapshots/snapshot-manager";
-import { getSnapshots } from "../features/snapshots/snapshot-storage";
+import { SnapshotDialog } from "../components/snapshot-dialog";
 
 const markdownExtension = new MonacoMarkdownExtension();
-
-// スナップショットダイアログを遅延ロード
-const SnapshotDialog = lazy(() =>
-  import("../components/snapshot-dialog").then((module) => ({ default: module.SnapshotDialog })),
-);
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -70,40 +67,6 @@ export const EditorApp = () => {
 
   // Add state to track snapshot dialog
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
-
-  const createAutoSave = (content: string) => {
-    if (!content || content.trim().length === 0) return;
-
-    // Check if the latest snapshot was created within the last 10 minutes
-    const snapshots = getSnapshots();
-    const latestSnapshot = snapshots[0];
-    if (latestSnapshot && new Date().getTime() - new Date(latestSnapshot.timestamp).getTime() < 10 * 60 * 1000) {
-      return;
-    }
-
-    createAutoSnapshot({
-      content,
-      title: new Date().toLocaleString(), // TODO: use random name
-      description: "Automatically created when leaving the editor",
-    });
-
-    showToast("Snapshot saved successfully", "success");
-  };
-
-  // Create a snapshot when the editor is blurred
-  useEffect(() => {
-    const handleBlur = () => {
-      if (editorRef.current) {
-        const content = editorRef.current.getValue();
-        createAutoSave(content);
-      }
-    };
-
-    window.addEventListener("blur", handleBlur);
-    return () => {
-      window.removeEventListener("blur", handleBlur);
-    };
-  }, []);
 
   // Handle editor mounting
   const handleEditorDidMount = (
@@ -217,48 +180,9 @@ export const EditorApp = () => {
     // Focus editor on mount
     editor.focus();
 
-    // Define custom themes
-    monaco.editor.defineTheme("ephe-light", {
-      base: "vs",
-      inherit: true,
-      rules: [
-        { token: "comment", foreground: "#8a9aa9", fontStyle: "italic" },
-        { token: "keyword", foreground: "#5d5080" },
-        { token: "string", foreground: "#457464" },
-        { token: "number", foreground: "#a37a55" },
-        { token: "type", foreground: "#44678a" },
-        { token: "function", foreground: "#4a768f" },
-        { token: "variable", foreground: "#566370" },
-        { token: "constant", foreground: "#9e6b60" },
-        { token: "operator", foreground: "#6d5e96" },
-      ],
-      colors: {
-        "editor.background": "#ffffff",
-        "editor.foreground": "#3a4550",
-      },
-    });
-
-    monaco.editor.defineTheme("ephe-dark", {
-      base: "vs-dark",
-      inherit: true,
-      rules: [
-        { token: "comment", foreground: "#8a9aa9", fontStyle: "italic" },
-        { token: "keyword", foreground: "#a08cc0" },
-        { token: "string", foreground: "#7fb49a" },
-        { token: "number", foreground: "#c79d7f" },
-        { token: "type", foreground: "#7a9cbf" },
-        { token: "function", foreground: "#7c9cb3" },
-        { token: "variable", foreground: "#d6d9dd" },
-        { token: "constant", foreground: "#c99a90" },
-        { token: "operator", foreground: "#a99ac6" },
-      ],
-      colors: {
-        "editor.background": "#121212",
-        "editor.foreground": "#d6d9dd",
-      },
-    });
-    // Apply custom theme
-    monaco.editor.setTheme(isDarkMode ? "ephe-dark" : "ephe-light");
+    monaco.editor.defineTheme(epheLight.name, epheLight.theme);
+    monaco.editor.defineTheme(epheDark.name, epheDark.theme);
+    monaco.editor.setTheme(isDarkMode ? epheDark.name : epheLight.name);
   };
 
   // Determine if placeholder should be visible initially
