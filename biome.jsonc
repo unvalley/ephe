@@ -14,10 +14,10 @@
       "recommended": true,
       "suspicious": {
         "noDoubleEquals": {
-            "level": "error",
-            "options": {
-                "ignoreNull": true
-            }
+          "level": "error",
+          "options": {
+            "ignoreNull": true
+          }
         }
       }
     }

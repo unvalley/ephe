@@ -9,12 +9,12 @@ import {
   purgeCompletedTasks,
   type CompletedTask,
 } from "../features/tasks/task-storage";
-import { Footer } from "./footer";
-import { SnapshotDiff } from "./snapshot-diff";
-import { SnapshotViewer } from "./snapshot-viewer";
+import { Footer } from "../components/footer";
+import { SnapshotDiff } from "../components/snapshot-diff";
+import { SnapshotViewer } from "../components/snapshot-viewer";
 import { EDITOR_CONTENT_KEY } from "../features/monaco";
 import { useNavigate } from "react-router-dom";
-import { showToast } from "./toast";
+import { showToast } from "../components/toast";
 
 type DateFilter = {
   year?: number;

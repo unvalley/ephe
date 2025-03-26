@@ -26,7 +26,7 @@ export const addKeybinding = (
       return undefined;
     },
   });
-}
+};
 
 export const activateFormatting = (editor: TextEditor) => {
   addKeybinding(editor, "toggleBold", toggleBold, [KeyMod.CtrlCmd | KeyCode.KeyB], "Toggle bold", "");
@@ -67,7 +67,7 @@ export const activateFormatting = (editor: TextEditor) => {
   );
   addKeybinding(editor, "toggleList", toggleList, [KeyMod.CtrlCmd | KeyCode.KeyL], "Toggle list", "");
   // addKeybinding(editor, paste, [KeyMod.CtrlCmd | KeyCode.KEY_B], "Toggle bold");
-}
+};
 
 /**
  * Here we store Regexp to check if the text is the single link.
@@ -162,7 +162,7 @@ const getMathState = (editor: TextEditor, cursor: Position): MathBlockState => {
     return MathBlockState.MULTI_DISPLAYED;
   }
   return MathBlockState.NONE;
-}
+};
 
 /**
  * Modify the document, change from `oldMathBlockState` to `newMathBlockState`.

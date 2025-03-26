@@ -8,8 +8,8 @@ import { useDebouncedCallback } from "../hooks/use-debounce";
 import { EDITOR_CONTENT_KEY, getRandomQuote } from "../features/monaco";
 import { isTaskListLine, isCheckedTask } from "../features/monaco/task-list-utils";
 import { Editor } from "@monaco-editor/react";
-import { CommandMenu } from "../components/command-k";
-import { TableOfContents, TableOfContentsButton } from "../components/toc";
+import { CommandMenu } from "./command-k";
+import { TableOfContents, TableOfContentsButton } from "./toc";
 import {
   editorOptions,
   handleKeyDown,
@@ -20,10 +20,10 @@ import {
   epheDark,
 } from "../features/monaco/editor-utils";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
-import { Footer } from "../components/footer";
-import { ToastContainer, showToast } from "../components/toast";
+import { Footer } from "./footer";
+import { ToastContainer, showToast } from "./toast";
 import { createAutoSnapshot } from "../features/snapshots/snapshot-manager";
-import { SnapshotDialog } from "../components/snapshot-dialog";
+import { SnapshotDialog } from "./snapshot-dialog";
 
 const markdownExtension = new MonacoMarkdownExtension();
 

@@ -10,4 +10,4 @@ export type Snapshot = {
   title: string;
   description: string;
   charCount: number;
-}; 
+};

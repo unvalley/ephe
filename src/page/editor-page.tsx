@@ -1,7 +1,7 @@
 import "./globals.css";
-import { EditorApp } from "./editor-app";
+import { EditorApp } from "../components/editor-app";
 
-export const EditorContainer = () => {
+export const EditorPage = () => {
   return (
     <div className="antialiased h-full w-full">
       <EditorApp />

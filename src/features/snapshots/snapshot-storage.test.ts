@@ -1,17 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   saveSnapshot,
   getSnapshots,
   getSnapshotsByDate,
   getSnapshotById,
   deleteSnapshot,
-  purgeAllSnapshots
-} from './snapshot-storage';
-import type { Snapshot } from './snapshot-types';
+  purgeAllSnapshots,
+} from "./snapshot-storage";
+import type { Snapshot } from "./snapshot-types";
 
-describe('Snapshot Storage', () => {
-  const SNAPSHOTS_STORAGE_KEY = 'ephe-snapshots';
-  
+describe("Snapshot Storage", () => {
+  const SNAPSHOTS_STORAGE_KEY = "ephe-snapshots";
+
   beforeEach(() => {
     // Mock localStorage
     const localStorageMock = (() => {
@@ -29,8 +29,8 @@ describe('Snapshot Storage', () => {
         }),
       };
     })();
-    
-    Object.defineProperty(window, 'localStorage', {
+
+    Object.defineProperty(window, "localStorage", {
       value: localStorageMock,
       writable: true,
     });
@@ -40,11 +40,11 @@ describe('Snapshot Storage', () => {
     vi.clearAllMocks();
   });
 
-  it('should save a snapshot', () => {
+  it("should save a snapshot", () => {
     const snapshot = {
-      content: 'Test content',
-      title: 'Test snapshot',
-      description: 'Test description',
+      content: "Test content",
+      title: "Test snapshot",
+      description: "Test description",
       charCount: 12,
     };
 
@@ -52,27 +52,27 @@ describe('Snapshot Storage', () => {
 
     const savedSnapshots = getSnapshots();
     expect(savedSnapshots.length).toBe(1);
-    expect(savedSnapshots[0].title).toBe('Test snapshot');
-    expect(savedSnapshots[0].content).toBe('Test content');
+    expect(savedSnapshots[0].title).toBe("Test snapshot");
+    expect(savedSnapshots[0].content).toBe("Test content");
     expect(savedSnapshots[0].id).toBeDefined();
     expect(savedSnapshots[0].timestamp).toBeDefined();
   });
 
-  it('should get all snapshots', () => {
+  it("should get all snapshots", () => {
     const mockSnapshots: Snapshot[] = [
       {
-        id: 'test-id-1',
-        content: 'Test content 1',
-        title: 'Test snapshot 1',
-        description: 'Test description 1',
+        id: "test-id-1",
+        content: "Test content 1",
+        title: "Test snapshot 1",
+        description: "Test description 1",
         charCount: 14,
         timestamp: new Date().toISOString(),
       },
       {
-        id: 'test-id-2',
-        content: 'Test content 2',
-        title: 'Test snapshot 2',
-        description: 'Test description 2',
+        id: "test-id-2",
+        content: "Test content 2",
+        title: "Test snapshot 2",
+        description: "Test description 2",
         charCount: 14,
         timestamp: new Date().toISOString(),
       },
@@ -84,25 +84,25 @@ describe('Snapshot Storage', () => {
     expect(result).toEqual(mockSnapshots);
   });
 
-  it('should get snapshots by date', () => {
+  it("should get snapshots by date", () => {
     // Create snapshots with different dates
-    const date1 = new Date('2023-01-15T12:00:00Z');
-    const date2 = new Date('2023-02-20T12:00:00Z');
-    
+    const date1 = new Date("2023-01-15T12:00:00Z");
+    const date2 = new Date("2023-02-20T12:00:00Z");
+
     const mockSnapshots: Snapshot[] = [
       {
-        id: 'test-id-1',
-        content: 'Test content 1',
-        title: 'Test snapshot 1',
-        description: 'Test description 1',
+        id: "test-id-1",
+        content: "Test content 1",
+        title: "Test snapshot 1",
+        description: "Test description 1",
         charCount: 14,
         timestamp: date1.toISOString(),
       },
       {
-        id: 'test-id-2',
-        content: 'Test content 2',
-        title: 'Test snapshot 2',
-        description: 'Test description 2',
+        id: "test-id-2",
+        content: "Test content 2",
+        title: "Test snapshot 2",
+        description: "Test description 2",
         charCount: 14,
         timestamp: date2.toISOString(),
       },
@@ -117,27 +117,27 @@ describe('Snapshot Storage', () => {
     // Test filtering by month
     const resultsByMonth = getSnapshotsByDate({ month: 1 }); // January
     expect(Object.keys(resultsByMonth).length).toBe(1);
-    
+
     // Test filtering by day
     const resultsByDay = getSnapshotsByDate({ day: 15 });
     expect(Object.keys(resultsByDay).length).toBe(1);
   });
 
-  it('should get a snapshot by ID', () => {
+  it("should get a snapshot by ID", () => {
     const mockSnapshots: Snapshot[] = [
       {
-        id: 'test-id-1',
-        content: 'Test content 1',
-        title: 'Test snapshot 1',
-        description: 'Test description 1',
+        id: "test-id-1",
+        content: "Test content 1",
+        title: "Test snapshot 1",
+        description: "Test description 1",
         charCount: 14,
         timestamp: new Date().toISOString(),
       },
       {
-        id: 'test-id-2',
-        content: 'Test content 2',
-        title: 'Test snapshot 2',
-        description: 'Test description 2',
+        id: "test-id-2",
+        content: "Test content 2",
+        title: "Test snapshot 2",
+        description: "Test description 2",
         charCount: 14,
         timestamp: new Date().toISOString(),
       },
@@ -145,28 +145,28 @@ describe('Snapshot Storage', () => {
 
     localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(mockSnapshots));
 
-    const result = getSnapshotById('test-id-1');
+    const result = getSnapshotById("test-id-1");
     expect(result).toEqual(mockSnapshots[0]);
-    
-    const nonExistentResult = getSnapshotById('non-existent-id');
+
+    const nonExistentResult = getSnapshotById("non-existent-id");
     expect(nonExistentResult).toBeNull();
   });
 
-  it('should delete a snapshot by ID', () => {
+  it("should delete a snapshot by ID", () => {
     const mockSnapshots: Snapshot[] = [
       {
-        id: 'test-id-1',
-        content: 'Test content 1',
-        title: 'Test snapshot 1',
-        description: 'Test description 1',
+        id: "test-id-1",
+        content: "Test content 1",
+        title: "Test snapshot 1",
+        description: "Test description 1",
         charCount: 14,
         timestamp: new Date().toISOString(),
       },
       {
-        id: 'test-id-2',
-        content: 'Test content 2',
-        title: 'Test snapshot 2',
-        description: 'Test description 2',
+        id: "test-id-2",
+        content: "Test content 2",
+        title: "Test snapshot 2",
+        description: "Test description 2",
         charCount: 14,
         timestamp: new Date().toISOString(),
       },
@@ -174,28 +174,28 @@ describe('Snapshot Storage', () => {
 
     localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(mockSnapshots));
 
-    deleteSnapshot('test-id-1');
-    
+    deleteSnapshot("test-id-1");
+
     const remainingSnapshots = getSnapshots();
     expect(remainingSnapshots.length).toBe(1);
-    expect(remainingSnapshots[0].id).toBe('test-id-2');
+    expect(remainingSnapshots[0].id).toBe("test-id-2");
   });
 
-  it('should purge all snapshots', () => {
+  it("should purge all snapshots", () => {
     const mockSnapshots: Snapshot[] = [
       {
-        id: 'test-id-1',
-        content: 'Test content 1',
-        title: 'Test snapshot 1',
-        description: 'Test description 1',
+        id: "test-id-1",
+        content: "Test content 1",
+        title: "Test snapshot 1",
+        description: "Test description 1",
         charCount: 14,
         timestamp: new Date().toISOString(),
       },
       {
-        id: 'test-id-2',
-        content: 'Test content 2',
-        title: 'Test snapshot 2',
-        description: 'Test description 2',
+        id: "test-id-2",
+        content: "Test content 2",
+        title: "Test snapshot 2",
+        description: "Test description 2",
         charCount: 14,
         timestamp: new Date().toISOString(),
       },
@@ -204,8 +204,8 @@ describe('Snapshot Storage', () => {
     localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(mockSnapshots));
 
     purgeAllSnapshots();
-    
+
     const remainingSnapshots = getSnapshots();
     expect(remainingSnapshots.length).toBe(0);
   });
-}); 
+});

@@ -15,12 +15,12 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
   const readValue = (): T => {
     try {
       const item = window.localStorage.getItem(key);
-      
+
       // エディタコンテンツの場合は JSON パースしない
       if (key === "editor-content" && item !== null) {
         return item as unknown as T;
       }
-      
+
       // それ以外の場合は通常通り JSON パース
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
@@ -41,9 +41,9 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
         // それ以外の場合は JSON 文字列に変換して保存
         window.localStorage.setItem(key, JSON.stringify(value));
       }
-      
+
       setStoredValue(value);
-      
+
       // 他のウィンドウに変更を通知
       window.dispatchEvent(new Event("local-storage"));
     } catch (error) {
@@ -56,10 +56,10 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
     const handleStorageChange = () => {
       setStoredValue(readValue());
     };
-    
+
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("local-storage", handleStorageChange);
-    
+
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("local-storage", handleStorageChange);

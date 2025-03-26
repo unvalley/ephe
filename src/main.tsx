@@ -1,13 +1,13 @@
-import "./app/globals.css";
+import "./page/globals.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ThemeProvider } from "./hooks/use-theme";
-import { LandingPage } from "./components/landing-page";
-import { EditorContainer } from "./app/editor-container";
-import { HistoryPage } from "./components/history-page";
+import { LandingPage } from "./page/landing-page";
+import { EditorPage } from "./page/editor-page";
+import { HistoryPage } from "./page/history-page";
 import { ToastContainer } from "./components/toast";
-import { NotFound } from "./components/not-found";
+import { NotFound } from "./page/404-page";
 
 const root = document.getElementById("root");
 if (!root) {
@@ -19,7 +19,7 @@ ReactDOM.createRoot(root).render(
     <ThemeProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<EditorContainer />} />
+          <Route path="/" element={<EditorPage />} />
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="*" element={<NotFound />} />
