@@ -4,6 +4,9 @@
 
 # Ephe :  An Ephemeral Markdown Paper.
 
+> [!WARNING]
+> This app is in progress. Features are unstable. 
+
 You can write ephemeral notes on this app. Ephe stores your notes on browser's local storage, no tracking, no ads, no login.
 
 An alternative to Slack Direct Message to ourself.
