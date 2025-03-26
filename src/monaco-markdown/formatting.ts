@@ -334,23 +334,34 @@ function createLinkRegex(): RegExp {
   const domain_re = `(?:\\.(?!-)[a-z${ul}0-9-]{1,63})*`;
 
   const tld_re =
-    `\\.` + // dot
-    `(?!-)` + // can't start with a dash
-    `(?:[a-z${ul}-]{2,63}` + // domain label
-    `|xn--[a-z0-9]{1,59})` + // or punycode label
+    "\\." + // dot
+    "(?!-)" + // can't start with a dash
+    "(?:[a-z${ul}-]{2,63}" + // domain label
+    "|xn--[a-z0-9]{1,59})" + // or punycode label
     // + '(?<!-)'                            // can't end with a dash
-    `\\.?`; // may have a trailing dot
+    "\\.?"; // may have a trailing dot
 
   const host_re = `(${hostname_re}${domain_re}${tld_re}|localhost)`;
-  const pattern =
-    `^(?:[a-z0-9\\.\\-\\+]*)://` + // scheme is not validated (in django it is validated additionally)
-    `(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?` + // user: pass authentication
-    `(?:${ipv4_re}|${ipv6_re}|${host_re})` +
-    `(?::\\d{2,5})?` + // port
-    `(?:[/?#][^\\s]*)?` + // resource path
-    `$`; // end of string
+  
+  // Create two patterns - one with scheme and one without
+  const withSchemePattern =
+    "^(?:[a-z0-9\\.\\-\\+]*)://" + // scheme is not validated (in django it is validated additionally)
+    "(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?" + // user: pass authentication
+    "(?:${ipv4_re}|${ipv6_re}|${host_re})" +
+    "(?::\\d{2,5})?" + // port
+    "(?:[/?#][^\\s]*)?" + // resource path
+    "$"; // end of string
 
-  return new RegExp(pattern, "i");
+  // Pattern for URLs without protocol (like example.com)
+  const withoutSchemePattern =
+    "^" +
+    "(?:${ipv4_re}|${host_re})" + // IP or hostname
+    "(?::\\d{2,5})?" + // port
+    "(?:[/?#][^\\s]*)?" + // resource path
+    "$"; // end of string
+
+  // Combine both patterns with OR operator
+  return new RegExp(`${withSchemePattern}|${withoutSchemePattern}`, "i");
 }
 
 /**
