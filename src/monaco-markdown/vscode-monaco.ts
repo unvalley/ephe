@@ -413,19 +413,19 @@ class UndefinedConfiguration {
   }
 }
 
-export interface ITextEditOperation {
+export type ITextEditOperation = {
   range: Range;
   text: string | null;
   forceMoveMarkers: boolean;
-}
+};
 
-export interface IEditData {
+export type IEditData = {
   documentVersionId: number | undefined;
   edits: ITextEditOperation[];
   setEndOfLine: EndOfLine | undefined;
   undoStopBefore: boolean;
   undoStopAfter: boolean;
-}
+};
 
 export class TextEditorEdit {
   private readonly _document: TextDocument;

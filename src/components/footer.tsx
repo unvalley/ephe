@@ -5,9 +5,9 @@ import { memo } from "react";
 import { useTheme } from "../hooks/use-theme";
 import Avatar from "boring-avatars";
 
-interface FooterProps {
+type FooterProps = {
   charCount?: number;
-}
+};
 
 const EPHE_VERSION = "0.0.1";
 

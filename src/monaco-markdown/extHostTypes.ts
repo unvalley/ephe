@@ -481,25 +481,25 @@ export class TextEdit {
   }
 }
 
-export interface IFileOperationOptions {
+export type IFileOperationOptions = {
   overwrite?: boolean;
   ignoreIfExists?: boolean;
   ignoreIfNotExists?: boolean;
   recursive?: boolean;
-}
+};
 
-export interface IFileOperation {
+export type IFileOperation = {
   _type: 1;
   from?: Uri;
   to?: Uri;
   options?: IFileOperationOptions;
-}
+};
 
-export interface IFileTextEdit {
+export type IFileTextEdit = {
   _type: 2;
   uri: Uri;
   edit: TextEdit;
-}
+};
 
 export class WorkspaceEdit {
   private _edits = new Array<IFileOperation | IFileTextEdit>();

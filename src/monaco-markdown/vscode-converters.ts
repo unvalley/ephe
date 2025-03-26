@@ -9,20 +9,20 @@ import {
 
 import * as vscode from "./extHostTypes";
 
-export interface PositionLike {
+export type PositionLike = {
   line: number;
   character: number;
-}
+};
 
-export interface RangeLike {
+export type RangeLike = {
   start: PositionLike;
   end: PositionLike;
-}
+};
 
-export interface SelectionLike extends RangeLike {
+export type SelectionLike = RangeLike & {
   anchor: PositionLike;
   active: PositionLike;
-}
+};
 
 export namespace Selection {
   export function to(selection: _Selection): vscode.Selection {

@@ -5,14 +5,14 @@
 
 import { languages } from "monaco-editor";
 
-interface ILang extends languages.ILanguageExtensionPoint {
+type ILang = languages.ILanguageExtensionPoint & {
   loader: () => Promise<ILangImpl>;
-}
+};
 
-interface ILangImpl {
+type ILangImpl = {
   conf: languages.LanguageConfiguration;
   language: languages.IMonarchLanguage;
-}
+};
 
 const languageDefinitions: { [languageId: string]: ILang } = {};
 

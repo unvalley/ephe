@@ -6,7 +6,7 @@ import type { Range } from "./extHostTypes";
  * TextLine objects are __immutable__. When a [document](#TextDocument) changes,
  * previously retrieved lines will not represent the latest state.
  */
-export interface TextLine {
+export type TextLine = {
   /**
    * The zero-based line number.
    */

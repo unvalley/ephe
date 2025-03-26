@@ -85,12 +85,12 @@ export function onUnexpectedExternalError(e: any): undefined {
   return undefined;
 }
 
-export interface SerializedError {
+export type SerializedError = {
   readonly $isError: true;
   readonly name: string;
   readonly message: string;
   readonly stack: string;
-}
+};
 
 export function transformErrorForSerialization(error: Error): SerializedError;
 export function transformErrorForSerialization(error: any): any;
@@ -111,7 +111,7 @@ export function transformErrorForSerialization(error: any): any {
 }
 
 // see https://github.com/v8/v8/wiki/Stack%20Trace%20API#basic-stack-traces
-export interface V8CallSite {
+export type V8CallSite = {
   getThis(): any;
   getTypeName(): string;
   getFunction(): string;
