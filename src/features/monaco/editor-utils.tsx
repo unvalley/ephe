@@ -26,6 +26,8 @@ export const applyTaskCheckboxDecorations = (
   const decorations: monaco.editor.IModelDeltaDecoration[] = [];
   const lineCount = model.getLineCount();
 
+  // TODO: use getLinesContent()
+
   for (let lineNumber = 1; lineNumber <= lineCount; lineNumber++) {
     const lineContent = model.getLineContent(lineNumber);
 

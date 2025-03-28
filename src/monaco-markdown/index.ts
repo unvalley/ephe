@@ -13,9 +13,11 @@ interface MonacoGlobal {
   languages: typeof languages;
 }
 
-export class MonacoMarkdownExtension {
-  private isLinkProviderRegistered = false;
+const simpleLinkDetector = /https?:\/\/\S+|\b[a-z0-9][a-z0-9-]*\.[a-z]{2,}(?:\/\S*)?\b|\[[^\]]+\]\([^)]+\)/gi;
+const protocolRegex = /^https?:\/\//;
+const domainRegex = /^[a-z0-9][a-z0-9-]*\.[a-z]{2,}/i;
 
+export class MonacoMarkdownExtension {
   activate(editor: editor.IStandaloneCodeEditor) {
     const textEditor = new TextEditor(editor);
 
@@ -23,7 +25,7 @@ export class MonacoMarkdownExtension {
     activateListEditing(textEditor);
     activateCompletion(textEditor);
     activateTableFormatter(textEditor);
-    this.registerLinkProvider(editor);
+    this.registerLinkProvider();
 
     // Allow `*` in word pattern for quick styling
     setWordDefinitionFor(
@@ -34,18 +36,8 @@ export class MonacoMarkdownExtension {
 
   /**
    * Register a link provider for Markdown links
-   * @param editor The Monaco editor instance
    */
-  private registerLinkProvider(editor: editor.IStandaloneCodeEditor) {
-    if (this.isLinkProviderRegistered) return;
-    this.isLinkProviderRegistered = true;
-
-    // ミニマムな正規表現定義 - 極力シンプルにする
-    const simpleLinkDetector = /https?:\/\/\S+|\b[a-z0-9][a-z0-9-]*\.[a-z]{2,}(?:\/\S*)?\b|\[[^\]]+\]\([^)]+\)/gi;
-
-    // リンク判定のための補助正規表現
-    const protocolRegex = /^https?:\/\//;
-    const domainRegex = /^[a-z0-9][a-z0-9-]*\.[a-z]{2,}/i;
+  private registerLinkProvider() {
 
     // Get the Monaco instance from the editor
     let monacoInstance: MonacoGlobal | undefined;
