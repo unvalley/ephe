@@ -1,6 +1,6 @@
-import { editor } from "monaco-editor";
-import type { IRange, languages } from "monaco-editor";
-import { activateFormatting } from "./formatting";
+import type { editor } from "monaco-editor";
+import { IRange, languages } from "monaco-editor";
+import { activateFormatting, isSingleLink } from "./formatting";
 import { setWordDefinitionFor, TextEditor } from "./vscode-monaco";
 import { activateListEditing } from "./listEditing";
 import { activateCompletion } from "./completion";
@@ -13,9 +13,7 @@ interface MonacoGlobal {
   languages: typeof languages;
 }
 
-const simpleLinkDetector = /https?:\/\/\S+|\b[a-z0-9][a-z0-9-]*\.[a-z]{2,}(?:\/\S*)?\b|\[[^\]]+\]\([^)]+\)/gi;
 const protocolRegex = /^https?:\/\//;
-const domainRegex = /^[a-z0-9][a-z0-9-]*\.[a-z]{2,}/i;
 
 export class MonacoMarkdownExtension {
   activate(editor: editor.IStandaloneCodeEditor) {
@@ -25,7 +23,8 @@ export class MonacoMarkdownExtension {
     activateListEditing(textEditor);
     activateCompletion(textEditor);
     activateTableFormatter(textEditor);
-    this.registerLinkProvider();
+
+    this.registerLinkProvider(editor);
 
     // Allow `*` in word pattern for quick styling
     setWordDefinitionFor(
@@ -37,8 +36,8 @@ export class MonacoMarkdownExtension {
   /**
    * Register a link provider for Markdown links
    */
-  private registerLinkProvider() {
-
+  private registerLinkProvider(editor: editor.IStandaloneCodeEditor) {
+    // TODO: remove
     // Get the Monaco instance from the editor
     let monacoInstance: MonacoGlobal | undefined;
 
@@ -54,94 +53,63 @@ export class MonacoMarkdownExtension {
       return;
     }
 
-    // リンク種別判定関数
-    const getLinkInfo = (text: string): { url: string; isMarkdown: boolean } => {
-      // Markdownリンク[text](url)を検出
-      if (text.includes("](") && text.startsWith("[") && text.endsWith(")")) {
-        const closeBracketPos = text.lastIndexOf("](");
-        if (closeBracketPos > 0) {
-          const url = text.substring(closeBracketPos + 2, text.length - 1);
-          return { url, isMarkdown: true };
-        }
-      }
 
-      // プロトコル付きURL
+    const getLinkInfo = (text: string): { url: string } => {
       if (protocolRegex.test(text)) {
-        return { url: text, isMarkdown: false };
+        return { url: text };
       }
-
-      // ドメインのみのURL
-      if (domainRegex.test(text)) {
-        return { url: `https://${text}`, isMarkdown: false };
-      }
-
-      // フォールバック - プロトコルがないURLとして扱う
-      return { url: `https://${text}`, isMarkdown: false };
+      return { url: `https://${text}` };
     };
 
-    // リンクプロバイダー登録
-    monacoInstance.languages.registerLinkProvider("markdown", {
+    const languageId = editor.getModel()?.getLanguageId() ?? "markdown";
+
+    monacoInstance.languages.registerLinkProvider(languageId, {
       provideLinks: (model: editor.ITextModel) => {
         const links: Array<{ range: IRange; url: string }> = [];
-
-        // 文書全体のテキストを取得
         const text = model.getValue();
         const lines = text.split("\n");
+        
+        const hasLinkTraces = 
+          text.includes("://") || 
+          text.includes("www.") || 
+          text.includes(".com") || 
+          text.includes(".org") || 
+          text.includes(".net") || 
+          text.includes(".io") || 
+          text.includes(".dev") || 
+          text.includes(".app") || 
+          text.includes(".jp");
 
-        // 効率的にリンクを検出（行ごとではなく一括で処理）
+        if (!hasLinkTraces) {
+          return { links };
+        }
+
+        // TODO: 
         for (let i = 0; i < lines.length; i++) {
           const lineContent = lines[i];
-
-          // リンクっぽい文字列が含まれていない行はスキップ（ただし、単純なドメインはチェック）
-          if (
-            !lineContent.includes("://") &&
-            !lineContent.includes(".com") &&
-            !lineContent.includes(".org") &&
-            !lineContent.includes(".net") &&
-            !lineContent.includes(".io") &&
-            !lineContent.includes(".dev") &&
-            !lineContent.includes(".jp") &&
-            !lineContent.includes(".") &&
-            !lineContent.includes("[") &&
-            !lineContent.includes("](")
-          ) {
-            continue;
-          }
-
-          // 単一のパスでリンクを検出
-          const matches = lineContent.match(simpleLinkDetector);
-          if (!matches) continue;
-
-          // 同じマッチが複数回出現する可能性を考慮して位置ベースで検出
-          let remainingContent = lineContent;
-          let currentOffset = 0;
-
-          for (const match of matches) {
-            const matchIndex = remainingContent.indexOf(match);
-            if (matchIndex === -1) continue;
-
-            const absoluteIndex = currentOffset + matchIndex;
-            const startColumn = absoluteIndex + 1;
-            const endColumn = startColumn + match.length;
-
-            // リンク種別に応じてURLを取得
-            const { url, isMarkdown } = getLinkInfo(match);
-
-            // Markdownリンクの場合、URL部分だけを範囲としてマーク
-            if (isMarkdown) {
-              const closePos = match.lastIndexOf("](");
-              const urlStartPos = closePos + 2;
-
-              links.push({
-                range: {
-                  startLineNumber: i + 1,
-                  startColumn: startColumn + urlStartPos,
-                  endLineNumber: i + 1,
-                  endColumn: endColumn - 1, // 閉じ括弧を除く
-                },
-                url,
-              });
-            } else {
+          
+          const words = lineContent.split(/\s+/);
+          let currentPos = 0;
+          
+          for (const word of words) {
+            // 空白をスキップして単語の開始位置を特定
+            currentPos = lineContent.indexOf(word, currentPos);
+            if (currentPos === -1) continue;
+            
+            // スキップすべき明らかに非URLなものを除外
+            if (word.length < 4 || word.startsWith("[") || word.includes("](")) {
+              currentPos += word.length;
+              continue;
+            }
+            
+            // isSingleLinkを使用してURLかどうかをチェック
+            if (isSingleLink(word)) {
+              const startColumn = currentPos + 1;
+              const endColumn = startColumn + word.length;
+              
+              // プロトコルの有無で適切なURLを構築
+              const { url } = getLinkInfo(word);
+              
               links.push({
                 range: {
                   startLineNumber: i + 1,
@@ -152,10 +120,8 @@ export class MonacoMarkdownExtension {
                 url,
               });
             }
-
-            // 処理済みの部分をスキップして次のマッチを探す
-            remainingContent = remainingContent.substring(matchIndex + match.length);
-            currentOffset += matchIndex + match.length;
+            
+            currentPos += word.length;
           }
         }
 

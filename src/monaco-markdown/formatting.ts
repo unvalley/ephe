@@ -69,10 +69,6 @@ export const activateFormatting = (editor: TextEditor) => {
   // addKeybinding(editor, paste, [KeyMod.CtrlCmd | KeyCode.KEY_B], "Toggle bold");
 };
 
-/**
- * Here we store Regexp to check if the text is the single link.
- */
-const singleLinkRegex: RegExp = createLinkRegex();
 
 // Return Promise because need to chain operations in unit tests
 
@@ -348,6 +344,10 @@ const createLinkRegex = (): RegExp => {
 }
 
 /**
+ * Here we store Regexp to check if the text is the single link.
+ */
+const singleLinkRegex: RegExp = createLinkRegex();
+/**
  * Checks if the string is a link. The list of link examples you can see in the tests file
  * `test/linksRecognition.test.ts`. This code ported from django's
  * [URLValidator](https://github.com/django/django/blob/2.2b1/django/core/validators.py#L74) with some simplifyings.
@@ -356,7 +356,7 @@ const createLinkRegex = (): RegExp => {
  *
  * @return boolean
  */
-export function isSingleLink(text: string): boolean {
+export const isSingleLink = (text: string): boolean => {
   return singleLinkRegex.test(text);
 }
 
