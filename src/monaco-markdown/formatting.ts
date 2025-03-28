@@ -342,7 +342,7 @@ function createLinkRegex(): RegExp {
     "\\.?"; // may have a trailing dot
 
   const host_re = `(${hostname_re}${domain_re}${tld_re}|localhost)`;
-  
+
   // Create two patterns - one with scheme and one without
   const withSchemePattern =
     "^(?:[a-z0-9\\.\\-\\+]*)://" + // scheme is not validated (in django it is validated additionally)

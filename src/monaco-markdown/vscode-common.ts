@@ -38,4 +38,4 @@ export type TextLine = {
    * for [TextLine.firstNonWhitespaceCharacterIndex](#TextLine.firstNonWhitespaceCharacterIndex) === [TextLine.text.length](#TextLine.text).
    */
   readonly isEmptyOrWhitespace: boolean;
-}
+};

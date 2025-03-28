@@ -406,7 +406,9 @@ export const HistoryPage = () => {
                   <option value="">All Months</option>
                   {availableMonths.map((month) => (
                     <option key={month} value={month}>
-                      {new Date(2000, month - 1, 1).toLocaleString("default", { month: "long" })}
+                      {new Date(2000, month - 1, 1).toLocaleString("default", {
+                        month: "long",
+                      })}
                     </option>
                   ))}
                 </select>
