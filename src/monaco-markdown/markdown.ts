@@ -118,6 +118,15 @@ export const language = <languages.IMonarchLanguage>{
       [/(!?\[)((?:[^\]\\]|@escapes)*)(\]\([^\)]+\))/, ["string.link", "", "string.link"]],
       [/(!?\[)((?:[^\]\\]|@escapes)*)(\])/, "string.link"],
 
+      // NOTE(@unvalley): Added for usability
+      // Auto-link URLs with protocols (e.g., http://example.com) - simple and efficient regex
+      [/\b(?:https?|ftp):\/\/\S+/, "string.link"],
+      // Auto-link URLs without protocols (e.g., example.com) - simple and efficient regex
+      [
+        /\b(?:[a-z0-9][-a-z0-9]*\.)+(?:com|org|net|edu|gov|mil|io|dev|co|jp|us|app|so|ai|design|info|shop|de|ru|br|uk|is|it|fr|de)\b/i,
+        "string.link",
+      ],
+
       //inline math
       [
         /(\$\$)([^$]*)(\$\$)/,

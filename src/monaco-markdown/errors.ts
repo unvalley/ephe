@@ -126,7 +126,7 @@ export type V8CallSite = {
   isNative(): boolean;
   isConstructor(): boolean;
   toString(): string;
-}
+};
 
 const canceledName = "Canceled";
 

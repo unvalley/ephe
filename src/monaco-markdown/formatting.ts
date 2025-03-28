@@ -69,10 +69,6 @@ export const activateFormatting = (editor: TextEditor) => {
   // addKeybinding(editor, paste, [KeyMod.CtrlCmd | KeyCode.KEY_B], "Toggle bold");
 };
 
-/**
- * Here we store Regexp to check if the text is the single link.
- */
-const singleLinkRegex: RegExp = createLinkRegex();
 
 // Return Promise because need to chain operations in unit tests
 
@@ -321,7 +317,7 @@ function toggleListSingleLine(doc: TextDocument, line: number, wsEdit: Workspace
  *
  * @return Regexp
  */
-function createLinkRegex(): RegExp {
+const createLinkRegex = (): RegExp => {
   // unicode letters range(must not be a raw string)
   const ul = "\\u00a1-\\uffff";
   // IP patterns
@@ -333,26 +329,24 @@ function createLinkRegex(): RegExp {
   // Max length for domain name labels is 63 characters per RFC 1034 sec. 3.1
   const domain_re = `(?:\\.(?!-)[a-z${ul}0-9-]{1,63})*`;
 
-  const tld_re =
-    `\\.` + // dot
-    `(?!-)` + // can't start with a dash
-    `(?:[a-z${ul}-]{2,63}` + // domain label
-    `|xn--[a-z0-9]{1,59})` + // or punycode label
-    // + '(?<!-)'                            // can't end with a dash
-    `\\.?`; // may have a trailing dot
+  const tld_re = `\\.((?!-)(?:[a-z${ul}-]{2,63}|xn--[a-z0-9]{1,59}))\\.?`; // dot, domain label/punycode, optional trailing dot
 
   const host_re = `(${hostname_re}${domain_re}${tld_re}|localhost)`;
-  const pattern =
-    `^(?:[a-z0-9\\.\\-\\+]*)://` + // scheme is not validated (in django it is validated additionally)
-    `(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?` + // user: pass authentication
-    `(?:${ipv4_re}|${ipv6_re}|${host_re})` +
-    `(?::\\d{2,5})?` + // port
-    `(?:[/?#][^\\s]*)?` + // resource path
-    `$`; // end of string
 
-  return new RegExp(pattern, "i");
+  // Create two patterns - one with scheme and one without
+  const withSchemePattern = `^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:${ipv4_re}|${ipv6_re}|${host_re})(?::\\d{2,5})?(?:[/?#][^\\s]*)?$`;
+
+  // Pattern for URLs without protocol (like example.com)
+  const withoutSchemePattern = `^(?:${ipv4_re}|${host_re})(?::\\d{2,5})?(?:[/?#][^\\s]*)?$`;
+
+  // Combine both patterns with OR operator
+  return new RegExp(`${withSchemePattern}|${withoutSchemePattern}`, "i");
 }
 
+/**
+ * Here we store Regexp to check if the text is the single link.
+ */
+const singleLinkRegex: RegExp = createLinkRegex();
 /**
  * Checks if the string is a link. The list of link examples you can see in the tests file
  * `test/linksRecognition.test.ts`. This code ported from django's
@@ -362,11 +356,11 @@ function createLinkRegex(): RegExp {
  *
  * @return boolean
  */
-export function isSingleLink(text: string): boolean {
+export const isSingleLink = (text: string): boolean => {
   return singleLinkRegex.test(text);
 }
 
-function styleByWrapping(editor: TextEditor, startPattern: string, endPattern?: string) {
+const styleByWrapping = (editor: TextEditor, startPattern: string, endPattern?: string): PromiseLike<void> => {
   const actualEndPattern = endPattern === undefined ? startPattern : endPattern;
 
   const selections = editor.selections;
@@ -456,7 +450,7 @@ function styleByWrapping(editor: TextEditor, startPattern: string, endPattern?: 
  * @param startPtn
  * @param endPtn
  */
-function wrapRange(
+const wrapRange = (
   editor: TextEditor,
   wsEdit: WorkspaceEdit,
   shifts: [Position, number][],
@@ -468,7 +462,7 @@ function wrapRange(
   isSelected: boolean,
   startPtn: string,
   endPtn?: string,
-) {
+): void => {
   const actualEndPtn = endPtn === undefined ? startPtn : endPtn;
 
   const text = editor.document.getText(range);
