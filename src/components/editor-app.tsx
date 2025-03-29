@@ -9,7 +9,7 @@ import { EDITOR_CONTENT_KEY, getRandomQuote } from "../features/monaco";
 import { isTaskLine, isClosedTaskLine } from "../features/monaco/task-list-utils";
 import { Editor } from "@monaco-editor/react";
 import { CommandMenu } from "./command-k";
-import { TableOfContents, TableOfContentsButton } from "./toc";
+import { TableOfContents, TableOfContentsButton } from "./table-of-contents";
 import {
   editorOptions,
   handleKeyDown,
