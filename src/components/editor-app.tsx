@@ -6,7 +6,7 @@ import type * as monaco from "monaco-editor";
 import { useLocalStorage } from "../hooks/use-local-storage";
 import { useDebouncedCallback } from "../hooks/use-debounce";
 import { EDITOR_CONTENT_KEY, getRandomQuote } from "../features/monaco";
-import { isTaskListLine, isCheckedTask } from "../features/monaco/task-list-utils";
+import { isTaskLine, isClosedTaskLine } from "../features/monaco/task-list-utils";
 import { Editor } from "@monaco-editor/react";
 import { CommandMenu } from "./command-k";
 import { TableOfContents, TableOfContentsButton } from "./toc";
@@ -31,16 +31,9 @@ export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   const [charCount, setCharCount] = useState<number>(0);
-
-  // Focus the editor when clicking anywhere in the page container
-  const handlePageClick = () => {
-    if (editorRef.current) {
-      editorRef.current.focus();
-    }
-  };
+  const [taskCount, setTaskCount] = useState<{ open: number; closed: number }>({ open: 0, closed: 0 });
 
   const [localStorageContent, setLocalStorageContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, "");
-
   const [placeholder, _] = useState<string>(getRandomQuote());
   const [isTocVisible, setIsTocVisible] = useState<boolean>(true);
 
@@ -49,24 +42,56 @@ export const EditorApp = () => {
   const [loadingEditor, setLoadingEditor] = useState(true);
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
 
-  const debouncedSetContent = useDebouncedCallback((newContent: string) => {
-    setLocalStorageContent(newContent);
+  // Focus the editor when clicking anywhere in the page container
+  const handlePageClick = () => {
+    if (editorRef.current) {
+      editorRef.current.focus();
+    }
+  };
+
+  const debouncedSetContent = useDebouncedCallback((content: string) => {
+    setLocalStorageContent(content);
   }, 300);
 
   const debouncedCharCountUpdate = useDebouncedCallback(
-    (text: string) => {
-      setCharCount(text.length);
+    (content: string) => {
+      setCharCount(content.length);
     },
     50, // Faster updates for character count
   );
 
-  // Add state to track editor content
+  const debouncedTaskCountUpdate = useDebouncedCallback((content: string) => {
+    countTasks(content);
+  }, 100);
+
   const [editorContent, setEditorContent] = useState<string>(
     typeof localStorageContent === "string" ? localStorageContent : "",
   );
 
-  // Add state to track snapshot dialog
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
+
+  const countTasks = (content: string) => {
+    if (!content) {
+      setTaskCount({ open: 0, closed: 0 });
+      return;
+    }
+
+    const lines = content.split("\n");
+    let openCount = 0;
+    let closedCount = 0;
+
+    for (const line of lines) {
+      if (isTaskLine(line)) {
+        if (isClosedTaskLine(line)) {
+          closedCount++;
+        } else {
+          openCount++;
+        }
+      }
+    }
+
+    setTaskCount({ open: openCount, closed: closedCount });
+  };
 
   // Handle editor mounting
   const handleEditorDidMount = (
@@ -118,9 +143,9 @@ export const EditorApp = () => {
           const lineContent = model.getLineContent(lineNumber);
 
           // Only process task list lines
-          if (isTaskListLine(lineContent)) {
+          if (isTaskLine(lineContent)) {
             // Add decoration for completed tasks
-            if (isCheckedTask(lineContent)) {
+            if (isClosedTaskLine(lineContent)) {
               decorations.push({
                 range: new monaco.Range(
                   lineNumber,
@@ -165,6 +190,7 @@ export const EditorApp = () => {
       updateDecorations(model);
       debouncedSetContent(value);
       debouncedCharCountUpdate(value);
+      debouncedTaskCountUpdate(value);
     });
 
     // Initialize decorations on mount
@@ -174,8 +200,10 @@ export const EditorApp = () => {
     updatePlaceholder(editor.getValue());
     updateDecorations(editor.getModel());
 
-    // Initial character count - direct calculation for initial load
-    setCharCount(editor.getValue().length);
+    // Initial character count and task count - direct calculation for initial load
+    const initialContent = editor.getValue();
+    setCharCount(initialContent.length);
+    countTasks(initialContent);
 
     // Focus editor on mount
     editor.focus();
@@ -225,7 +253,7 @@ export const EditorApp = () => {
                 }}
                 onMount={handleEditorDidMount}
                 className="overflow-visible"
-                loading=""
+                loading="loading..."
                 theme={isDarkMode ? "ephe-dark" : "ephe-light"}
               />
             </div>
@@ -249,7 +277,8 @@ export const EditorApp = () => {
           />
         </div>
       </div>
-      <Footer charCount={charCount} />
+
+      <Footer charCount={charCount} taskCount={taskCount} />
 
       {snapshotDialogOpen && (
         <Suspense fallback={<div className="loading-spinner" />}>

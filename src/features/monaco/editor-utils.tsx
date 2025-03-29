@@ -1,6 +1,6 @@
 import * as monaco from "monaco-editor";
 import type { EditorProps } from "@monaco-editor/react";
-import { isTaskListLine, isCheckedTask } from "./task-list-utils";
+import { isTaskLine, isClosedTaskLine } from "./task-list-utils";
 import { generateTaskIdentifier } from "../tasks/task-storage";
 import { findTaskSection } from "./task-section-utils";
 import { saveCompletedTask, deleteCompletedTaskByIdentifier } from "../tasks/task-storage";
@@ -31,7 +31,7 @@ export const applyTaskCheckboxDecorations = (
   for (let lineNumber = 1; lineNumber <= lineCount; lineNumber++) {
     const lineContent = model.getLineContent(lineNumber);
 
-    if (isTaskListLine(lineContent)) {
+    if (isTaskLine(lineContent)) {
       // Find the checkbox position
       const checkboxStartIndex = lineContent.indexOf("- [");
       if (checkboxStartIndex === -1) continue;
@@ -200,7 +200,7 @@ export const handleTaskCheckboxToggle = (
     if (!position) return;
 
     const lineContent = model.getLineContent(position.lineNumber);
-    if (!isTaskListLine(lineContent)) return;
+    if (!isTaskLine(lineContent)) return;
 
     // Find the exact position of the checkbox in the line
     const checkboxStartIndex = lineContent.indexOf("- [");
@@ -215,7 +215,7 @@ export const handleTaskCheckboxToggle = (
 
     // Check if click is within the checkbox area
     if (position.column >= clickAreaStart && position.column <= clickAreaEnd) {
-      const isChecked = isCheckedTask(lineContent);
+      const isChecked = isClosedTaskLine(lineContent);
       const newState = isChecked ? " " : "x";
 
       // - [ ] = 5 characters

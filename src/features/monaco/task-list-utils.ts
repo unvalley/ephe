@@ -1,13 +1,30 @@
+// hit to `- [ ]` or `- [x]` or `- [X]`
+const TASK_LINE_REGEX = /^(\s*)- \[\s*([xX ])\s*\]/;
+// hit to `- [ ]`
+const OPEN_TASK_LINE_REGEX = /^(\s*)- \[\s* \s*\]/;
+// hit to `- [x]` or `- [X]`
+const CLOSED_TASK_LINE_REGEX = /^(\s*)- \[\s*[xX]\s*\]/;
+
 /**
  * Checks if a line contains a task list item
+ * - [ ] or - [x] or - [X]
  */
-export const isTaskListLine = (lineContent: string): boolean => {
-  return !!lineContent.match(/^(\s*)- \[\s*([xX ])\s*\]/);
+export const isTaskLine = (lineContent: string): boolean => {
+  return !!lineContent.match(TASK_LINE_REGEX);
+};
+
+/**
+ * Checks if a line contains an open task
+ * - [ ]
+ */
+export const isOpenTaskLine = (lineContent: string): boolean => {
+  return !!lineContent.match(OPEN_TASK_LINE_REGEX);
 };
 
 /**
  * Checks if a line contains a checked task
+ * - [x] or - [X]
  */
-export const isCheckedTask = (lineContent: string): boolean => {
-  return !!lineContent.match(/^(\s*)- \[\s*[xX]\s*\]/);
+export const isClosedTaskLine = (lineContent: string): boolean => {
+  return !!lineContent.match(CLOSED_TASK_LINE_REGEX);
 };
