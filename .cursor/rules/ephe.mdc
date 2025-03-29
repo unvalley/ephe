@@ -1,7 +1,7 @@
 ---
 description: 
-globs: 
-alwaysApply: true
+globs: *.ts,*.tsx
+alwaysApply: false
 ---
 ## General Rule
 

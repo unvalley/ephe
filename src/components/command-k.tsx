@@ -4,18 +4,31 @@ import { Command } from "cmdk";
 import { useEffect, useRef } from "react";
 import { useTheme } from "../hooks/use-theme";
 import { useNavigate } from "react-router-dom";
+import type * as monaco from "monaco-editor";
+import type { MarkdownFormatter } from "../features/markdown/markdown-formatter";
+import { showToast } from "./toast";
 
 type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;
   onOpen?: () => void;
   editorContent: string;
+  editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
+  markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
 };
 
-export const CommandMenu = ({ open, onClose, onOpen, editorContent }: CommandMenuProps) => {
+export const CommandMenu = ({
+  open,
+  onClose,
+  onOpen,
+  editorContent,
+  editorRef,
+  markdownFormatterRef,
+}: CommandMenuProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toggleTheme, toggleTargetTheme } = useTheme();
   const navigate = useNavigate();
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
@@ -61,6 +74,27 @@ export const CommandMenu = ({ open, onClose, onOpen, editorContent }: CommandMen
     // Clean up
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    onClose?.();
+  };
+
+  // Function to format document using dprint
+  const handleFormatDocument = async () => {
+    if (!editorRef?.current || !markdownFormatterRef?.current) {
+      console.error("Editor or markdown formatter not available");
+      return;
+    }
+
+    try {
+      const content = editorRef.current.getValue();
+      const formattedContent = await markdownFormatterRef.current.formatMarkdown(content);
+
+      editorRef.current.setValue(formattedContent);
+      showToast("Document formatted successfully", "success");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown";
+      showToast(`Error formatting document: ${message}`, "error");
+    }
+
     onClose?.();
   };
 
@@ -122,11 +156,9 @@ export const CommandMenu = ({ open, onClose, onOpen, editorContent }: CommandMen
 
           <Command.Item
             className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
-            onSelect={() => {
-              onClose?.();
-            }}
+            onSelect={handleFormatDocument}
           >
-            Format document (WIP)
+            Format document
           </Command.Item>
 
           <Command.Item

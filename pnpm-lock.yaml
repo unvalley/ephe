@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@dprint/formatter':
+        specifier: ^0.4.1
+        version: 0.4.1
+      '@dprint/markdown':
+        specifier: ^0.18.0
+        version: 0.18.0
       '@monaco-editor/react':
         specifier: ^4.6.0
         version: 4.7.0(monaco-editor@0.47.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -155,6 +161,12 @@ packages:
   '@babel/types@7.26.10':
     resolution: {integrity: sha512-emqcG3vHrpxUKTrxcblR36dcrcoRDvKmnL/dCL6ZsHaShW80qxCAcNhzQZrpeM765VzEos+xOi4s+r4IXzTwdQ==}
     engines: {node: '>=6.9.0'}
+
+  '@dprint/formatter@0.4.1':
+    resolution: {integrity: sha512-IB/GXdlMOvi0UhQQ9mcY15Fxcrc2JPadmo6tqefCNV0bptFq7YBpggzpqYXldBXDa04CbKJ+rDwO2eNRPE2+/g==}
+
+  '@dprint/markdown@0.18.0':
+    resolution: {integrity: sha512-H9al+CZRIc941iYMtb2ATVR3kRKKIvbUjQo152IHR3qqrcvt/ts3mvkWlNwy3yYWlnQE4T6Q+Y5l39Vvr7SbFQ==}
 
   '@edge-runtime/primitives@4.1.0':
     resolution: {integrity: sha512-Vw0lbJ2lvRUqc7/soqygUX216Xb8T3WBZ987oywz6aJqRxcwSVWwr9e+Nqo2m9bxobA9mdbWNNoRY6S9eko1EQ==}
@@ -1334,6 +1346,10 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.25.9
       '@babel/helper-validator-identifier': 7.25.9
+
+  '@dprint/formatter@0.4.1': {}
+
+  '@dprint/markdown@0.18.0': {}
 
   '@edge-runtime/primitives@4.1.0':
     optional: true

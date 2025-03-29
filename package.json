@@ -12,6 +12,8 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@dprint/formatter": "^0.4.1",
+    "@dprint/markdown": "^0.18.0",
     "@monaco-editor/react": "^4.6.0",
     "@tailwindcss/vite": "^4.0.14",
     "boring-avatars": "^1.11.2",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, Suspense } from "react";
+import { useRef, useState, useCallback, Suspense, useEffect } from "react";
 import { useTheme } from "../hooks/use-theme";
 import type * as monaco from "monaco-editor";
 import { useLocalStorage } from "../hooks/use-local-storage";
@@ -24,11 +24,14 @@ import { Footer } from "./footer";
 import { ToastContainer, showToast } from "./toast";
 import { createAutoSnapshot } from "../features/snapshots/snapshot-manager";
 import { SnapshotDialog } from "./snapshot-dialog";
+import { DprintMarkdownFormatter } from "../features/markdown/dprint-markdown-formatter";
+import type { MarkdownFormatter } from "../features/markdown/markdown-formatter";
 
 const markdownExtension = new MonacoMarkdownExtension();
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const formatterRef = useRef<MarkdownFormatter | null>(null);
 
   const [charCount, setCharCount] = useState<number>(0);
   const [taskCount, setTaskCount] = useState<{ open: number; closed: number }>({ open: 0, closed: 0 });
@@ -41,6 +44,22 @@ export const EditorApp = () => {
   const isDarkMode = theme === "dark";
   const [loadingEditor, setLoadingEditor] = useState(true);
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const initMarkdownFormatter = async () => {
+      try {
+        const formatter = await DprintMarkdownFormatter.getInstance();
+        formatterRef.current = formatter;
+      } catch (error) {
+        console.error("Failed to initialize markdown formatter:", error);
+      }
+    };
+    initMarkdownFormatter();
+
+    return () => {
+      formatterRef.current = null;
+    };
+  }, []);
 
   // Focus the editor when clicking anywhere in the page container
   const handlePageClick = () => {
@@ -184,13 +203,18 @@ export const EditorApp = () => {
     editor.onDidChangeModelContent(() => {
       const value = editor.getValue();
       const model = editor.getModel();
+      if (!model) return;
 
-      setEditorContent(value);
+      // TODO: Instead of processing line by line, use a markdown parser library
+      // to perform operations more efficiently with a single parse
+
       updatePlaceholder(value);
       updateDecorations(model);
-      debouncedSetContent(value);
-      debouncedCharCountUpdate(value);
       debouncedTaskCountUpdate(value);
+
+      debouncedCharCountUpdate(value);
+      debouncedSetContent(value);
+      setEditorContent(value);
     });
 
     // Initialize decorations on mount
@@ -274,6 +298,8 @@ export const EditorApp = () => {
             open={commandMenuOpen}
             onClose={() => setCommandMenuOpen(false)}
             onOpen={() => setCommandMenuOpen(true)}
+            editorRef={editorRef}
+            markdownFormatterRef={formatterRef}
           />
         </div>
       </div>

@@ -101,16 +101,16 @@ export const editorOptions: EditorProps["options"] = {
   padding: { top: 4 }, // Add padding to prevent cursor from being cut off
 };
 
-// Set up placeholder when editor is empty
-export const updatePlaceholder = (editorValue: string) => {
+// Set up placeholder when editor content is empty
+export const updatePlaceholder = (content: string) => {
   const placeholderElement = document.querySelector(".monaco-placeholder");
   if (!placeholderElement) return;
 
-  const isContentEmpty = !editorValue || !editorValue.trim();
+  const isContentEmpty = !content || !content.trim();
   if (isContentEmpty) {
     // Delay showing placeholder to avoid flickering during IME input
     setTimeout(() => {
-      if (!editorValue || !editorValue.trim()) {
+      if (!content || !content.trim()) {
         showPlaceholder(placeholderElement);
       }
     }, 300);
