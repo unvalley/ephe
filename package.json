@@ -4,12 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "npm run copy-wasm && vite",
+    "build": "npm run copy-wasm && tsc && vite build",
     "preview": "vite preview",
     "lint": "biome lint .",
     "format": "biome format --write .",
-    "test": "vitest"
+    "test": "vitest",
+    "copy-wasm": "node scripts/copy-wasm.js"
   },
   "dependencies": {
     "@dprint/formatter": "^0.4.1",
@@ -34,6 +35,8 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^6",
+    "vite-plugin-top-level-await": "^1.5.0",
+    "vite-plugin-wasm": "^3.4.1",
     "vitest": "latest"
   }
 }

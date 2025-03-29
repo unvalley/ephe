@@ -1,4 +1,5 @@
 import { createFromBuffer, type GlobalConfiguration } from "@dprint/formatter";
+import { getPath } from "@dprint/markdown";
 import type { MarkdownFormatter, FormatterConfig } from "./markdown-formatter";
 
 /**
@@ -12,6 +13,7 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
   } | null = null;
   private isInitialized = false;
   private config: FormatterConfig;
+  private static readonly WASM_URL = '/wasm/dprint-markdown.wasm';
 
   /**
    * Private constructor to enforce singleton pattern
@@ -31,22 +33,43 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
     return DprintMarkdownFormatter.instance;
   }
 
+  /**
+   * Check if running in browser environment
+   */
+  private isBrowser(): boolean {
+    return typeof window !== 'undefined' && typeof document !== 'undefined';
+  }
+
+  /**
+   * Load WASM buffer based on environment
+   */
+  private async loadWasmBuffer(): Promise<Uint8Array> {
+    if (this.isBrowser()) {
+      // In browser environment, fetch WASM from static assets
+      const response = await fetch(DprintMarkdownFormatter.WASM_URL);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch WASM: ${response.statusText}`);
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      return new Uint8Array(arrayBuffer);
+    }
+    
+    // In Node.js environment, load WASM directly from file
+    // Note: This code won't be executed when bundled with Vite
+    const fs = await import('node:fs');
+    const wasmPath = getPath();
+    const buffer = fs.readFileSync(wasmPath);
+    return new Uint8Array(buffer);
+  }
+
   private async initialize(): Promise<void> {
     if (this.isInitialized) return;
     
     try {
-      // Upgrade if needed
-      const pluginUrl = "https://plugins.dprint.dev/markdown-0.18.0.wasm";
-      const response = await fetch(pluginUrl);
+      // Load WASM buffer based on current environment
+      const wasmBuffer = await this.loadWasmBuffer();
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch dprint markdown plugin: ${response.statusText}`);
-      }
-      
-      const arrayBuffer = await response.arrayBuffer();
-      const buffer = new Uint8Array(arrayBuffer);
-      
-      this.formatter = await createFromBuffer(buffer);
+      this.formatter = await createFromBuffer(wasmBuffer);
       
       this.setConfig({
         indentWidth: this.config.indentWidth ?? 2,
@@ -57,7 +80,7 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
       
       this.isInitialized = true;
     } catch (error) {
-      console.error("Failed to initialize dprint markdown service:", error);
+      console.error("Failed to initialize dprint markdown formatter:", error);
       throw error;
     }
   }
