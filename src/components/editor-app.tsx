@@ -126,19 +126,24 @@ export const EditorApp = () => {
     markdownExtension.activate(editor);
 
     // Add key binding for Cmd+S / Ctrl+S to save and create snapshot
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      // Force save to localStorage
-      const value = editor.getValue();
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, async () => {
+      let value = editor.getValue();
+
+      if (formatterRef.current) {
+        try {
+          const formatted = await formatterRef.current.formatMarkdown(value);
+          if (formatted !== value) {
+            editor.setValue(formatted);
+            value = formatted;
+          }
+        } catch (error) {
+          console.error("Failed to format markdown:", error);
+          showToast("Failed to format content", "error");
+        }
+      }
+
       setLocalStorageContent(value);
-
-      // Create automatic snapshot on save
-      createAutoSnapshot({
-        content: value,
-        title: new Date().toLocaleString(), // TODO: use random name
-        description: "Manually saved from command menu",
-      });
-
-      showToast("Snapshot saved successfully", "success");
+      showToast("Content formatted and saved", "success");
     });
 
     // Add key binding for Cmd+K / Ctrl+K to open the command menu
