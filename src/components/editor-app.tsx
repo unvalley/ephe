@@ -136,10 +136,20 @@ export const EditorApp = () => {
 
       if (formatterRef.current) {
         try {
+          // Save current cursor position and selection before formatting
+          const selection = editor.getSelection();
+          const scrollTop = editor.getScrollTop();
+
           const formatted = await formatterRef.current.formatMarkdown(value);
           if (formatted !== value) {
             editor.setValue(formatted);
             value = formatted;
+
+            // Restore cursor position and selection after formatting
+            if (selection) {
+              editor.setSelection(selection);
+              editor.setScrollTop(scrollTop);
+            }
           }
         } catch (error) {
           console.error("Failed to format markdown:", error);
