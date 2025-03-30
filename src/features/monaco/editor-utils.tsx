@@ -62,12 +62,13 @@ export const editorOptions: EditorProps["options"] = {
   lineDecorationsWidth: 0,
   lineNumbersMinChars: 0,
   glyphMargin: false,
-  folding: false,
+  folding: true,
   renderLineHighlight: "none",
   scrollBeyondLastLine: false,
   renderWhitespace: "none",
-  fontFamily: "monospace", // cause problems?
+  fontFamily: "monospace",
   fontSize: 14,
+  lineHeight: 21,
   contextmenu: false,
   scrollbar: {
     vertical: "auto",
@@ -98,7 +99,7 @@ export const editorOptions: EditorProps["options"] = {
   renderControlCharacters: false,
   renderLineHighlightOnlyWhenFocus: true,
   maxTokenizationLineLength: 5000,
-  padding: { top: 4 }, // Add padding to prevent cursor from being cut off
+  padding: { top: 12, bottom: 12 }, // Match with placeholder positioning
 };
 
 // Set up placeholder when editor content is empty
@@ -107,16 +108,29 @@ export const updatePlaceholder = (content: string) => {
   if (!placeholderElement) return;
 
   const isContentEmpty = !content || !content.trim();
+
+  // Immediately update the placeholder visibility
   if (isContentEmpty) {
-    // Delay showing placeholder to avoid flickering during IME input
-    setTimeout(() => {
-      if (!content || !content.trim()) {
-        showPlaceholder(placeholderElement);
-      }
-    }, 300);
+    showPlaceholder(placeholderElement);
   } else {
     hidePlaceholder(placeholderElement);
   }
+
+  // Remove first line fold controls when placeholder is visible
+  setTimeout(() => {
+    const firstLineControls = document.querySelectorAll(".heading-fold-control-before");
+    if (firstLineControls.length > 0 && isContentEmpty) {
+      for (const control of firstLineControls) {
+        if (control.closest(".monaco-editor .view-line:first-child")) {
+          control.classList.add("hidden-with-placeholder");
+        }
+      }
+    } else if (firstLineControls.length > 0 && !isContentEmpty) {
+      for (const control of firstLineControls) {
+        control.classList.remove("hidden-with-placeholder");
+      }
+    }
+  }, 100);
 };
 
 // Handle keyboard events

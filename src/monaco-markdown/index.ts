@@ -1,16 +1,26 @@
-import type { editor } from "monaco-editor";
-import { IRange, languages } from "monaco-editor";
+import type { editor, languages, IRange } from "monaco-editor";
 import { activateFormatting, isSingleLink } from "./formatting";
 import { setWordDefinitionFor, TextEditor } from "./vscode-monaco";
 import { activateListEditing } from "./listEditing";
 import { activateCompletion } from "./completion";
 import { activateTableFormatter } from "./tableFormatter";
+import { registerFoldingProvider } from "../features/monaco/folding-provider";
 
 import { activateMarkdownMath } from "./markdown.contribution";
 
 // Define a type for the Monaco global object
 interface MonacoGlobal {
-  languages: typeof languages;
+  languages: {
+    registerLinkProvider: (languageId: string, provider: languages.LinkProvider) => void;
+  };
+}
+
+// Get the real Monaco instance from the window object
+function getMonacoInstance(): typeof import("monaco-editor") | undefined {
+  if (typeof window !== "undefined") {
+    return (window as { monaco?: typeof import("monaco-editor") }).monaco;
+  }
+  return undefined;
 }
 
 const protocolRegex = /^https?:\/\//;
@@ -23,6 +33,12 @@ export class MonacoMarkdownExtension {
     activateListEditing(textEditor);
     activateCompletion(textEditor);
     activateTableFormatter(textEditor);
+    
+    // Register custom markdown folding provider
+    const monaco = getMonacoInstance();
+    if (monaco) {
+      registerFoldingProvider(monaco);
+    }
 
     this.registerLinkProvider(editor);
 
