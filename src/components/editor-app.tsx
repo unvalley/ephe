@@ -20,6 +20,11 @@ import {
   epheDark,
 } from "../features/monaco/editor-utils";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
+import {
+  applyHeadingFoldDecorations,
+  registerHeadingFoldClickHandler,
+  registerFoldingStateListeners,
+} from "../features/monaco/heading-fold-decorator";
 import { Footer } from "./footer";
 import { ToastContainer, showToast } from "./toast";
 import { createAutoSnapshot } from "../features/snapshots/snapshot-manager";
@@ -125,6 +130,12 @@ export const EditorApp = () => {
     // Initialize markdown extension
     markdownExtension.activate(editor);
 
+    // Register heading fold click handler
+    registerHeadingFoldClickHandler(editor);
+
+    // Register folding state listeners
+    registerFoldingStateListeners(editor);
+
     // Add key binding for Cmd+S / Ctrl+S to save and create snapshot
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
       // Force save to localStorage
@@ -149,6 +160,35 @@ export const EditorApp = () => {
     // Add key binding for Cmd+Shift+S / Ctrl+Shift+S to open custom snapshot dialog
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyS, () => {
       setSnapshotDialogOpen(true);
+    });
+
+    // Add keyboard shortcuts for folding/unfolding
+    // Cmd/Ctrl + [ to fold
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.BracketLeft, () => {
+      editor.trigger("keyboard", "editor.fold", null);
+      // Update heading fold decorations after folding
+      setTimeout(() => applyHeadingFoldDecorations(editor, editor.getModel()), 100);
+    });
+
+    // Cmd/Ctrl + ] to unfold
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.BracketRight, () => {
+      editor.trigger("keyboard", "editor.unfold", null);
+      // Update heading fold decorations after unfolding
+      setTimeout(() => applyHeadingFoldDecorations(editor, editor.getModel()), 100);
+    });
+
+    // Cmd/Ctrl + Shift + [ to fold all
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.BracketLeft, () => {
+      editor.trigger("keyboard", "editor.foldAll", null);
+      // Update heading fold decorations after folding all
+      setTimeout(() => applyHeadingFoldDecorations(editor, editor.getModel()), 100);
+    });
+
+    // Cmd/Ctrl + Shift + ] to unfold all
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.BracketRight, () => {
+      editor.trigger("keyboard", "editor.unfoldAll", null);
+      // Update heading fold decorations after unfolding all
+      setTimeout(() => applyHeadingFoldDecorations(editor, editor.getModel()), 100);
     });
 
     // Add decorations for checked tasks
@@ -188,8 +228,11 @@ export const EditorApp = () => {
 
         editor.deltaDecorations(oldIds, decorations);
 
-        // Add call to createTaskCheckboxDecorations to handle checkbox hover styles
+        // Apply task decorations
         applyTaskCheckboxDecorations(editor, model);
+
+        // Apply heading fold decorations
+        applyHeadingFoldDecorations(editor, model);
       } catch (error) {
         console.error("Error updating decorations:", error);
       }
@@ -262,45 +305,62 @@ export const EditorApp = () => {
           <div className="flex justify-center h-full">
             <div className="w-full max-w-2xl px-4 sm:px-6 md:px-2 relative">
               <div
-                className={`text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 px-4 sm:px-2 ${shouldShowPlaceholder ? "opacity-100" : "opacity-0"}`}
-                aria-hidden={!shouldShowPlaceholder}
-              >
-                {placeholder}
-              </div>
-              <Editor
-                height="100%"
-                width="100%"
-                defaultLanguage="markdown"
-                defaultValue={localStorageContent}
-                options={{
-                  ...editorOptions,
+                className="relative h-full"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
                 }}
-                onMount={handleEditorDidMount}
-                className="overflow-visible"
-                loading="loading..."
-                theme={isDarkMode ? "ephe-dark" : "ephe-light"}
+              >
+                <div
+                  className={`absolute text-gray-400 dark:text-gray-500 pointer-events-none z-20 transition-opacity duration-300 font-mono text-sm ${shouldShowPlaceholder ? "opacity-100" : "opacity-0"}`}
+                  style={{
+                    left: "18px",
+                    top: "12px",
+                    lineHeight: "1.5",
+                  }}
+                  aria-hidden={!shouldShowPlaceholder}
+                >
+                  {placeholder}
+                </div>
+                <Editor
+                  height="100%"
+                  width="100%"
+                  defaultLanguage="markdown"
+                  defaultValue={localStorageContent}
+                  options={{
+                    ...editorOptions,
+                  }}
+                  onMount={handleEditorDidMount}
+                  className="overflow-visible h-full"
+                  loading="loading..."
+                  theme={isDarkMode ? "ephe-dark" : "ephe-light"}
+                />
+              </div>
+
+              {/* Only show TOC when there is content */}
+              {editorContent.trim() && (
+                <>
+                  <TableOfContentsButton isVisible={isTocVisible} toggleToc={toggleToc} />
+                  <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
+                    <TableOfContents
+                      isVisible={isTocVisible}
+                      content={editorContent}
+                      onItemClick={handleTocItemClick}
+                    />
+                  </div>
+                </>
+              )}
+
+              <CommandMenu
+                editorContent={editorContent}
+                open={commandMenuOpen}
+                onClose={() => setCommandMenuOpen(false)}
+                onOpen={() => setCommandMenuOpen(true)}
+                editorRef={editorRef}
+                markdownFormatterRef={formatterRef}
               />
             </div>
           </div>
-
-          {/* Only show TOC when there is content */}
-          {editorContent.trim() && (
-            <>
-              <TableOfContentsButton isVisible={isTocVisible} toggleToc={toggleToc} />
-              <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
-                <TableOfContents isVisible={isTocVisible} content={editorContent} onItemClick={handleTocItemClick} />
-              </div>
-            </>
-          )}
-
-          <CommandMenu
-            editorContent={editorContent}
-            open={commandMenuOpen}
-            onClose={() => setCommandMenuOpen(false)}
-            onOpen={() => setCommandMenuOpen(true)}
-            editorRef={editorRef}
-            markdownFormatterRef={formatterRef}
-          />
         </div>
       </div>
 
