@@ -27,6 +27,10 @@ import { ToastContainer, showToast } from "./toast";
 import { SnapshotDialog } from "./snapshot-dialog";
 import { DprintMarkdownFormatter } from "../features/markdown/dprint-markdown-formatter";
 import type { MarkdownFormatter } from "../features/markdown/markdown-formatter";
+import { isGitHubIssuesSection, processGitHubSections } from "../features/github/github-section-utils";
+
+// GitHub username
+const GITHUB_USERNAME = "unvalley";
 
 const markdownExtension = new MonacoMarkdownExtension();
 
@@ -209,9 +213,39 @@ export const EditorApp = () => {
     editor.onKeyDown((event) => handleKeyDown(event, editor, editor.getModel(), editor.getPosition()));
     editor.onMouseDown((event) => handleTaskCheckboxToggle(event, editor, editor.getModel()));
 
+    // Keyboard commands
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyE, () => {
       // Prevent Monaco from handling the search
       return true; // Return true to stop Monaco from handling this key
+    });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyF, () => {
+      // Release editor focus to allow browser search to take over
+      editor.getDomNode()?.blur();
+      return true;
+    });
+
+    // Add command to refresh GitHub issues
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyG, async () => {
+      const model = editor.getModel();
+      if (!model) return;
+
+      // Check if there's any GitHub section in the document
+      let hasGitHubSection = false;
+      for (let i = 1; i <= model.getLineCount(); i++) {
+        if (isGitHubIssuesSection(model.getLineContent(i))) {
+          hasGitHubSection = true;
+          break;
+        }
+      }
+
+      if (!hasGitHubSection) {
+        showToast("No GitHub issues section found. Add a section with heading '## @GitHub/issues/assigned'", "info");
+        return;
+      }
+
+      // Process GitHub sections
+      await processGitHubSections(editor, model, GITHUB_USERNAME);
     });
 
     // Update editor content state when content changes
@@ -230,6 +264,10 @@ export const EditorApp = () => {
       debouncedCharCountUpdate(value);
       debouncedSetContent(value);
       setEditorContent(value);
+
+      // Check if content contains GitHub section
+      // Note: We don't process the GitHub sections here automatically
+      // to avoid too many API calls, but we could add a debounced version
     });
 
     // Initialize decorations on mount
