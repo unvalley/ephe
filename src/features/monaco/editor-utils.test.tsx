@@ -7,6 +7,8 @@ describe("Task List Utils", () => {
     expect(isTaskLine("- [x] Completed task")).toBe(true);
     expect(isTaskLine("- [X] Completed task")).toBe(true);
     expect(isTaskLine("* [ ] Task with asterisk")).toBe(true);
+    expect(isTaskLine("* [x] Completed task with asterisk")).toBe(true);
+    expect(isTaskLine("* [X] Completed task with asterisk")).toBe(true);
     expect(isTaskLine("Regular text")).toBe(false);
     expect(isTaskLine("- Regular list item")).toBe(false);
   });
@@ -15,6 +17,7 @@ describe("Task List Utils", () => {
     expect(isClosedTaskLine("- [x] Completed task")).toBe(true);
     expect(isClosedTaskLine("- [X] Completed task")).toBe(true);
     expect(isClosedTaskLine("* [x] Completed task with asterisk")).toBe(true);
+    expect(isClosedTaskLine("* [X] Completed task with asterisk")).toBe(true);
     expect(isClosedTaskLine("- [ ] Incomplete task")).toBe(false);
     expect(isClosedTaskLine("Regular text")).toBe(false);
   });

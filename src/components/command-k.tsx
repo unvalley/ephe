@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import type * as monaco from "monaco-editor";
 import type { MarkdownFormatter } from "../features/markdown/markdown-formatter";
 import { showToast } from "./toast";
+import { fetchGitHubIssuesTaskList } from "../features/github/github-api";
 
 type CommandMenuProps = {
   open: boolean;
@@ -98,6 +99,47 @@ export const CommandMenu = ({
     onClose?.();
   };
 
+  // Function to fetch and insert GitHub issues as tasks
+  const handleInsertGitHubIssues = async () => {
+    if (!editorRef?.current) {
+      showToast("Editor not available", "error");
+      return;
+    }
+
+    try {
+      const github_user_id = prompt("Enter GitHub User ID:");
+
+      // If user cancels the prompt or enters empty string, abort
+      if (!github_user_id) {
+        return;
+      }
+
+      // Fetch GitHub issues
+      const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id);
+
+      // Insert issues at current cursor position
+      const editor = editorRef.current;
+      const selection = editor.getSelection();
+
+      if (selection) {
+        editor.executeEdits("", [
+          {
+            range: selection,
+            text: issuesTaskList,
+            forceMoveMarkers: true,
+          },
+        ]);
+      }
+
+      showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
+    } catch (error) {
+      console.error("Error inserting GitHub issues:", error);
+      showToast("Failed to insert GitHub issues", "error");
+    }
+
+    onClose?.();
+  };
+
   return (
     <>
       {/* Overlay */}
@@ -159,6 +201,13 @@ export const CommandMenu = ({
             onSelect={handleFormatDocument}
           >
             Format document
+          </Command.Item>
+
+          <Command.Item
+            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+            onSelect={handleInsertGitHubIssues}
+          >
+            Insert GitHub Issues (Public Repos)
           </Command.Item>
 
           <Command.Item

@@ -8,10 +8,12 @@ describe("Task List Utilities", () => {
       expect(isTaskLine("- [x] Task")).toBe(true);
       expect(isTaskLine("- [X] Task")).toBe(true);
       expect(isTaskLine("  - [ ] Indented task")).toBe(true);
+      expect(isTaskLine("* [ ] Task")).toBe(true);
+      expect(isTaskLine("* [x] Task")).toBe(true);
+      expect(isTaskLine("* [X] Task")).toBe(true);
 
       expect(isTaskLine("Not a task")).toBe(false);
       expect(isTaskLine("- Not a task")).toBe(false);
-      expect(isTaskLine("* [ ] Wrong marker")).toBe(false);
     });
   });
 
