@@ -403,7 +403,7 @@ export const HistoryPage = () => {
                   <input
                     type="text"
                     className="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
-                    placeholder="Search in history..."
+                    placeholder="Search in history...(unimplemented)"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
