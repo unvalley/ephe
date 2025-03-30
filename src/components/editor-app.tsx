@@ -209,16 +209,9 @@ export const EditorApp = () => {
     editor.onKeyDown((event) => handleKeyDown(event, editor, editor.getModel(), editor.getPosition()));
     editor.onMouseDown((event) => handleTaskCheckboxToggle(event, editor, editor.getModel()));
 
-    // Keyboard commands
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyE, () => {
       // Prevent Monaco from handling the search
       return true; // Return true to stop Monaco from handling this key
-    });
-
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyF, () => {
-      // Release editor focus to allow browser search to take over
-      editor.getDomNode()?.blur();
-      return true;
     });
 
     // Update editor content state when content changes
@@ -237,10 +230,6 @@ export const EditorApp = () => {
       debouncedCharCountUpdate(value);
       debouncedSetContent(value);
       setEditorContent(value);
-
-      // Check if content contains GitHub section
-      // Note: We don't process the GitHub sections here automatically
-      // to avoid too many API calls, but we could add a debounced version
     });
 
     // Initialize decorations on mount
