@@ -86,10 +86,23 @@ export const CommandMenu = ({
     }
 
     try {
-      const content = editorRef.current.getValue();
+      const editor = editorRef.current;
+      // Save current cursor position and selection
+      const selection = editor.getSelection();
+      const scrollTop = editor.getScrollTop();
+
+      const content = editor.getValue();
       const formattedContent = await markdownFormatterRef.current.formatMarkdown(content);
 
-      editorRef.current.setValue(formattedContent);
+      // Apply the formatted content
+      editor.setValue(formattedContent);
+
+      // Restore cursor position and selection
+      if (selection) {
+        editor.setSelection(selection);
+        editor.setScrollTop(scrollTop);
+      }
+
       showToast("Document formatted successfully", "success");
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown";
