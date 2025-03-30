@@ -47,7 +47,6 @@ export const HistoryPage = () => {
   // Get available years, months, and days from all history
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [availableMonths, setAvailableMonths] = useState<number[]>([]);
-  const [availableDays, setAvailableDays] = useState<number[]>([]);
 
   // Confirmation modal state
   const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
@@ -80,18 +79,15 @@ export const HistoryPage = () => {
     // Extract unique years, months, and days from all history
     const years = new Set<number>();
     const months = new Set<number>();
-    const days = new Set<number>();
 
     for (const dateStr of Object.keys(allHistory)) {
-      const [year, month, day] = dateStr.split("-").map(Number);
+      const [year, month, _] = dateStr.split("-").map(Number);
       years.add(year);
       months.add(month);
-      days.add(day);
     }
 
     setAvailableYears(Array.from(years).sort((a, b) => b - a));
     setAvailableMonths(Array.from(months).sort((a, b) => a - b));
-    setAvailableDays(Array.from(days).sort((a, b) => a - b));
   }, []);
 
   // Apply filters when they change
