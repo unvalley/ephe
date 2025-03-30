@@ -226,12 +226,6 @@ export const EditorApp = () => {
       return true; // Return true to stop Monaco from handling this key
     });
 
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyF, () => {
-      // Release editor focus to allow browser search to take over
-      editor.getDomNode()?.blur();
-      return true;
-    });
-
     // Update editor content state when content changes
     editor.onDidChangeModelContent(() => {
       const value = editor.getValue();
@@ -248,10 +242,6 @@ export const EditorApp = () => {
       debouncedCharCountUpdate(value);
       debouncedSetContent(value);
       setEditorContent(value);
-
-      // Check if content contains GitHub section
-      // Note: We don't process the GitHub sections here automatically
-      // to avoid too many API calls, but we could add a debounced version
     });
 
     // Initialize decorations on mount
@@ -344,7 +334,7 @@ export const EditorApp = () => {
       <Footer charCount={charCount} taskCount={taskCount} />
 
       {snapshotDialogOpen && (
-        <Suspense fallback={<div className="loading-spinner" />}>
+        <Suspense fallback={<Loading className="h-screen w-screen flex items-center justify-center" />}>
           <SnapshotDialog
             isOpen={snapshotDialogOpen}
             onClose={() => setSnapshotDialogOpen(false)}
