@@ -27,6 +27,7 @@ import { ToastContainer, showToast } from "./toast";
 import { SnapshotDialog } from "./snapshot-dialog";
 import { DprintMarkdownFormatter } from "../features/markdown/dprint-markdown-formatter";
 import type { MarkdownFormatter } from "../features/markdown/markdown-formatter";
+import { Loading } from "./loading";
 
 const markdownExtension = new MonacoMarkdownExtension();
 
@@ -303,7 +304,7 @@ export const EditorApp = () => {
                 }}
                 onMount={handleEditorDidMount}
                 className="overflow-visible"
-                loading="loading..."
+                loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
                 theme={isDarkMode ? "ephe-dark" : "ephe-light"}
               />
             </div>

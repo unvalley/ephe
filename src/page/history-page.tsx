@@ -15,6 +15,7 @@ import { SnapshotViewer } from "../components/snapshot-viewer";
 import { EDITOR_CONTENT_KEY } from "../features/monaco";
 import { useNavigate } from "react-router-dom";
 import { showToast } from "../components/toast";
+import { Loading } from "../components/loading";
 
 type DateFilter = {
   year?: number;
@@ -334,11 +335,7 @@ export const HistoryPage = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 dark:border-gray-100" />
-      </div>
-    );
+    return <Loading className="h-screen w-screen flex items-center justify-center" />;
   }
 
   return (
