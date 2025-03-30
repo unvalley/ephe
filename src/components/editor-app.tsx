@@ -209,6 +209,11 @@ export const EditorApp = () => {
     editor.onKeyDown((event) => handleKeyDown(event, editor, editor.getModel(), editor.getPosition()));
     editor.onMouseDown((event) => handleTaskCheckboxToggle(event, editor, editor.getModel()));
 
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyE, () => {
+      // Prevent Monaco from handling the search
+      return true; // Return true to stop Monaco from handling this key
+    });
+
     // Update editor content state when content changes
     editor.onDidChangeModelContent(() => {
       const value = editor.getValue();
