@@ -1,10 +1,10 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 /**
  * Script to copy WASM file from @dprint/markdown package to public directory
  */
 import { getPath } from '@dprint/markdown';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
@@ -23,4 +23,4 @@ if (!fs.existsSync(targetDir)) {
 
 // Copy WASM file
 fs.copyFileSync(sourceWasmPath, targetPath);
-console.log(`Copied WASM from ${sourceWasmPath} to ${targetPath}`); 
+console.info(`✅ Copied WASM from ${sourceWasmPath} to ${targetPath}`); 

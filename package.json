@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "npm run copy-wasm && vite",
-    "build": "npm run copy-wasm && tsc && vite build",
+    "dev": "pnpm run copy-wasm && vite",
+    "build": "pnpm run copy-wasm && tsc && vite build",
     "preview": "vite preview",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "test": "vitest",
-    "copy-wasm": "node scripts/copy-wasm.js"
+    "copy-wasm": "node --experimental-strip-types scripts/copy-wasm.ts"
   },
   "dependencies": {
     "@dprint/formatter": "^0.4.1",
