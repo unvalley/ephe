@@ -28,6 +28,8 @@ const _Footer = ({ charCount, taskCount }: FooterProps) => {
   const hasTasks = totalTasks > 0;
   const allTasksCompleted = hasTasks && openTasks === 0;
 
+  const hasCharCount = charCount && charCount > 0;
+
   return (
     <footer className="fixed inset-x-0 bottom-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm space-mono">
       <div className="mx-auto px-2 py-1 text-sm text-gray-600 dark:text-gray-400 flex items-center justify-between">
@@ -71,7 +73,7 @@ const _Footer = ({ charCount, taskCount }: FooterProps) => {
               <span className="ml-0.5">tasks</span>
             </span>
           )}
-          {charCount && (
+          {hasCharCount && (
             <span className="whitespace-nowrap flex items-center gap-0.5 bg-gray-50 dark:bg-gray-700 px-2 py-0.5 rounded">
               {charCount.toLocaleString()} chars
             </span>
