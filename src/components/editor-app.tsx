@@ -5,7 +5,7 @@ import { useTheme } from "../hooks/use-theme";
 import type * as monaco from "monaco-editor";
 import { useLocalStorage } from "../hooks/use-local-storage";
 import { useDebouncedCallback } from "../hooks/use-debounce";
-import { type ContentSyncEvent, useTabDetection, type WindowWithSync } from "../hooks/use-tab-detection";
+import { useTabDetection } from "../hooks/use-tab-detection";
 import { EDITOR_CONTENT_KEY, getRandomQuote } from "../features/monaco";
 import { isTaskLine, isClosedTaskLine } from "../features/monaco/task-list-utils";
 import { Editor } from "@monaco-editor/react";
@@ -27,9 +27,6 @@ import { ToastContainer, showToast } from "./toast";
 import { SnapshotDialog } from "./snapshot-dialog";
 import { DprintMarkdownFormatter } from "../features/markdown/dprint-markdown-formatter";
 import type { MarkdownFormatter } from "../features/markdown/markdown-formatter";
-
-// Event name for content synchronization
-const CONTENT_SYNC_EVENT = "ephe-remote-content-update";
 
 const markdownExtension = new MonacoMarkdownExtension();
 
@@ -53,11 +50,8 @@ export const EditorApp = () => {
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
 
-  // Tab detection and synchronization state
-  const isOtherTabOpen = useTabDetection();
-  const [tabAlertDismissed, setTabAlertDismissed] = useState(false);
-  const [showTabAlert, setShowTabAlert] = useState(false);
-  const [remoteSyncEnabled, setRemoteSyncEnabled] = useState(false);
+  // Tab detection with integrated alert management
+  const { shouldShowAlert, dismissAlert } = useTabDetection();
 
   // Define debounced functions
   const debouncedSetContent = useDebouncedCallback((content: string) => {
@@ -74,68 +68,6 @@ export const EditorApp = () => {
   const debouncedTaskCountUpdate = useDebouncedCallback((content: string) => {
     countTasks(content);
   }, 100);
-
-  // Show alert when another tab is detected
-  useEffect(() => {
-    if (isOtherTabOpen && !tabAlertDismissed) {
-      setShowTabAlert(true);
-    }
-  }, [isOtherTabOpen, tabAlertDismissed]);
-
-  const handleEnableSync = () => {
-    setTabAlertDismissed(true);
-    setShowTabAlert(false);
-    setRemoteSyncEnabled(true);
-    showToast("Sync enabled with other tabs", "info");
-  };
-
-  // Apply content updates from remote tabs
-  const applyRemoteContent = useCallback(
-    (content: string) => {
-      if (!editorRef.current) return;
-
-      const currentContent = editorRef.current.getValue();
-      // Only update if content is different to avoid unnecessary renders
-      if (content === currentContent) return;
-
-      editorRef.current.setValue(content);
-      setEditorContent(content);
-      debouncedSetContent(content);
-      debouncedCharCountUpdate(content);
-      debouncedTaskCountUpdate(content);
-
-      showToast("Content updated from another tab", "info");
-    },
-    [debouncedSetContent, debouncedCharCountUpdate, debouncedTaskCountUpdate],
-  );
-
-  // Listen for remote content updates
-  useEffect(() => {
-    if (!remoteSyncEnabled) return;
-
-    const handleRemoteContentUpdate = (event: CustomEvent<ContentSyncEvent>) => {
-      const { content } = event.detail;
-      applyRemoteContent(content);
-    };
-
-    // Add event listener with proper typing
-    window.addEventListener(CONTENT_SYNC_EVENT, handleRemoteContentUpdate as unknown as EventListener);
-
-    return () => {
-      window.removeEventListener(CONTENT_SYNC_EVENT, handleRemoteContentUpdate as unknown as EventListener);
-    };
-  }, [remoteSyncEnabled, applyRemoteContent]);
-
-  // Sync content with other tabs when we make changes
-  useEffect(() => {
-    // Only sync if remote sync is enabled and other tabs are detected
-    if (!remoteSyncEnabled || !isOtherTabOpen || !editorContent) return;
-
-    const windowWithSync = window as WindowWithSync;
-    if (windowWithSync.epheSyncContent) {
-      windowWithSync.epheSyncContent(editorContent);
-    }
-  }, [editorContent, remoteSyncEnabled, isOtherTabOpen]);
 
   // Initialize markdown formatter
   useEffect(() => {
@@ -394,7 +326,7 @@ export const EditorApp = () => {
         </Suspense>
       )}
 
-      <AlreadyOpenDialog isOpen={showTabAlert} onEnableSync={handleEnableSync} remoteSyncEnabled={remoteSyncEnabled} />
+      <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />
 
       <ToastContainer />
     </div>

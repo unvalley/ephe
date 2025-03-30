@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 
 type AlreadyOpenDialogProps = {
-  isOpen: boolean;
-  onEnableSync?: () => void;
-  remoteSyncEnabled?: boolean;
+  shouldShowAlert: boolean;
+  onContinue: () => void;
 };
 
-export const AlreadyOpenDialog = ({ isOpen, onEnableSync, remoteSyncEnabled = false }: AlreadyOpenDialogProps) => {
+export const AlreadyOpenDialog = ({ shouldShowAlert: isOpen, onContinue }: AlreadyOpenDialogProps) => {
   const [isVisible, setIsVisible] = useState<boolean>(false);
 
   // Handle animation visibility
@@ -26,14 +25,6 @@ export const AlreadyOpenDialog = ({ isOpen, onEnableSync, remoteSyncEnabled = fa
     return null;
   }
 
-  // Get appropriate message based on sync state
-  const getMessage = () => {
-    if (remoteSyncEnabled) {
-      return "Content is now being synced with other tabs in real-time.";
-    }
-    return "The app is already open in another tab or window. You can choose to continue without syncing (which may lead to conflicts or data loss) or enable real-time sync between tabs.";
-  };
-
   return (
     <div
       className={`fixed inset-0 bg-black/50 z-50 flex items-center justify-center transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`}
@@ -50,18 +41,19 @@ export const AlreadyOpenDialog = ({ isOpen, onEnableSync, remoteSyncEnabled = fa
         <h2 id="dialog-title" className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
           App Already Open
         </h2>
-        <p className="mb-6 text-gray-700 dark:text-gray-300">{getMessage()}</p>
+        <p className="mb-6 text-gray-700 dark:text-gray-300">
+          The app is already open in another tab or window. Editing in multiple tabs simultaneously may lead to
+          conflicts or data loss.
+        </p>
         <div className="flex justify-end gap-3">
-          {!remoteSyncEnabled && onEnableSync && (
-            <button
-              type="button"
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-300 rounded-md transition-colors cursor-pointer"
-              onClick={onEnableSync}
-              aria-label="Enable real-time synchronization between tabs"
-            >
-              Enable Sync
-            </button>
-          )}
+          <button
+            type="button"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+            onClick={onContinue}
+            aria-label="Continue without synchronization"
+          >
+            Continue Anyway
+          </button>
         </div>
       </dialog>
     </div>

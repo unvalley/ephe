@@ -1,42 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { ValueOf } from "src/utils/types";
 
 // Constants for storage keys and settings
 const STORAGE = {
   LOCK_KEY: "ephe-tab-lock",
-  CHANNEL_NAME: "ephe-tab-channel",
-  CHECK_INTERVAL: 1000, // Check every second
-  MAX_STALE_TIME: 3000, // 3 seconds - consider tab closed after this time
+  ALERT_DISMISSED_KEY: "ephe-alert-dismissed",
+  CHECK_INTERVAL: 2000, // Check every 2 seconds
+  MAX_STALE_TIME: 5000, // 5 seconds - consider tab closed after this time
 };
 
-// Message types for broadcast channel
-const MessageType = {
-  PING: "ping",
-  PONG: "pong",
-  CONTENT_UPDATE: "content_update",
-} as const;
-
-type TabRegistry = {
-  [tabId: string]: number;
-}
-
-type SyncMessage = {
-  type: ValueOf<typeof MessageType>;
-  id: string;
-  timestamp: number;
-  content?: string;
-}
-
-export type WindowWithSync = Window & {
-  epheSyncContent?: (content: string) => void;
-}
-
-export type ContentSyncEvent = {
-  content: string;
-  sourceId: string;
-}
+// Return type for useTabDetection hook
+export type TabDetectionResult = {
+  shouldShowAlert: boolean;
+  dismissAlert: () => void;
+};
 
 /**
  * Check if the browser supports sessionStorage and required features
@@ -61,11 +39,15 @@ const isSupported = (): boolean => {
 
 /**
  * Custom hook to detect if the application is already open in another tab
- * This version still detects other tabs but enables working together
- * @returns {boolean} True if another instance is already running
+ * and manage the alert state
+ * @returns {TabDetectionResult} Object containing state and functions for tab detection
  */
-export function useTabDetection(): boolean {
+export function useTabDetection(): TabDetectionResult {
   const [isOtherTabOpen, setIsOtherTabOpen] = useState<boolean>(false);
+  const [alertDismissed, setAlertDismissed] = useState<boolean>(false);
+  
+  // Get alert visibility based on other tabs and dismissal state
+  const shouldShowAlert = isOtherTabOpen && !alertDismissed;
 
   useEffect(() => {
     // Skip detection if not supported in this browser
@@ -74,68 +56,33 @@ export function useTabDetection(): boolean {
     }
     
     const tabId = Math.random().toString(36).substring(2, 15);
-    let broadcastChannel: BroadcastChannel | null = null;
     
-    // Initialize broadcast channel for cross-tab communication if supported
-    if (typeof BroadcastChannel !== "undefined") {
-      try {
-        broadcastChannel = new BroadcastChannel(STORAGE.CHANNEL_NAME);
-        
-        // Listen for messages from other tabs
-        broadcastChannel.onmessage = (event: MessageEvent<SyncMessage>) => {
-          const { type, id, content } = event.data;
-          
-          // Handle different message types
-          switch (type) {
-            case MessageType.PING:
-              // Respond to pings with current tab's ID
-              broadcastChannel?.postMessage({
-                type: MessageType.PONG,
-                id: tabId,
-                timestamp: Date.now()
-              });
-              break;
-              
-            case MessageType.PONG:
-              // If another tab responds to our ping, mark as other tab open
-              if (id !== tabId) {
-                setIsOtherTabOpen(true);
-              }
-              break;
-              
-            case MessageType.CONTENT_UPDATE:
-              // Dispatch content update events to the application
-              if (content) {
-                window.dispatchEvent(
-                  new CustomEvent<ContentSyncEvent>("ephe-remote-content-update", {
-                    detail: {
-                      content,
-                      sourceId: id
-                    }
-                  })
-                );
-              }
-              break;
-          }
-        };
-      } catch (e) {
-        console.error("Error creating BroadcastChannel:", e);
+    // Try to load alert dismissed state from sessionStorage
+    try {
+      const dismissedState = sessionStorage.getItem(STORAGE.ALERT_DISMISSED_KEY);
+      if (dismissedState === "true") {
+        setAlertDismissed(true);
       }
+    } catch (e) {
+      console.error("Error loading alert dismissed state:", e);
     }
     
-    // Register all open tabs
-    const registerTab = (): void => {
+    // Simple function to register this tab and check for others
+    const checkForOtherTabs = (): void => {
       try {
         // Get current tabs registry or initialize empty one
         const tabsRegistryStr = sessionStorage.getItem(STORAGE.LOCK_KEY);
-        let tabsRegistry: TabRegistry = {};
+        let tabsRegistry: { [key: string]: number } = {};
         
         if (tabsRegistryStr) {
-          tabsRegistry = JSON.parse(tabsRegistryStr);
+          try {
+            tabsRegistry = JSON.parse(tabsRegistryStr);
+          } catch (e) {
+            // If corrupt, start with a clean registry
+            console.error("Error parsing tab registry, resetting:", e);
+            tabsRegistry = {};
+          }
         }
-        
-        // Add this tab with current timestamp
-        tabsRegistry[tabId] = Date.now();
         
         // Clean up stale tabs
         const now = Date.now();
@@ -145,53 +92,24 @@ export function useTabDetection(): boolean {
           }
         }
         
+        // Add this tab with current timestamp
+        tabsRegistry[tabId] = now;
+        
         // Save registry back
         sessionStorage.setItem(STORAGE.LOCK_KEY, JSON.stringify(tabsRegistry));
         
         // If more than one active tab, set other tab open flag
         setIsOtherTabOpen(Object.keys(tabsRegistry).length > 1);
       } catch (error) {
-        console.error("Error updating tabs registry:", error);
+        console.error("Error checking for other tabs:", error);
       }
     };
     
-    // Function to ping other tabs to check if they're open
-    const pingOtherTabs = () => {
-      if (broadcastChannel) {
-        broadcastChannel.postMessage({
-          type: MessageType.PING,
-          id: tabId,
-          timestamp: Date.now()
-        });
-      }
-    };
-    
-    // Method to sync content with other tabs (exposed via window object)
-    const syncContent = (content: string) => {
-      if (broadcastChannel) {
-        broadcastChannel.postMessage({
-          type: MessageType.CONTENT_UPDATE,
-          id: tabId,
-          content,
-          timestamp: Date.now()
-        });
-      }
-    };
-    
-    // Expose the sync method to window for external usage
-    (window as WindowWithSync).epheSyncContent = syncContent;
-    
-    // Initial tab registration
-    registerTab();
-    
-    // Initial ping to find other tabs
-    pingOtherTabs();
+    // Initial check
+    checkForOtherTabs();
     
     // Set up interval to check regularly
-    const intervalId = window.setInterval(() => {
-      registerTab();
-      pingOtherTabs();
-    }, STORAGE.CHECK_INTERVAL);
+    const intervalId = window.setInterval(checkForOtherTabs, STORAGE.CHECK_INTERVAL);
     
     // Clean up on unmount
     return () => {
@@ -208,18 +126,21 @@ export function useTabDetection(): boolean {
       } catch (error) {
         console.error("Error removing tab from registry:", error);
       }
-      
-      // Close the broadcast channel
-      if (broadcastChannel) {
-        broadcastChannel.close();
-      }
-      
-      // Remove the global sync method
-      if ((window as WindowWithSync).epheSyncContent) {
-        (window as WindowWithSync).epheSyncContent = undefined;
-      }
     };
   }, []);
   
-  return isOtherTabOpen;
+  // Function to dismiss the alert
+  const dismissAlert = () => {
+    setAlertDismissed(true);
+    try {
+      sessionStorage.setItem(STORAGE.ALERT_DISMISSED_KEY, "true");
+    } catch (e) {
+      console.error("Error saving alert dismissed state:", e);
+    }
+  };
+  
+  return {
+    shouldShowAlert,
+    dismissAlert
+  };
 } 
