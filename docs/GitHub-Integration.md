@@ -4,21 +4,14 @@ Ephe now supports displaying your assigned GitHub issues directly in your markdo
 
 ## How to Use
 
-1. Add a section heading `## @GitHub/issues/assigned` to your markdown file
-2. Press `Cmd+G` (Mac) or `Ctrl+G` (Windows/Linux) to fetch and display your assigned GitHub issues
-3. Your assigned issues will be displayed as a task list below the heading
+1. Press `Cmd+K` (Mac) or `Ctrl+K` (Windows/Linux) to open the command menu
+2. Select "Insert GitHub Issues" from the menu
+3. Enter the GitHub username when prompted (defaults to "unvalley")
+4. Your assigned GitHub issues will be inserted at the cursor position as a task list
 
-Example:
-
-```markdown
-## @GitHub/issues/assigned
-```
-
-After pressing `Cmd+G`, it will be populated with:
+Example of inserted issues:
 
 ```markdown
-## @GitHub/issues/assigned
-
 - [ ] github.com/owner/repo/issues/123
 - [ ] github.com/another-owner/another-repo/issues/456
 ```
@@ -26,24 +19,21 @@ After pressing `Cmd+G`, it will be populated with:
 ## Current Limitations
 
 - Only works with public repositories
-- Requires manual refresh using `Cmd+G`
-- Currently hardcoded to use username "unvalley"
 - Does not support authentication for private repositories (yet)
 
 ## Future Enhancements
 
 Future versions will include:
 - Authentication for private repositories
-- Automatic refresh
-- Ability to specify different GitHub usernames
 - Filter options for issues
 - Update issue status directly from the editor
+- More integrations with other services
 
 ## Troubleshooting
 
 If you're having issues with the GitHub integration:
 
-1. Make sure your heading is exactly `## @GitHub/issues/assigned`
+1. Make sure your cursor is positioned where you want the issues to be inserted
 2. Check your internet connection
 3. GitHub API has rate limits for unauthenticated requests, so you might need to wait if you hit those limits
 

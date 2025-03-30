@@ -2,7 +2,7 @@
  * GitHub API service for fetching issues and other GitHub data
  */
 
-export interface GitHubIssue {
+export type GitHubIssue = {
   id: number;
   title: string;
   html_url: string;
@@ -14,12 +14,12 @@ export interface GitHubIssue {
 /**
  * Fetch issues assigned to a specific GitHub user
  * Currently only supports public repositories
- * @param username The GitHub username to fetch issues for
+ * @param github_user_id The GitHub user ID to fetch issues for
  * @returns Promise with the list of issues assigned to the user
  */
-export const fetchAssignedIssues = async (username: string): Promise<GitHubIssue[]> => {
+export const fetchAssignedIssues = async (github_user_id: string): Promise<GitHubIssue[]> => {
   try {
-    const response = await fetch(`https://api.github.com/search/issues?q=assignee:${username}+state:open`);
+    const response = await fetch(`https://api.github.com/search/issues?q=assignee:${github_user_id}+state:open`);
     
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.status}`);
@@ -65,4 +65,19 @@ export const generateIssuesTaskList = (issues: GitHubIssue[]): string => {
       return `- [ ] ${displayUrl}`;
     })
     .join("\n");
+}; 
+
+/**
+ * Fetches GitHub issues for a user and returns them as a markdown task list
+ * @param username GitHub username to fetch issues for
+ * @returns Promise with markdown text containing the task list
+ */
+export const fetchGitHubIssuesTaskList = async (github_user_id: string): Promise<string> => {
+  try {
+    const issues = await fetchAssignedIssues(github_user_id);
+    return generateIssuesTaskList(issues);
+  } catch (error) {
+    console.error("Error fetching GitHub issues:", error);
+    return "Error fetching GitHub issues.";
+  }
 }; 
