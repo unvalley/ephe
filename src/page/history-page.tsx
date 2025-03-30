@@ -41,6 +41,7 @@ export const HistoryPage = () => {
   const [historyByDate, setHistoryByDate] = useState<Record<string, HistoryItem[]>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filter, setFilter] = useState<DateFilter>({});
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const navigate = useNavigate();
 
   // Get available years, months, and days from all history
@@ -218,29 +219,32 @@ export const HistoryPage = () => {
     // Check if item is a snapshot
     if (isSnapshot(item)) {
       const snapshot = item;
+      const time = new Date(snapshot.timestamp).toLocaleTimeString();
 
       return (
-        <div className="flex group">
+        <div className="flex group border-b border-gray-200 dark:border-gray-700 py-3 px-2">
           <div className="flex-1 flex items-start">
-            <div>
-              {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
-              <div
-                className="cursor-pointer text-xs text-gray-700 dark:text-gray-300 opacity-80"
+            <div className="flex items-center">
+              <svg className="h-4 w-4 mr-2" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" role="img">
+                <path
+                  fillRule="evenodd"
+                  d="M3.75 1.5a.25.25 0 00-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 00.25-.25V6h-2.75A1.75 1.75 0 019 4.25V1.5H3.75zm6.75.062V4.25c0 .138.112.25.25.25h2.688a.252.252 0 00-.011-.013l-2.914-2.914a.272.272 0 00-.013-.011zM2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0113.25 16h-9.5A1.75 1.75 0 012 14.25V1.75z"
+                />
+              </svg>
+              <button
+                className="cursor-pointer hover:underline text-gray-600 dark:text-gray-200"
                 onClick={() => handleViewSnapshot(snapshot)}
-                role="button"
-                tabIndex={0}
+                type="button"
               >
-                - {snapshot.title}
-              </div>
+                {snapshot.title}
+              </button>
             </div>
+            <div className="ml-6 mt-1 text-xs text-gray-500 dark:text-gray-400">Created at {time}</div>
           </div>
-          <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex space-x-2">
             <button
               onClick={() => {
-                // Load the snapshot content into the editor
                 localStorage.setItem(EDITOR_CONTENT_KEY, snapshot.content);
-
-                // Navigate to editor
                 navigate("/");
                 showToast("Snapshot restored to editor", "success");
               }}
@@ -266,15 +270,25 @@ export const HistoryPage = () => {
     const time = new Date(task.completedAt).toLocaleTimeString();
 
     return (
-      <div className="flex group">
+      <div className="flex group border-b border-gray-200 dark:border-gray-700 py-3 px-2">
         <div className="flex-1 flex items-start">
-          <div>
-            <span className="text-gray-700 dark:text-gray-300 opacity-80">- [x] {task.content}</span>
-            {task.section && <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">in {task.section},</span>}
-            <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">at {time}</span>
+          <div className="flex items-center">
+            <svg
+              className="h-4 w-4 mr-2 text-green-600 dark:text-green-400"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              aria-hidden="true"
+              role="img"
+            >
+              <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z" />
+            </svg>
+            <span className="text-sm  text-gray-600 dark:text-gray-200">{task.content}</span>
+          </div>
+          <div className="ml-6 mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Completed {task.section && <span>in {task.section} </span>} at {time}
           </div>
         </div>
-        <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex space-x-2">
           <button
             onClick={() => handleDeleteItem(task.id, "task")}
             className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
@@ -290,11 +304,13 @@ export const HistoryPage = () => {
   // Render history items for a specific date
   const renderHistoryItems = (date: string, items: HistoryItem[]) => {
     const itemsByType = groupItemsByType(items);
-    const limit = 5; // 初期表示数
+    const limit = 5;
 
     return (
-      <div key={date} className="mb-6">
-        <div className="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">{formatDate(date)}</div>
+      <div key={date} className="mb-8">
+        <div className="mb-2 text-sm text-gray-800 dark:text-gray-100 py-2 border-b border-gray-200 dark:border-gray-700">
+          {formatDate(date)}
+        </div>
 
         {Object.entries(itemsByType).map(([historyItemType, typeItems]) => {
           if (filter.types && !filter.types.includes(historyItemType)) {
@@ -310,17 +326,17 @@ export const HistoryPage = () => {
 
           return (
             <div key={historyItemType} className="mb-4">
-              <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">
+              <div className="mb-1 text-xs text-gray-600 dark:text-gray-400 tracking-wider py-1 px-2 dark:bg-gray-800 rounded-t-md">
                 {historyItemType === "task" ? "Completed Tasks" : "Snapshots"}
               </div>
-              <div className="space-y-2 pl-2 border-l-2 border-gray-200 dark:border-gray-600">
+              <div className="border border-gray-100 dark:border-gray-700 rounded-md overflow-hidden">
                 {displayItems.map((item) => (
                   <div key={isSnapshot(item) ? item.id : (item as CompletedTask).id}>{renderHistoryItem(item)}</div>
                 ))}
                 {typeItems.length > limit && (
                   <button
                     onClick={() => toggleTypeExpansion(`${date}-${historyItemType}`)}
-                    className="mt-2 text-sm focus:outline-none"
+                    className="w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 border-t border-gray-200 dark:border-gray-700 focus:outline-none"
                     type="button"
                   >
                     {isExpanded ? "Show less" : `Show ${typeItems.length - limit} more...`}
@@ -339,13 +355,13 @@ export const HistoryPage = () => {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col antialiased bg-white dark:bg-gray-900">
+    <div className="h-screen w-screen flex flex-col antialiase">
       <div className="flex-1 pt-16 pb-8 overflow-auto">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
+        <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-lg text-gray-900 dark:text-gray-100">History</h1>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Your completed tasks and snapshots.</p>
+              <h1 className="text-xl text-gray-800 dark:text-gray-100">History</h1>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Your completed tasks and snapshots.</p>
             </div>
 
             {/* Purge button */}
@@ -363,80 +379,39 @@ export const HistoryPage = () => {
             )}
           </div>
 
-          <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="w-full sm:w-auto">
-                <label htmlFor="year-filter" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Year
-                </label>
-                <select
-                  id="year-filter"
-                  value={filter.year || ""}
-                  onChange={(e) => {
-                    const value = e.target.value ? Number(e.target.value) : undefined;
-                    updateFilter("year", value);
-                  }}
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-1.5 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="">All Years</option>
-                  {availableYears.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
+          {/* GitHub-like filter toolbar */}
+          <div className="mb-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm">
+            <div className="flex flex-col sm:flex-row p-2 gap-2 items-center">
+              {/* Search input */}
+              <div className="w-full sm:w-auto flex-1">
+                <div className="relative rounded-md shadow-sm">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                    <svg
+                      className="h-4 w-4 text-gray-400 dark:text-gray-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                      aria-hidden="true"
+                      role="img"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    className="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
+                    placeholder="Search in history..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
               </div>
 
+              {/* Type filter dropdown */}
               <div className="w-full sm:w-auto">
-                <label htmlFor="month-filter" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Month
-                </label>
-                <select
-                  id="month-filter"
-                  value={filter.month || ""}
-                  onChange={(e) => {
-                    const value = e.target.value ? Number(e.target.value) : undefined;
-                    updateFilter("month", value);
-                  }}
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-1.5 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="">All Months</option>
-                  {availableMonths.map((month) => (
-                    <option key={month} value={month}>
-                      {new Date(2000, month - 1, 1).toLocaleString("default", {
-                        month: "long",
-                      })}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="w-full sm:w-auto">
-                <label htmlFor="day-filter" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Day
-                </label>
-                <select
-                  id="day-filter"
-                  value={filter.day || ""}
-                  onChange={(e) => {
-                    const value = e.target.value ? Number(e.target.value) : undefined;
-                    updateFilter("day", value);
-                  }}
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-1.5 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="">All Days</option>
-                  {availableDays.map((day) => (
-                    <option key={day} value={day}>
-                      {day}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="w-full sm:w-auto">
-                <label htmlFor="type-filter" className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Type
-                </label>
                 <select
                   id="type-filter"
                   value={filter.types ? filter.types[0] : ""}
@@ -444,7 +419,7 @@ export const HistoryPage = () => {
                     const value = e.target.value as HistoryItemType;
                     updateFilter("types", value ? [value] : undefined);
                   }}
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 py-1.5 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
                 >
                   <option value="">All Types</option>
                   <option value="task">Tasks</option>
@@ -452,25 +427,94 @@ export const HistoryPage = () => {
                 </select>
               </div>
 
-              <div className="w-full sm:w-auto sm:ml-auto sm:self-end">
+              {/* Date filter dropdown */}
+              <div className="w-full sm:w-auto">
+                <select
+                  id="date-filter"
+                  value={filter.month ? `${filter.year}-${filter.month}` : filter.year?.toString() || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (!value) {
+                      updateFilter("year", undefined);
+                      updateFilter("month", undefined);
+                    } else if (value.includes("-")) {
+                      const [year, month] = value.split("-").map(Number);
+                      updateFilter("year", year);
+                      updateFilter("month", month);
+                    } else {
+                      updateFilter("year", Number(value));
+                      updateFilter("month", undefined);
+                    }
+                  }}
+                  className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
+                >
+                  <option value="">All Time</option>
+                  {availableYears.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                  {availableYears.map((year) =>
+                    availableMonths.map((month) => (
+                      <option key={`${year}-${month}`} value={`${year}-${month}`}>
+                        {new Date(year, month - 1, 1).toLocaleString("default", { month: "long", year: "numeric" })}
+                      </option>
+                    )),
+                  )}
+                </select>
+              </div>
+
+              {/* Clear filters button */}
+              {(filter.year || filter.month || filter.types || searchQuery) && (
                 <button
-                  onClick={resetFilters}
-                  className="w-full sm:w-auto px-3 py-1.5 text-sm rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors focus:outline-none"
+                  onClick={() => {
+                    resetFilters();
+                    setSearchQuery("");
+                  }}
+                  className="w-full sm:w-auto px-3 py-1.5 text-sm rounded-md flex items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none"
                   type="button"
                 >
-                  Reset Filters
+                  <svg
+                    className="h-3 w-3 mr-1 text-gray-500 dark:text-gray-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    role="img"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Clear
                 </button>
-              </div>
+              )}
             </div>
           </div>
 
           {sortedDates.length === 0 ? (
-            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <p className="text-gray-500 dark:text-gray-400">Empty.</p>
+            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+                role="img"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1}
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
+              </svg>
+              <p className="mt-4 text-gray-500 dark:text-gray-400">No history items found.</p>
               {Object.keys(filter).length > 0 && (
                 <p className="mt-2 text-gray-500 dark:text-gray-400">
                   Try adjusting your filters or{" "}
-                  <button onClick={resetFilters} className="text-blue-500 hover:underline" type="button">
+                  <button onClick={resetFilters} className="" type="button">
                     reset them
                   </button>
                   .
@@ -478,13 +522,11 @@ export const HistoryPage = () => {
               )}
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="font-mono text-sm p-4 h-[60vh] overflow-auto whitespace-pre-wrap">
-                {sortedDates.map((date) => {
-                  const items = historyByDate[date];
-                  return renderHistoryItems(date, items);
-                })}
-              </div>
+            <div className="space-y-4">
+              {sortedDates.map((date) => {
+                const items = historyByDate[date];
+                return renderHistoryItems(date, items);
+              })}
             </div>
           )}
         </div>
