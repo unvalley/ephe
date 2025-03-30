@@ -7,6 +7,7 @@ import { EDITOR_CONTENT_KEY } from "../features/monaco";
 import { useNavigate } from "react-router-dom";
 import type * as monaco from "monaco-editor";
 import { showToast } from "./toast";
+import { Loading } from "./loading";
 
 type SnapshotViewerProps = {
   isOpen: boolean;
@@ -114,11 +115,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
         )}
 
         <div className="flex-1 overflow-hidden">
-          {isLoading && (
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100"></div>
-            </div>
-          )}
+          {isLoading && <Loading className="h-full w-full flex items-center justify-center" />}
 
           <Editor
             height="100%"
@@ -138,7 +135,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
               overviewRulerBorder: false,
               overviewRulerLanes: 0,
               contextmenu: false,
-              fontFamily: "'Space Mono', monospace",
+              fontFamily: "monospace",
               fontSize: 14,
               lineHeight: 1.6,
               padding: { top: 16, bottom: 16 },

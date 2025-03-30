@@ -27,6 +27,7 @@ import { ToastContainer, showToast } from "./toast";
 import { SnapshotDialog } from "./snapshot-dialog";
 import { DprintMarkdownFormatter } from "../features/markdown/dprint-markdown-formatter";
 import type { MarkdownFormatter } from "../features/markdown/markdown-formatter";
+import { Loading } from "./loading";
 
 const markdownExtension = new MonacoMarkdownExtension();
 
@@ -219,6 +220,7 @@ export const EditorApp = () => {
     editor.onKeyDown((event) => handleKeyDown(event, editor, editor.getModel(), editor.getPosition()));
     editor.onMouseDown((event) => handleTaskCheckboxToggle(event, editor, editor.getModel()));
 
+    // Keyboard commands
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyE, () => {
       // Prevent Monaco from handling the search
       return true; // Return true to stop Monaco from handling this key
@@ -302,7 +304,7 @@ export const EditorApp = () => {
                 }}
                 onMount={handleEditorDidMount}
                 className="overflow-visible"
-                loading="loading..."
+                loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
                 theme={isDarkMode ? "ephe-dark" : "ephe-light"}
               />
             </div>
@@ -332,7 +334,7 @@ export const EditorApp = () => {
       <Footer charCount={charCount} taskCount={taskCount} />
 
       {snapshotDialogOpen && (
-        <Suspense fallback={<div className="loading-spinner" />}>
+        <Suspense fallback={<Loading className="h-screen w-screen flex items-center justify-center" />}>
           <SnapshotDialog
             isOpen={snapshotDialogOpen}
             onClose={() => setSnapshotDialogOpen(false)}
