@@ -99,6 +99,11 @@ export const editorOptions: EditorProps["options"] = {
   renderLineHighlightOnlyWhenFocus: true,
   maxTokenizationLineLength: 5000,
   padding: { top: 4 }, // Add padding to prevent cursor from being cut off
+  stickyScroll: {
+    enabled: false,
+    scrollWithEditor: false,
+  },
+  stickyTabStops: false,
 };
 
 // Set up placeholder when editor content is empty
