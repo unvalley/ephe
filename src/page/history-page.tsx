@@ -326,9 +326,6 @@ export const HistoryPage = () => {
 
           return (
             <div key={historyItemType} className="mb-4">
-              <div className="mb-1 text-xs text-gray-600 dark:text-gray-400 tracking-wider py-1 px-2 dark:bg-gray-800 rounded-t-md">
-                {historyItemType === "task" ? "Completed Tasks" : "Snapshots"}
-              </div>
               <div className="border border-gray-100 dark:border-gray-700 rounded-md overflow-hidden">
                 {displayItems.map((item) => (
                   <div key={isSnapshot(item) ? item.id : (item as CompletedTask).id}>{renderHistoryItem(item)}</div>
