@@ -11,6 +11,14 @@ export type MarkdownProcessingResult = {
 }
 
 /**
+ * Task item with its line number information
+ */
+export type TaskWithLineNumber = {
+  line: number;
+  checked: boolean;
+}
+
+/**
  * Markdown service that handles processing markdown content
  * using @textlint/markdown-to-ast for parsing and custom rendering
  */
@@ -78,6 +86,44 @@ export class MarkdownAstService {
     if (this.isParentNode(node)) {
       for (const child of node.children) {
         this.countTasksRecursively(child, taskCount);
+      }
+    }
+  }
+
+  /**
+   * Find all checked task items with their line numbers
+   * @param ast The markdown AST
+   * @returns Array of tasks with line numbers
+   */
+  public findCheckedTasksWithLineNumbers(ast: TxtDocumentNode): TaskWithLineNumber[] {
+    const tasks: TaskWithLineNumber[] = [];
+    this.findTasksRecursively(ast, tasks);
+    return tasks;
+  }
+
+  /**
+   * Recursively find all task items with their line numbers
+   * @param node The current node
+   * @param tasks Array to collect found tasks
+   */
+  private findTasksRecursively(node: TxtNode, tasks: TaskWithLineNumber[]): void {
+    // If it's a ListItem node with checked attribute
+    if (node.type === "ListItem") {
+      const listItemNode = node as TxtListItemNode;
+      
+      // Only add if checked is explicitly true or false (not undefined or null)
+      if (listItemNode.checked === true || listItemNode.checked === false) {
+        tasks.push({
+          line: node.loc.start.line,
+          checked: listItemNode.checked
+        });
+      }
+    }
+    
+    // Recursively process child nodes if they exist
+    if (this.isParentNode(node)) {
+      for (const child of node.children) {
+        this.findTasksRecursively(child, tasks);
       }
     }
   }

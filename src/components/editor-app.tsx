@@ -105,30 +105,17 @@ export const EditorApp = () => {
     // Define editor themes
     monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
     monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
-
     monaco.editor.setTheme(isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name);
 
-    const content = editor.getValue();
+    const markdownExtension = new MonacoMarkdownExtension();
+    markdownExtension.activate(editor);
 
+    const content = editor.getValue();
     if (content) {
       const { taskCount } = markdownService.processMarkdown(content);
       setCharCount(content.length);
       setTaskCount(taskCount);
     }
-
-    // Setup content change handler
-    editor.onDidChangeModelContent(() => {
-      const updatedText = editor.getValue();
-
-      setEditorContent(updatedText);
-      debouncedSetContent(updatedText);
-      debouncedCharCountUpdate(updatedText);
-      debouncedTaskCountUpdate(updatedText);
-    });
-
-    // Add Editor extensions
-    const markdownExtension = new MonacoMarkdownExtension();
-    markdownExtension.activate(editor);
 
     // Add decorations for checked tasks
     const updateDecorations = (model: monaco.editor.ITextModel | null) => {
@@ -137,22 +124,23 @@ export const EditorApp = () => {
         const oldDecorations = model.getAllDecorations() || [];
         const decorations: monaco.editor.IModelDeltaDecoration[] = [];
 
-        // Get content and process with markdown service to identify task locations
         const content = model.getValue();
-        const lines = content.split("\n");
+        const ast = markdownService.getAst(content);
 
-        // Process each line to find completed tasks
-        for (let lineNumber = 1; lineNumber <= lines.length; lineNumber++) {
-          const lineContent = lines[lineNumber - 1];
+        // Get all tasks with line numbers from markdown service
+        const tasks = markdownService.findCheckedTasksWithLineNumbers(ast);
 
-          // Simple regex check for completed tasks
-          // In the future we can enhance the markdown service to provide line numbers
-          if (lineContent.match(/^\s*[-*] \[\s*[xX]\s*\]/)) {
+        // Create decorations for checked tasks
+        for (const task of tasks) {
+          if (task.checked) {
+            // Get the line content to determine the full line range for decoration
+            const lineContent = model.getLineContent(task.line);
+
             decorations.push({
               range: new monaco.Range(
-                lineNumber,
+                task.line,
                 1, // Start from beginning of line
-                lineNumber,
+                task.line,
                 lineContent.length + 1, // To the end of the line
               ),
               options: {
@@ -185,7 +173,6 @@ export const EditorApp = () => {
     const model = editor.getModel();
     if (model) {
       updateDecorations(model);
-      model.onDidChangeContent(() => updateDecorations(model));
     }
 
     // Add key binding for Cmd+S / Ctrl+S to save and create snapshot
@@ -227,6 +214,17 @@ export const EditorApp = () => {
     // Add key binding for Cmd+Shift+S / Ctrl+Shift+S to open custom snapshot dialog
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyS, () => {
       setSnapshotDialogOpen(true);
+    });
+
+    // Setup content change handler
+    editor.onDidChangeModelContent(() => {
+      const updatedText = editor.getValue();
+
+      updateDecorations(model);
+      setEditorContent(updatedText);
+      debouncedSetContent(updatedText);
+      debouncedCharCountUpdate(updatedText);
+      debouncedTaskCountUpdate(updatedText);
     });
   };
 
@@ -294,7 +292,6 @@ export const EditorApp = () => {
             </>
           )}
 
-          {/* Footer */}
           <Footer charCount={charCount} taskCount={taskCount} />
 
           {/* Command palette */}

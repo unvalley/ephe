@@ -73,10 +73,12 @@ const _Footer = ({ charCount, taskCount }: FooterProps) => {
               <span className="ml-0.5">tasks</span>
             </span>
           )}
-          {hasCharCount && (
+          {hasCharCount ? (
             <span className="whitespace-nowrap flex items-center gap-0.5 bg-gray-50 dark:bg-gray-700 px-2 py-0.5 rounded">
               {charCount.toLocaleString()} chars
             </span>
+          ) : (
+            <></>
           )}
           <a
             href="https://github.com/unvalley/ephe"
