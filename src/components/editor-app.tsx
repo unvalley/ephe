@@ -7,6 +7,7 @@ import { useTheme } from "../hooks/use-theme";
 import { useLocalStorage } from "../hooks/use-local-storage";
 import { useDebouncedCallback } from "use-debounce";
 import { useTabDetection } from "../hooks/use-tab-detection";
+import { usePaperMode } from "../hooks/use-paper-mode";
 import { TableOfContents, TableOfContentsButton } from "./table-of-contents";
 import { CommandMenu } from "./command-k";
 import { getRandomQuote } from "../utils/quotes";
@@ -44,6 +45,7 @@ export const EditorApp = () => {
   );
 
   const { theme } = useTheme();
+  const { paperMode, paperModeClass, cycleMode: cyclePaperMode } = usePaperMode();
   const isDarkMode = theme === "dark";
   const [loadingEditor, setLoadingEditor] = useState(true);
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
@@ -255,7 +257,7 @@ export const EditorApp = () => {
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents:
-    <div className="h-screen w-screen flex flex-col" onClick={handlePageClick}>
+    <div className={`h-screen w-screen flex flex-col ${paperModeClass}`} onClick={handlePageClick}>
       <div className="flex-1 pt-16 pb-8 overflow-hidden">
         <div className="mx-auto h-full max-w-5xl">
           <div className="flex justify-center h-full">
@@ -271,9 +273,7 @@ export const EditorApp = () => {
                 width="100%"
                 defaultLanguage="markdown"
                 defaultValue={localStorageContent}
-                options={{
-                  ...editorOptions,
-                }}
+                options={editorOptions}
                 onMount={handleEditorDidMount}
                 className="overflow-visible"
                 loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
@@ -301,6 +301,8 @@ export const EditorApp = () => {
             editorContent={editorContent}
             editorRef={editorRef}
             markdownFormatterRef={formatterRef}
+            paperMode={paperMode}
+            cyclePaperMode={cyclePaperMode}
           />
 
           {snapshotDialogOpen && (

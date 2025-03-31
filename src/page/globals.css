@@ -206,3 +206,33 @@ span.task-checkbox {
     padding-top: 2rem;
   }
 }
+
+/* Paper Mode: Graph Paper (Light Mode) */
+.bg-graph-paper {
+    background-image: linear-gradient(rgba(210, 210, 210, 0.3) 1px, transparent 1px), linear-gradient(to right, rgba(210, 210, 210, 0.3) 1px, transparent 1px);
+    background-size: 18px 18px;
+    background-color: #fff;
+    background-position: -14px 14px;
+}
+
+/* Paper Mode: Graph Paper (Dark Mode) */
+.dark .bg-graph-paper {
+    background-image: linear-gradient(rgba(80, 80, 80, 0.3) 1px, transparent 1px), linear-gradient(to right, rgba(80, 80, 80, 0.3) 1px, transparent 1px);
+    background-size: 18px 18px;
+    background-color: #121212;
+    background-position: -14px 14px;
+}
+
+/* Paper Mode: Dots (Light Mode) */
+.bg-dots-paper {
+    background-image: radial-gradient(rgba(210, 210, 210, 0.5) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-color: #fff;
+}
+
+/* Paper Mode: Dots (Dark Mode) */
+.dark .bg-dots-paper {
+    background-image: radial-gradient(rgba(80, 80, 80, 0.5) 1px, transparent 1px);
+    background-size: 16px 16px;
+    background-color: #121212;
+}

@@ -61,6 +61,7 @@ export const editorOptions: EditorProps["options"] = {
   wrappingIndent: "same",
   lineDecorationsWidth: 0,
   lineNumbersMinChars: 0,
+  lineHeight: 24,
   glyphMargin: false,
   folding: false,
   renderLineHighlight: "none",
@@ -266,6 +267,8 @@ export const handleTaskCheckboxToggle = (
   }
 };
 
+const TRANSPARENT_THEME = "#00000000";
+
 export const EPHE_LIGHT_THEME = {
   name: "ephe-light",
   theme: {
@@ -283,7 +286,7 @@ export const EPHE_LIGHT_THEME = {
       { token: "operator", foreground: "#6d5e96" },
     ],
     colors: {
-      "editor.background": "#ffffff",
+      "editor.background": TRANSPARENT_THEME,
       "editor.foreground": "#3a4550",
     },
   } as monaco.editor.IStandaloneThemeData,
@@ -306,7 +309,7 @@ export const EPHE_DARK_THEME = {
       { token: "operator", foreground: "#a99ac6" },
     ],
     colors: {
-      "editor.background": "#121212",
+      "editor.background": TRANSPARENT_THEME,
       "editor.foreground": "#d6d9dd",
     },
   } as monaco.editor.IStandaloneThemeData,

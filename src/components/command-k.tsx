@@ -8,6 +8,7 @@ import type * as monaco from "monaco-editor";
 import type { MarkdownFormatter } from "../features/markdown/markdown-formatter";
 import { showToast } from "./toast";
 import { fetchGitHubIssuesTaskList } from "../features/github/github-api";
+import type { PaperMode } from "../hooks/use-paper-mode";
 
 type CommandMenuProps = {
   open: boolean;
@@ -16,6 +17,8 @@ type CommandMenuProps = {
   editorContent: string;
   editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
   markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
+  paperMode?: PaperMode;
+  cyclePaperMode?: () => PaperMode;
 };
 
 export const CommandMenu = ({
@@ -25,6 +28,8 @@ export const CommandMenu = ({
   editorContent,
   editorRef,
   markdownFormatterRef,
+  paperMode = "none",
+  cyclePaperMode,
 }: CommandMenuProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toggleTheme, toggleTargetTheme } = useTheme();
@@ -191,6 +196,18 @@ export const CommandMenu = ({
           >
             Switch to {toggleTargetTheme} mode
           </Command.Item>
+
+          {cyclePaperMode && (
+            <Command.Item
+              className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+              onSelect={() => {
+                cyclePaperMode();
+                onClose?.();
+              }}
+            >
+              Cycle paper mode {paperMode !== "none" ? `(current: ${paperMode})` : ""}
+            </Command.Item>
+          )}
 
           <Command.Item
             className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
