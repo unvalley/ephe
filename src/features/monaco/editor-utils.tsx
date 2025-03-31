@@ -267,8 +267,6 @@ export const handleTaskCheckboxToggle = (
   }
 };
 
-const TRANSPARENT_THEME = "#00000000";
-
 export const EPHE_LIGHT_THEME = {
   name: "ephe-light",
   theme: {
@@ -286,7 +284,7 @@ export const EPHE_LIGHT_THEME = {
       { token: "operator", foreground: "#6d5e96" },
     ],
     colors: {
-      "editor.background": TRANSPARENT_THEME,
+      "editor.background": "#00000000",
       "editor.foreground": "#3a4550",
     },
   } as monaco.editor.IStandaloneThemeData,
@@ -309,7 +307,7 @@ export const EPHE_DARK_THEME = {
       { token: "operator", foreground: "#a99ac6" },
     ],
     colors: {
-      "editor.background": TRANSPARENT_THEME,
+      "editor.background": "#00000000",
       "editor.foreground": "#d6d9dd",
     },
   } as monaco.editor.IStandaloneThemeData,

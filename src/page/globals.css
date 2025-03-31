@@ -40,7 +40,7 @@ html {
 /* Dark mode transitions */
 html.dark {
   color-scheme: dark;
-  background-color: #121212;
+  background-color: #0d1117;
 }
 
 /* Markdown syntax highlighting */
@@ -219,7 +219,7 @@ span.task-checkbox {
 .dark .bg-graph-paper {
     background-image: linear-gradient(rgba(80, 80, 80, 0.3) 1px, transparent 1px), linear-gradient(to right, rgba(80, 80, 80, 0.3) 1px, transparent 1px);
     background-size: 18px 18px;
-    background-color: #121212;
+    background-color: #0d1117;
     background-position: -14px 14px;
 }
 
@@ -234,5 +234,5 @@ span.task-checkbox {
 .dark .bg-dots-paper {
     background-image: radial-gradient(rgba(80, 80, 80, 0.5) 1px, transparent 1px);
     background-size: 16px 16px;
-    background-color: #121212;
+    background-color: #0d1117;
 }

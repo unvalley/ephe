@@ -80,14 +80,14 @@ const _Footer = ({ charCount, taskCount }: FooterProps) => {
           ) : (
             <></>
           )}
-          <a
+          {/* <a
             href="https://github.com/unvalley/ephe"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-gray-900 dark:hover:text-gray-100 flex items-center"
           >
             GitHub
-          </a>
+          </a> */}
           <div className="flex items-center">
             <Avatar
               size={12}
