@@ -17,12 +17,15 @@
     "@dprint/markdown": "^0.18.0",
     "@monaco-editor/react": "^4.6.0",
     "@tailwindcss/vite": "^4.0.14",
+    "@textlint/ast-node-types": "^14.5.0",
+    "@textlint/markdown-to-ast": "^14.5.0",
     "boring-avatars": "^1.11.2",
     "cmdk": "^1.1.1",
     "monaco-editor": "^0.47.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^6.22.0"
+    "react-router-dom": "^6.22.0",
+    "use-debounce": "^10.0.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.14",

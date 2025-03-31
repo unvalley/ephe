@@ -6,9 +6,9 @@ import { TextDocument, type TextEditor } from "./vscode-monaco";
 import { Range, SnippetString, Position } from "./extHostTypes";
 
 import { slugify } from "./util";
-import { buildToc } from "./toc";
 
 import * as latex from "./latex";
+import { buildToc } from "./toc";
 
 let completionActivated = false;
 

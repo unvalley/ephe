@@ -266,7 +266,7 @@ export const handleTaskCheckboxToggle = (
   }
 };
 
-export const epheLight = {
+export const EPHE_LIGHT_THEME = {
   name: "ephe-light",
   theme: {
     base: "vs",
@@ -289,7 +289,7 @@ export const epheLight = {
   } as monaco.editor.IStandaloneThemeData,
 } as const;
 
-export const epheDark = {
+export const EPHE_DARK_THEME = {
   name: "ephe-dark",
   theme: {
     base: "vs-dark",

@@ -1,42 +1,40 @@
 "use client";
 
-import { useRef, useState, useCallback, Suspense, useEffect } from "react";
-import { useTheme } from "../hooks/use-theme";
 import type * as monaco from "monaco-editor";
-import { useLocalStorage } from "../hooks/use-local-storage";
-import { useDebouncedCallback } from "../hooks/use-debounce";
-import { useTabDetection } from "../hooks/use-tab-detection";
-import { EDITOR_CONTENT_KEY, getRandomQuote } from "../features/monaco";
-import { isTaskLine, isClosedTaskLine } from "../features/monaco/task-list-utils";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { Editor } from "@monaco-editor/react";
-import { CommandMenu } from "./command-k";
+import { useTheme } from "../hooks/use-theme";
+import { useLocalStorage } from "../hooks/use-local-storage";
+import { useDebouncedCallback } from "use-debounce";
+import { useTabDetection } from "../hooks/use-tab-detection";
 import { TableOfContents, TableOfContentsButton } from "./table-of-contents";
-import { AlreadyOpenDialog } from "./already-open-dialog";
-import {
-  editorOptions,
-  handleKeyDown,
-  handleTaskCheckboxToggle,
-  updatePlaceholder,
-  applyTaskCheckboxDecorations,
-  epheLight,
-  epheDark,
-} from "../features/monaco/editor-utils";
-import { MonacoMarkdownExtension } from "../monaco-markdown";
-import { Footer } from "./footer";
-import { ToastContainer, showToast } from "./toast";
+import { CommandMenu } from "./command-k";
+import { getRandomQuote } from "../utils/quotes";
+import { EDITOR_CONTENT_KEY } from "../utils/constants";
 import { SnapshotDialog } from "./snapshot-dialog";
+import {
+  handleKeyDown,
+  applyTaskCheckboxDecorations,
+  editorOptions,
+  EPHE_DARK_THEME,
+  EPHE_LIGHT_THEME,
+} from "../features/monaco/editor-utils";
+import { Footer } from "./footer";
+import { Loading } from "./loading";
+import { handleTaskCheckboxToggle } from "../features/monaco/editor-utils";
 import { DprintMarkdownFormatter } from "../features/markdown/dprint-markdown-formatter";
 import type { MarkdownFormatter } from "../features/markdown/markdown-formatter";
-import { Loading } from "./loading";
-
-const markdownExtension = new MonacoMarkdownExtension();
+import { MonacoMarkdownExtension } from "../monaco-markdown";
+import { markdownService, type TaskListCount } from "../features/markdown/ast/markdown-service";
+import { AlreadyOpenDialog } from "./already-open-dialog";
+import { ToastContainer, showToast } from "./toast";
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const formatterRef = useRef<MarkdownFormatter | null>(null);
 
   const [charCount, setCharCount] = useState<number>(0);
-  const [taskCount, setTaskCount] = useState<{ open: number; closed: number }>({ open: 0, closed: 0 });
+  const [taskCount, setTaskCount] = useState<TaskListCount>({ open: 0, closed: 0 });
 
   const [localStorageContent, setLocalStorageContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, "");
   const [placeholder, _] = useState<string>(getRandomQuote());
@@ -67,7 +65,8 @@ export const EditorApp = () => {
   );
 
   const debouncedTaskCountUpdate = useDebouncedCallback((content: string) => {
-    countTasks(content);
+    const { taskCount } = markdownService.processMarkdown(content);
+    setTaskCount(taskCount);
   }, 100);
 
   // Initialize markdown formatter
@@ -94,42 +93,100 @@ export const EditorApp = () => {
     }
   };
 
-  // Task counter function
-  const countTasks = (content: string) => {
-    if (!content) {
-      setTaskCount({ open: 0, closed: 0 });
-      return;
-    }
-
-    const lines = content.split("\n");
-    let openCount = 0;
-    let closedCount = 0;
-
-    for (const line of lines) {
-      if (isTaskLine(line)) {
-        if (isClosedTaskLine(line)) {
-          closedCount++;
-        } else {
-          openCount++;
-        }
-      }
-    }
-
-    setTaskCount({ open: openCount, closed: closedCount });
-  };
-
   // Handle editor mounting
   const handleEditorDidMount = (
     editor: monaco.editor.IStandaloneCodeEditor,
     monaco: typeof import("monaco-editor"),
   ) => {
-    if (editorRef) {
-      editorRef.current = editor;
-    }
+    // Set editor reference
+    editorRef.current = editor;
     setLoadingEditor(false);
 
-    // Initialize markdown extension
+    // Define editor themes
+    monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
+    monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
+
+    monaco.editor.setTheme(isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name);
+
+    const content = editor.getValue();
+
+    if (content) {
+      const { taskCount } = markdownService.processMarkdown(content);
+      setCharCount(content.length);
+      setTaskCount(taskCount);
+    }
+
+    // Setup content change handler
+    editor.onDidChangeModelContent(() => {
+      const updatedText = editor.getValue();
+
+      setEditorContent(updatedText);
+      debouncedSetContent(updatedText);
+      debouncedCharCountUpdate(updatedText);
+      debouncedTaskCountUpdate(updatedText);
+    });
+
+    // Add Editor extensions
+    const markdownExtension = new MonacoMarkdownExtension();
     markdownExtension.activate(editor);
+
+    // Add decorations for checked tasks
+    const updateDecorations = (model: monaco.editor.ITextModel | null) => {
+      if (!model) return;
+      try {
+        const oldDecorations = model.getAllDecorations() || [];
+        const decorations: monaco.editor.IModelDeltaDecoration[] = [];
+
+        // Get content and process with markdown service to identify task locations
+        const content = model.getValue();
+        const lines = content.split("\n");
+
+        // Process each line to find completed tasks
+        for (let lineNumber = 1; lineNumber <= lines.length; lineNumber++) {
+          const lineContent = lines[lineNumber - 1];
+
+          // Simple regex check for completed tasks
+          // In the future we can enhance the markdown service to provide line numbers
+          if (lineContent.match(/^\s*[-*] \[\s*[xX]\s*\]/)) {
+            decorations.push({
+              range: new monaco.Range(
+                lineNumber,
+                1, // Start from beginning of line
+                lineNumber,
+                lineContent.length + 1, // To the end of the line
+              ),
+              options: {
+                inlineClassName: "task-completed-line",
+                isWholeLine: true,
+                stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore,
+              },
+            });
+          }
+        }
+
+        const oldIds = oldDecorations
+          .filter((d) => d.options.inlineClassName === "task-completed-line")
+          .map((d) => d.id);
+
+        editor.deltaDecorations(oldIds, decorations);
+
+        // Add call to applyTaskCheckboxDecorations to handle checkbox hover styles
+        applyTaskCheckboxDecorations(editor, model);
+      } catch (error) {
+        console.error("Error updating decorations:", error);
+      }
+    };
+
+    // Add event handlers
+    editor.onKeyDown((event) => handleKeyDown(event, editor, editor.getModel(), editor.getPosition()));
+    editor.onMouseDown((event) => handleTaskCheckboxToggle(event, editor, editor.getModel()));
+
+    // Update decorations initially and on content change
+    const model = editor.getModel();
+    if (model) {
+      updateDecorations(model);
+      model.onDidChangeContent(() => updateDecorations(model));
+    }
 
     // Add key binding for Cmd+S / Ctrl+S to save and create snapshot
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, async () => {
@@ -171,107 +228,24 @@ export const EditorApp = () => {
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyS, () => {
       setSnapshotDialogOpen(true);
     });
-
-    // Add decorations for checked tasks
-    const updateDecorations = (model: monaco.editor.ITextModel | null) => {
-      if (!model) return;
-      try {
-        const oldDecorations = model.getAllDecorations() || [];
-        const decorations: monaco.editor.IModelDeltaDecoration[] = [];
-
-        for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
-          const lineContent = model.getLineContent(lineNumber);
-
-          // Only process task list lines
-          if (isTaskLine(lineContent)) {
-            // Add decoration for completed tasks
-            if (isClosedTaskLine(lineContent)) {
-              decorations.push({
-                range: new monaco.Range(
-                  lineNumber,
-                  1, // Start from beginning of line
-                  lineNumber,
-                  lineContent.length + 1, // To the end of the line
-                ),
-                options: {
-                  inlineClassName: "task-completed-line",
-                  isWholeLine: true,
-                  stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore,
-                },
-              });
-            }
-          }
-        }
-
-        const oldIds = oldDecorations
-          .filter((d) => d.options.inlineClassName === "task-completed-line")
-          .map((d) => d.id);
-
-        editor.deltaDecorations(oldIds, decorations);
-
-        // Add call to createTaskCheckboxDecorations to handle checkbox hover styles
-        applyTaskCheckboxDecorations(editor, model);
-      } catch (error) {
-        console.error("Error updating decorations:", error);
-      }
-    };
-
-    // Add event handlers
-    editor.onKeyDown((event) => handleKeyDown(event, editor, editor.getModel(), editor.getPosition()));
-    editor.onMouseDown((event) => handleTaskCheckboxToggle(event, editor, editor.getModel()));
-
-    // Keyboard commands
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyE, () => {
-      // Prevent Monaco from handling the search
-      return true; // Return true to stop Monaco from handling this key
-    });
-
-    // Update editor content state when content changes
-    editor.onDidChangeModelContent(() => {
-      const value = editor.getValue();
-      const model = editor.getModel();
-      if (!model) return;
-
-      // TODO: Instead of processing line by line, use a markdown parser library
-      // to perform operations more efficiently with a single parse
-
-      updatePlaceholder(value);
-      updateDecorations(model);
-      debouncedTaskCountUpdate(value);
-
-      debouncedCharCountUpdate(value);
-      debouncedSetContent(value);
-      setEditorContent(value);
-    });
-
-    // Initialize decorations on mount
-    applyTaskCheckboxDecorations(editor, editor.getModel());
-
-    // Initial setup
-    updatePlaceholder(editor.getValue());
-    updateDecorations(editor.getModel());
-
-    // Initial character count and task count - direct calculation for initial load
-    const initialContent = editor.getValue();
-    setCharCount(initialContent.length);
-    countTasks(initialContent);
-
-    // Focus editor on mount
-    editor.focus();
-
-    monaco.editor.defineTheme(epheLight.name, epheLight.theme);
-    monaco.editor.defineTheme(epheDark.name, epheDark.theme);
-    monaco.editor.setTheme(isDarkMode ? epheDark.name : epheLight.name);
   };
 
-  // Determine if placeholder should be visible initially
-  const shouldShowPlaceholder = !loadingEditor && (!localStorageContent || !localStorageContent.trim());
+  const shouldShowPlaceholder = editorContent.length === 0 && !loadingEditor;
 
   // Handle TOC item click
   const handleTocItemClick = useCallback((line: number) => {
+    if (!editorRef.current) return;
+
+    // Position to the start of the clicked heading line
+    editorRef.current.revealLineInCenter(line + 1);
+    editorRef.current.setPosition({ lineNumber: line + 1, column: 1 });
+    editorRef.current.focus();
+  }, []);
+
+  // Handle command menu close
+  const handleCloseCommandMenu = useCallback(() => {
+    setCommandMenuOpen(false);
     if (editorRef.current) {
-      editorRef.current.revealLineInCenter(line + 1);
-      editorRef.current.setPosition({ lineNumber: line + 1, column: 1 });
       editorRef.current.focus();
     }
   }, []);
@@ -305,7 +279,7 @@ export const EditorApp = () => {
                 onMount={handleEditorDidMount}
                 className="overflow-visible"
                 loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
-                theme={isDarkMode ? "ephe-dark" : "ephe-light"}
+                theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
               />
             </div>
           </div>
@@ -320,32 +294,33 @@ export const EditorApp = () => {
             </>
           )}
 
+          {/* Footer */}
+          <Footer charCount={charCount} taskCount={taskCount} />
+
+          {/* Command palette */}
           <CommandMenu
-            editorContent={editorContent}
             open={commandMenuOpen}
-            onClose={() => setCommandMenuOpen(false)}
-            onOpen={() => setCommandMenuOpen(true)}
+            onClose={handleCloseCommandMenu}
+            editorContent={editorContent}
             editorRef={editorRef}
             markdownFormatterRef={formatterRef}
           />
+
+          {snapshotDialogOpen && (
+            <Suspense fallback={<Loading className="h-screen w-screen flex items-center justify-center" />}>
+              <SnapshotDialog
+                isOpen={snapshotDialogOpen}
+                onClose={() => setSnapshotDialogOpen(false)}
+                editorContent={editorContent}
+              />
+            </Suspense>
+          )}
+
+          <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />
+
+          <ToastContainer />
         </div>
       </div>
-
-      <Footer charCount={charCount} taskCount={taskCount} />
-
-      {snapshotDialogOpen && (
-        <Suspense fallback={<Loading className="h-screen w-screen flex items-center justify-center" />}>
-          <SnapshotDialog
-            isOpen={snapshotDialogOpen}
-            onClose={() => setSnapshotDialogOpen(false)}
-            editorContent={editorContent}
-          />
-        </Suspense>
-      )}
-
-      <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />
-
-      <ToastContainer />
     </div>
   );
 };
