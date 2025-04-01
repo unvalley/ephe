@@ -3,12 +3,9 @@
 import { useState, useEffect } from "react";
 
 // Constants for storage keys and settings
-const STORAGE = {
-  LOCK_KEY: "ephe-tab-lock",
-  ALERT_DISMISSED_KEY: "ephe-alert-dismissed",
-  CHECK_INTERVAL: 2000, // Check every 2 seconds
-  MAX_STALE_TIME: 5000, // 5 seconds - consider tab closed after this time
-};
+const STORAGE_KEY = "ephe-tab-data";
+const CHECK_INTERVAL = 2000; // Check every 2 seconds
+const MAX_STALE_TIME = 10000; // 10 seconds - consider tab closed after this time
 
 // Return type for useTabDetection hook
 export type TabDetectionResult = {
@@ -17,115 +14,92 @@ export type TabDetectionResult = {
 };
 
 /**
- * Check if the browser supports sessionStorage and required features
- */
-const isSupported = (): boolean => {
-  try {
-    // Check sessionStorage support
-    if (typeof sessionStorage === "undefined") {
-      return false;
-    }
-    
-    // Test if we can actually use it (might be disabled in some contexts)
-    const testKey = `__test_${Date.now()}`;
-    sessionStorage.setItem(testKey, "test");
-    sessionStorage.removeItem(testKey);
-    
-    return true;
-  } catch (e) {
-    return false;
-  }
-};
-
-/**
  * Custom hook to detect if the application is already open in another tab
- * and manage the alert state
- * @returns {TabDetectionResult} Object containing state and functions for tab detection
  */
-export function useTabDetection(): TabDetectionResult {
+export const useTabDetection = (): TabDetectionResult => {
   const [isOtherTabOpen, setIsOtherTabOpen] = useState<boolean>(false);
   const [alertDismissed, setAlertDismissed] = useState<boolean>(false);
-  
-  // Get alert visibility based on other tabs and dismissal state
-  const shouldShowAlert = isOtherTabOpen && !alertDismissed;
 
   useEffect(() => {
-    // Skip detection if not supported in this browser
-    if (!isSupported()) {
+    // Check browser compatibility
+    if (typeof localStorage === "undefined") {
       return undefined;
     }
-    
-    const tabId = Math.random().toString(36).substring(2, 15);
-    
-    // Try to load alert dismissed state from sessionStorage
-    try {
-      const dismissedState = sessionStorage.getItem(STORAGE.ALERT_DISMISSED_KEY);
-      if (dismissedState === "true") {
-        setAlertDismissed(true);
+
+    // Generate a unique ID for this tab instance that persists through reloads
+    const getTabId = (): string => {
+      const KEY = "ephe-tab-id";
+      let id = localStorage.getItem(KEY);
+      if (!id) {
+        id = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        localStorage.setItem(KEY, id);
       }
-    } catch (e) {
-      console.error("Error loading alert dismissed state:", e);
-    }
+      return id;
+    };
+
+    const tabId = getTabId();
     
-    // Simple function to register this tab and check for others
+    // Check if alert was previously dismissed
+    const wasDismissed = localStorage.getItem(`${STORAGE_KEY}-dismissed`) === "true";
+    if (wasDismissed) {
+      setAlertDismissed(true);
+    }
+
+    // Track tabs and their last activity timestamp
     const checkForOtherTabs = (): void => {
       try {
-        // Get current tabs registry or initialize empty one
-        const tabsRegistryStr = sessionStorage.getItem(STORAGE.LOCK_KEY);
-        let tabsRegistry: { [key: string]: number } = {};
-        
-        if (tabsRegistryStr) {
-          try {
-            tabsRegistry = JSON.parse(tabsRegistryStr);
-          } catch (e) {
-            // If corrupt, start with a clean registry
-            console.error("Error parsing tab registry, resetting:", e);
-            tabsRegistry = {};
-          }
-        }
+        // Get or initialize tab registry
+        const storedData = localStorage.getItem(STORAGE_KEY);
+        const tabsRegistry: Record<string, number> = storedData 
+          ? JSON.parse(storedData) 
+          : {};
         
         // Clean up stale tabs
         const now = Date.now();
         for (const id of Object.keys(tabsRegistry)) {
-          if (now - tabsRegistry[id] > STORAGE.MAX_STALE_TIME) {
+          if (now - tabsRegistry[id] > MAX_STALE_TIME) {
             delete tabsRegistry[id];
           }
         }
         
-        // Add this tab with current timestamp
+        // Update this tab's timestamp
         tabsRegistry[tabId] = now;
         
-        // Save registry back
-        sessionStorage.setItem(STORAGE.LOCK_KEY, JSON.stringify(tabsRegistry));
+        // Save updated registry
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tabsRegistry));
         
-        // If more than one active tab, set other tab open flag
+        // Check if other tabs are open
         setIsOtherTabOpen(Object.keys(tabsRegistry).length > 1);
       } catch (error) {
-        console.error("Error checking for other tabs:", error);
+        // If any error occurs, default to not showing alert
+        setIsOtherTabOpen(false);
       }
     };
     
-    // Initial check
-    checkForOtherTabs();
-    
-    // Set up interval to check regularly
-    const intervalId = window.setInterval(checkForOtherTabs, STORAGE.CHECK_INTERVAL);
-    
-    // Clean up on unmount
-    return () => {
-      window.clearInterval(intervalId);
-      
-      // Remove this tab from the registry
+    // Handle tab cleanup
+    const cleanupTab = () => {
       try {
-        const tabsRegistryStr = sessionStorage.getItem(STORAGE.LOCK_KEY);
-        if (tabsRegistryStr) {
-          const tabsRegistry = JSON.parse(tabsRegistryStr);
+        const storedData = localStorage.getItem(STORAGE_KEY);
+        if (storedData) {
+          const tabsRegistry = JSON.parse(storedData);
           delete tabsRegistry[tabId];
-          sessionStorage.setItem(STORAGE.LOCK_KEY, JSON.stringify(tabsRegistry));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(tabsRegistry));
         }
       } catch (error) {
-        console.error("Error removing tab from registry:", error);
+        // Ignore cleanup errors
       }
+    };
+    
+    // Initial check and setup interval
+    checkForOtherTabs();
+    window.addEventListener("beforeunload", cleanupTab);
+    const intervalId = window.setInterval(checkForOtherTabs, CHECK_INTERVAL);
+    
+    // Cleanup on unmount
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("beforeunload", cleanupTab);
+      cleanupTab();
     };
   }, []);
   
@@ -133,14 +107,14 @@ export function useTabDetection(): TabDetectionResult {
   const dismissAlert = () => {
     setAlertDismissed(true);
     try {
-      sessionStorage.setItem(STORAGE.ALERT_DISMISSED_KEY, "true");
-    } catch (e) {
-      console.error("Error saving alert dismissed state:", e);
+      localStorage.setItem(`${STORAGE_KEY}-dismissed`, "true");
+    } catch {
+      // Ignore storage errors
     }
   };
   
   return {
-    shouldShowAlert,
+    shouldShowAlert: isOtherTabOpen && !alertDismissed,
     dismissAlert
   };
 } 
