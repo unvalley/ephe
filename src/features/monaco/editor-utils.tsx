@@ -3,7 +3,10 @@ import type { EditorProps } from "@monaco-editor/react";
 import { isTaskLine, isClosedTaskLine } from "./task-list-utils";
 import { generateTaskIdentifier } from "../tasks/task-storage";
 import { findTaskSection } from "./task-section-utils";
-import { saveCompletedTask, deleteCompletedTaskByIdentifier } from "../tasks/task-storage";
+import {
+  saveCompletedTask,
+  deleteCompletedTaskByIdentifier,
+} from "../tasks/task-storage";
 
 // Helper functions for placeholder visibility
 export const showPlaceholder = (element: Element) => {
@@ -19,7 +22,7 @@ export const hidePlaceholder = (element: Element) => {
 // Add a new function to create decorations for task checkboxes
 export const applyTaskCheckboxDecorations = (
   editor: monaco.editor.IStandaloneCodeEditor,
-  model: monaco.editor.ITextModel | null,
+  model: monaco.editor.ITextModel | null
 ): void => {
   if (!model) return;
 
@@ -105,6 +108,13 @@ export const editorOptions: EditorProps["options"] = {
     scrollWithEditor: false,
   },
   stickyTabStops: false,
+  cursorBlinking: "smooth",
+  cursorStyle: "line", // line-thin?
+  unicodeHighlight: {
+    nonBasicASCII: false,
+    ambiguousCharacters: false,
+  },
+  occurrencesHighlight: "off",
 };
 
 // Set up placeholder when editor content is empty
@@ -130,7 +140,7 @@ export const handleKeyDown = (
   e: monaco.IKeyboardEvent,
   editor: monaco.editor.IStandaloneCodeEditor,
   model: monaco.editor.ITextModel | null,
-  position: monaco.Position | null,
+  position: monaco.Position | null
 ): void => {
   if (!model) return;
 
@@ -144,7 +154,7 @@ export const handleTaskListAutoComplete = (
   e: monaco.IKeyboardEvent,
   editor: monaco.editor.IStandaloneCodeEditor,
   model: monaco.editor.ITextModel | null,
-  position: monaco.Position | null,
+  position: monaco.Position | null
 ): boolean => {
   if (!model || !position) return false;
   if (e.keyCode !== monaco.KeyCode.BracketLeft) return false;
@@ -193,7 +203,7 @@ export const handleTaskListAutoComplete = (
 export const handleTaskCheckboxToggle = (
   e: monaco.editor.IEditorMouseEvent,
   editor: monaco.editor.IStandaloneCodeEditor,
-  model: monaco.editor.ITextModel | null,
+  model: monaco.editor.ITextModel | null
 ): boolean | undefined => {
   try {
     if (e.target.type !== monaco.editor.MouseTargetType.CONTENT_TEXT) {
@@ -227,7 +237,9 @@ export const handleTaskCheckboxToggle = (
       // - [ ] = 5 characters
       const taskContent = lineContent.substring(checkboxStartIndex + 5).trim();
 
-      const section = model ? findTaskSection(model, position.lineNumber) : undefined;
+      const section = model
+        ? findTaskSection(model, position.lineNumber)
+        : undefined;
       const taskIdentifier = generateTaskIdentifier(taskContent);
 
       if (newState === "x") {

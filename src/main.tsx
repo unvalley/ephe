@@ -17,11 +17,16 @@ if (!root) {
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <ThemeProvider>
-      <BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <Routes>
           <Route path="/" element={<EditorPage />} />
-          <Route path="/landing" element={<LandingPage />} />
-          <Route path="/history" element={<HistoryPage />} />
+          <Route path="landing" element={<LandingPage />} />
+          <Route path="history" element={<HistoryPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <ToastContainer />
