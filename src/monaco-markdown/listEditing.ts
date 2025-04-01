@@ -170,7 +170,7 @@ function onTabKey(editor: TextEditor, modifiers?: string) {
     }
 
     // Get task indentation info
-    const { leadingSpaces, indentLevel } = getTaskIndentation(lineText);
+    const { indentLevel } = getTaskIndentation(lineText);
     
     // Check parent task indentation
     const parentInfo = findParentTaskIndentation(editor, currentLine, indentLevel);
