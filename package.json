@@ -21,6 +21,7 @@
     "@textlint/markdown-to-ast": "^14.5.0",
     "boring-avatars": "^1.11.2",
     "cmdk": "^1.1.1",
+    "dexie": "^4.0.11",
     "monaco-editor": "^0.47.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
