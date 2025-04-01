@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-export type PaperMode = "none" | "graph" | "dots";
+export type PaperMode = "none" | "graph" | "dots" | "texture";
 
 const PAPER_MODE_KEY = "ephe-paper-mode";
 
@@ -8,6 +8,7 @@ export const PAPER_MODE_CLASSES: Record<PaperMode, string> = {
   none: "",
   graph: "bg-graph-paper",
   dots: "bg-dots-paper",
+  texture: "bg-paper-texture",
 };
 
 const createPaperModeStore = () => {
@@ -35,7 +36,7 @@ const createPaperModeStore = () => {
   };
 
   const cycleMode = () => {
-    const modes: PaperMode[] = ["none", "graph", "dots"];
+    const modes: PaperMode[] = ["none", "graph", "dots", "texture"];
     const currentIndex = modes.indexOf(currentMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     setMode(modes[nextIndex]);
@@ -86,5 +87,6 @@ export const usePaperMode = () => {
     cycleMode: paperModeStore.cycleMode,
     toggleGraphMode: () => paperModeStore.toggleMode("graph"),
     toggleDotsMode: () => paperModeStore.toggleMode("dots"),
+    toggleTextureMode: () => paperModeStore.toggleMode("texture"),
   };
 };

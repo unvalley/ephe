@@ -109,7 +109,7 @@ export const editorOptions: EditorProps["options"] = {
   },
   stickyTabStops: false,
   cursorBlinking: "smooth",
-  cursorStyle: "line", // line-thin?
+  cursorStyle: "line",
   unicodeHighlight: {
     nonBasicASCII: false,
     ambiguousCharacters: false,

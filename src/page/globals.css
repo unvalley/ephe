@@ -2,8 +2,8 @@
 
 /* CSS variables for theming */
 :root {
-  --focus-border-light: #ffffff;
-  --focus-border-dark: #181818;
+  --focus-border-light: #00000000;
+  --focus-border-dark: #00000000;
 }
 
 .monaco-editor .overflow-guard {
@@ -235,4 +235,23 @@ span.task-checkbox {
     background-image: radial-gradient(rgba(80, 80, 80, 0.5) 1px, transparent 1px);
     background-size: 16px 16px;
     background-color: #0d1117;
+}
+
+/* Paper Mode: Texture (Light Mode) */
+.bg-paper-texture {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.75)), url('/paper-texture.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #fff;
+}
+
+/* Paper Mode: Texture (Dark Mode) */
+.dark .bg-paper-texture {
+    background-image: linear-gradient(rgba(13, 17, 23, 0.7), rgba(13, 17, 23, 0.7)), url('/paper-texture.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #0d1117;
+    filter: brightness(0.8) contrast(1.05);
 }
