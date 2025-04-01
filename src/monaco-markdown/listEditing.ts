@@ -156,23 +156,67 @@ function onEnterKey(editor: TextEditor, modifiers?: string) {
 function onTabKey(editor: TextEditor, modifiers?: string) {
   const cursorPos = editor.selection.start;
   const lineText = editor.document.lineAt(cursorPos.line).text;
+  const currentLine = cursorPos.line;
 
-  if (isInFencedCodeBlock(editor.document, cursorPos.line)) {
+  if (isInFencedCodeBlock(editor.document, currentLine)) {
     return asNormal(editor, "tab", modifiers);
   }
 
-  const match = /^\s*([-+*]|[0-9]+[.)]) +(\[[ x]\] +)?/.exec(lineText);
+  // Check if the line contains a task item
+  const taskMatch = /^(\s*)([-+*]|[0-9]+[.)]) +(\[[ x]\] +)?/.exec(lineText);
   if (
-    match &&
+    taskMatch &&
     (modifiers === "shift" ||
       !editor.selection.isEmpty ||
-      (editor.selection.isEmpty && cursorPos.character <= match[0].length))
+      (editor.selection.isEmpty && cursorPos.character <= taskMatch[0].length))
   ) {
     if (modifiers === "shift") {
       return outdent(editor).then(() => fixMarker(editor));
     }
+
+    // Calculate current indentation level (spaces before list marker)
+    const leadingSpaces = taskMatch[1].length;
+    const currentIndentLevel = Math.floor(leadingSpaces / 2);
+    
+    // Find previous line with task item to check parent
+    let prevLine = currentLine - 1;
+    let parentFound = false;
+    let parentIndentLevel = -1;
+    
+    while (prevLine >= 0) {
+      const prevLineText = editor.document.lineAt(prevLine).text;
+      const prevTaskMatch = /^(\s*)([-+*]|[0-9]+[.)]) +(\[[ x]\] +)?/.exec(prevLineText);
+      
+      if (prevTaskMatch) {
+        const prevLeadingSpaces = prevTaskMatch[1].length;
+        const prevIndentLevel = Math.floor(prevLeadingSpaces / 2);
+        
+        // If this is a potential parent (less or same indentation)
+        if (prevIndentLevel <= currentIndentLevel) {
+          parentFound = true;
+          parentIndentLevel = prevIndentLevel;
+          break;
+        }
+      }
+      
+      prevLine--;
+    }
+    
+    // Apply strict indentation rules:
+    // 1. If no parent, only allow indent if at level 0
+    // 2. If parent exists, only allow indent if at same level as parent
+    if (
+      (!parentFound && currentIndentLevel > 0) ||
+      (parentFound && currentIndentLevel > parentIndentLevel)
+    ) {
+      console.log("BLOCKED: Cannot indent task - already at maximum allowed level");
+      return Promise.resolve();
+    }
+
     return indent(editor).then(() => fixMarker(editor));
   }
+  
+  // Not a task list or cursor is not at the beginning, handle as normal
   return asNormal(editor, "tab", modifiers);
 }
 
