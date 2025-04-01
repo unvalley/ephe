@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 const STORAGE = {
   LOCK_KEY: "ephe-tab-lock",
   ALERT_DISMISSED_KEY: "ephe-alert-dismissed",
-  CHECK_INTERVAL: 2000, // Check every 2 seconds
+  CHECK_INTERVAL: 5000, // Check every 5 seconds
   MAX_STALE_TIME: 5000, // 5 seconds - consider tab closed after this time
 };
 
