@@ -164,7 +164,7 @@ export const CommandMenu = ({
       {open && (
         // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
         <div
-          className="fixed inset-0 bg-gray-300/50 dark:bg-gray-700/50 backdrop-blur-sm z-40"
+          className="fixed z-40 inset-0"
           onClick={(e) => {
             e.preventDefault();
             onClose?.();
