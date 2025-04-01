@@ -19,15 +19,6 @@ export type TaskWithLineNumber = {
 }
 
 /**
- * Task list hierarchy information
- */
-export type TaskHierarchy = {
-  line: number;
-  level: number;
-  parentLine?: number;
-}
-
-/**
  * Markdown service that handles processing markdown content
  * using @textlint/markdown-to-ast for parsing and custom rendering
  */
@@ -65,162 +56,85 @@ export class MarkdownAstService {
   
 
   /**
-   * Count tasks in the document
+   * Recursively traverses the AST to count all nested tasks
    */
-  public countTasks(node: TxtDocumentNode): TaskListCount {
-    const result: TaskListCount = {
-      closed: 0,
-      open: 0,
-    };
-    this.countTasksRecursively(node, result);
-    return result;
+  public countTasks(ast: TxtDocumentNode): TaskListCount {
+    const taskCount: TaskListCount = { open: 0, closed: 0 };
+    this.countTasksRecursively(ast, taskCount);
+    return taskCount;
   }
 
   /**
-   * Find checked tasks with their line numbers
+   * recursively traverse the AST to count all nested tasks
+   * @param node the current node
+   * @param taskCount the result of task count
    */
-  public findCheckedTasks(node: TxtDocumentNode): TaskWithLineNumber[] {
+  private countTasksRecursively(node: TxtNode, taskCount: TaskListCount): void {
+    // if the node is a ListItem node, check the checked attribute
+    if (node.type === "ListItem") {
+      const listItemNode = node as TxtListItemNode;
+      
+      // count only if the checked attribute is true or false (undefined or null means no checkbox)
+      if (listItemNode.checked === true) {
+        taskCount.closed++;
+      } else if (listItemNode.checked === false) {
+        taskCount.open++;
+      }
+    }
+    
+    // if the node is a parent node, recursively count the tasks
+    if (this.isParentNode(node)) {
+      for (const child of node.children) {
+        this.countTasksRecursively(child, taskCount);
+      }
+    }
+  }
+
+  /**
+   * Find all checked task items with their line numbers
+   * @param ast The markdown AST
+   * @returns Array of tasks with line numbers
+   */
+  public findCheckedTasksWithLineNumbers(ast: TxtDocumentNode): TaskWithLineNumber[] {
     const tasks: TaskWithLineNumber[] = [];
-    this.findCheckedTasksRecursively(node, tasks);
+    this.findTasksRecursively(ast, tasks);
     return tasks;
   }
 
   /**
-   * Find checked tasks recursively
-   */
-  private findCheckedTasksRecursively(
-    node: TxtNode,
-    tasks: TaskWithLineNumber[]
-  ): void {
-    if (node.type === "ListItem" && (node as TxtListItemNode).checked === true) {
-      tasks.push({
-        line: node.loc.start.line,
-        checked: true
-      });
-    }
-
-    if (this.isParentNode(node)) {
-      for (const child of node.children) {
-        this.findCheckedTasksRecursively(child, tasks);
-      }
-    }
-  }
-
-  private isParentNode(node: TxtNode): node is TxtParentNode {
-    return "children" in node;
-  }
-
-  /**
-   * Count tasks recursively
-   */
-  private countTasksRecursively(
-    node: TxtNode,
-    result: TaskListCount,
-  ): void {
-    if (node.type === "ListItem" && (node as TxtListItemNode).checked !== undefined) {
-      if ((node as TxtListItemNode).checked) {
-        result.closed++;
-      } else {
-        result.open++;
-      }
-    }
-
-    if (this.isParentNode(node)) {
-      for (const child of node.children) {
-        this.countTasksRecursively(child, result);
-      }
-    }
-  }
-
-  /**
-   * Get task hierarchy information
-   * @param ast The markdown AST
-   * @returns Array of task hierarchy information
-   */
-  public getTaskHierarchy(ast: TxtDocumentNode): TaskHierarchy[] {
-    const hierarchy: TaskHierarchy[] = [];
-    this.findTaskHierarchyRecursively(ast, hierarchy);
-    return hierarchy;
-  }
-
-  /**
-   * Check if a task can be indented at the given line
-   * @param ast The markdown AST
-   * @param line The line number to check
-   * @returns true if the task can be indented
-   */
-  public canIndentTask(ast: TxtDocumentNode, line: number): boolean {
-    const hierarchy = this.getTaskHierarchy(ast);
-    const task = hierarchy.find(t => t.line === line);
-    
-    if (!task) return false;
-    
-    // Find the parent task
-    const parent = task.parentLine ? hierarchy.find(t => t.line === task.parentLine) : undefined;
-    
-    // If no parent (top-level task), we can only indent once (level 0 -> level 1)
-    if (!parent) {
-      return task.level === 0;
-    }
-    
-    // STRICT RULE: A task can only be at the same indentation level as its parent
-    // This means it cannot be indented beyond its parent's level
-    return task.level === parent.level;
-  }
-
-  /**
-   * Recursively find task list hierarchy
+   * Recursively find all task items with their line numbers
    * @param node The current node
-   * @param hierarchy Array to collect hierarchy information
-   * @param currentLevel Current nesting level
-   * @param parentLine Line number of parent task
+   * @param tasks Array to collect found tasks
    */
-  private findTaskHierarchyRecursively(
-    node: TxtNode,
-    hierarchy: TaskHierarchy[],
-    currentLevel = 0,
-    parentLine?: number
-  ): void {
-    // Keep track of the current line if this is a task item
-    let thisIsTaskItem = false;
-    let currentTaskLine = -1;
-    
+  private findTasksRecursively(node: TxtNode, tasks: TaskWithLineNumber[]): void {
+    // If it's a ListItem node with checked attribute
     if (node.type === "ListItem") {
       const listItemNode = node as TxtListItemNode;
       
-      // Only process if it's a task item (has checked attribute)
-      if (listItemNode.checked !== undefined) {
-        thisIsTaskItem = true;
-        currentTaskLine = node.loc.start.line;
-        
-        // Get raw text to calculate indentation
-        const rawText = node.raw;
-        // Count leading spaces to determine indentation level
-        const leadingSpaces = rawText.match(/^\s*/)?.[0].length || 0;
-        const indentLevel = Math.floor(leadingSpaces / 2);
-        
-        hierarchy.push({
-          line: currentTaskLine,
-          level: indentLevel,
-          parentLine
+      // Only add if checked is explicitly true or false (not undefined or null)
+      if (listItemNode.checked === true || listItemNode.checked === false) {
+        tasks.push({
+          line: node.loc.start.line,
+          checked: listItemNode.checked
         });
       }
     }
     
-    // Process children if this node has any
+    // Recursively process child nodes if they exist
     if (this.isParentNode(node)) {
-      // If this node is a task item, it becomes the parent for its children
-      const newParentLine = thisIsTaskItem ? currentTaskLine : parentLine;
-      
       for (const child of node.children) {
-        this.findTaskHierarchyRecursively(
-          child,
-          hierarchy,
-          currentLevel + 1,
-          newParentLine
-        );
+        this.findTasksRecursively(child, tasks);
       }
     }
+  }
+
+  /**
+   * check if the node is a parent node (node with children)
+   * @param node the node to check
+   * @returns true if the node is a parent node
+   */
+  private isParentNode(node: TxtNode): node is TxtParentNode {
+    return 'children' in node && Array.isArray((node as TxtParentNode).children);
   }
 }
 
