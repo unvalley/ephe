@@ -26,10 +26,7 @@ import { handleTaskCheckboxToggle } from "../features/monaco/editor-utils";
 import { DprintMarkdownFormatter } from "../features/markdown/dprint-markdown-formatter";
 import type { MarkdownFormatter } from "../features/markdown/markdown-formatter";
 import { MonacoMarkdownExtension } from "../monaco-markdown";
-import {
-  markdownService,
-  type TaskListCount,
-} from "../features/markdown/ast/markdown-service";
+import { markdownService, type TaskListCount } from "../features/markdown/ast/markdown-service";
 import { AlreadyOpenDialog } from "./already-open-dialog";
 import { ToastContainer, showToast } from "./toast";
 
@@ -43,14 +40,11 @@ export const EditorApp = () => {
     closed: 0,
   });
 
-  const [localStorageContent, setLocalStorageContent] = useLocalStorage<string>(
-    EDITOR_CONTENT_KEY,
-    ""
-  );
+  const [localStorageContent, setLocalStorageContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, "");
   const [placeholder, _] = useState<string>(getRandomQuote());
   const [isTocVisible, setIsTocVisible] = useState<boolean>(true);
   const [editorContent, setEditorContent] = useState<string>(
-    typeof localStorageContent === "string" ? localStorageContent : ""
+    typeof localStorageContent === "string" ? localStorageContent : "",
   );
 
   const { theme } = useTheme();
@@ -59,8 +53,6 @@ export const EditorApp = () => {
   const [loadingEditor, setLoadingEditor] = useState(true);
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
-
-  // Tab detection with integrated alert management
   const { shouldShowAlert, dismissAlert } = useTabDetection();
 
   // Define debounced functions
@@ -72,7 +64,7 @@ export const EditorApp = () => {
     (content: string) => {
       setCharCount(content.length);
     },
-    50 // Faster updates for character count
+    50, // Faster updates for character count
   );
 
   const debouncedTaskCountUpdate = useDebouncedCallback((content: string) => {
@@ -107,7 +99,7 @@ export const EditorApp = () => {
   // Handle editor mounting
   const handleEditorDidMount = (
     editor: monaco.editor.IStandaloneCodeEditor,
-    monaco: typeof import("monaco-editor")
+    monaco: typeof import("monaco-editor"),
   ) => {
     // Set editor reference
     editorRef.current = editor;
@@ -116,9 +108,7 @@ export const EditorApp = () => {
     // Define editor themes
     monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
     monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
-    monaco.editor.setTheme(
-      isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name
-    );
+    monaco.editor.setTheme(isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name);
 
     const markdownExtension = new MonacoMarkdownExtension();
     markdownExtension.activate(editor);
@@ -154,14 +144,12 @@ export const EditorApp = () => {
                 task.line,
                 1, // Start from beginning of line
                 task.line,
-                lineContent.length + 1 // To the end of the line
+                lineContent.length + 1, // To the end of the line
               ),
               options: {
                 inlineClassName: "task-completed-line",
                 isWholeLine: true,
-                stickiness:
-                  monaco.editor.TrackedRangeStickiness
-                    .GrowsOnlyWhenTypingBefore,
+                stickiness: monaco.editor.TrackedRangeStickiness.GrowsOnlyWhenTypingBefore,
               },
             });
           }
@@ -181,12 +169,8 @@ export const EditorApp = () => {
     };
 
     // Add event handlers
-    editor.onKeyDown((event) =>
-      handleKeyDown(event, editor, editor.getModel(), editor.getPosition())
-    );
-    editor.onMouseDown((event) =>
-      handleTaskCheckboxToggle(event, editor, editor.getModel())
-    );
+    editor.onKeyDown((event) => handleKeyDown(event, editor, editor.getModel(), editor.getPosition()));
+    editor.onMouseDown((event) => handleTaskCheckboxToggle(event, editor, editor.getModel()));
 
     // Update decorations initially and on content change
     const model = editor.getModel();
@@ -231,12 +215,9 @@ export const EditorApp = () => {
     });
 
     // Add key binding for Cmd+Shift+S / Ctrl+Shift+S to open custom snapshot dialog
-    editor.addCommand(
-      monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyS,
-      () => {
-        setSnapshotDialogOpen(true);
-      }
-    );
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyS, () => {
+      setSnapshotDialogOpen(true);
+    });
 
     // Setup content change handler
     editor.onDidChangeModelContent(() => {
@@ -252,7 +233,6 @@ export const EditorApp = () => {
 
   const shouldShowPlaceholder = editorContent.length === 0 && !loadingEditor;
 
-  // Handle TOC item click
   const handleTocItemClick = useCallback((line: number) => {
     if (!editorRef.current) return;
 
@@ -262,7 +242,6 @@ export const EditorApp = () => {
     editorRef.current.focus();
   }, []);
 
-  // Handle command menu close
   const handleCloseCommandMenu = useCallback(() => {
     setCommandMenuOpen(false);
     if (editorRef.current) {
@@ -270,7 +249,6 @@ export const EditorApp = () => {
     }
   }, []);
 
-  // Toggle TOC visibility
   const toggleToc = useCallback(() => {
     setIsTocVisible(!isTocVisible);
   }, [isTocVisible]);
@@ -298,38 +276,23 @@ export const EditorApp = () => {
                 options={editorOptions}
                 onMount={handleEditorDidMount}
                 className="overflow-visible"
-                loading={
-                  <Loading className="h-screen w-screen flex items-center justify-center" />
-                }
-                theme={
-                  isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name
-                }
+                loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
+                theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
               />
             </div>
           </div>
 
-          {/* Only show TOC when there is content */}
           {editorContent.trim() && (
             <>
-              <TableOfContentsButton
-                isVisible={isTocVisible}
-                toggleToc={toggleToc}
-              />
-              <div
-                className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}
-              >
-                <TableOfContents
-                  isVisible={isTocVisible}
-                  content={editorContent}
-                  onItemClick={handleTocItemClick}
-                />
+              <TableOfContentsButton isVisible={isTocVisible} toggleToc={toggleToc} />
+              <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
+                <TableOfContents isVisible={isTocVisible} content={editorContent} onItemClick={handleTocItemClick} />
               </div>
             </>
           )}
 
           <Footer charCount={charCount} taskCount={taskCount} />
 
-          {/* Command palette */}
           <CommandMenu
             open={commandMenuOpen}
             onClose={handleCloseCommandMenu}
@@ -341,11 +304,7 @@ export const EditorApp = () => {
           />
 
           {snapshotDialogOpen && (
-            <Suspense
-              fallback={
-                <Loading className="h-screen w-screen flex items-center justify-center" />
-              }
-            >
+            <Suspense fallback={<Loading className="h-screen w-screen flex items-center justify-center" />}>
               <SnapshotDialog
                 isOpen={snapshotDialogOpen}
                 onClose={() => setSnapshotDialogOpen(false)}
@@ -354,10 +313,7 @@ export const EditorApp = () => {
             </Suspense>
           )}
 
-          <AlreadyOpenDialog
-            shouldShowAlert={shouldShowAlert}
-            onContinue={dismissAlert}
-          />
+          <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />
 
           <ToastContainer />
         </div>
