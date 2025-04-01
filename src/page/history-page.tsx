@@ -228,7 +228,7 @@ export const HistoryPage = () => {
                 />
               </svg>
               <button
-                className="cursor-pointer hover:underline text-gray-600 dark:text-gray-200"
+                className="cursor-pointer hover:underline text-gray-600 dark:text-gray-100"
                 onClick={() => handleViewSnapshot(snapshot)}
                 type="button"
               >
@@ -278,7 +278,7 @@ export const HistoryPage = () => {
             >
               <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z" />
             </svg>
-            <span className="text-sm  text-gray-600 dark:text-gray-200">{task.content}</span>
+            <span className="text-sm text-gray-600 dark:text-gray-100">{task.content}</span>
           </div>
           <div className="ml-6 mt-1 text-xs text-gray-500 dark:text-gray-400">
             Completed {task.section && <span>in {task.section} </span>} at {time}
@@ -372,10 +372,8 @@ export const HistoryPage = () => {
             )}
           </div>
 
-          {/* GitHub-like filter toolbar */}
-          <div className="mb-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm">
+          <div className="mb-6 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm">
             <div className="flex flex-col sm:flex-row p-2 gap-2 items-center">
-              {/* Search input */}
               <div className="w-full sm:w-auto flex-1">
                 <div className="relative rounded-md shadow-sm">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -395,7 +393,7 @@ export const HistoryPage = () => {
                   </div>
                   <input
                     type="text"
-                    className="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
+                    className="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset sm:text-sm"
                     placeholder="Search in history...(unimplemented)"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -403,7 +401,6 @@ export const HistoryPage = () => {
                 </div>
               </div>
 
-              {/* Type filter dropdown */}
               <div className="w-full sm:w-auto">
                 <select
                   id="type-filter"
@@ -412,7 +409,7 @@ export const HistoryPage = () => {
                     const value = e.target.value as HistoryItemType;
                     updateFilter("types", value ? [value] : undefined);
                   }}
-                  className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
+                  className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset sm:text-sm"
                 >
                   <option value="">All Types</option>
                   <option value="task">Tasks</option>
@@ -439,7 +436,7 @@ export const HistoryPage = () => {
                       updateFilter("month", undefined);
                     }
                   }}
-                  className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
+                  className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset sm:text-sm"
                 >
                   <option value="">All Time</option>
                   {availableYears.map((year) => (
@@ -464,7 +461,7 @@ export const HistoryPage = () => {
                     resetFilters();
                     setSearchQuery("");
                   }}
-                  className="w-full sm:w-auto px-3 py-1.5 text-sm rounded-md flex items-center justify-center bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none"
+                  className="w-full sm:w-auto px-3 py-1.5 text-sm rounded-md flex items-center justify-center  hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors focus:outline-none"
                   type="button"
                 >
                   <svg
@@ -503,11 +500,15 @@ export const HistoryPage = () => {
                   d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                 />
               </svg>
-              <p className="mt-4 text-gray-500 dark:text-gray-400">No history items found.</p>
+              <p className="mt-4 text-gray-500 dark:text-gray-300">No history items found.</p>
               {Object.keys(filter).length > 0 && (
-                <p className="mt-2 text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-gray-500 dark:text-gray-300">
                   Try adjusting your filters or{" "}
-                  <button onClick={resetFilters} className="" type="button">
+                  <button
+                    onClick={resetFilters}
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                    type="button"
+                  >
                     reset them
                   </button>
                   .
