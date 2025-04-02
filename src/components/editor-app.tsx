@@ -29,10 +29,12 @@ import { MonacoMarkdownExtension } from "../monaco-markdown";
 import { markdownService, type TaskListCount } from "../features/markdown/ast/markdown-service";
 import { AlreadyOpenDialog } from "./already-open-dialog";
 import { ToastContainer, showToast } from "./toast";
+import { useIndexedDBStore } from "../hooks/use-indexeddb-store";
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const formatterRef = useRef<MarkdownFormatter | null>(null);
+  const { setContent: setIndexedDBContent } = useIndexedDBStore();
 
   const [charCount, setCharCount] = useState<number>(0);
   const [taskCount, setTaskCount] = useState<TaskListCount>({
@@ -205,8 +207,15 @@ export const EditorApp = () => {
         }
       }
 
-      setLocalStorageContent(value);
-      showToast("Content formatted and saved", "success");
+      try {
+        // Save to both localStorage and IndexedDB
+        setLocalStorageContent(value);
+        await setIndexedDBContent(value);
+        showToast("Content formatted and saved", "success");
+      } catch (error) {
+        console.error("Failed to save content:", error);
+        showToast("Failed to save content", "error");
+      }
     });
 
     // Add key binding for Cmd+K / Ctrl+K to open the command menu
