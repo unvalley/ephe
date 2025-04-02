@@ -45,10 +45,11 @@ export const getSnapshots = (): Snapshot[] => {
 /**
  * Get snapshots grouped by date (YYYY-MM-DD)
  */
-export const getSnapshotsByDate = (filter?: { year?: number; month?: number; day?: number }): Record<
-  string,
-  Snapshot[]
-> => {
+export const getSnapshotsByDate = (filter?: {
+  year?: number;
+  month?: number;
+  day?: number;
+}): Record<string, Snapshot[]> => {
   const snapshots = getSnapshots();
   const snapshotsByDate: Record<string, Snapshot[]> = {};
 

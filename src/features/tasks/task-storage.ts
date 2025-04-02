@@ -59,10 +59,11 @@ export const getCompletedTasks = (): CompletedTask[] => {
 /**
  * Get completed tasks grouped by date (YYYY-MM-DD)
  */
-export const getTasksByDate = (filter?: { year?: number; month?: number; day?: number }): Record<
-  string,
-  CompletedTask[]
-> => {
+export const getTasksByDate = (filter?: {
+  year?: number;
+  month?: number;
+  day?: number;
+}): Record<string, CompletedTask[]> => {
   const tasks = getCompletedTasks();
   const tasksByDate: Record<string, CompletedTask[]> = {};
 

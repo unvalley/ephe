@@ -3,9 +3,7 @@ import type { Uri } from "monaco-editor";
 
 // export function values<V = any>(set: Set<V>): V[];
 // export function values<K = any, V = any>(map: Map<K, V>): V[];
-export function values<V>(forEachable: {
-  forEach(callback: (value: V, ...more: any[]) => any): void;
-}): V[] {
+export function values<V>(forEachable: { forEach(callback: (value: V, ...more: any[]) => any): void }): V[] {
   const result: V[] = [];
   forEachable.forEach((value) => result.push(value));
   return result;

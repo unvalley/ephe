@@ -1,8 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
+  "$schema": "https://biomejs.dev/schemas/latest/schema.json",
   "vcs": {
     "useIgnoreFile": true,
     "clientKind": "git",
