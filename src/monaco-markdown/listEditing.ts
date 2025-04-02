@@ -6,11 +6,11 @@ import { Position, WorkspaceEdit, Range, Selection, TextEditorRevealType } from 
 import { addKeybinding } from "./formatting";
 import { isTaskLine } from "../features/monaco/task-list-utils";
 
-function onShiftTabKey(editor: TextEditor) {
+const onShiftTabKey = (editor: TextEditor) => {
   onTabKey(editor, "shift");
-}
+};
 
-export function activateListEditing(editor: TextEditor) {
+export const activateListEditing = (editor: TextEditor) => {
   const editorContext = "editorTextFocus && !editorReadonly && !suggestWidgetVisible";
   addKeybinding(editor, "onEnterKey", onEnterKey, [KeyCode.Enter], "", editorContext, "");
   addKeybinding(editor, "onCtrlEnterKey", onCtrlEnterKey, [KeyCode.Enter | KeyMod.CtrlCmd], "", editorContext, "");
@@ -18,26 +18,15 @@ export function activateListEditing(editor: TextEditor) {
   addKeybinding(editor, "onTabKey", onTabKey, [KeyCode.Tab], "", editorContext, "");
   addKeybinding(editor, "onShiftTabKey", onShiftTabKey, [KeyCode.Tab | KeyMod.Shift], "", editorContext, "");
   addKeybinding(editor, "onBackspaceKey", onBackspaceKey, [KeyCode.Backspace], "", editorContext, "");
+};
 
-  //
-  // context.subscriptions.push(
-  //     commands.registerCommand('markdown.extension.checkTaskList', checkTaskList),
-  //     commands.registerCommand('markdown.extension.onMoveLineDown', onMoveLineDown),
-  //     commands.registerCommand('markdown.extension.onMoveLineUp', onMoveLineUp),
-  //     commands.registerCommand('markdown.extension.onCopyLineDown', onCopyLineDown),
-  //     commands.registerCommand('markdown.extension.onCopyLineUp', onCopyLineUp),
-  //     commands.registerCommand('markdown.extension.onIndentLines', onIndentLines),
-  //     commands.registerCommand('markdown.extension.onOutdentLines', onOutdentLines)
-  // );
-}
-
-function onShiftEnterKey(editor: TextEditor) {
+const onShiftEnterKey = (editor: TextEditor) => {
   onEnterKey(editor, "shift");
-}
+};
 
-function onCtrlEnterKey(editor: TextEditor) {
+const onCtrlEnterKey = (editor: TextEditor) => {
   onEnterKey(editor, "ctrl");
-}
+};
 
 function onEnterKey(editor: TextEditor, modifiers?: string) {
   const cursorPos: Position = editor.selection.active;
@@ -149,105 +138,114 @@ function onEnterKey(editor: TextEditor, modifiers?: string) {
   return asNormal(editor, "enter", modifiers);
 }
 
-function onTabKey(editor: TextEditor, modifiers?: string) {
-  const cursorPos = editor.selection.start;
-  const lineText = editor.document.lineAt(cursorPos.line).text;
-  const currentLine = cursorPos.line;
+// Types for list indentation
+type ListIndentationInfo = {
+  leadingSpaces: number;
+  indentLevel: number;
+};
 
-  if (isInFencedCodeBlock(editor.document, currentLine)) {
-    return asNormal(editor, "tab", modifiers);
-  }
-
-  // Check if this is a task list item
-  if (
-    isTaskLine(lineText) &&
-    (modifiers === "shift" ||
-      !editor.selection.isEmpty ||
-      (editor.selection.isEmpty && cursorPos.character <= getTaskPrefixLength(lineText)))
-  ) {
-    if (modifiers === "shift") {
-      return outdent(editor).then(() => fixMarker(editor));
-    }
-
-    // Get task indentation info
-    const { indentLevel } = getTaskIndentation(lineText);
-    
-    // Check parent task indentation
-    const parentInfo = findParentTaskIndentation(editor, currentLine, indentLevel);
-    
-    // Apply strict indentation rules:
-    // 1. If no parent, only allow indent if at level 0
-    // 2. If parent exists, only allow indent if at same level as parent
-    if (
-      (!parentInfo.found && indentLevel > 0) ||
-      (parentInfo.found && indentLevel > parentInfo.level)
-    ) {
-      return Promise.resolve();
-    }
-
-    return indent(editor).then(() => fixMarker(editor));
-  }
-  
-  // Not a task list or cursor is not at the beginning, handle as normal
-  return asNormal(editor, "tab", modifiers);
-}
+type ParentTaskInfo = {
+  found: boolean;
+  level: number;
+};
 
 /**
  * Gets the length of the task prefix (indentation + marker + checkbox)
- * @param lineText The line text to analyze
- * @returns The length of the task prefix
  */
-function getTaskPrefixLength(lineText: string): number {
+const getTaskPrefixLength = (lineText: string): number => {
   const match = /^(\s*)([-+*]|[0-9]+[.)]) +(\[[ x]\] +)?/.exec(lineText);
   return match ? match[0].length : 0;
-}
+};
 
 /**
- * Gets task indentation information
- * @param lineText The line text to analyze
- * @returns Object with indentation details
+ * Gets list indentation information
  */
-function getTaskIndentation(lineText: string): { leadingSpaces: number; indentLevel: number } {
+const getTaskIndentation = (lineText: string): ListIndentationInfo => {
   const match = /^(\s*)([-+*]|[0-9]+[.)]) +(\[[ x]\] +)?/.exec(lineText);
   if (!match) {
     return { leadingSpaces: 0, indentLevel: 0 };
   }
-  
+
   const leadingSpaces = match[1].length;
-  const indentLevel = Math.floor(leadingSpaces / 2);
-  
+  const indentLevel = Math.floor(leadingSpaces / 2); // Use 2 spaces as default, but this will be overridden by user settings
+
   return { leadingSpaces, indentLevel };
-}
+};
 
 /**
- * Find the parent task's indentation level
- * @param editor The text editor
- * @param line The current line number
- * @param currentIndent The current indentation level
- * @returns Object with parent task information
+ * Find the parent list item's indentation level
  */
-function findParentTaskIndentation(editor: TextEditor, line: number, currentIndent: number): { found: boolean; level: number } {
+const findParentTaskIndentation = (editor: TextEditor, line: number, currentIndent: number): ParentTaskInfo => {
   let prevLine = line - 1;
-  
+
   while (prevLine >= 0) {
     const prevLineText = editor.document.lineAt(prevLine).text;
-    
-    if (isTaskLine(prevLineText)) {
+
+    // Check for both task lists and regular lists
+    if (isTaskLine(prevLineText) || /^(\s*)([-+*]|[0-9]+[.)]) +/.test(prevLineText)) {
       const { indentLevel } = getTaskIndentation(prevLineText);
-      
+
       // If this is a potential parent (less or same indentation)
       if (indentLevel <= currentIndent) {
         return { found: true, level: indentLevel };
       }
     }
-    
+
     prevLine -= 1;
   }
-  
-  return { found: false, level: -1 };
-}
 
-function onBackspaceKey(editor: TextEditor) {
+  return { found: false, level: -1 };
+};
+
+/**
+ * Handles tab key press for list items
+ */
+const onTabKey = (editor: TextEditor, modifiers?: string) => {
+  const cursorPos = editor.selection.start;
+  const lineText = editor.document.lineAt(cursorPos.line).text;
+  const currentLine = cursorPos.line;
+
+  // Skip if in code block
+  if (isInFencedCodeBlock(editor.document, currentLine)) {
+    return asNormal(editor, "tab", modifiers);
+  }
+
+  // Check if this is a list item
+  const isListItem = /^(\s*)([-+*]|[0-9]+[.)]) +/.test(lineText);
+  const isTaskListItem = isTaskLine(lineText);
+
+  // Handle list item indentation
+  if (
+    (isListItem || isTaskListItem) &&
+    (modifiers === "shift" ||
+      !editor.selection.isEmpty ||
+      (editor.selection.isEmpty && cursorPos.character <= getTaskPrefixLength(lineText)))
+  ) {
+    // Handle outdent
+    if (modifiers === "shift") {
+      return outdent(editor).then(() => fixMarker(editor));
+    }
+
+    // Get indentation info and check parent
+    const { indentLevel } = getTaskIndentation(lineText);
+    const parentInfo = findParentTaskIndentation(editor, currentLine, indentLevel);
+
+    // Apply indentation rules:
+    // 1. If no parent, only allow indent if at level 0
+    // 2. If parent exists, only allow indent if at same level as parent
+    if ((!parentInfo.found && indentLevel > 0) || (parentInfo.found && indentLevel > parentInfo.level)) {
+      return Promise.resolve();
+    }
+
+    // Apply indentation if rules are satisfied
+    return indent(editor).then(() => fixMarker(editor));
+  }
+
+  // Handle non-list items normally
+  return asNormal(editor, "tab", modifiers);
+};
+
+const onBackspaceKey = (editor: TextEditor) => {
   const cursor = editor.selection.active;
   const document = editor.document;
   const textBeforeCursor = document.lineAt(cursor.line).text.substring(0, cursor.character);
@@ -278,9 +276,9 @@ function onBackspaceKey(editor: TextEditor) {
     );
   }
   return asNormal(editor, "backspace");
-}
+};
 
-function asNormal(editor: TextEditor, key: string, modifiers?: string): Thenable<void> | undefined {
+const asNormal = (editor: TextEditor, key: string, modifiers?: string): Thenable<void> | undefined => {
   switch (key) {
     case "enter":
       if (modifiers === "ctrl") {
@@ -304,7 +302,7 @@ function asNormal(editor: TextEditor, key: string, modifiers?: string): Thenable
     case "backspace":
       return editor.executeCommand("deleteLeft");
   }
-}
+};
 
 /**
  * If
@@ -314,7 +312,7 @@ function asNormal(editor: TextEditor, key: string, modifiers?: string): Thenable
  *
  * then indent the current line to align with the previous list item.
  */
-function indent(editor: TextEditor): Thenable<void> {
+const indent = (editor: TextEditor): Thenable<void> => {
   const maybeConfig = editor.getConfiguration("markdown.extension.list");
   const config = maybeConfig?.get<string>("indentationSize") || "";
   if (config === "adaptive") {
@@ -344,12 +342,12 @@ function indent(editor: TextEditor): Thenable<void> {
   }
 
   return editor.executeCommand("editor.action.indentLines");
-}
+};
 
 /**
  * Similar to `indent`-function
  */
-function outdent(editor: TextEditor): Thenable<void> {
+const outdent = (editor: TextEditor): Thenable<void> => {
   const maybeConfig = editor.getConfiguration("markdown.extension.list");
   const config = maybeConfig?.get<string>("indentationSize") || "";
 
@@ -387,33 +385,32 @@ function outdent(editor: TextEditor): Thenable<void> {
   }
 
   return editor.executeCommand("editor.action.outdentLines");
-}
+};
 
 /**
  * Determine indentation size based on previous list items
  */
-function tryDetermineIndentationSize(editor: TextEditor, originalLine: number, currentIndentation: number) {
+const tryDetermineIndentationSize = (editor: TextEditor, originalLine: number, currentIndentation: number): number => {
   let lineToCheck = originalLine;
-  
+
   while (lineToCheck > 0) {
     lineToCheck -= 1;
     const lineText = editor.document.lineAt(lineToCheck).text;
     const matches = /^(\s*)(([-+*]|[0-9]+[.)]) +)(\[[ x]\] +)?/.exec(lineText);
-    
+
     if (matches && matches[1].length <= currentIndentation) {
       return matches[2].length;
     }
   }
   throw "No previous Markdown list item";
-}
+};
 
 /**
- * Returns the line number of the next ordered list item starting either from
- * the specified line or the beginning of the current selection.
+ * Returns the line number of the next ordered list item
  */
-function findNextMarkerLineNumber(editor: TextEditor, fromLine?: number): number {
+const findNextMarkerLineNumber = (editor: TextEditor, fromLine?: number): number => {
   let lineToCheck = fromLine !== undefined ? fromLine : editor.selection.start.line;
-  
+
   while (lineToCheck < editor.document.lineCount) {
     const lineText = editor.document.lineAt(lineToCheck).text;
     if (/^\s*[0-9]+[.)] +/.exec(lineText) !== null) {
@@ -421,23 +418,20 @@ function findNextMarkerLineNumber(editor: TextEditor, fromLine?: number): number
     }
     lineToCheck += 1;
   }
-  return 0; 
-}
+  return 0;
+};
 
 /**
  * Looks for the previous ordered list marker at the same indentation level
- * and returns the marker number that should follow it.
- *
- * @returns the fixed marker number
  */
-function lookUpwardForMarker(editor: TextEditor, originalLine: number, currentIndentation: number): number {
+const lookUpwardForMarker = (editor: TextEditor, originalLine: number, currentIndentation: number): number => {
   let lineToCheck = originalLine;
-  
+
   while (lineToCheck > 0) {
     lineToCheck -= 1;
     const lineText = editor.document.lineAt(lineToCheck).text;
     const matches = /^(\s*)(([0-9]+)[.)] +)/.exec(lineText);
-    
+
     if (matches) {
       const leadingSpace = matches[1];
       const marker = matches[3];
@@ -452,34 +446,32 @@ function lookUpwardForMarker(editor: TextEditor, originalLine: number, currentIn
         return 1;
       }
     }
-    
+
     const nonListMatches = /^(\s*)\S/.exec(lineText);
     if (nonListMatches && nonListMatches[1].length <= currentIndentation) {
       break;
     }
   }
   return 1;
-}
+};
 
 /**
  * Fix ordered list marker *iteratively* starting from current line
  */
-export function fixMarker(editor: TextEditor, fromLine?: number): Promise<boolean> {
-  const lineToProcess = fromLine !== undefined 
-    ? fromLine 
-    : findNextMarkerLineNumber(editor);
-  
+export const fixMarker = (editor: TextEditor, fromLine?: number): Promise<boolean> => {
+  const lineToProcess = fromLine !== undefined ? fromLine : findNextMarkerLineNumber(editor);
+
   if (lineToProcess < 0 || editor.document.lineCount <= lineToProcess) {
     return Promise.resolve(false);
   }
 
   const currentLineText = editor.document.lineAt(lineToProcess).text;
   const matches = /^(\s*)([0-9]+)([.)])( +)/.exec(currentLineText);
-  
+
   if (!matches) {
     return Promise.resolve(false);
   }
-  
+
   // ordered list
   const leadingSpace = matches[1];
   const marker = matches[2];
@@ -523,9 +515,9 @@ export function fixMarker(editor: TextEditor, fromLine?: number): Promise<boolea
       }
       return Promise.resolve(true);
     });
-}
+};
 
-function deleteRange(editor: TextEditor, range: Range): Thenable<void> {
+const deleteRange = (editor: TextEditor, range: Range): Thenable<void> => {
   return editor.edit(
     (editBuilder) => {
       editBuilder.delete(range);
@@ -533,6 +525,6 @@ function deleteRange(editor: TextEditor, range: Range): Thenable<void> {
     // We will enable undoStop after fixing markers
     { undoStopBefore: true, undoStopAfter: false },
   );
-}
+};
 
-export function deactivate() {}
+export const deactivate = () => {};
