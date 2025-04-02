@@ -30,6 +30,7 @@ import { AlreadyOpenDialog } from "../../components/already-open-dialog";
 import { ToastContainer, showToast } from "../../components/toast";
 import { PlaceholderWidget } from "./monaco/placeholder-widget";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
+import { saveSnapshot } from "../snapshots/snapshot-storage";
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -219,6 +220,12 @@ export const EditorApp = () => {
         }
       }
 
+      saveSnapshot({
+        content: value,
+        charCount: value.length,
+        title: "Manual Save",
+        description: "",
+      });
       setLocalStorageContent(value);
       showToast("Content formatted and saved", "success");
     };
