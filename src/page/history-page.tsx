@@ -12,10 +12,10 @@ import {
 import { Footer } from "../components/footer";
 import { SnapshotDiff } from "../components/snapshot-diff";
 import { SnapshotViewer } from "../components/snapshot-viewer";
-import { EDITOR_CONTENT_KEY } from "../features/monaco";
 import { useNavigate } from "react-router-dom";
 import { showToast } from "../components/toast";
 import { Loading } from "../components/loading";
+import { LOCAL_STORAGE_KEYS } from "../utils/constants";
 
 type DateFilter = {
   year?: number;
@@ -240,7 +240,7 @@ export const HistoryPage = () => {
           <div className="flex space-x-2">
             <button
               onClick={() => {
-                localStorage.setItem(EDITOR_CONTENT_KEY, snapshot.content);
+                localStorage.setItem(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, snapshot.content);
                 navigate("/");
                 showToast("Snapshot restored to editor", "success");
               }}

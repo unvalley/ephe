@@ -1,5 +1,3 @@
-export const EDITOR_CONTENT_KEY = "editor-content";
-
 export const WRITING_QUOTES = [
   "The scariest moment is always just before you start.",
   "Fill your paper with the breathings of your heart.",

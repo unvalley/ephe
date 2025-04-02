@@ -51,7 +51,6 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
 
         // PERF: reuse existing items if the line is the same
         if (i < prevLines.length && line === prevLines[i] && existingItemsMap.has(i)) {
-          // biome-ignore lint/style/noNonNullAssertion: <explanation>
           items.push(existingItemsMap.get(i)!);
           continue;
         }

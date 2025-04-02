@@ -11,7 +11,6 @@ import { usePaperMode } from "../hooks/use-paper-mode";
 import { TableOfContents, TableOfContentsButton } from "./table-of-contents";
 import { CommandMenu } from "./command-k";
 import { getRandomQuote } from "../utils/quotes";
-import { EDITOR_CONTENT_KEY } from "../utils/constants";
 import { SnapshotDialog } from "./snapshot-dialog";
 import {
   handleKeyDown,
@@ -30,6 +29,7 @@ import { markdownService, type TaskListCount } from "../features/markdown/ast/ma
 import { AlreadyOpenDialog } from "./already-open-dialog";
 import { ToastContainer, showToast } from "./toast";
 import { PlaceholderWidget } from "./placeholder-widget";
+import { LOCAL_STORAGE_KEYS } from "../utils/constants";
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -42,7 +42,7 @@ export const EditorApp = () => {
     closed: 0,
   });
 
-  const [localStorageContent, setLocalStorageContent] = useLocalStorage<string>(EDITOR_CONTENT_KEY, "");
+  const [localStorageContent, setLocalStorageContent] = useLocalStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
   const [placeholder, _] = useState<string>(getRandomQuote());
   const [isTocVisible, setIsTocVisible] = useState<boolean>(true);
   const [editorContent, setEditorContent] = useState<string>(
@@ -194,8 +194,7 @@ export const EditorApp = () => {
 
     handlePlaceholder(editor.getValue());
 
-    // Add key binding for Cmd+S / Ctrl+S to save and create snapshot
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, async () => {
+    const commandSave = async () => {
       let value = editor.getValue();
 
       if (formatterRef.current) {
@@ -216,13 +215,16 @@ export const EditorApp = () => {
             }
           }
         } catch (error) {
-          console.error("Failed to format markdown:", error);
           showToast("Failed to format content", "error");
         }
       }
 
       setLocalStorageContent(value);
       showToast("Content formatted and saved", "success");
+    };
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, async () => {
+      await commandSave();
     });
 
     // Add key binding for Cmd+K / Ctrl+K to open the command menu

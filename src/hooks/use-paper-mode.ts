@@ -1,8 +1,8 @@
 import { useSyncExternalStore } from "react";
+import { LOCAL_STORAGE_KEYS } from "../utils/constants";
 
 export type PaperMode = "none" | "graph" | "dots";
 
-const PAPER_MODE_KEY = "ephe-paper-mode";
 
 export const PAPER_MODE_CLASSES: Record<PaperMode, string> = {
   none: "",
@@ -16,7 +16,7 @@ const createPaperModeStore = () => {
   const getCurrentMode = (): PaperMode => {
     if (typeof window === "undefined") return "none";
 
-    const saved = localStorage.getItem(PAPER_MODE_KEY);
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.PAPER_MODE);
     return (saved as PaperMode) || "none";
   };
 
@@ -26,7 +26,7 @@ const createPaperModeStore = () => {
     if (currentMode === mode) return;
 
     currentMode = mode;
-    localStorage.setItem(PAPER_MODE_KEY, mode);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.PAPER_MODE, mode);
 
     // Notify all subscribers
     for (const callback of subscribers) {

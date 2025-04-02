@@ -1,4 +1,6 @@
-// Local storage keys
-export const EDITOR_CONTENT_KEY = "editor-content";
-export const COMPLETED_TASKS_KEY = "ephe-completed-tasks";
-export const SNAPSHOTS_KEY = "ephe-snapshots";
+export const LOCAL_STORAGE_KEYS = {
+  EDITOR_CONTENT: "editor-content",
+  COMPLETED_TASKS: "ephe-completed-tasks",
+  SNAPSHOTS: "ephe-snapshots",
+  PAPER_MODE: "ephe-paper-mode",
+} as const;

@@ -1,10 +1,5 @@
-/**
- * Storage utilities for snapshots
- */
-
 import type { Snapshot } from "./snapshot-types";
-
-const SNAPSHOTS_STORAGE_KEY = "ephe-snapshots";
+import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 
 /**
  * Save a snapshot to localStorage
@@ -20,10 +15,10 @@ export const saveSnapshot = (snapshot: Omit<Snapshot, "id" | "timestamp">): void
       timestamp: now.toISOString(),
     };
 
-    const existingSnapshotsJson = localStorage.getItem(SNAPSHOTS_STORAGE_KEY);
+    const existingSnapshotsJson = localStorage.getItem(LOCAL_STORAGE_KEYS.SNAPSHOTS);
     const existingSnapshots: Snapshot[] = existingSnapshotsJson ? JSON.parse(existingSnapshotsJson) : [];
 
-    localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify([newSnapshot, ...existingSnapshots]));
+    localStorage.setItem(LOCAL_STORAGE_KEYS.SNAPSHOTS, JSON.stringify([newSnapshot, ...existingSnapshots]));
   } catch (error) {
     console.error("Error saving snapshot:", error);
   }
@@ -34,7 +29,7 @@ export const saveSnapshot = (snapshot: Omit<Snapshot, "id" | "timestamp">): void
  */
 export const getSnapshots = (): Snapshot[] => {
   try {
-    const snapshotsJson = localStorage.getItem(SNAPSHOTS_STORAGE_KEY);
+    const snapshotsJson = localStorage.getItem(LOCAL_STORAGE_KEYS.SNAPSHOTS);
     return snapshotsJson ? JSON.parse(snapshotsJson) : [];
   } catch (error) {
     console.error("Error retrieving snapshots:", error);
@@ -100,7 +95,7 @@ export const deleteSnapshot = (id: string): void => {
   try {
     const snapshots = getSnapshots();
     const updatedSnapshots = snapshots.filter((snapshot) => snapshot.id !== id);
-    localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(updatedSnapshots));
+    localStorage.setItem(LOCAL_STORAGE_KEYS.SNAPSHOTS, JSON.stringify(updatedSnapshots));
   } catch (error) {
     console.error("Error deleting snapshot:", error);
   }
@@ -111,7 +106,7 @@ export const deleteSnapshot = (id: string): void => {
  */
 export const purgeAllSnapshots = (): void => {
   try {
-    localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify([]));
+    localStorage.setItem(LOCAL_STORAGE_KEYS.SNAPSHOTS, JSON.stringify([]));
   } catch (error) {
     console.error("Error purging snapshots:", error);
   }

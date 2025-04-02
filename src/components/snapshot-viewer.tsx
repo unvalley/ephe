@@ -3,7 +3,7 @@ import type { Snapshot } from "../features/snapshots/snapshot-types";
 import { Editor } from "@monaco-editor/react";
 import { useTheme } from "../hooks/use-theme";
 import { deleteSnapshot } from "../features/snapshots/snapshot-storage";
-import { EDITOR_CONTENT_KEY } from "../features/monaco";
+import { LOCAL_STORAGE_KEYS } from "../utils/constants";
 import { useNavigate } from "react-router-dom";
 import type * as monaco from "monaco-editor";
 import { showToast } from "./toast";
@@ -66,7 +66,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
 
   const handleRestore = () => {
     if (!snapshot) return;
-    localStorage.setItem(EDITOR_CONTENT_KEY, snapshot.content);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, snapshot.content);
 
     showToast("Snapshot restored", "success");
     navigate("/");

@@ -5,18 +5,6 @@
 import { saveSnapshot, getSnapshots, getSnapshotById, deleteSnapshot } from "./snapshot-storage";
 
 /**
- * Create a snapshot of the current editor content
- */
-export const createSnapshot = (content: string, title: string, description = ""): void => {
-  saveSnapshot({
-    content,
-    title,
-    description,
-    charCount: content.length,
-  });
-};
-
-/**
  * Create an automatic snapshot of the current editor content
  */
 export const createAutoSnapshot = ({

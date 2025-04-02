@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { createSnapshot } from "../features/snapshots/snapshot-manager";
 import { showToast } from "./toast";
+import { saveSnapshot } from "../features/snapshots/snapshot-storage";
 
 type SnapshotDialogProps = {
   isOpen: boolean;
@@ -31,7 +31,12 @@ export const SnapshotDialog = ({ isOpen, onClose, editorContent }: SnapshotDialo
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    createSnapshot(editorContent, title, description || undefined);
+    saveSnapshot({
+      content: editorContent,
+      title,
+      description,
+      charCount: editorContent.length,
+    });
 
     showToast("Snapshot created successfully", "success");
 
