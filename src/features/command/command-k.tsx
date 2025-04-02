@@ -186,69 +186,74 @@ export const CommandMenu = ({
           <Command.Empty className="py-2 px-4 text-sm text-gray-500 dark:text-gray-400">
             No results found.
           </Command.Empty>
-
-          <Command.Item
-            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
-            onSelect={() => {
-              toggleTheme();
-              onClose?.();
-            }}
-          >
-            Switch to {toggleTargetTheme} mode
-          </Command.Item>
-
-          {cyclePaperMode && (
+          <Command.Group heading="Interface Mode">
             <Command.Item
               className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
               onSelect={() => {
-                cyclePaperMode();
+                toggleTheme();
                 onClose?.();
               }}
             >
-              Cycle paper mode {paperMode !== "none" ? `(current: ${paperMode})` : ""}
+              Switch to {toggleTargetTheme} mode
             </Command.Item>
-          )}
 
-          <Command.Item
-            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
-            onSelect={handleExportMarkdown}
-          >
-            Export as Markdown
-          </Command.Item>
+            {cyclePaperMode && (
+              <Command.Item
+                className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+                onSelect={() => {
+                  cyclePaperMode();
+                  onClose?.();
+                }}
+              >
+                Cycle paper mode {paperMode !== "none" ? `(current: ${paperMode})` : ""}
+              </Command.Item>
+            )}
+          </Command.Group>
 
-          <Command.Item
-            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
-            onSelect={() => {
-              window.open("https://github.com/unvalley/ephe", "_blank");
-              onClose?.();
-            }}
-          >
-            Go to GitHub
-          </Command.Item>
+          <Command.Group heading="Operations">
+            <Command.Item
+              className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+              onSelect={handleExportMarkdown}
+            >
+              Export markdown
+            </Command.Item>
 
-          <Command.Item
-            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
-            onSelect={handleFormatDocument}
-          >
-            Format document
-          </Command.Item>
+            <Command.Item
+              className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+              onSelect={handleFormatDocument}
+            >
+              Format document
+            </Command.Item>
 
-          <Command.Item
-            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
-            onSelect={handleInsertGitHubIssues}
-          >
-            Insert GitHub Issues (Public Repos)
-          </Command.Item>
+            <Command.Item
+              className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+              onSelect={handleInsertGitHubIssues}
+            >
+              Insert GitHub Issues (Public Repos)
+            </Command.Item>
+          </Command.Group>
 
-          <Command.Item
-            className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
-            onSelect={() => {
-              navigate("/history");
-              onClose?.();
-            }}
-          >
-            View History
-          </Command.Item>
+          <Command.Group heading="Move">
+            <Command.Item
+              className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+              onSelect={() => {
+                window.open("https://github.com/unvalley/ephe", "_blank");
+                onClose?.();
+              }}
+            >
+              Go to Ephe GitHub Repo
+            </Command.Item>
+
+            <Command.Item
+              className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+              onSelect={() => {
+                navigate("/history");
+                onClose?.();
+              }}
+            >
+              Go to History
+            </Command.Item>
+          </Command.Group>
         </Command.List>
       </Command>
     </>

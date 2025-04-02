@@ -21,13 +21,12 @@ export class PlaceholderWidget implements monaco.editor.IContentWidget {
       domNode.innerText = this.placeholderText;
       domNode.className = `
         absolute 
-        text-md 
         left-0.5 px-4 sm:px-2 w-max
         items-center 
         text-gray-400 dark:text-gray-500 
         pointer-events-none 
         z-[1] 
-        transition-opacity duration-300 opacity-100`;
+        transition-opacity duration-700 opacity-100`;
 
       this.editor.applyFontInfo(domNode);
       this.domNode = domNode;
