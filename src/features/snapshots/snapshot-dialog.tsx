@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { showToast } from "./toast";
-import { saveSnapshot } from "../features/snapshots/snapshot-storage";
+import { showToast } from "../../components/toast";
+import { saveSnapshot } from "./snapshot-storage";
 
 type SnapshotDialogProps = {
   isOpen: boolean;

@@ -2,13 +2,13 @@
 
 import { Command } from "cmdk";
 import { useEffect, useRef } from "react";
-import { useTheme } from "../hooks/use-theme";
+import { useTheme } from "../../hooks/use-theme";
 import { useNavigate } from "react-router-dom";
 import type * as monaco from "monaco-editor";
-import type { MarkdownFormatter } from "../features/markdown/markdown-formatter";
-import { showToast } from "./toast";
-import { fetchGitHubIssuesTaskList } from "../features/github/github-api";
-import type { PaperMode } from "../hooks/use-paper-mode";
+import type { MarkdownFormatter } from "../editor/markdown/markdown-formatter";
+import { showToast } from "../../components/toast";
+import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
+import type { PaperMode } from "../../hooks/use-paper-mode";
 
 type CommandMenuProps = {
   open: boolean;

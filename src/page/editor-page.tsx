@@ -1,5 +1,5 @@
 import "./globals.css";
-import { EditorApp } from "../components/editor-app";
+import { EditorApp } from "../features/editor/editor-app";
 import { usePaperMode } from "../hooks/use-paper-mode";
 
 export const EditorPage = () => {

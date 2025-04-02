@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { compareSnapshots } from "../features/snapshots/snapshot-manager";
-import type { Snapshot } from "../features/snapshots/snapshot-types";
-import { getSnapshots } from "../features/snapshots/snapshot-storage";
+import { compareSnapshots } from "./snapshot-manager";
+import type { Snapshot } from "./snapshot-types";
+import { getSnapshots } from "./snapshot-storage";
 
 type SnapshotDiffProps = {
   isOpen: boolean;

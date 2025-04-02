@@ -10,7 +10,7 @@
     "lint": "biome lint .",
     "format": "biome format --write .",
     "test": "vitest",
-    "copy-wasm": "node --experimental-strip-types scripts/copy-wasm.ts"
+    "copy-wasm": "node --experimental-strip-types src/scripts/copy-wasm.ts"
   },
   "dependencies": {
     "@biomejs/biome": "2.0.0-beta.1",

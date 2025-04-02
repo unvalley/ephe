@@ -1,9 +1,9 @@
 import * as monaco from "monaco-editor";
 import type { EditorProps } from "@monaco-editor/react";
 import { isTaskLine, isClosedTaskLine } from "./task-list-utils";
-import { generateTaskIdentifier } from "../tasks/task-storage";
+import { generateTaskIdentifier } from "../../tasks/task-storage";
 import { findTaskSection } from "./task-section-utils";
-import { saveCompletedTask, deleteCompletedTaskByIdentifier } from "../tasks/task-storage";
+import { saveCompletedTask, deleteCompletedTaskByIdentifier } from "../../tasks/task-storage";
 
 // Helper functions for placeholder visibility
 export const showPlaceholder = (element: Element) => {

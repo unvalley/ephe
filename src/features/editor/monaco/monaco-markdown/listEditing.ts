@@ -4,7 +4,7 @@ import { isInFencedCodeBlock } from "./util";
 import { KeyCode, KeyMod, type Thenable } from "monaco-editor";
 import { Position, WorkspaceEdit, Range, Selection, TextEditorRevealType } from "./extHostTypes";
 import { addKeybinding } from "./formatting";
-import { isTaskLine } from "../features/monaco/task-list-utils";
+import { isTaskLine } from "../task-list-utils";
 
 const onShiftTabKey = (editor: TextEditor) => {
   onTabKey(editor, "shift");

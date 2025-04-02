@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.resolve(__dirname, "..");
+const rootDir = path.resolve(__dirname, "../..");
 
 // Source and target paths
 const sourceWasmPath = getPath();

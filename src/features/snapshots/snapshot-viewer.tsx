@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import type { Snapshot } from "../features/snapshots/snapshot-types";
+import type { Snapshot } from "./snapshot-types";
 import { Editor } from "@monaco-editor/react";
-import { useTheme } from "../hooks/use-theme";
-import { deleteSnapshot } from "../features/snapshots/snapshot-storage";
-import { LOCAL_STORAGE_KEYS } from "../utils/constants";
+import { useTheme } from "../../hooks/use-theme";
+import { deleteSnapshot } from "./snapshot-storage";
+import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { useNavigate } from "react-router-dom";
 import type * as monaco from "monaco-editor";
-import { showToast } from "./toast";
-import { Loading } from "./loading";
+import { showToast } from "../../components/toast";
+import { Loading } from "../../components/loading";
 
 type SnapshotViewerProps = {
   isOpen: boolean;

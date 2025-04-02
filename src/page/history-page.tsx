@@ -10,8 +10,8 @@ import {
   type CompletedTask,
 } from "../features/tasks/task-storage";
 import { Footer } from "../components/footer";
-import { SnapshotDiff } from "../components/snapshot-diff";
-import { SnapshotViewer } from "../components/snapshot-viewer";
+import { SnapshotDiff } from "../features/snapshots/snapshot-diff";
+import { SnapshotViewer } from "../features/snapshots/snapshot-viewer";
 import { useNavigate } from "react-router-dom";
 import { showToast } from "../components/toast";
 import { Loading } from "../components/loading";

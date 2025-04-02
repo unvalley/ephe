@@ -3,33 +3,33 @@
 import type * as monaco from "monaco-editor";
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { Editor } from "@monaco-editor/react";
-import { useTheme } from "../hooks/use-theme";
-import { useLocalStorage } from "../hooks/use-local-storage";
+import { useTheme } from "../../hooks/use-theme";
+import { useLocalStorage } from "../../hooks/use-local-storage";
 import { useDebouncedCallback } from "use-debounce";
-import { useTabDetection } from "../hooks/use-tab-detection";
-import { usePaperMode } from "../hooks/use-paper-mode";
+import { useTabDetection } from "../../hooks/use-tab-detection";
+import { usePaperMode } from "../../hooks/use-paper-mode";
 import { TableOfContents, TableOfContentsButton } from "./table-of-contents";
-import { CommandMenu } from "./command-k";
-import { getRandomQuote } from "../utils/quotes";
-import { SnapshotDialog } from "./snapshot-dialog";
+import { CommandMenu } from "../command/command-k";
+import { getRandomQuote } from "../../utils/quotes";
+import { SnapshotDialog } from "../snapshots/snapshot-dialog";
 import {
   handleKeyDown,
   applyTaskCheckboxDecorations,
   editorOptions,
   EPHE_DARK_THEME,
   EPHE_LIGHT_THEME,
-} from "../features/monaco/editor-utils";
-import { Footer } from "./footer";
-import { Loading } from "./loading";
-import { handleTaskCheckboxToggle } from "../features/monaco/editor-utils";
-import { DprintMarkdownFormatter } from "../features/markdown/dprint-markdown-formatter";
-import type { MarkdownFormatter } from "../features/markdown/markdown-formatter";
-import { MonacoMarkdownExtension } from "../monaco-markdown";
-import { markdownService, type TaskListCount } from "../features/markdown/ast/markdown-service";
-import { AlreadyOpenDialog } from "./already-open-dialog";
-import { ToastContainer, showToast } from "./toast";
-import { PlaceholderWidget } from "./placeholder-widget";
-import { LOCAL_STORAGE_KEYS } from "../utils/constants";
+} from "./monaco/editor-utils";
+import { Footer } from "../../components/footer";
+import { Loading } from "../../components/loading";
+import { handleTaskCheckboxToggle } from "./monaco/editor-utils";
+import { DprintMarkdownFormatter } from "./markdown/dprint-markdown-formatter";
+import type { MarkdownFormatter } from "./markdown/markdown-formatter";
+import { MonacoMarkdownExtension } from "./monaco/monaco-markdown";
+import { markdownService, type TaskListCount } from "./markdown/ast/markdown-service";
+import { AlreadyOpenDialog } from "../../components/already-open-dialog";
+import { ToastContainer, showToast } from "../../components/toast";
+import { PlaceholderWidget } from "./monaco/placeholder-widget";
+import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
