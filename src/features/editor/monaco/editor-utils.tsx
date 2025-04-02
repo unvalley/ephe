@@ -71,8 +71,8 @@ export const editorOptions: EditorProps["options"] = {
   fontSize: 14,
   contextmenu: false,
   scrollbar: {
-    vertical: "auto",
-    horizontal: "auto",
+    vertical: "hidden",
+    horizontal: "hidden",
     verticalScrollbarSize: 0,
     horizontalScrollbarSize: 0,
     verticalSliderSize: 0,

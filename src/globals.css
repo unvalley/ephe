@@ -1,22 +1,19 @@
 @import "tailwindcss";
 
+html {
+  font-family: monospace;
+}
+
+/* Dark mode transitions */
+html.dark {
+  color-scheme: dark;
+  background-color: #0d1117;
+}
+
 /* CSS variables for theming */
 :root {
-  --focus-border-light: #ffffff;
-  --focus-border-dark: #181818;
-}
-
-.monaco-editor .overflow-guard {
-  border-radius: 0.375rem;
-}
-
-/* Hide scrollbars completely */
-.monaco-editor .scrollbar {
-  display: none !important;
-}
-
-.monaco-editor .scroll-decoration {
-  box-shadow: none !important;
+  --focus-border-light: #00000000;
+  --focus-border-dark: #00000000;
 }
 
 /* Make sure content is still scrollable */
@@ -31,27 +28,6 @@
 
 .monaco-editor textarea {
   outline: none;
-}
-
-html {
-  font-family: monospace;
-}
-
-/* Dark mode transitions */
-html.dark {
-  color-scheme: dark;
-  background-color: #0d1117;
-}
-
-/* Markdown syntax highlighting */
-.markdown-task-item {
-  position: relative;
-}
-
-/* Style for completed tasks */
-.task-completed {
-  color: #6b7280; /* gray-500 */
-  opacity: 0.6;
 }
 
 /* Make the checkbox part clickable */
@@ -91,26 +67,7 @@ span.task-checkbox {
 
 /* Styling for completed tasks - using opacity instead of strikethrough */
 .task-completed-line {
-  opacity: 0.75;
-}
-
-.dark .task-completed-line {
-  color: #9ca3af;
-  opacity: 0.8;
-}
-
-.light .task-completed-line {
-  color: #6b7280;
-}
-
-/* Add this to your globals.css file */
-.task-checkbox-clickable {
-  cursor: pointer !important;
-}
-
-/* Make sure the cursor stays as pointer when hovering over the checkbox */
-.monaco-editor .view-line:hover .task-checkbox-clickable {
-  cursor: pointer !important;
+  opacity: 0.5;
 }
 
 /* TOC styles */

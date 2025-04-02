@@ -10,7 +10,7 @@ import { useTabDetection } from "../../hooks/use-tab-detection";
 import { usePaperMode } from "../../hooks/use-paper-mode";
 import { TableOfContents, TableOfContentsButton } from "./table-of-contents";
 import { CommandMenu } from "../command/command-k";
-import { getRandomQuote } from "../../utils/quotes";
+import { getRandomQuote } from "./quotes";
 import { SnapshotDialog } from "../snapshots/snapshot-dialog";
 import {
   handleKeyDown,
@@ -22,8 +22,8 @@ import {
 import { Footer } from "../../components/footer";
 import { Loading } from "../../components/loading";
 import { handleTaskCheckboxToggle } from "./monaco/editor-utils";
-import { DprintMarkdownFormatter } from "./markdown/dprint-markdown-formatter";
-import type { MarkdownFormatter } from "./markdown/markdown-formatter";
+import { DprintMarkdownFormatter } from "./markdown/formatter/dprint-markdown-formatter";
+import type { MarkdownFormatter } from "./markdown/formatter/markdown-formatter";
 import { MonacoMarkdownExtension } from "./monaco/monaco-markdown";
 import { markdownService, type TaskListCount } from "./markdown/ast/markdown-service";
 import { AlreadyOpenDialog } from "../../components/already-open-dialog";

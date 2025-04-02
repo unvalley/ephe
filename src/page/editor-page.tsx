@@ -1,4 +1,4 @@
-import "./globals.css";
+import "../globals.css";
 import { EditorApp } from "../features/editor/editor-app";
 import { usePaperMode } from "../hooks/use-paper-mode";
 

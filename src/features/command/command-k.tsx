@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { useTheme } from "../../hooks/use-theme";
 import { useNavigate } from "react-router-dom";
 import type * as monaco from "monaco-editor";
-import type { MarkdownFormatter } from "../editor/markdown/markdown-formatter";
+import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-formatter";
 import { showToast } from "../../components/toast";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import type { PaperMode } from "../../hooks/use-paper-mode";
