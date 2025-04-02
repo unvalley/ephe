@@ -269,10 +269,10 @@ export const HistoryPage = () => {
 
     return (
       <div className="flex group border-b border-gray-200 dark:border-gray-700 py-3 px-2">
-        <div className="flex-1 flex items-start">
-          <div className="flex items-center">
+        <div className="flex-1 flex items-start min-w-0">
+          <div className="flex items-center min-w-0">
             <svg
-              className="h-4 w-4 mr-2 text-green-600 dark:text-green-400"
+              className="h-4 w-4 mr-2 text-green-600 dark:text-green-400 flex-shrink-0"
               viewBox="0 0 16 16"
               fill="currentColor"
               aria-hidden="true"
@@ -280,15 +280,15 @@ export const HistoryPage = () => {
             >
               <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z" />
             </svg>
-            <div className="ml-1">
-              <span className="text-sm">{task.content}</span>
+            <div className="ml-1 min-w-0">
+              <span className="text-sm block truncate">{task.content}</span>
               <div className="text-gray-500 dark:text-gray-400 text-xs">
                 Completed {task.section && <span>in {task.section} </span>} at {time}
               </div>
             </div>
           </div>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 flex-shrink-0">
           <button
             onClick={() => handleDeleteItem(task.id, "task")}
             className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
