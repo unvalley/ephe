@@ -29,10 +29,12 @@ import { MonacoMarkdownExtension } from "../monaco-markdown";
 import { markdownService, type TaskListCount } from "../features/markdown/ast/markdown-service";
 import { AlreadyOpenDialog } from "./already-open-dialog";
 import { ToastContainer, showToast } from "./toast";
+import { PlaceholderWidget } from "./placeholder-widget";
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const formatterRef = useRef<MarkdownFormatter | null>(null);
+  const placeholderRef = useRef<PlaceholderWidget | null>(null);
 
   const [charCount, setCharCount] = useState<number>(0);
   const [taskCount, setTaskCount] = useState<TaskListCount>({
@@ -50,7 +52,6 @@ export const EditorApp = () => {
   const { theme } = useTheme();
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
   const isDarkMode = theme === "dark";
-  const [loadingEditor, setLoadingEditor] = useState(true);
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const { shouldShowAlert, dismissAlert } = useTabDetection();
@@ -96,6 +97,20 @@ export const EditorApp = () => {
     }
   };
 
+  const handlePlaceholder = (updatedText: string) => {
+    if (placeholder === "" || editorRef.current == null) return;
+
+    if (placeholderRef.current == null) {
+      placeholderRef.current = new PlaceholderWidget(editorRef.current, placeholder);
+    }
+
+    if (updatedText.length > 0) {
+      editorRef.current.removeContentWidget(placeholderRef.current);
+    } else {
+      editorRef.current.addContentWidget(placeholderRef.current);
+    }
+  };
+
   // Handle editor mounting
   const handleEditorDidMount = (
     editor: monaco.editor.IStandaloneCodeEditor,
@@ -103,7 +118,6 @@ export const EditorApp = () => {
   ) => {
     // Set editor reference
     editorRef.current = editor;
-    setLoadingEditor(false);
 
     // Define editor themes
     monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
@@ -178,6 +192,8 @@ export const EditorApp = () => {
       updateDecorations(model);
     }
 
+    handlePlaceholder(editor.getValue());
+
     // Add key binding for Cmd+S / Ctrl+S to save and create snapshot
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, async () => {
       let value = editor.getValue();
@@ -228,10 +244,9 @@ export const EditorApp = () => {
       debouncedSetContent(updatedText);
       debouncedCharCountUpdate(updatedText);
       debouncedTaskCountUpdate(updatedText);
+      handlePlaceholder(updatedText);
     });
   };
-
-  const shouldShowPlaceholder = editorContent.length === 0 && !loadingEditor;
 
   const handleTocItemClick = useCallback((line: number) => {
     if (!editorRef.current) return;
@@ -260,14 +275,6 @@ export const EditorApp = () => {
         <div className="mx-auto h-full max-w-5xl">
           <div className="flex justify-center h-full">
             <div className="w-full max-w-2xl px-4 sm:px-6 md:px-2 relative">
-              <div
-                className={`text-md absolute left-0.5 top-1 text-gray-400 dark:text-gray-500 pointer-events-none z-[1] transition-opacity duration-300 px-4 sm:px-2 ${
-                  shouldShowPlaceholder ? "opacity-100" : "opacity-0"
-                }`}
-                aria-hidden={!shouldShowPlaceholder}
-              >
-                {placeholder}
-              </div>
               <Editor
                 height="100%"
                 width="100%"
