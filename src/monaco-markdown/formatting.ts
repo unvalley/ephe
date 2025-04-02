@@ -69,7 +69,6 @@ export const activateFormatting = (editor: TextEditor) => {
   // addKeybinding(editor, paste, [KeyMod.CtrlCmd | KeyCode.KEY_B], "Toggle bold");
 };
 
-
 // Return Promise because need to chain operations in unit tests
 
 const toggleBold = (editor: TextEditor) => {
@@ -341,7 +340,7 @@ const createLinkRegex = (): RegExp => {
 
   // Combine both patterns with OR operator
   return new RegExp(`${withSchemePattern}|${withoutSchemePattern}`, "i");
-}
+};
 
 /**
  * Here we store Regexp to check if the text is the single link.
@@ -358,7 +357,7 @@ const singleLinkRegex: RegExp = createLinkRegex();
  */
 export const isSingleLink = (text: string): boolean => {
   return singleLinkRegex.test(text);
-}
+};
 
 const styleByWrapping = (editor: TextEditor, startPattern: string, endPattern?: string): PromiseLike<void> => {
   const actualEndPattern = endPattern === undefined ? startPattern : endPattern;
@@ -438,7 +437,7 @@ const styleByWrapping = (editor: TextEditor, startPattern: string, endPattern?: 
       editor.selections = newSelections;
     }
   });
-}
+};
 
 /**
  * Add or remove `startPattern`/`endPattern` according to the context
@@ -555,7 +554,7 @@ const wrapRange = (
   }
 
   newSelections[i] = newSelection;
-}
+};
 
 function isWrapped(text: string, startPattern: string, endPattern?: string): boolean {
   const actualEndPattern = endPattern === undefined ? startPattern : endPattern;

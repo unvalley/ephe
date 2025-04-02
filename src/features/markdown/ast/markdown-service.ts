@@ -4,11 +4,11 @@ import type { TxtDocumentNode, TxtNode, TxtParentNode, TxtListItemNode } from "@
 export type TaskListCount = {
   open: number;
   closed: number;
-}
+};
 
 export type MarkdownProcessingResult = {
   taskCount: TaskListCount;
-}
+};
 
 /**
  * Task item with its line number information
@@ -16,7 +16,7 @@ export type MarkdownProcessingResult = {
 export type TaskWithLineNumber = {
   line: number;
   checked: boolean;
-}
+};
 
 /**
  * Markdown service that handles processing markdown content
@@ -35,7 +35,7 @@ export class MarkdownAstService {
 
   public getAst(markdown: string): TxtDocumentNode {
     const doc = parse(markdown);
-    return doc
+    return doc;
   }
 
   /**
@@ -53,7 +53,6 @@ export class MarkdownAstService {
       taskCount: this.countTasks(ast),
     };
   }
-  
 
   /**
    * Recursively traverses the AST to count all nested tasks
@@ -73,7 +72,7 @@ export class MarkdownAstService {
     // if the node is a ListItem node, check the checked attribute
     if (node.type === "ListItem") {
       const listItemNode = node as TxtListItemNode;
-      
+
       // count only if the checked attribute is true or false (undefined or null means no checkbox)
       if (listItemNode.checked === true) {
         taskCount.closed++;
@@ -81,7 +80,7 @@ export class MarkdownAstService {
         taskCount.open++;
       }
     }
-    
+
     // if the node is a parent node, recursively count the tasks
     if (this.isParentNode(node)) {
       for (const child of node.children) {
@@ -110,16 +109,16 @@ export class MarkdownAstService {
     // If it's a ListItem node with checked attribute
     if (node.type === "ListItem") {
       const listItemNode = node as TxtListItemNode;
-      
+
       // Only add if checked is explicitly true or false (not undefined or null)
       if (listItemNode.checked === true || listItemNode.checked === false) {
         tasks.push({
           line: node.loc.start.line,
-          checked: listItemNode.checked
+          checked: listItemNode.checked,
         });
       }
     }
-    
+
     // Recursively process child nodes if they exist
     if (this.isParentNode(node)) {
       for (const child of node.children) {
@@ -134,9 +133,9 @@ export class MarkdownAstService {
    * @returns true if the node is a parent node
    */
   private isParentNode(node: TxtNode): node is TxtParentNode {
-    return 'children' in node && Array.isArray((node as TxtParentNode).children);
+    return "children" in node && Array.isArray((node as TxtParentNode).children);
   }
 }
 
 // singleton
-export const markdownService = MarkdownAstService.getInstance(); 
+export const markdownService = MarkdownAstService.getInstance();

@@ -13,7 +13,7 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
   } | null = null;
   private isInitialized = false;
   private config: FormatterConfig;
-  private static readonly WASM_URL = '/wasm/dprint-markdown.wasm';
+  private static readonly WASM_URL = "/wasm/dprint-markdown.wasm";
 
   /**
    * Private constructor to enforce singleton pattern
@@ -37,7 +37,7 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
    * Check if running in browser environment
    */
   private isBrowser(): boolean {
-    return typeof window !== 'undefined' && typeof document !== 'undefined';
+    return typeof window !== "undefined" && typeof document !== "undefined";
   }
 
   /**
@@ -53,10 +53,10 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
       const arrayBuffer = await response.arrayBuffer();
       return new Uint8Array(arrayBuffer);
     }
-    
+
     // In Node.js environment, load WASM directly from file
     // Note: This code won't be executed when bundled with Vite
-    const fs = await import('node:fs');
+    const fs = await import("node:fs");
     const wasmPath = getPath();
     const buffer = fs.readFileSync(wasmPath);
     return new Uint8Array(buffer);
@@ -64,20 +64,20 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
 
   private async initialize(): Promise<void> {
     if (this.isInitialized) return;
-    
+
     try {
       // Load WASM buffer based on current environment
       const wasmBuffer = await this.loadWasmBuffer();
-      
+
       this.formatter = await createFromBuffer(wasmBuffer);
-      
+
       this.setConfig({
         indentWidth: this.config.indentWidth ?? 2,
         lineWidth: this.config.lineWidth ?? 80,
         useTabs: this.config.useTabs ?? false,
-        newLineKind: this.config.newLineKind ?? "auto"
+        newLineKind: this.config.newLineKind ?? "auto",
       });
-      
+
       this.isInitialized = true;
     } catch (error) {
       console.error("Failed to initialize dprint markdown formatter:", error);
@@ -89,7 +89,7 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
   private setConfig(globalConfig: GlobalConfiguration, dprintMarkdownConfig: Record<string, unknown> = {}): void {
     if (!this.formatter) {
       throw new Error("Formatter not initialized. Call initialize() first.");
-    } 
+    }
     this.formatter.setConfig(globalConfig, dprintMarkdownConfig);
   }
 
@@ -100,10 +100,10 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
     if (!this.isInitialized || !this.formatter) {
       throw new Error("Formatter not initialized properly");
     }
-    
+
     return this.formatter.formatText({
       filePath: "ephe.md",
       fileText: text,
     });
   }
-} 
+}

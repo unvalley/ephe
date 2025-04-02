@@ -9,7 +9,7 @@ export type GitHubIssue = {
   state: string;
   repository_url: string;
   repository_name?: string;
-}
+};
 
 /**
  * Fetch issues assigned to a specific GitHub user
@@ -20,26 +20,26 @@ export type GitHubIssue = {
 export const fetchAssignedIssues = async (github_user_id: string): Promise<GitHubIssue[]> => {
   try {
     const response = await fetch(`https://api.github.com/search/issues?q=assignee:${github_user_id}+state:open`);
-    
+
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     // Process the results to extract repository name from repository_url
     const issues: GitHubIssue[] = data.items.map((item: GitHubIssue) => {
       // Extract repository name from repository_url
       // Format: https://api.github.com/repos/owner/repo
       const repoUrl = item.repository_url;
       const repoName = repoUrl.split("/repos/")[1];
-      
+
       return {
         ...item,
-        repository_name: repoName
+        repository_name: repoName,
       };
     });
-    
+
     return issues;
   } catch (error) {
     console.error("Error fetching GitHub issues:", error);
@@ -56,7 +56,7 @@ export const generateIssuesTaskList = (issues: GitHubIssue[]): string => {
   if (issues.length === 0) {
     return "No issues assigned.";
   }
-  
+
   return issues
     .map((issue) => {
       // Remove https:// from the URL for cleaner display
@@ -65,7 +65,7 @@ export const generateIssuesTaskList = (issues: GitHubIssue[]): string => {
       return `- [ ] ${displayUrl}`;
     })
     .join("\n");
-}; 
+};
 
 /**
  * Fetches GitHub issues for a user and returns them as a markdown task list
@@ -80,4 +80,4 @@ export const fetchGitHubIssuesTaskList = async (github_user_id: string): Promise
     console.error("Error fetching GitHub issues:", error);
     return "Error fetching GitHub issues.";
   }
-}; 
+};

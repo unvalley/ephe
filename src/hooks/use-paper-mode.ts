@@ -74,10 +74,7 @@ const paperModeStore = createPaperModeStore();
  * @returns Paper mode state and operations
  */
 export const usePaperMode = () => {
-  const mode = useSyncExternalStore(
-    paperModeStore.subscribe,
-    paperModeStore.getSnapshot
-  );
+  const mode = useSyncExternalStore(paperModeStore.subscribe, paperModeStore.getSnapshot);
 
   return {
     paperMode: mode,

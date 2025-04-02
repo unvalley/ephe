@@ -6,7 +6,7 @@ export type MarkdownFormatter = {
    * Format markdown text
    */
   formatMarkdown(text: string): Promise<string>;
-}
+};
 
 /**
  * Configuration for markdown formatter
@@ -17,4 +17,4 @@ export type FormatterConfig = {
   useTabs?: boolean;
   newLineKind?: "auto" | "lf" | "crlf" | "system";
   [key: string]: unknown;
-} 
+};
