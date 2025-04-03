@@ -75,7 +75,7 @@ const DaysDisplay = () => {
       {showTooltip && (
         <div
           ref={tooltipRef}
-          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 transform bg-white dark:bg-gray-900 p-10 z-50 shadow-xl rounded-xl"
+          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 transform bg-white dark:bg-gray-900 p-10 shadow-xl rounded-xl"
           style={{
             maxWidth: "450px",
             maxHeight: "650px",
