@@ -110,7 +110,7 @@ const DaysDisplay = () => {
                 onMouseLeave={() => setHoveredDay(null)}
               >
                 <div
-                  className={`absolute bottom-full left-1/2 -translate-x-1/2 transform mb-1 px-1 py-1 bg-gray-800 text-xs rounded whitespace-nowrap transition-all duration-300 ease-out ${
+                  className={`absolute bottom-full left-1/2 -translate-x-1/2 transform mb-1 px-1 py-1 bg-gray-800 dark:bg-gray-700 text-white dark:text-gray-100 text-xs rounded whitespace-nowrap transition-all duration-300 ease-out ${
                     hoveredDay === formatDate(day.date)
                       ? "opacity-100 translate-y-0 scale-100"
                       : "opacity-0 translate-y-2 scale-95 pointer-events-none"
