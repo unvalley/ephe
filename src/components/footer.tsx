@@ -8,6 +8,7 @@ import { SuccessIcon, GearIcon } from "./icons";
 import { SystemMenu } from "../features/system/system-menu";
 import { useSystemMenu } from "../features/system/system-context";
 import { DaysDisplay } from "./days-display";
+import type { EditorWidth } from "../hooks/use-editor-width";
 
 type FooterProps = {
   charCount?: number;
@@ -15,11 +16,12 @@ type FooterProps = {
     open: number;
     closed: number;
   };
+  editorWidth?: EditorWidth;
 };
 
 const EPHE_VERSION = "0.0.1";
 
-const _Footer = ({ charCount = 0, taskCount }: FooterProps) => {
+const _Footer = ({ charCount = 0, taskCount, editorWidth = "normal" }: FooterProps) => {
   const { isSystemMenuOpen, toggleSystemMenu } = useSystemMenu();
 
   // Safe access to task counts with defaults

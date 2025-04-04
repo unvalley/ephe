@@ -9,6 +9,7 @@ import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-fo
 import { showToast } from "../../components/toast";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import type { PaperMode } from "../../hooks/use-paper-mode";
+import type { EditorWidth } from "../../hooks/use-editor-width";
 
 type CommandMenuProps = {
   open: boolean;
@@ -19,6 +20,10 @@ type CommandMenuProps = {
   markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
   paperMode?: PaperMode;
   cyclePaperMode?: () => PaperMode;
+  editorWidth?: EditorWidth;
+  toggleEditorWidth?: () => EditorWidth;
+  setNormalWidth?: () => "normal";
+  setWideWidth?: () => "wide";
 };
 
 export const CommandMenu = ({
@@ -28,8 +33,12 @@ export const CommandMenu = ({
   editorContent,
   editorRef,
   markdownFormatterRef,
-  paperMode = "none",
+  paperMode = "normal",
   cyclePaperMode,
+  editorWidth = "normal",
+  toggleEditorWidth,
+  setNormalWidth,
+  setWideWidth,
 }: CommandMenuProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toggleTheme, toggleTargetTheme } = useTheme();
@@ -205,7 +214,19 @@ export const CommandMenu = ({
                   onClose?.();
                 }}
               >
-                Cycle paper mode {paperMode !== "none" ? `(current: ${paperMode})` : ""}
+                Cycle paper mode (current: {paperMode})
+              </Command.Item>
+            )}
+
+            {toggleEditorWidth && (
+              <Command.Item
+                className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+                onSelect={() => {
+                  toggleEditorWidth();
+                  onClose?.();
+                }}
+              >
+                Toggle editor width (current: {editorWidth})
               </Command.Item>
             )}
           </Command.Group>

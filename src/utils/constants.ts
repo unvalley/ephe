@@ -3,4 +3,5 @@ export const LOCAL_STORAGE_KEYS = {
   COMPLETED_TASKS: "ephe-completed-tasks",
   SNAPSHOTS: "ephe-snapshots",
   PAPER_MODE: "ephe-paper-mode",
+  EDITOR_WIDTH: "ephe-editor-width",
 } as const;

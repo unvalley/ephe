@@ -1,15 +1,17 @@
 "use client";
 
 import { useTheme } from "../../hooks/use-theme";
-import { MoonIcon, SunIcon, TableOfContentsIcon } from "../../components/icons";
+import { MoonIcon, SunIcon, TableOfContentsIcon, WidthIcon } from "../../components/icons";
 import { usePaperMode } from "../../hooks/use-paper-mode";
 import { useToc } from "../toc/toc-context";
+import { useEditorWidth } from "../../hooks/use-editor-width";
 
 export const SystemMenu = () => {
   const { theme, toggleTheme } = useTheme();
   const isDarkMode = theme === "dark";
   const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
   const { isTocVisible, toggleToc } = useToc();
+  const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
 
   return (
     <div
@@ -94,6 +96,34 @@ export const SystemMenu = () => {
             </span>
           </span>
           <span>Dots</span>
+        </button>
+      </div>
+
+      <div className="py-1">
+        <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400">Editor Width</div>
+        <button
+          type="button"
+          onClick={setNormalWidth}
+          className={`${
+            editorWidth === "normal" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
+          } text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+        >
+          <span className="flex items-center justify-center w-5 h-5 mr-3">
+            <WidthIcon />
+          </span>
+          <span>Normal</span>
+        </button>
+        <button
+          type="button"
+          onClick={setWideWidth}
+          className={`${
+            editorWidth === "wide" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
+          } text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+        >
+          <span className="flex items-center justify-center w-5 h-5 mr-3">
+            <WidthIcon />
+          </span>
+          <span>Wide</span>
         </button>
       </div>
     </div>

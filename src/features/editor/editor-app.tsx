@@ -8,6 +8,7 @@ import { useLocalStorage } from "../../hooks/use-local-storage";
 import { useDebouncedCallback } from "use-debounce";
 import { useTabDetection } from "../../hooks/use-tab-detection";
 import { usePaperMode } from "../../hooks/use-paper-mode";
+import { useEditorWidth } from "../../hooks/use-editor-width";
 import { CommandMenu } from "../command/command-k";
 import { getRandomQuote } from "./quotes";
 import { SnapshotDialog } from "../snapshots/snapshot-dialog";
@@ -53,6 +54,7 @@ export const EditorApp = () => {
 
   const { theme } = useTheme();
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
+  const { editorWidth, isWideMode, toggleWidth, setNormalWidth, setWideWidth } = useEditorWidth();
   const isDarkMode = theme === "dark";
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
@@ -245,6 +247,12 @@ export const EditorApp = () => {
       setSnapshotDialogOpen(true);
     });
 
+    // Add key binding for Cmd+Shift+W / Ctrl+Shift+W to toggle editor width
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyW, () => {
+      toggleWidth();
+      showToast(`Editor width mode: ${editorWidth === "normal" ? "Wide" : "Normal"}`, "default");
+    });
+
     // Setup content change handler
     editor.onDidChangeModelContent(() => {
       const updatedText = editor.getValue();
@@ -270,7 +278,7 @@ export const EditorApp = () => {
     <div className="h-screen w-screen flex flex-col" onClick={handlePageClick}>
       <div className="flex-1 pt-16 pb-8 overflow-hidden">
         <div className="flex justify-center h-full">
-          <div className="w-full max-w-2xl px-4 sm:px-6 md:px-2 relative">
+          <div className={`w-full ${isWideMode ? "max-w-6xl" : "max-w-2xl"} px-4 sm:px-6 md:px-2 relative`}>
             <Editor
               height="100%"
               width="100%"
@@ -291,7 +299,7 @@ export const EditorApp = () => {
           </div>
         )}
 
-        <Footer charCount={charCount} taskCount={taskCount} />
+        <Footer charCount={charCount} taskCount={taskCount} editorWidth={editorWidth} />
 
         <CommandMenu
           open={commandMenuOpen}
@@ -301,6 +309,10 @@ export const EditorApp = () => {
           markdownFormatterRef={formatterRef}
           paperMode={paperMode}
           cyclePaperMode={cyclePaperMode}
+          editorWidth={editorWidth}
+          toggleEditorWidth={toggleWidth}
+          setNormalWidth={setNormalWidth}
+          setWideWidth={setWideWidth}
         />
 
         {snapshotDialogOpen && (
