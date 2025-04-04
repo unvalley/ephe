@@ -26,12 +26,12 @@ import type { MarkdownFormatter } from "./markdown/formatter/markdown-formatter"
 import { MonacoMarkdownExtension } from "./monaco/monaco-markdown";
 import { markdownService, type TaskListCount } from "./markdown/ast/markdown-service";
 import { AlreadyOpenDialog } from "../../components/already-open-dialog";
-import { ToastContainer, showToast } from "../../components/toast";
 import { PlaceholderWidget } from "./monaco/placeholder-widget";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { saveSnapshot } from "../snapshots/snapshot-storage";
 import { useToc } from "../toc/toc-context";
 import { TableOfContents } from "./table-of-contents";
+import { showToast } from "../../components/toast";
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -314,8 +314,6 @@ export const EditorApp = () => {
         )}
 
         <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />
-
-        <ToastContainer />
       </div>
     </div>
   );

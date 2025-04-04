@@ -108,7 +108,7 @@ export const CommandMenu = ({
         editor.setScrollTop(scrollTop);
       }
 
-      showToast("Document formatted successfully", "success");
+      showToast("Document formatted successfully", "default");
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown";
       showToast(`Error formatting document: ${message}`, "error");

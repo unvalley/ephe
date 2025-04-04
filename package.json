@@ -26,6 +26,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^6.22.0",
+    "sonner": "^2.0.3",
     "use-debounce": "^10.0.4"
   },
   "devDependencies": {
