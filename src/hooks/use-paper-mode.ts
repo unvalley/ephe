@@ -81,6 +81,7 @@ export const usePaperMode = () => {
     paperModeClass: PAPER_MODE_CLASSES[mode],
     setMode: paperModeStore.setMode,
     cycleMode: paperModeStore.cycleMode,
+    toggleNormalMode: () => paperModeStore.toggleMode("none"),
     toggleGraphMode: () => paperModeStore.toggleMode("graph"),
     toggleDotsMode: () => paperModeStore.toggleMode("dots"),
   };

@@ -8,7 +8,8 @@ import { useLocalStorage } from "../../hooks/use-local-storage";
 import { useDebouncedCallback } from "use-debounce";
 import { useTabDetection } from "../../hooks/use-tab-detection";
 import { usePaperMode } from "../../hooks/use-paper-mode";
-import { TableOfContents, TableOfContentsButton } from "./table-of-contents";
+import { TableOfContents } from "./table-of-contents";
+import { SettingsContainer } from "../../components/settings-menu";
 import { CommandMenu } from "../command/command-k";
 import { getRandomQuote } from "./quotes";
 import { SnapshotDialog } from "../snapshots/snapshot-dialog";
@@ -282,6 +283,8 @@ export const EditorApp = () => {
     <div className="h-screen w-screen flex flex-col" onClick={handlePageClick}>
       <div className="flex-1 pt-16 pb-8 overflow-hidden">
         <div className="mx-auto h-full max-w-5xl">
+          <SettingsContainer isTocVisible={isTocVisible} toggleToc={toggleToc} />
+
           <div className="flex justify-center h-full">
             <div className="w-full max-w-2xl px-4 sm:px-6 md:px-2 relative">
               <Editor
@@ -297,15 +300,6 @@ export const EditorApp = () => {
               />
             </div>
           </div>
-
-          {editorContent.trim() && (
-            <>
-              <TableOfContentsButton isVisible={isTocVisible} toggleToc={toggleToc} />
-              <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
-                <TableOfContents isVisible={isTocVisible} content={editorContent} onItemClick={handleTocItemClick} />
-              </div>
-            </>
-          )}
 
           <Footer charCount={charCount} taskCount={taskCount} />
 

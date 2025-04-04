@@ -3,7 +3,6 @@
 import type React from "react";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTheme } from "../../hooks/use-theme";
-import { TableOfContentsIcon } from "../../components/icons";
 
 type TocItem = {
   level: number;
@@ -134,18 +133,5 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
         ))}
       </ul>
     </div>
-  );
-};
-
-export const TableOfContentsButton = ({ isVisible, toggleToc }: { isVisible: boolean; toggleToc: () => void }) => {
-  return (
-    <button
-      type="button"
-      onClick={toggleToc}
-      className={"toc-toggle-button cursor-pointer"}
-      title={isVisible ? "Hide table of contents" : "Show table of contents"}
-    >
-      <TableOfContentsIcon />
-    </button>
   );
 };

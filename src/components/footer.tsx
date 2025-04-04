@@ -151,17 +151,6 @@ const _Footer = ({ charCount = 0, taskCount }: FooterProps) => {
           <Link to="/history" className={"hover:text-gray-900 dark:hover:text-gray-100"}>
             History
           </Link>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleTheme();
-            }}
-            className="hover:text-gray-900 dark:hover:text-gray-100"
-            aria-label={`Switch to ${toggleTargetTheme} mode`}
-          >
-            {toggleTargetTheme === "light" ? "Light" : "Dark"}
-          </button>
         </nav>
 
         <div className="flex items-center space-x-3 min-w-0">
