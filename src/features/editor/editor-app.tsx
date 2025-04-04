@@ -8,8 +8,6 @@ import { useLocalStorage } from "../../hooks/use-local-storage";
 import { useDebouncedCallback } from "use-debounce";
 import { useTabDetection } from "../../hooks/use-tab-detection";
 import { usePaperMode } from "../../hooks/use-paper-mode";
-import { TableOfContents } from "./table-of-contents";
-import { SettingsContainer } from "../../components/settings-menu";
 import { CommandMenu } from "../command/command-k";
 import { getRandomQuote } from "./quotes";
 import { SnapshotDialog } from "../snapshots/snapshot-dialog";
@@ -32,6 +30,8 @@ import { ToastContainer, showToast } from "../../components/toast";
 import { PlaceholderWidget } from "./monaco/placeholder-widget";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { saveSnapshot } from "../snapshots/snapshot-storage";
+import { useToc } from "../toc/toc-context";
+import { TableOfContents } from "./table-of-contents";
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -46,7 +46,7 @@ export const EditorApp = () => {
 
   const [localStorageContent, setLocalStorageContent] = useLocalStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
   const [placeholder, _] = useState<string>(getRandomQuote());
-  const [isTocVisible, setIsTocVisible] = useState<boolean>(true);
+  const { isTocVisible, focusOnSection } = useToc({ editorRef });
   const [editorContent, setEditorContent] = useState<string>(
     typeof localStorageContent === "string" ? localStorageContent : "",
   );
@@ -258,15 +258,6 @@ export const EditorApp = () => {
     });
   };
 
-  const handleTocItemClick = useCallback((line: number) => {
-    if (!editorRef.current) return;
-
-    // Position to the start of the clicked heading line
-    editorRef.current.revealLineInCenter(line + 1);
-    editorRef.current.setPosition({ lineNumber: line + 1, column: 1 });
-    editorRef.current.focus();
-  }, []);
-
   const handleCloseCommandMenu = useCallback(() => {
     setCommandMenuOpen(false);
     if (editorRef.current) {
@@ -274,59 +265,57 @@ export const EditorApp = () => {
     }
   }, []);
 
-  const toggleToc = useCallback(() => {
-    setIsTocVisible(!isTocVisible);
-  }, [isTocVisible]);
-
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents:
     <div className="h-screen w-screen flex flex-col" onClick={handlePageClick}>
       <div className="flex-1 pt-16 pb-8 overflow-hidden">
-        <div className="mx-auto h-full max-w-5xl">
-          <SettingsContainer isTocVisible={isTocVisible} toggleToc={toggleToc} />
-
-          <div className="flex justify-center h-full">
-            <div className="w-full max-w-2xl px-4 sm:px-6 md:px-2 relative">
-              <Editor
-                height="100%"
-                width="100%"
-                defaultLanguage="markdown"
-                defaultValue={localStorageContent}
-                options={editorOptions}
-                onMount={handleEditorDidMount}
-                className="overflow-visible"
-                loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
-                theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
-              />
-            </div>
+        <div className="flex justify-center h-full">
+          <div className="w-full max-w-2xl px-4 sm:px-6 md:px-2 relative">
+            <Editor
+              height="100%"
+              width="100%"
+              defaultLanguage="markdown"
+              defaultValue={localStorageContent}
+              options={editorOptions}
+              onMount={handleEditorDidMount}
+              className="overflow-visible"
+              loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
+              theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
+            />
           </div>
-
-          <Footer charCount={charCount} taskCount={taskCount} />
-
-          <CommandMenu
-            open={commandMenuOpen}
-            onClose={handleCloseCommandMenu}
-            editorContent={editorContent}
-            editorRef={editorRef}
-            markdownFormatterRef={formatterRef}
-            paperMode={paperMode}
-            cyclePaperMode={cyclePaperMode}
-          />
-
-          {snapshotDialogOpen && (
-            <Suspense fallback={<Loading className="h-screen w-screen flex items-center justify-center" />}>
-              <SnapshotDialog
-                isOpen={snapshotDialogOpen}
-                onClose={() => setSnapshotDialogOpen(false)}
-                editorContent={editorContent}
-              />
-            </Suspense>
-          )}
-
-          <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />
-
-          <ToastContainer />
         </div>
+
+        {editorContent.trim() && (
+          <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
+            <TableOfContents isVisible={isTocVisible} content={editorContent} onItemClick={focusOnSection} />
+          </div>
+        )}
+
+        <Footer charCount={charCount} taskCount={taskCount} />
+
+        <CommandMenu
+          open={commandMenuOpen}
+          onClose={handleCloseCommandMenu}
+          editorContent={editorContent}
+          editorRef={editorRef}
+          markdownFormatterRef={formatterRef}
+          paperMode={paperMode}
+          cyclePaperMode={cyclePaperMode}
+        />
+
+        {snapshotDialogOpen && (
+          <Suspense fallback={<Loading className="h-screen w-screen flex items-center justify-center" />}>
+            <SnapshotDialog
+              isOpen={snapshotDialogOpen}
+              onClose={() => setSnapshotDialogOpen(false)}
+              editorContent={editorContent}
+            />
+          </Suspense>
+        )}
+
+        <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />
+
+        <ToastContainer />
       </div>
     </div>
   );

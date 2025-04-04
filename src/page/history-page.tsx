@@ -347,188 +347,190 @@ export const HistoryPage = () => {
     );
   };
 
-  if (isLoading) {
-    return <Loading className="h-screen w-screen flex items-center justify-center" />;
-  }
-
   return (
-    <div className="h-screen w-screen flex flex-col antialiase">
-      <div className="flex-1 pt-16 pb-8 overflow-auto">
-        <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-xl text-gray-800 dark:text-gray-100">History</h1>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Your completed tasks and snapshots.</p>
+    <div className="h-screen w-screen flex flex-col">
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Loading className="flex items-center justify-center" />
+        </div>
+      ) : (
+        <div className="flex-1 pt-16 pb-8 overflow-auto">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-xl text-gray-800 dark:text-gray-100">History</h1>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Your completed tasks and snapshots.</p>
+              </div>
+
+              {/* Purge button */}
+              {Object.keys(historyByDate).length > 0 && (
+                <button
+                  onClick={() => {
+                    setPurgeType("all");
+                    setShowPurgeConfirm(true);
+                  }}
+                  className="px-3 py-1.5 text-sm rounded-md bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors focus:outline-none"
+                  type="button"
+                >
+                  Delete All
+                </button>
+              )}
             </div>
 
-            {/* Purge button */}
-            {Object.keys(historyByDate).length > 0 && (
-              <button
-                onClick={() => {
-                  setPurgeType("all");
-                  setShowPurgeConfirm(true);
-                }}
-                className="px-3 py-1.5 text-sm rounded-md bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors focus:outline-none"
-                type="button"
-              >
-                Delete All
-              </button>
-            )}
-          </div>
+            <div className="mb-6 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm">
+              <div className="flex flex-col sm:flex-row p-2 gap-2 items-center">
+                <div className="w-full sm:w-auto flex-1">
+                  <div className="relative rounded-md shadow-sm">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <svg
+                        className="h-4 w-4 text-gray-400 dark:text-gray-500"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        aria-hidden="true"
+                        role="img"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      className="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset sm:text-sm"
+                      placeholder="Search in history...(unimplemented)"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                </div>
 
-          <div className="mb-6 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm">
-            <div className="flex flex-col sm:flex-row p-2 gap-2 items-center">
-              <div className="w-full sm:w-auto flex-1">
-                <div className="relative rounded-md shadow-sm">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <div className="w-full sm:w-auto">
+                  <select
+                    id="type-filter"
+                    value={filter.types ? filter.types[0] : ""}
+                    onChange={(e) => {
+                      const value = e.target.value as HistoryItemType;
+                      updateFilter("types", value ? [value] : undefined);
+                    }}
+                    className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset sm:text-sm"
+                  >
+                    <option value="">All Types</option>
+                    <option value="task">Tasks</option>
+                    <option value="snapshot">Snapshots</option>
+                  </select>
+                </div>
+
+                {/* Date filter dropdown */}
+                <div className="w-full sm:w-auto">
+                  <select
+                    id="date-filter"
+                    value={filter.month ? `${filter.year}-${filter.month}` : filter.year?.toString() || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (!value) {
+                        updateFilter("year", undefined);
+                        updateFilter("month", undefined);
+                      } else if (value.includes("-")) {
+                        const [year, month] = value.split("-").map(Number);
+                        updateFilter("year", year);
+                        updateFilter("month", month);
+                      } else {
+                        updateFilter("year", Number(value));
+                        updateFilter("month", undefined);
+                      }
+                    }}
+                    className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset sm:text-sm"
+                  >
+                    <option value="">All Time</option>
+                    {availableYears.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                    {availableYears.map((year) =>
+                      availableMonths.map((month) => (
+                        <option key={`${year}-${month}`} value={`${year}-${month}`}>
+                          {new Date(year, month - 1, 1).toLocaleString("default", { month: "long", year: "numeric" })}
+                        </option>
+                      )),
+                    )}
+                  </select>
+                </div>
+
+                {/* Clear filters button */}
+                {(filter.year || filter.month || filter.types || searchQuery) && (
+                  <button
+                    onClick={() => {
+                      resetFilters();
+                      setSearchQuery("");
+                    }}
+                    className="w-full sm:w-auto px-3 py-1.5 text-sm rounded-md flex items-center justify-center  hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors focus:outline-none"
+                    type="button"
+                  >
                     <svg
-                      className="h-4 w-4 text-gray-400 dark:text-gray-500"
-                      fill="currentColor"
+                      className="h-3 w-3 mr-1 text-gray-500 dark:text-gray-400"
                       viewBox="0 0 20 20"
+                      fill="currentColor"
                       aria-hidden="true"
                       role="img"
                     >
                       <path
                         fillRule="evenodd"
-                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                         clipRule="evenodd"
                       />
                     </svg>
-                  </div>
-                  <input
-                    type="text"
-                    className="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset sm:text-sm"
-                    placeholder="Search in history...(unimplemented)"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="w-full sm:w-auto">
-                <select
-                  id="type-filter"
-                  value={filter.types ? filter.types[0] : ""}
-                  onChange={(e) => {
-                    const value = e.target.value as HistoryItemType;
-                    updateFilter("types", value ? [value] : undefined);
-                  }}
-                  className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset sm:text-sm"
-                >
-                  <option value="">All Types</option>
-                  <option value="task">Tasks</option>
-                  <option value="snapshot">Snapshots</option>
-                </select>
-              </div>
-
-              {/* Date filter dropdown */}
-              <div className="w-full sm:w-auto">
-                <select
-                  id="date-filter"
-                  value={filter.month ? `${filter.year}-${filter.month}` : filter.year?.toString() || ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (!value) {
-                      updateFilter("year", undefined);
-                      updateFilter("month", undefined);
-                    } else if (value.includes("-")) {
-                      const [year, month] = value.split("-").map(Number);
-                      updateFilter("year", year);
-                      updateFilter("month", month);
-                    } else {
-                      updateFilter("year", Number(value));
-                      updateFilter("month", undefined);
-                    }
-                  }}
-                  className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset sm:text-sm"
-                >
-                  <option value="">All Time</option>
-                  {availableYears.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                  {availableYears.map((year) =>
-                    availableMonths.map((month) => (
-                      <option key={`${year}-${month}`} value={`${year}-${month}`}>
-                        {new Date(year, month - 1, 1).toLocaleString("default", { month: "long", year: "numeric" })}
-                      </option>
-                    )),
-                  )}
-                </select>
-              </div>
-
-              {/* Clear filters button */}
-              {(filter.year || filter.month || filter.types || searchQuery) && (
-                <button
-                  onClick={() => {
-                    resetFilters();
-                    setSearchQuery("");
-                  }}
-                  className="w-full sm:w-auto px-3 py-1.5 text-sm rounded-md flex items-center justify-center  hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors focus:outline-none"
-                  type="button"
-                >
-                  <svg
-                    className="h-3 w-3 mr-1 text-gray-500 dark:text-gray-400"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                    role="img"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Clear
-                </button>
-              )}
-            </div>
-          </div>
-
-          {sortedDates.length === 0 ? (
-            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-                role="img"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1}
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                />
-              </svg>
-              <p className="mt-4 text-gray-500 dark:text-gray-300">No history items found.</p>
-              {Object.keys(filter).length > 0 && (
-                <p className="mt-2 text-gray-500 dark:text-gray-300">
-                  Try adjusting your filters or{" "}
-                  <button
-                    onClick={resetFilters}
-                    className="text-blue-600 dark:text-blue-400 hover:underline"
-                    type="button"
-                  >
-                    reset them
+                    Clear
                   </button>
-                  .
-                </p>
-              )}
+                )}
+              </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {sortedDates.map((date) => {
-                const items = historyByDate[date];
-                return renderHistoryItems(date, items);
-              })}
-            </div>
-          )}
+
+            {sortedDates.length === 0 ? (
+              <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                  role="img"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1}
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  />
+                </svg>
+                <p className="mt-4 text-gray-500 dark:text-gray-300">No history items found.</p>
+                {Object.keys(filter).length > 0 && (
+                  <p className="mt-2 text-gray-500 dark:text-gray-300">
+                    Try adjusting your filters or{" "}
+                    <button
+                      onClick={resetFilters}
+                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                      type="button"
+                    >
+                      reset them
+                    </button>
+                    .
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sortedDates.map((date) => {
+                  const items = historyByDate[date];
+                  return renderHistoryItems(date, items);
+                })}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Confirmation Modal */}
       {showPurgeConfirm && (
