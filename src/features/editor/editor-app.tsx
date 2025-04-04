@@ -54,7 +54,7 @@ export const EditorApp = () => {
 
   const { theme } = useTheme();
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
-  const { editorWidth, isWideMode, toggleWidth, setNormalWidth, setWideWidth } = useEditorWidth();
+  const { editorWidth, isWideMode, toggleWidth } = useEditorWidth();
   const isDarkMode = theme === "dark";
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
@@ -311,8 +311,6 @@ export const EditorApp = () => {
           cyclePaperMode={cyclePaperMode}
           editorWidth={editorWidth}
           toggleEditorWidth={toggleWidth}
-          setNormalWidth={setNormalWidth}
-          setWideWidth={setWideWidth}
         />
 
         {snapshotDialogOpen && (

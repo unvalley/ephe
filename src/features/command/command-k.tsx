@@ -22,8 +22,6 @@ type CommandMenuProps = {
   cyclePaperMode?: () => PaperMode;
   editorWidth?: EditorWidth;
   toggleEditorWidth?: () => EditorWidth;
-  setNormalWidth?: () => "normal";
-  setWideWidth?: () => "wide";
 };
 
 export const CommandMenu = ({
@@ -37,8 +35,6 @@ export const CommandMenu = ({
   cyclePaperMode,
   editorWidth = "normal",
   toggleEditorWidth,
-  setNormalWidth,
-  setWideWidth,
 }: CommandMenuProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toggleTheme, toggleTargetTheme } = useTheme();
