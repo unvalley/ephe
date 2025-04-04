@@ -1,11 +1,10 @@
 import { useSyncExternalStore } from "react";
 import { LOCAL_STORAGE_KEYS } from "../utils/constants";
 
-export type PaperMode = "none" | "graph" | "dots";
-
+export type PaperMode = "normal" | "graph" | "dots";
 
 export const PAPER_MODE_CLASSES: Record<PaperMode, string> = {
-  none: "",
+  normal: "",
   graph: "bg-graph-paper",
   dots: "bg-dots-paper",
 };
@@ -14,10 +13,10 @@ const createPaperModeStore = () => {
   const subscribers = new Set<() => void>();
 
   const getCurrentMode = (): PaperMode => {
-    if (typeof window === "undefined") return "none";
+    if (typeof window === "undefined") return "normal";
 
     const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.PAPER_MODE);
-    return (saved as PaperMode) || "none";
+    return (saved as PaperMode) || "normal";
   };
 
   let currentMode = getCurrentMode();
@@ -35,7 +34,7 @@ const createPaperModeStore = () => {
   };
 
   const cycleMode = () => {
-    const modes: PaperMode[] = ["none", "graph", "dots"];
+    const modes: PaperMode[] = ["normal", "graph", "dots"];
     const currentIndex = modes.indexOf(currentMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     setMode(modes[nextIndex]);
@@ -43,7 +42,7 @@ const createPaperModeStore = () => {
   };
 
   const toggleMode = (mode: PaperMode) => {
-    setMode(currentMode === mode ? "none" : mode);
+    setMode(currentMode === mode ? "normal" : mode);
     return currentMode;
   };
 
@@ -81,7 +80,7 @@ export const usePaperMode = () => {
     paperModeClass: PAPER_MODE_CLASSES[mode],
     setMode: paperModeStore.setMode,
     cycleMode: paperModeStore.cycleMode,
-    toggleNormalMode: () => paperModeStore.toggleMode("none"),
+    toggleNormalMode: () => paperModeStore.toggleMode("normal"),
     toggleGraphMode: () => paperModeStore.toggleMode("graph"),
     toggleDotsMode: () => paperModeStore.toggleMode("dots"),
   };

@@ -52,13 +52,13 @@ export const SystemMenu = () => {
           type="button"
           onClick={toggleNormalMode}
           className={`${
-            paperMode === "none" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
+            paperMode === "normal" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
           } text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
         >
           <span className="flex items-center justify-center w-5 h-5 mr-3">
             <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"></span>
           </span>
-          <span>Normal paper</span>
+          <span>Normal</span>
         </button>
         <button
           type="button"
@@ -79,7 +79,7 @@ export const SystemMenu = () => {
               ></span>
             </span>
           </span>
-          <span>Graph paper</span>
+          <span>Graph</span>
         </button>
         <button
           type="button"
@@ -93,7 +93,7 @@ export const SystemMenu = () => {
               <span className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500"></span>
             </span>
           </span>
-          <span>Dots paper</span>
+          <span>Dots</span>
         </button>
       </div>
     </div>
