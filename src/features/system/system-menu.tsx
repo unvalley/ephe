@@ -11,7 +11,7 @@ export const SystemMenu = () => {
   const isDarkMode = theme === "dark";
   const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
   const { isTocVisible, toggleToc } = useToc();
-  const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
+  const { editorWidth } = useEditorWidth();
 
   return (
     <div
