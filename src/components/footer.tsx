@@ -21,7 +21,7 @@ type FooterProps = {
 
 const EPHE_VERSION = "0.0.1";
 
-const _Footer = ({ charCount = 0, taskCount, editorWidth = "normal" }: FooterProps) => {
+const _Footer = ({ charCount = 0, taskCount }: FooterProps) => {
   const { isSystemMenuOpen, toggleSystemMenu } = useSystemMenu();
 
   // Safe access to task counts with defaults

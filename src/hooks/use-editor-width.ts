@@ -78,5 +78,7 @@ export const useEditorWidth = () => {
     isWideMode: width === "wide",
     setWidth: editorWidthStore.setWidth,
     toggleWidth: editorWidthStore.toggleWidth,
+    setNormalWidth: editorWidthStore.setNormalWidth,
+    setWideWidth: editorWidthStore.setWideWidth,
   };
 }; 
