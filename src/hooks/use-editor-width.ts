@@ -81,4 +81,4 @@ export const useEditorWidth = () => {
     setNormalWidth: editorWidthStore.setNormalWidth,
     setWideWidth: editorWidthStore.setWideWidth,
   };
-}; 
+};
