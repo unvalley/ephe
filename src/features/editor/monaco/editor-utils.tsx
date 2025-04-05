@@ -70,6 +70,10 @@ export const editorOptions: EditorProps["options"] = {
   fontFamily: "monospace", // cause problems?
   fontSize: 14,
   contextmenu: false,
+  tabSize: 2,
+  useTabStops: true,
+  detectIndentation: false, // enforce 2 spaces
+  insertSpaces: true,
   scrollbar: {
     vertical: "hidden",
     horizontal: "hidden",
@@ -143,6 +147,8 @@ export const handleKeyDown = (
 
   // Auto-complete task list syntax
   handleTaskListAutoComplete(e, editor, model, position);
+
+  // No additional handling needed for Enter key as tabSize setting already ensures proper indentation
   return;
 };
 
