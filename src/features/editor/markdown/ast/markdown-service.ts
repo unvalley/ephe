@@ -1,5 +1,9 @@
 import { parse } from "@textlint/markdown-to-ast";
 import type { TxtDocumentNode, TxtNode, TxtParentNode, TxtListItemNode } from "@textlint/ast-node-types";
+import { LOCAL_STORAGE_KEYS } from "src/utils/constants";
+
+// ローカルストレージのキー
+const COMPLETED_TASKS_STORAGE_KEY = "completed_tasks_timestamps";
 
 export type TaskListCount = {
   open: number;
@@ -19,12 +23,31 @@ export type TaskWithLineNumber = {
 };
 
 /**
+ * Task item with completion timestamp
+ */
+export type CompletedTaskWithTimestamp = TaskWithLineNumber & {
+  completedAt: Date;
+};
+
+/**
+ * Stored task data structure
+ */
+type StoredTaskData = {
+  [lineNumber: string]: number; // タイムスタンプを数値で保存
+};
+
+/**
  * Markdown service that handles processing markdown content
  * using @textlint/markdown-to-ast for parsing and custom rendering
  */
 export class MarkdownAstService {
   private static instance: MarkdownAstService | null = null;
-  private constructor() {}
+  private closedTasksTimestamps: Map<number, Date> = new Map();
+
+  private constructor() {
+    // Load data from localStorage when the instance is created
+    this.loadClosedTasksFromStorage();
+  }
 
   public static getInstance(): MarkdownAstService {
     if (!MarkdownAstService.instance) {
@@ -36,6 +59,45 @@ export class MarkdownAstService {
   public getAst(markdown: string): TxtDocumentNode {
     const doc = parse(markdown);
     return doc;
+  }
+
+  /**
+   * Load closed tasks data from localStorage
+   */
+  private loadClosedTasksFromStorage(): void {
+    try {
+      const storedData = localStorage.getItem(LOCAL_STORAGE_KEYS.CLOSED_TASKS);
+      if (storedData) {
+        const parsedData: StoredTaskData = JSON.parse(storedData);
+
+        // Convert stored data to Map
+        this.closedTasksTimestamps = new Map();
+        Object.entries(parsedData).forEach(([lineStr, timestamp]) => {
+          const line = parseInt(lineStr, 10);
+          this.closedTasksTimestamps.set(line, new Date(timestamp));
+        });
+      }
+    } catch (error) {
+      console.error("Error loading closed tasks data:", error);
+    }
+  }
+
+  /**
+   * Save completed tasks data to localStorage
+   */
+  private saveClosedTasksToStorage(): void {
+    try {
+      const dataToStore: StoredTaskData = {};
+
+      // Convert Map to plain object for storage
+      this.closedTasksTimestamps.forEach((date, line) => {
+        dataToStore[line.toString()] = date.getTime();
+      });
+
+      localStorage.setItem(LOCAL_STORAGE_KEYS.CLOSED_TASKS, JSON.stringify(dataToStore));
+    } catch (error) {
+      console.error("Error saving closed tasks data:", error);
+    }
   }
 
   /**
@@ -101,6 +163,50 @@ export class MarkdownAstService {
   }
 
   /**
+   * Record a completed task with its completion timestamp
+   * @param taskLine Line number of the task
+   * @param timestamp Completion timestamp
+   */
+  public recordCompletedTask(taskLine: number, timestamp: Date = new Date()): void {
+    this.closedTasksTimestamps.set(taskLine, timestamp);
+    // Save task information to localStorage
+    this.saveClosedTasksToStorage();
+  }
+
+  /**
+   * Remove a task from the completed tasks registry
+   * @param taskLine Line number of the task to remove
+   */
+  public removeCompletedTask(taskLine: number): void {
+    if (this.closedTasksTimestamps.has(taskLine)) {
+      this.closedTasksTimestamps.delete(taskLine);
+      // 変更を永続化
+      this.saveClosedTasksToStorage();
+    }
+  }
+
+  /**
+   * Find completed tasks with their completion timestamps
+   * @param ast The markdown AST
+   * @returns Array of completed tasks with timestamps
+   */
+  public findCompletedTasksWithTimestamps(ast: TxtDocumentNode): CompletedTaskWithTimestamp[] {
+    const tasks = this.findCheckedTasksWithLineNumbers(ast);
+    const now = new Date();
+
+    return tasks
+      .filter((task) => task.checked)
+      .map((task) => {
+        // Use recorded timestamp if available, otherwise use current time
+        const completedAt = this.closedTasksTimestamps.get(task.line) || now;
+        return {
+          ...task,
+          completedAt,
+        };
+      });
+  }
+
+  /**
    * Recursively find all task items with their line numbers
    * @param node The current node
    * @param tasks Array to collect found tasks
@@ -125,6 +231,39 @@ export class MarkdownAstService {
         this.findTasksRecursively(child, tasks);
       }
     }
+  }
+
+  /**
+   * Check if there are any pending tasks that should be cleared
+   * based on the specified mode and timing
+   * @param mode Auto clear mode
+   * @returns Array of task lines that should be cleared
+   */
+  public getTasksToBeCleared(mode: "hourly" | "daily"): number[] {
+    const now = new Date();
+    const tasksToRemove: number[] = [];
+
+    this.closedTasksTimestamps.forEach((completedAt, taskLine) => {
+      let shouldClear = false;
+
+      if (mode === "hourly") {
+        // 1時間経過したかチェック
+        const hourLater = new Date(completedAt);
+        hourLater.setHours(hourLater.getHours() + 1);
+        shouldClear = now >= hourLater;
+      } else if (mode === "daily") {
+        // 日付が変わったかチェック
+        const taskDate = completedAt.toDateString();
+        const currentDate = now.toDateString();
+        shouldClear = taskDate !== currentDate;
+      }
+
+      if (shouldClear) {
+        tasksToRemove.push(taskLine);
+      }
+    });
+
+    return tasksToRemove;
   }
 
   /**

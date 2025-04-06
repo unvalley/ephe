@@ -1,7 +1,7 @@
 ---
 description: 
-globs: *.ts,*.tsx
-alwaysApply: false
+globs: 
+alwaysApply: true
 ---
 ## General Rule
 
@@ -17,3 +17,8 @@ alwaysApply: false
 - Use arrow functions.
 - Use async/await for asynchronous code.
 - Use vitest to write tests.
+
+
+## Learning
+
+

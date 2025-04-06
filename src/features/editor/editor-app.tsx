@@ -9,6 +9,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { useTabDetection } from "../../hooks/use-tab-detection";
 import { usePaperMode } from "../../hooks/use-paper-mode";
 import { useEditorWidth } from "../../hooks/use-editor-width";
+import { useAutoClearClosedTasks, type AutoClearMode } from "../../hooks/use-auto-clear-closed-tasks";
 import { CommandMenu } from "../command/command-k";
 import { getRandomQuote } from "./quotes";
 import { SnapshotDialog } from "../snapshots/snapshot-dialog";
@@ -33,6 +34,8 @@ import { saveSnapshot } from "../snapshots/snapshot-storage";
 import { useToc } from "../toc/toc-context";
 import { TableOfContents } from "./table-of-contents";
 import { showToast } from "../../components/toast";
+import { isClosedTaskLine } from "./monaco/task-list-utils";
+import { Range } from "monaco-editor";
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -59,6 +62,9 @@ export const EditorApp = () => {
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const { shouldShowAlert, dismissAlert } = useTabDetection();
+
+  const { autoClearMode, setAutoClearMode, processCompletedTasks, handleTaskChecked } =
+    useAutoClearClosedTasks(editorRef);
 
   // Define debounced functions
   const debouncedSetContent = useDebouncedCallback((content: string) => {
@@ -150,6 +156,9 @@ export const EditorApp = () => {
 
         // Get all tasks with line numbers from markdown service
         const tasks = markdownService.findCheckedTasksWithLineNumbers(ast);
+
+        // Process completed tasks for auto-clearing
+        processCompletedTasks(editor);
 
         // Create decorations for checked tasks
         for (const task of tasks) {
@@ -253,6 +262,24 @@ export const EditorApp = () => {
       showToast(`Editor width mode: ${editorWidth === "normal" ? "Wide" : "Normal"}`, "default");
     });
 
+    // Add key binding for task operations
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyT, () => {
+      // Cycle through auto-clear modes
+      const modes: AutoClearMode[] = ["disabled", "immediate", "hourly", "daily"];
+      const currentIndex = modes.indexOf(autoClearMode);
+      const nextIndex = (currentIndex + 1) % modes.length;
+      setAutoClearMode(modes[nextIndex]);
+
+      // Show toast with current mode
+      const modeNames = {
+        disabled: "Disabled",
+        immediate: "Immediate",
+        hourly: "After 1 hour",
+        daily: "After date change",
+      };
+      showToast(`Auto Clear Tasks: ${modeNames[modes[nextIndex]]}`, "default");
+    });
+
     // Setup content change handler
     editor.onDidChangeModelContent(() => {
       const updatedText = editor.getValue();
@@ -272,6 +299,22 @@ export const EditorApp = () => {
       editorRef.current.focus();
     }
   }, []);
+
+  // Process tasks after checking (immediate mode)
+  useEffect(() => {
+    const handleTaskCheckedEvent = (event: CustomEvent<{ taskLine: number; taskContent: string }>) => {
+      const { taskLine } = event.detail;
+      // Use the hook's handler which handles all modes
+      handleTaskChecked(taskLine);
+    };
+
+    // Add event listener with type assertion
+    document.addEventListener("taskChecked", handleTaskCheckedEvent as EventListener);
+
+    return () => {
+      document.removeEventListener("taskChecked", handleTaskCheckedEvent as EventListener);
+    };
+  }, [handleTaskChecked]);
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents:
@@ -311,6 +354,8 @@ export const EditorApp = () => {
           cyclePaperMode={cyclePaperMode}
           editorWidth={editorWidth}
           toggleEditorWidth={toggleWidth}
+          autoClearMode={autoClearMode}
+          setAutoClearMode={setAutoClearMode}
         />
 
         {snapshotDialogOpen && (

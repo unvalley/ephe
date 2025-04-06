@@ -5,6 +5,8 @@ import { MoonIcon, SunIcon, TableOfContentsIcon, WidthIcon } from "../../compone
 import { usePaperMode } from "../../hooks/use-paper-mode";
 import { useToc } from "../toc/toc-context";
 import { useEditorWidth } from "../../hooks/use-editor-width";
+import { useAutoClearClosedTasks, type AutoClearMode } from "../../hooks/use-auto-clear-closed-tasks";
+import { showToast } from "../../components/toast";
 
 export const SystemMenu = () => {
   const { theme, toggleTheme } = useTheme();
@@ -12,6 +14,20 @@ export const SystemMenu = () => {
   const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
   const { isTocVisible, toggleToc } = useToc();
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
+  const { autoClearMode, setAutoClearMode } = useAutoClearClosedTasks();
+
+  const handleAutoClearModeChange = (mode: AutoClearMode) => {
+    setAutoClearMode(mode);
+
+    const modeNames = {
+      disabled: "Disabled",
+      immediate: "Immediate",
+      hourly: "After 1 hour",
+      daily: "After date change",
+    };
+
+    showToast(`Auto Clear Tasks: ${modeNames[mode]}`, "default");
+  };
 
   return (
     <div
@@ -124,6 +140,66 @@ export const SystemMenu = () => {
             <WidthIcon />
           </span>
           <span>Wide</span>
+        </button>
+      </div>
+
+      <div className="py-1">
+        <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400">Auto Clear Tasks</div>
+        <button
+          type="button"
+          onClick={() => handleAutoClearModeChange("disabled")}
+          className={`${
+            autoClearMode === "disabled" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
+          } text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+        >
+          <span className="flex items-center justify-center w-5 h-5 mr-3">
+            <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 flex items-center justify-center">
+              <span className="w-3 h-0.5 bg-gray-400 dark:bg-gray-500"></span>
+            </span>
+          </span>
+          <span>Disabled</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => handleAutoClearModeChange("immediate")}
+          className={`${
+            autoClearMode === "immediate" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
+          } text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+        >
+          <span className="flex items-center justify-center w-5 h-5 mr-3">
+            <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs">
+              <span>⚡</span>
+            </span>
+          </span>
+          <span>Immediate</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => handleAutoClearModeChange("hourly")}
+          className={`${
+            autoClearMode === "hourly" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
+          } text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+        >
+          <span className="flex items-center justify-center w-5 h-5 mr-3">
+            <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs">
+              <span>1h</span>
+            </span>
+          </span>
+          <span>After 1 hour</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => handleAutoClearModeChange("daily")}
+          className={`${
+            autoClearMode === "daily" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
+          } text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+        >
+          <span className="flex items-center justify-center w-5 h-5 mr-3">
+            <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-xs">
+              <span>1d</span>
+            </span>
+          </span>
+          <span>After date change</span>
         </button>
       </div>
     </div>
