@@ -4,6 +4,7 @@ import { isTaskLine, isClosedTaskLine } from "./task-list-utils";
 import { generateTaskIdentifier } from "../../tasks/task-storage";
 import { findTaskSection } from "./task-section-utils";
 import { saveCompletedTask, deleteCompletedTaskByIdentifier } from "../../tasks/task-storage";
+import { markdownService } from "../markdown/ast/markdown-service";
 
 // Helper functions for placeholder visibility
 export const showPlaceholder = (element: Element) => {
@@ -244,6 +245,10 @@ export const handleTaskCheckboxToggle = (
       const taskIdentifier = generateTaskIdentifier(taskContent);
 
       if (newState === "x") {
+        // Record the task completion time for auto-clear features
+        const now = new Date();
+        markdownService.recordCompletedTask(position.lineNumber, now);
+
         // If task is being checked, save it to history
         saveCompletedTask({
           id: taskIdentifier,
@@ -251,8 +256,18 @@ export const handleTaskCheckboxToggle = (
           originalLine: lineContent,
           taskIdentifier,
           section,
-          completedAt: new Date().toISOString(),
+          completedAt: now.toISOString(),
         });
+
+        // Dispatch a custom event to notify about a task being checked
+        // This allows the EditorApp to handle auto-clearing
+        const customEvent = new CustomEvent("taskChecked", {
+          detail: {
+            taskLine: position.lineNumber,
+            taskContent,
+          },
+        });
+        document.dispatchEvent(customEvent);
       } else {
         // If task is being unchecked, remove it from history
         deleteCompletedTaskByIdentifier(taskIdentifier);

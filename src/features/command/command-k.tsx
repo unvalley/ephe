@@ -10,6 +10,7 @@ import { showToast } from "../../components/toast";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import type { PaperMode } from "../../hooks/use-paper-mode";
 import type { EditorWidth } from "../../hooks/use-editor-width";
+import type { AutoClearMode } from "../../hooks/use-auto-clear-closed-tasks";
 
 type CommandMenuProps = {
   open: boolean;
@@ -22,6 +23,8 @@ type CommandMenuProps = {
   cyclePaperMode?: () => PaperMode;
   editorWidth?: EditorWidth;
   toggleEditorWidth?: () => EditorWidth;
+  autoClearMode?: AutoClearMode;
+  setAutoClearMode?: (mode: AutoClearMode) => void;
 };
 
 export const CommandMenu = ({
@@ -35,6 +38,8 @@ export const CommandMenu = ({
   cyclePaperMode,
   editorWidth = "normal",
   toggleEditorWidth,
+  autoClearMode = "disabled",
+  setAutoClearMode,
 }: CommandMenuProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toggleTheme, toggleTargetTheme } = useTheme();
@@ -163,6 +168,25 @@ export const CommandMenu = ({
     onClose?.();
   };
 
+  // Function to cycle through auto clear modes
+  const handleCycleAutoClearMode = () => {
+    if (!setAutoClearMode) return;
+
+    const modes: AutoClearMode[] = ["disabled", "immediate", "hourly", "daily"];
+    const currentIndex = modes.indexOf(autoClearMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    setAutoClearMode(modes[nextIndex]);
+
+    const modeNames = {
+      disabled: "Disabled",
+      immediate: "Immediate",
+      hourly: "After 1 hour",
+      daily: "After date change",
+    };
+
+    showToast(`Auto Clear Tasks: ${modeNames[modes[nextIndex]]}`, "default");
+  };
+
   return (
     <>
       {/* Overlay */}
@@ -249,6 +273,27 @@ export const CommandMenu = ({
               Insert GitHub Issues (Public Repos)
             </Command.Item>
           </Command.Group>
+
+          {setAutoClearMode && (
+            <Command.Group heading="Task Management">
+              <Command.Item
+                className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+                onSelect={() => {
+                  handleCycleAutoClearMode();
+                  onClose?.();
+                }}
+              >
+                Auto Clear Tasks:{" "}
+                {autoClearMode === "disabled"
+                  ? "Disabled"
+                  : autoClearMode === "immediate"
+                    ? "Immediate"
+                    : autoClearMode === "hourly"
+                      ? "After 1 hour"
+                      : "After date change"}
+              </Command.Item>
+            </Command.Group>
+          )}
 
           <Command.Group heading="Move">
             <Command.Item
