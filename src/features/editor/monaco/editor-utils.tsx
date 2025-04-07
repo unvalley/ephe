@@ -116,6 +116,7 @@ export const editorOptions: EditorProps["options"] = {
     ambiguousCharacters: false,
   },
   occurrencesHighlight: "off",
+  accessibilitySupport: "off", // Fix for CJK text overlapping when wrapping lines
 };
 
 // Set up placeholder when editor content is empty
