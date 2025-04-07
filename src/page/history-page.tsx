@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { showToast } from "../components/toast";
 import { Loading } from "../components/loading";
 import { LOCAL_STORAGE_KEYS } from "../utils/constants";
+import { usePaperMode } from "../hooks/use-paper-mode";
 
 type DateFilter = {
   year?: number;
@@ -43,6 +44,7 @@ export const HistoryPage = () => {
   const [filter, setFilter] = useState<DateFilter>({});
   const [searchQuery, setSearchQuery] = useState<string>("");
   const navigate = useNavigate();
+  const { paperModeClass } = usePaperMode();
 
   // Get available years, months, and days from all history
   const [availableYears, setAvailableYears] = useState<number[]>([]);
@@ -218,7 +220,7 @@ export const HistoryPage = () => {
       const time = new Date(snapshot.timestamp).toLocaleTimeString();
 
       return (
-        <div className="flex group border-b border-gray-200 dark:border-gray-700 py-3 px-2">
+        <div className="flex group border-b border-gray-200 dark:border-gray-700 py-3 px-2 bg-mono-50 dark:bg-mono-800">
           <div className="flex-1 flex items-start">
             <div className="flex items-center">
               <svg className="h-4 w-4 mr-2" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" role="img">
@@ -268,7 +270,7 @@ export const HistoryPage = () => {
     const time = new Date(task.completedAt).toLocaleTimeString();
 
     return (
-      <div className="flex group border-b border-gray-200 dark:border-gray-700 py-3 px-2">
+      <div className="flex group border-b border-gray-200 dark:border-gray-700 py-3 px-2 bg-mono-50 dark:bg-mono-800">
         <div className="flex-1 flex items-start min-w-0">
           <div className="flex items-center min-w-0">
             <svg
@@ -325,7 +327,7 @@ export const HistoryPage = () => {
           }
 
           return (
-            <div key={historyItemType} className="mb-4">
+            <div key={historyItemType} className="mb-4 bg-mono-50 dark:bg-mono-800">
               <div className="border border-gray-100 dark:border-gray-700 rounded-md overflow-hidden">
                 {displayItems.map((item) => (
                   <div key={isSnapshot(item) ? item.id : (item as CompletedTask).id}>{renderHistoryItem(item)}</div>
@@ -333,7 +335,7 @@ export const HistoryPage = () => {
                 {typeItems.length > limit && (
                   <button
                     onClick={() => toggleTypeExpansion(`${date}-${historyItemType}`)}
-                    className="w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 border-t border-gray-200 dark:border-gray-700 focus:outline-none"
+                    className="w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-mono-100 dark:hover:bg-mono-700"
                     type="button"
                   >
                     {isExpanded ? "Show less" : `Show ${typeItems.length - limit} more...`}
@@ -348,7 +350,7 @@ export const HistoryPage = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col dark:bg-mono-800">
+    <div className={`h-screen w-screen flex flex-col antialiased ${paperModeClass}`}>
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <Loading className="flex items-center justify-center" />
@@ -377,7 +379,7 @@ export const HistoryPage = () => {
               )}
             </div>
 
-            <div className="mb-6 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm">
+            <div className="mb-6 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm bg-mono-50 dark:bg-mono-800">
               <div className="flex flex-col sm:flex-row p-2 gap-2 items-center">
                 <div className="w-full sm:w-auto flex-1">
                   <div className="relative rounded-md shadow-sm">
