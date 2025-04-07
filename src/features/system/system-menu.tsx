@@ -19,7 +19,7 @@ export const SystemMenu = () => {
       className="bg-white dark:bg-gray-800 z-10 w-56 divide-y divide-gray-100 dark:divide-gray-700 rounded-md ring-1 shadow-lg ring-black/5 dark:ring-white/10 ring-opacity-5 focus:outline-none dark:shadow-gray-900/30"
     >
       <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-        Settings
+        System
       </div>
 
       <div className="py-1">
