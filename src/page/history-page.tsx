@@ -348,7 +348,7 @@ export const HistoryPage = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col dark:bg-transparent">
+    <div className="h-screen w-screen flex flex-col dark:bg-mono-800">
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <Loading className="flex items-center justify-center" />
