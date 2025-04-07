@@ -65,7 +65,7 @@ export const TableOfContentsIcon = () => {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className="text-gray-500 dark:text-gray-400"
+      className="text-mono-500 dark:text-mono-300"
     >
       <title>Table of Contents</title>
       <line x1="21" y1="6" x2="3" y2="6" />
@@ -88,7 +88,7 @@ export const SettingsIcon = () => {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className="text-gray-500 dark:text-gray-400"
+      className="text-mono-500 dark:text-mono-300"
     >
       <title>Settings</title>
       <circle cx="12" cy="12" r="1" />
@@ -110,7 +110,7 @@ export const MoonIcon = () => {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="mr-2"
+      className="text-mono-500 dark:text-mono-300"
     >
       <title>Dark mode</title>
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
@@ -130,7 +130,7 @@ export const SunIcon = () => {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="mr-2"
+      className="text-mono-500 dark:text-mono-300"
     >
       <title>Light mode</title>
       <circle cx="12" cy="12" r="5" />
@@ -159,7 +159,7 @@ export const GearIcon = () => {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className="text-gray-500 dark:text-gray-400"
+      className="text-mono-500 dark:text-mono-300"
     >
       <title>System settings</title>
       <circle cx="12" cy="12" r="3" />

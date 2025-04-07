@@ -34,43 +34,41 @@ const _Footer = ({ charCount = 0, taskCount }: FooterProps) => {
   const allTasksCompleted = hasTasks && openTasks === 0;
 
   return (
-    <footer className="fixed inset-x-0 bottom-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm space-mono">
-      <div className="mx-auto px-2 py-1 text-s dark:text-gray-400 flex items-center justify-between">
-        <nav className="flex gap-4 items-center">
+    <footer className="fixed inset-x-0 bottom-0 bg-transparent">
+      <div className="flex mx-auto px-2 py-1 text-sm justify-between items-center">
+        <nav className="flex gap-3">
           <div className="relative">
             <button
               id="system-menu-trigger"
               type="button"
               onClick={toggleSystemMenu}
-              className="hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-1"
+              className="flex items-center gap-1"
             >
               <GearIcon />
               <span>System</span>
             </button>
             {isSystemMenuOpen && (
-              <div className="absolute bottom-full mb-2 left-0 z-50">
-                <div className="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden shadow-lg">
+              <div className="absolute bottom-full mb-2 left-0 z-10">
+                <div className="border border-neutral-100 dark:border-neutral-700 rounded-md overflow-hidden shadow-lg">
                   <SystemMenu />
                 </div>
               </div>
             )}
           </div>
-          <Link to="/" className="hover:text-gray-900 dark:hover:text-gray-100">
+          <Link to="/" className="hover:text-neutral-900 dark:hover:text-neutral-100">
             Editor
           </Link>
-          <Link to="/history" className={"hover:text-gray-900 dark:hover:text-gray-100"}>
+          <Link to="/history" className={"hover:text-neutral-900 dark:hover:text-neutral-100"}>
             History
           </Link>
         </nav>
 
-        <div className="flex items-center space-x-3 min-w-0">
+        <div className="flex items-center gap-4 min-w-0">
           <DaysDisplay />
 
           <span
-            className={`whitespace-nowrap flex items-center gap-0.5 px-2 py-0.5 rounded ${
-              allTasksCompleted
-                ? "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                : "bg-gray-50 dark:bg-gray-700"
+            className={`whitespace-nowrap flex items-center rounded ${
+              allTasksCompleted && "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
             }`}
           >
             {allTasksCompleted && closedTasks > 0 && (
@@ -87,9 +85,8 @@ const _Footer = ({ charCount = 0, taskCount }: FooterProps) => {
             )}
             <span className="ml-0.5">tasks</span>
           </span>
-          <span className="whitespace-nowrap flex items-center gap-0.5 bg-gray-50 dark:bg-gray-700 px-2 py-0.5 rounded">
-            {charCount.toLocaleString()} chars
-          </span>
+
+          <span className="whitespace-nowrap flex items-center rounded">{charCount.toLocaleString()} chars</span>
           <div className="flex items-center">
             <Avatar
               size={12}
@@ -98,7 +95,7 @@ const _Footer = ({ charCount = 0, taskCount }: FooterProps) => {
               variant="marble"
               className="flex-shrink-0 mr-1"
             />
-            <Link to="/landing" className="hover:text-gray-900 dark:hover:text-gray-100 whitespace-nowrap">
+            <Link to="/landing" className="whitespace-nowrap">
               Ephe v{EPHE_VERSION}
             </Link>
           </div>

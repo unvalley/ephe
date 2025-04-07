@@ -16,46 +16,39 @@ export const SystemMenu = () => {
   return (
     <div
       id="system-menu-container"
-      className="bg-white dark:bg-gray-800 z-10 w-56 divide-y divide-gray-100 dark:divide-gray-700 rounded-md ring-1 shadow-lg ring-black/5 dark:ring-white/10 ring-opacity-5 focus:outline-none dark:shadow-gray-900/30"
+      className="bg-mono-50 dark:bg-mono-700 z-10 w-56 divide-y divide-mono-100 dark:divide-mono-500 rounded-md ring-1 shadow-lg ring-black/5 dark:ring-white/10 ring-opacity-5 focus:outline-none"
     >
-      <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-        System
-      </div>
-
-      <div className="py-1">
+      <SystemMenuSection title="System">
         <button
           type="button"
           onClick={toggleTheme}
-          className="text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150"
+          className={`flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
         >
-          <span className="flex items-center justify-center w-5 h-5 mr-3 text-gray-600 dark:text-gray-300">
+          <span className="flex items-center justify-center w-5 h-5 mr-3">
             {isDarkMode ? <SunIcon /> : <MoonIcon />}
           </span>
           <span>{isDarkMode ? "Light mode" : "Dark mode"}</span>
         </button>
-      </div>
 
-      <div className="py-1">
         <button
           type="button"
           onClick={toggleToc}
-          className={`${isTocVisible ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""} text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+          className={`flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
         >
-          <span className="flex items-center justify-center w-5 h-5 mr-3 text-gray-600 dark:text-gray-300">
+          <span className="flex items-center justify-center w-5 h-5 mr-3">
             <TableOfContentsIcon />
           </span>
           <span>{isTocVisible ? "Hide ToC" : "Show ToC"}</span>
         </button>
-      </div>
+      </SystemMenuSection>
 
-      <div className="py-1">
-        <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400">Paper Mode</div>
+      <SystemMenuSection title="Paper Mode">
         <button
           type="button"
           onClick={toggleNormalMode}
           className={`${
             paperMode === "normal" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
-          } text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+          } flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
         >
           <span className="flex items-center justify-center w-5 h-5 mr-3">
             <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"></span>
@@ -67,7 +60,7 @@ export const SystemMenu = () => {
           onClick={toggleGraphMode}
           className={`${
             paperMode === "graph" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
-          } text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+          } flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
         >
           <span className="flex items-center justify-center w-5 h-5 mr-3">
             <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 grid grid-cols-3 opacity-70">
@@ -83,12 +76,13 @@ export const SystemMenu = () => {
           </span>
           <span>Graph</span>
         </button>
+
         <button
           type="button"
           onClick={toggleDotsMode}
           className={`${
             paperMode === "dots" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
-          } text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+          } flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
         >
           <span className="flex items-center justify-center w-5 h-5 mr-3">
             <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 flex items-center justify-center">
@@ -97,16 +91,15 @@ export const SystemMenu = () => {
           </span>
           <span>Dots</span>
         </button>
-      </div>
+      </SystemMenuSection>
 
-      <div className="py-1">
-        <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400">Editor Width</div>
+      <SystemMenuSection title="Editor Width">
         <button
           type="button"
           onClick={setNormalWidth}
           className={`${
-            editorWidth === "normal" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
-          } text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+            editorWidth === "normal" ? "font-semibold bg-gray-100 dark:bg-gray-700/50" : ""
+          } flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
         >
           <span className="flex items-center justify-center w-5 h-5 mr-3">
             <WidthIcon />
@@ -117,15 +110,24 @@ export const SystemMenu = () => {
           type="button"
           onClick={setWideWidth}
           className={`${
-            editorWidth === "wide" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
-          } text-gray-700 dark:text-gray-300 flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+            editorWidth === "wide" ? "font-semibold bg-gray-100 dark:bg-gray-700/50" : ""
+          } flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
         >
           <span className="flex items-center justify-center w-5 h-5 mr-3">
             <WidthIcon />
           </span>
           <span>Wide</span>
         </button>
-      </div>
+      </SystemMenuSection>
+    </div>
+  );
+};
+
+const SystemMenuSection = ({ title, children }: { title: string; children: React.ReactNode }) => {
+  return (
+    <div className="py-1">
+      <div className="px-3 py-2 text-xs text-mono-400 dark:text-mono-300">{title}</div>
+      {children}
     </div>
   );
 };

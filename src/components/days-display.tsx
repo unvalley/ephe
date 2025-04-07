@@ -55,7 +55,7 @@ export const DaysDisplay = () => {
         type="button"
         onClick={() => setShowTooltip(!showTooltip)}
         onMouseEnter={() => setShowTooltip(true)}
-        className="whitespace-nowrap flex items-center gap-0.5 bg-gray-50 dark:bg-gray-700 px-2 py-0.5 rounded hover:text-gray-900 dark:hover:text-gray-100 font-mono text-sm"
+        className="whitespace-nowrap"
       >
         {formattedToday}
       </button>
@@ -63,7 +63,7 @@ export const DaysDisplay = () => {
       {showTooltip && (
         <div
           ref={tooltipRef}
-          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 transform bg-white dark:bg-gray-900 p-10 shadow-xl rounded-xl"
+          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 transform p-10 shadow-xl rounded-xl bg-mono-50 dark:bg-mono-700"
           style={{
             maxWidth: "450px",
             maxHeight: "650px",
@@ -98,7 +98,7 @@ export const DaysDisplay = () => {
                 onMouseLeave={() => setHoveredDay(null)}
               >
                 <div
-                  className={`absolute bottom-full left-1/2 -translate-x-1/2 transform mb-1 px-1 py-1 bg-gray-800 dark:bg-gray-700 text-white dark:text-gray-100 text-xs rounded whitespace-nowrap transition-all duration-300 ease-out ${
+                  className={`absolute bottom-full left-1/2 -translate-x-1/2 transform mb-1 bg-mono-50 dark:bg-mono-700 text-xs rounded whitespace-nowrap transition-all duration-300 ease-out ${
                     hoveredDay === formatDate(day.date)
                       ? "opacity-100 translate-y-0 scale-100"
                       : "opacity-0 translate-y-2 scale-95 pointer-events-none"

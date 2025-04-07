@@ -1,14 +1,15 @@
 @import "tailwindcss";
+@config "../tailwind.config.js";
 
 html {
   font-family: monospace;
 }
 
 /* Dark mode transitions */
-html.dark {
+/* html.dark {
   color-scheme: dark;
   background-color: #0d1117;
-}
+} */
 
 /* CSS variables for theming */
 :root {
