@@ -66,27 +66,31 @@ const _Footer = ({ charCount = 0, taskCount }: FooterProps) => {
         <div className="flex items-center gap-4 min-w-0">
           <DaysDisplay />
 
-          <span
-            className={`whitespace-nowrap flex items-center rounded ${
-              allTasksCompleted && "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-            }`}
-          >
-            {allTasksCompleted && closedTasks > 0 && (
-              <span className="px-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 rounded-full flex items-center">
-                <SuccessIcon />
-              </span>
-            )}
-            {hasTasks ? (
-              <span>
-                {closedTasks}/{totalTasks}
-              </span>
-            ) : (
-              <span>0</span>
-            )}
-            <span className="ml-0.5">tasks</span>
-          </span>
+          {hasTasks && (
+            <span
+              className={`whitespace-nowrap flex items-center rounded ${
+                allTasksCompleted && "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+              }`}
+            >
+              {allTasksCompleted && closedTasks > 0 && (
+                <span className="px-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 rounded-full flex items-center">
+                  <SuccessIcon />
+                </span>
+              )}
+              {hasTasks ? (
+                <span>
+                  {closedTasks}/{totalTasks}
+                </span>
+              ) : (
+                <span>0</span>
+              )}
+              <span className="ml-0.5">tasks</span>
+            </span>
+          )}
 
-          <span className="whitespace-nowrap flex items-center rounded">{charCount.toLocaleString()} chars</span>
+          {charCount > 0 && (
+            <span className="whitespace-nowrap flex items-center rounded">{charCount.toLocaleString()} chars</span>
+          )}
           <div className="flex items-center">
             <Avatar
               size={12}
