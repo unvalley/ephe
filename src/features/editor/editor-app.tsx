@@ -120,13 +120,7 @@ export const EditorApp = () => {
     editor: monaco.editor.IStandaloneCodeEditor,
     monaco: typeof import("monaco-editor"),
   ) => {
-    // Set editor reference
     editorRef.current = editor;
-
-    // Define editor themes
-    monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
-    monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
-    monaco.editor.setTheme(isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name);
 
     const markdownExtension = new MonacoMarkdownExtension();
     markdownExtension.activate(editor);
@@ -286,6 +280,13 @@ export const EditorApp = () => {
               defaultValue={localStorageContent}
               options={editorOptions}
               onMount={handleEditorDidMount}
+              beforeMount={(monaco) => {
+                monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
+                monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
+
+                const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
+                monaco.editor.setTheme(themeName);
+              }}
               className="overflow-visible"
               loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
               theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
