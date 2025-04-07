@@ -348,7 +348,7 @@ export const HistoryPage = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col">
+    <div className="h-screen w-screen flex flex-col dark:bg-mono-700">
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center">
           <Loading className="flex items-center justify-center" />
@@ -358,7 +358,7 @@ export const HistoryPage = () => {
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-xl text-gray-800 dark:text-gray-100">History</h1>
+                <h1 className="text-md">History</h1>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Your completed tasks and snapshots.</p>
               </div>
 
