@@ -48,7 +48,7 @@ export const AlreadyOpenDialog = ({ shouldShowAlert: isOpen, onContinue }: Alrea
         <div className="flex justify-end gap-3">
           <button
             type="button"
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+            className="btn-primary px-4 py-2"
             onClick={onContinue}
             aria-label="Continue without synchronization"
           >
