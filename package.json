@@ -38,7 +38,6 @@
   "devDependencies": {
     "@biomejs/biome": "2.0.0-beta.1",
     "@tailwindcss/postcss": "^4.0.14",
-    "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
