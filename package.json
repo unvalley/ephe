@@ -18,7 +18,6 @@
         "@headlessui/react": "^2.2.1",
         "@monaco-editor/react": "^4.6.0",
         "@tailwindcss/typography": "^0.5.16",
-        "@tailwindcss/vite": "^4.0.14",
         "@textlint/ast-node-types": "^14.5.0",
         "@textlint/markdown-to-ast": "^14.5.0",
         "boring-avatars": "^1.11.2",
@@ -38,6 +37,7 @@
     "devDependencies": {
         "@biomejs/biome": "2.0.0-beta.1",
         "@tailwindcss/postcss": "^4.0.14",
+        "@tailwindcss/vite": "^4.0.14",
         "@types/node": "^22",
         "@types/react": "^19",
         "@types/react-dom": "^19",
