@@ -69,8 +69,8 @@ const _Footer = ({ charCount = 0, taskCount, previewMode = false, togglePreview 
             <button
               onClick={togglePreview}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-colors ${
-                previewMode 
-                  ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400" 
+                previewMode
+                  ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
                   : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
               }`}
             >
@@ -78,7 +78,7 @@ const _Footer = ({ charCount = 0, taskCount, previewMode = false, togglePreview 
               <span>{previewMode ? "Edit" : "Preview"}</span>
             </button>
           )}
-          
+
           <DaysDisplay />
 
           {hasTasks && (

@@ -89,7 +89,8 @@ export const DaysDisplay = () => {
                 style={{
                   width: "5px",
                   height: "5px",
-                  background: day.past || day.current ? (isDarkMode ? "white" : "#333333") : isDarkMode ? "#444444" : "#dddddd",
+                  background:
+                    day.past || day.current ? (isDarkMode ? "white" : "#333333") : isDarkMode ? "#444444" : "#dddddd",
                   borderRadius: "50%",
                   transition: "transform 0.2s, background-color 0.2s",
                 }}

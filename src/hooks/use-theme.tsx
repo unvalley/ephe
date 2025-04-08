@@ -1,11 +1,10 @@
 "use client";
 
-
 import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { SESSION_STORAGE_KEYS } from "../utils/constants";
 import { valueOf } from "../utils/types";
 import { useEffect } from "react";
+import { LOCAL_STORAGE_KEYS } from "../utils/constants";
 
 const COLOR_THEME = {
   LIGHT: "light",
@@ -14,7 +13,7 @@ const COLOR_THEME = {
 
 type ColorTheme = valueOf<typeof COLOR_THEME>;
 
-const themeAtom = atomWithStorage<ColorTheme>(SESSION_STORAGE_KEYS.THEME, "light");
+const themeAtom = atomWithStorage<ColorTheme>(LOCAL_STORAGE_KEYS.THEME, "light");
 
 export const useTheme = () => {
   const [theme, setTheme] = useAtom(themeAtom);

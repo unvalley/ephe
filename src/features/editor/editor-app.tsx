@@ -4,7 +4,6 @@ import * as monaco from "monaco-editor";
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { Editor } from "@monaco-editor/react";
 import { useTheme } from "../../hooks/use-theme";
-import { useLocalStorage } from "../../hooks/use-local-storage";
 import { useDebouncedCallback } from "use-debounce";
 import { useTabDetection } from "../../hooks/use-tab-detection";
 import { usePaperMode } from "../../hooks/use-paper-mode";
@@ -37,12 +36,17 @@ import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
+import { atomWithStorage } from "jotai/utils";
+import { useAtom } from "jotai";
+import { usePreviewMode } from "../../hooks/use-preview-mode";
 
 // Initialize remark processor with GFM plugin
 const remarkProcessor = remark()
   .use(remarkGfm)
   .use(remarkRehype, { allowDangerousHtml: true })
   .use(rehypeStringify, { allowDangerousHtml: true });
+
+const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -56,18 +60,19 @@ export const EditorApp = () => {
     closed: 0,
   });
 
-  const [localStorageContent, setLocalStorageContent] = useLocalStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
+  const [localStorageContent, setLocalStorageContent] = useAtom(editorAtom);
   const [placeholder, _] = useState<string>(getRandomQuote());
   const { isTocVisible, focusOnSection } = useToc({ editorRef });
   const [editorContent, setEditorContent] = useState<string>(
     typeof localStorageContent === "string" ? localStorageContent : "",
   );
-  const [previewMode, setPreviewMode] = useLocalStorage<boolean>(LOCAL_STORAGE_KEYS.PREVIEW_MODE, false);
   const [renderedHTML, setRenderedHTML] = useState<string>("");
 
   const { theme } = useTheme();
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
-  const { editorWidth, isWideMode, toggleWidth } = useEditorWidth();
+  const { previewMode, togglePreviewMode } = usePreviewMode();
+  const { editorWidth, isWideMode, toggleEditorWidth } = useEditorWidth();
+
   const isDarkMode = theme === "dark";
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
@@ -84,7 +89,7 @@ export const EditorApp = () => {
         setRenderedHTML(`<p>Error rendering markdown: ${error instanceof Error ? error.message : String(error)}</p>`);
       }
     };
-    
+
     renderMarkdown();
   }, [editorContent]);
 
@@ -127,10 +132,6 @@ export const EditorApp = () => {
     if (editorRef.current && !previewMode) {
       editorRef.current.focus();
     }
-  };
-
-  const togglePreviewMode = () => {
-    setPreviewMode(!previewMode);
   };
 
   const handlePlaceholder = (updatedText: string) => {
@@ -275,7 +276,7 @@ export const EditorApp = () => {
 
     // Add key binding for Cmd+Shift+W / Ctrl+Shift+W to toggle editor width
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyW, () => {
-      toggleWidth();
+      toggleEditorWidth();
       showToast(`Editor width mode: ${editorWidth === "normal" ? "Wide" : "Normal"}`, "default");
     });
 
@@ -331,10 +332,8 @@ export const EditorApp = () => {
                 theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
               />
             ) : (
-              <div 
-                className="h-full overflow-auto px-2 py-2 prose prose-slate dark:prose-invert max-w-none"
-              >
-                <div 
+              <div className="h-full overflow-auto px-2 py-2 prose prose-slate dark:prose-invert max-w-none">
+                <div
                   ref={previewRef}
                   dangerouslySetInnerHTML={{ __html: renderedHTML }}
                   className="min-h-full markdown-preview overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
@@ -350,9 +349,9 @@ export const EditorApp = () => {
           </div>
         )}
 
-        <Footer 
-          charCount={charCount} 
-          taskCount={taskCount} 
+        <Footer
+          charCount={charCount}
+          taskCount={taskCount}
           editorWidth={editorWidth}
           previewMode={previewMode}
           togglePreview={togglePreviewMode}
@@ -367,7 +366,7 @@ export const EditorApp = () => {
           paperMode={paperMode}
           cyclePaperMode={cyclePaperMode}
           editorWidth={editorWidth}
-          toggleEditorWidth={toggleWidth}
+          toggleEditorWidth={toggleEditorWidth}
           previewMode={previewMode}
           togglePreviewMode={togglePreviewMode}
         />
