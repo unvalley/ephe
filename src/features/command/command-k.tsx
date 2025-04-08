@@ -10,6 +10,7 @@ import { showToast } from "../../components/toast";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import type { PaperMode } from "../../hooks/use-paper-mode";
 import type { EditorWidth } from "../../hooks/use-editor-width";
+import { EyeIcon } from "../../components/icons";
 
 // Icons - you might need to install react-icons package if not already installed
 function ThemeIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -489,13 +490,23 @@ export const CommandMenu = ({
 
             {togglePreviewMode && (
               <Command.Item
-                className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+                className="px-2 py-2.5 rounded-md text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2
+                  cursor-pointer group hover:bg-gray-100 dark:hover:bg-zinc-800 
+                  aria-selected:bg-primary-500/10 dark:aria-selected:bg-primary-500/20
+                  aria-selected:text-primary-600 dark:aria-selected:text-primary-400
+                  transition-colors"
                 onSelect={() => {
                   togglePreviewMode();
                   onClose?.();
                 }}
+                value="preview mode toggle switch"
               >
-                Toggle preview mode ({previewMode ? "on" : "off"})
+                <div className="flex items-center justify-center h-5 w-5 rounded-md bg-gray-100/80 dark:bg-zinc-700/60 text-gray-900 dark:text-gray-100 group-hover:bg-gray-200 dark:group-hover:bg-zinc-600 group-aria-selected:bg-primary-500/20 dark:group-aria-selected:bg-primary-600/20 transition-colors">
+                  <EyeIcon className="h-3.5 w-3.5" />
+                </div>
+                <span>
+                  Toggle preview mode ({previewMode ? "on" : "off"})
+                </span>
               </Command.Item>
             )}
           </Command.Group>
