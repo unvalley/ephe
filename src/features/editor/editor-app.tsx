@@ -332,7 +332,7 @@ export const EditorApp = () => {
               />
             ) : (
               <div 
-                className="h-full overflow-hidden px-2 py-2 prose prose-slate dark:prose-invert max-w-none"
+                className="h-full overflow-auto px-2 py-2 prose prose-slate dark:prose-invert max-w-none"
               >
                 <div 
                   ref={previewRef}
