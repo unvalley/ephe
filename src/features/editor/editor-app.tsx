@@ -37,6 +37,7 @@ import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
+import { useCommandMenu } from "../command/command-context";
 
 // Initialize remark processor with GFM plugin
 const remarkProcessor = remark()
@@ -69,9 +70,36 @@ export const EditorApp = () => {
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
   const { editorWidth, isWideMode, toggleWidth } = useEditorWidth();
   const isDarkMode = theme === "dark";
-  const [commandMenuOpen, setCommandMenuOpen] = useState(false);
+  const { openCommandMenu, updateEditorInfo, isCommandMenuOpen } = useCommandMenu();
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const { shouldShowAlert, dismissAlert } = useTabDetection();
+
+  // Simple togglePreviewMode function
+  const togglePreviewMode = useCallback(() => {
+    setPreviewMode(!previewMode);
+  }, [previewMode, setPreviewMode]);
+
+  // Enhanced togglePreviewMode that updates the command menu
+  const handleTogglePreviewMode = useCallback(() => {
+    togglePreviewMode();
+    // Update editor info after preview mode changes
+    setTimeout(() => {
+      updateEditorInfo({
+        previewMode: !previewMode,
+        togglePreviewMode,
+      });
+    }, 0);
+  }, [togglePreviewMode, updateEditorInfo, previewMode]);
+  
+  // Initial editor info update - only register the callbacks for toggles
+  useEffect(() => {
+    // 初回レンダリング時、機能的な部分（関数）だけを更新
+    updateEditorInfo({
+      cyclePaperMode,
+      toggleEditorWidth: toggleWidth,
+      togglePreviewMode: handleTogglePreviewMode,
+    });
+  }, [updateEditorInfo, cyclePaperMode, toggleWidth, handleTogglePreviewMode]);
 
   // Render markdown when content changes
   useEffect(() => {
@@ -85,25 +113,45 @@ export const EditorApp = () => {
       }
     };
     
-    renderMarkdown();
-  }, [editorContent]);
+    // プレビューモードの時だけレンダリングする
+    if (previewMode) {
+      renderMarkdown();
+    }
+  }, [editorContent, previewMode]);
 
-  // Define debounced functions
-  const debouncedSetContent = useDebouncedCallback((content: string) => {
+  // Create one combined debounced function to handle all content updates
+  const handleContentUpdate = useDebouncedCallback((content: string) => {
+    // LocalStorageへの保存は常に行う
     setLocalStorageContent(content);
+    
+    // 文字数カウントの更新
+    setCharCount(content.length);
+    
+    // タスク数の更新
+    try {
+      const { taskCount } = markdownService.processMarkdown(content);
+      setTaskCount(taskCount);
+    } catch (error) {
+      console.error("Error processing markdown:", error);
+    }
+    
+    // コマンドメニューが開いている場合のみ、エディタコンテンツを更新
+    if (isCommandMenuOpen) {
+      updateEditorInfo({
+        editorContent: content,
+      });
+    }
   }, 300);
 
-  const debouncedCharCountUpdate = useDebouncedCallback(
-    (content: string) => {
-      setCharCount(content.length);
-    },
-    50, // Faster updates for character count
-  );
-
-  const debouncedTaskCountUpdate = useDebouncedCallback((content: string) => {
-    const { taskCount } = markdownService.processMarkdown(content);
-    setTaskCount(taskCount);
-  }, 100);
+  // Now that updateEditorInfoMemoized is defined, we can use it
+  const handleToggleWidth = useCallback(() => {
+    const newWidth = toggleWidth();
+    // Update editor info after width changes
+    updateEditorInfo({
+      editorWidth: newWidth,
+    });
+    return newWidth;
+  }, [toggleWidth, updateEditorInfo]);
 
   // Initialize markdown formatter
   useEffect(() => {
@@ -127,10 +175,6 @@ export const EditorApp = () => {
     if (editorRef.current && !previewMode) {
       editorRef.current.focus();
     }
-  };
-
-  const togglePreviewMode = () => {
-    setPreviewMode(!previewMode);
   };
 
   const handlePlaceholder = (updatedText: string) => {
@@ -263,9 +307,9 @@ export const EditorApp = () => {
       await commandSave();
     });
 
-    // Add key binding for Cmd+K / Ctrl+K to open the command menu
+    // Add key binding for Cmd+K / Ctrl+K to open the command menu but use the global state
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
-      setCommandMenuOpen((prev) => !prev);
+      openCommandMenu();
     });
 
     // Add key binding for Cmd+Shift+S / Ctrl+Shift+S to open custom snapshot dialog
@@ -275,13 +319,13 @@ export const EditorApp = () => {
 
     // Add key binding for Cmd+Shift+W / Ctrl+Shift+W to toggle editor width
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyW, () => {
-      toggleWidth();
+      handleToggleWidth();
       showToast(`Editor width mode: ${editorWidth === "normal" ? "Wide" : "Normal"}`, "default");
     });
 
     // Add key binding for Cmd+P / Ctrl+P to toggle preview mode
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyP, () => {
-      togglePreviewMode();
+      handleTogglePreviewMode();
       showToast(`Preview mode: ${!previewMode ? "On" : "Off"}`, "default");
     });
 
@@ -291,19 +335,10 @@ export const EditorApp = () => {
 
       updateDecorations(model);
       setEditorContent(updatedText);
-      debouncedSetContent(updatedText);
-      debouncedCharCountUpdate(updatedText);
-      debouncedTaskCountUpdate(updatedText);
+      handleContentUpdate(updatedText);
       handlePlaceholder(updatedText);
     });
   };
-
-  const handleCloseCommandMenu = useCallback(() => {
-    setCommandMenuOpen(false);
-    if (editorRef.current) {
-      editorRef.current.focus();
-    }
-  }, []);
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents:
@@ -355,21 +390,7 @@ export const EditorApp = () => {
           taskCount={taskCount} 
           editorWidth={editorWidth}
           previewMode={previewMode}
-          togglePreview={togglePreviewMode}
-        />
-
-        <CommandMenu
-          open={commandMenuOpen}
-          onClose={handleCloseCommandMenu}
-          editorContent={editorContent}
-          editorRef={editorRef}
-          markdownFormatterRef={formatterRef}
-          paperMode={paperMode}
-          cyclePaperMode={cyclePaperMode}
-          editorWidth={editorWidth}
-          toggleEditorWidth={toggleWidth}
-          previewMode={previewMode}
-          togglePreviewMode={togglePreviewMode}
+          togglePreview={handleTogglePreviewMode}
         />
 
         {snapshotDialogOpen && (
