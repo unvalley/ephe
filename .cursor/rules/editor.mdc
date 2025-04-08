@@ -1,0 +1,18 @@
+---
+description: 
+globs: src/features/editor/**/*.ts,src/features/editor/**/*.tsx
+alwaysApply: false
+---
+# Editor
+
+We build an Markdown Editor based on monaco-editor.
+
+We use packages below to handler text:
+
+- monaco-editor
+- @monaco-editor/react
+- @textlint/ast-node-types
+- @textlint/markdown-to-ast
+
+We focus on English and Japanese.
+The editor must be performant.
