@@ -8,7 +8,7 @@ const EDITOR_WITH = {
   WIDE: "wide",
 } as const;
 
-type EditorWidth = valueOf<typeof EDITOR_WITH>;
+export type EditorWidth = valueOf<typeof EDITOR_WITH>;
 
 const editorWidthAtom = atomWithStorage<EditorWidth>(LOCAL_STORAGE_KEYS.EDITOR_WIDTH, "normal");
 
