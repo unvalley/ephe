@@ -37,6 +37,8 @@ import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
+import { useNavigate } from "react-router-dom";
+import { useCommandMenu } from "../command/command-context";
 
 // Initialize remark processor with GFM plugin
 const remarkProcessor = remark()
@@ -69,9 +71,31 @@ export const EditorApp = () => {
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
   const { editorWidth, isWideMode, toggleWidth } = useEditorWidth();
   const isDarkMode = theme === "dark";
-  const [commandMenuOpen, setCommandMenuOpen] = useState(false);
+  const { isCommandMenuOpen, openCommandMenu, closeCommandMenu, updateEditorInfo } = useCommandMenu();
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const { shouldShowAlert, dismissAlert } = useTabDetection();
+
+  // Update editor info whenever relevant state changes
+  useEffect(() => {
+    updateEditorInfo({
+      editorContent,
+      editorRef,
+      markdownFormatterRef: formatterRef,
+      paperMode,
+      cyclePaperMode,
+      editorWidth,
+      toggleEditorWidth: toggleWidth,
+      previewMode,
+      togglePreviewMode,
+    });
+  }, [
+    editorContent, 
+    paperMode, 
+    cyclePaperMode, 
+    editorWidth, 
+    previewMode, 
+    updateEditorInfo
+  ]);
 
   // Render markdown when content changes
   useEffect(() => {
@@ -263,9 +287,9 @@ export const EditorApp = () => {
       await commandSave();
     });
 
-    // Add key binding for Cmd+K / Ctrl+K to open the command menu
+    // Add key binding for Cmd+K / Ctrl+K to open the command menu but use the global state
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
-      setCommandMenuOpen((prev) => !prev);
+      openCommandMenu();
     });
 
     // Add key binding for Cmd+Shift+S / Ctrl+Shift+S to open custom snapshot dialog
@@ -298,12 +322,16 @@ export const EditorApp = () => {
     });
   };
 
+  const handleFormatDocument = async () => {
+    // ... existing code ...
+  };
+
   const handleCloseCommandMenu = useCallback(() => {
-    setCommandMenuOpen(false);
+    closeCommandMenu();
     if (editorRef.current) {
       editorRef.current.focus();
     }
-  }, []);
+  }, [closeCommandMenu]);
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents:
@@ -356,20 +384,6 @@ export const EditorApp = () => {
           editorWidth={editorWidth}
           previewMode={previewMode}
           togglePreview={togglePreviewMode}
-        />
-
-        <CommandMenu
-          open={commandMenuOpen}
-          onClose={handleCloseCommandMenu}
-          editorContent={editorContent}
-          editorRef={editorRef}
-          markdownFormatterRef={formatterRef}
-          paperMode={paperMode}
-          cyclePaperMode={cyclePaperMode}
-          editorWidth={editorWidth}
-          toggleEditorWidth={toggleWidth}
-          previewMode={previewMode}
-          togglePreviewMode={togglePreviewMode}
         />
 
         {snapshotDialogOpen && (

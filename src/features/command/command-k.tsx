@@ -222,16 +222,7 @@ export const CommandMenu = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
-        e.preventDefault();
-        if (open) {
-          onClose?.();
-        } else {
-          onOpen?.();
-        }
-      }
-
-      // Make ESC key close the command menu immediately
+      // Only handle ESC key to close the command menu immediately
       if (e.key === "Escape" && open) {
         e.preventDefault();
         e.stopPropagation(); // ensure the event doesn't reach Monaco editor
@@ -242,7 +233,7 @@ export const CommandMenu = ({
     // Use capture phase to handle the event before it reaches Monaco editor
     document.addEventListener("keydown", handleKeyDown, true);
     return () => document.removeEventListener("keydown", handleKeyDown, true);
-  }, [open, onClose, onOpen]);
+  }, [open, onClose]);
 
   useEffect(() => {
     if (open) {
