@@ -115,36 +115,6 @@ span.task-checkbox {
   pointer-events: none;
 }
 
-/* TOC toggle button */
-.toc-toggle-button {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  padding: 0.25rem;
-  border-radius: 0.375rem;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.dark .toc-toggle-button.visible {
-  background-color: #374151; /* bg-gray-700 */
-  color: #d1d5db; /* text-gray-300 */
-}
-
-.dark .toc-toggle-button.hidden {
-  background-color: #1f2937; /* bg-gray-800 */
-  color: #9ca3af; /* text-gray-400 */
-}
-
-.light .toc-toggle-button.visible {
-  background-color: #e5e7eb; /* bg-gray-200 */
-  color: #374151; /* text-gray-700 */
-}
-
-.light .toc-toggle-button.hidden {
-  background-color: #f3f4f6; /* bg-gray-100 */
-  color: #6b7280; /* text-gray-500 */
-}
-
 @media (max-width: 1280px) {
   .toc-wrapper {
     position: fixed;

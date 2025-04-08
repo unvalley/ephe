@@ -1,6 +1,6 @@
 "use client";
 
-import type * as monaco from "monaco-editor";
+import * as monaco from "monaco-editor";
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { Editor } from "@monaco-editor/react";
 import { useTheme } from "../../hooks/use-theme";
@@ -33,11 +33,22 @@ import { saveSnapshot } from "../snapshots/snapshot-storage";
 import { useToc } from "../toc/toc-context";
 import { TableOfContents } from "./table-of-contents";
 import { showToast } from "../../components/toast";
+import { remark } from "remark";
+import remarkGfm from "remark-gfm";
+import remarkRehype from "remark-rehype";
+import rehypeStringify from "rehype-stringify";
+
+// Initialize remark processor with GFM plugin
+const remarkProcessor = remark()
+  .use(remarkGfm)
+  .use(remarkRehype, { allowDangerousHtml: true })
+  .use(rehypeStringify, { allowDangerousHtml: true });
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const formatterRef = useRef<MarkdownFormatter | null>(null);
   const placeholderRef = useRef<PlaceholderWidget | null>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
 
   const [charCount, setCharCount] = useState<number>(0);
   const [taskCount, setTaskCount] = useState<TaskListCount>({
@@ -51,6 +62,8 @@ export const EditorApp = () => {
   const [editorContent, setEditorContent] = useState<string>(
     typeof localStorageContent === "string" ? localStorageContent : "",
   );
+  const [previewMode, setPreviewMode] = useLocalStorage<boolean>(LOCAL_STORAGE_KEYS.PREVIEW_MODE, false);
+  const [renderedHTML, setRenderedHTML] = useState<string>("");
 
   const { theme } = useTheme();
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
@@ -59,6 +72,21 @@ export const EditorApp = () => {
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const { shouldShowAlert, dismissAlert } = useTabDetection();
+
+  // Render markdown when content changes
+  useEffect(() => {
+    const renderMarkdown = async () => {
+      try {
+        const result = await remarkProcessor.process(editorContent);
+        setRenderedHTML(String(result));
+      } catch (error) {
+        console.error("Error rendering markdown:", error);
+        setRenderedHTML(`<p>Error rendering markdown: ${error instanceof Error ? error.message : String(error)}</p>`);
+      }
+    };
+    
+    renderMarkdown();
+  }, [editorContent]);
 
   // Define debounced functions
   const debouncedSetContent = useDebouncedCallback((content: string) => {
@@ -96,9 +124,13 @@ export const EditorApp = () => {
 
   // Focus the editor when clicking anywhere in the page container
   const handlePageClick = () => {
-    if (editorRef.current) {
+    if (editorRef.current && !previewMode) {
       editorRef.current.focus();
     }
+  };
+
+  const togglePreviewMode = () => {
+    setPreviewMode(!previewMode);
   };
 
   const handlePlaceholder = (updatedText: string) => {
@@ -247,6 +279,12 @@ export const EditorApp = () => {
       showToast(`Editor width mode: ${editorWidth === "normal" ? "Wide" : "Normal"}`, "default");
     });
 
+    // Add key binding for Cmd+P / Ctrl+P to toggle preview mode
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyP, () => {
+      togglePreviewMode();
+      showToast(`Preview mode: ${!previewMode ? "On" : "Off"}`, "default");
+    });
+
     // Setup content change handler
     editor.onDidChangeModelContent(() => {
       const updatedText = editor.getValue();
@@ -273,34 +311,52 @@ export const EditorApp = () => {
       <div className="flex-1 pt-16 pb-8 overflow-hidden">
         <div className="flex justify-center h-full">
           <div className={`w-full ${isWideMode ? "max-w-6xl" : "max-w-2xl"} px-4 sm:px-6 md:px-2 relative`}>
-            <Editor
-              height="100%"
-              width="100%"
-              defaultLanguage="markdown"
-              defaultValue={localStorageContent}
-              options={editorOptions}
-              onMount={handleEditorDidMount}
-              beforeMount={(monaco) => {
-                monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
-                monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
+            {!previewMode ? (
+              <Editor
+                height="100%"
+                width="100%"
+                defaultLanguage="markdown"
+                defaultValue={localStorageContent}
+                options={editorOptions}
+                onMount={handleEditorDidMount}
+                beforeMount={(monaco) => {
+                  monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
+                  monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
 
-                const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
-                monaco.editor.setTheme(themeName);
-              }}
-              className="overflow-visible"
-              loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
-              theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
-            />
+                  const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
+                  monaco.editor.setTheme(themeName);
+                }}
+                className="overflow-visible"
+                loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
+                theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
+              />
+            ) : (
+              <div 
+                className="h-full overflow-auto px-2 py-2 prose prose-slate dark:prose-invert max-w-none"
+              >
+                <div 
+                  ref={previewRef}
+                  dangerouslySetInnerHTML={{ __html: renderedHTML }}
+                  className="min-h-full markdown-preview"
+                />
+              </div>
+            )}
           </div>
         </div>
 
-        {editorContent.trim() && (
+        {editorContent.trim() && !previewMode && (
           <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
             <TableOfContents isVisible={isTocVisible} content={editorContent} onItemClick={focusOnSection} />
           </div>
         )}
 
-        <Footer charCount={charCount} taskCount={taskCount} editorWidth={editorWidth} />
+        <Footer 
+          charCount={charCount} 
+          taskCount={taskCount} 
+          editorWidth={editorWidth}
+          previewMode={previewMode}
+          togglePreview={togglePreviewMode}
+        />
 
         <CommandMenu
           open={commandMenuOpen}
@@ -312,6 +368,8 @@ export const EditorApp = () => {
           cyclePaperMode={cyclePaperMode}
           editorWidth={editorWidth}
           toggleEditorWidth={toggleWidth}
+          previewMode={previewMode}
+          togglePreviewMode={togglePreviewMode}
         />
 
         {snapshotDialogOpen && (

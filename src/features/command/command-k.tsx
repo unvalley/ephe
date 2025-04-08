@@ -22,6 +22,8 @@ type CommandMenuProps = {
   cyclePaperMode?: () => PaperMode;
   editorWidth?: EditorWidth;
   toggleEditorWidth?: () => EditorWidth;
+  previewMode?: boolean;
+  togglePreviewMode?: () => void;
 };
 
 export const CommandMenu = ({
@@ -35,6 +37,8 @@ export const CommandMenu = ({
   cyclePaperMode,
   editorWidth = "normal",
   toggleEditorWidth,
+  previewMode = false,
+  togglePreviewMode,
 }: CommandMenuProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { toggleTheme, toggleTargetTheme } = useTheme();
@@ -223,6 +227,18 @@ export const CommandMenu = ({
                 }}
               >
                 Toggle editor width (current: {editorWidth})
+              </Command.Item>
+            )}
+
+            {togglePreviewMode && (
+              <Command.Item
+                className="px-4 py-2 rounded text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer aria-selected:bg-blue-100 dark:aria-selected:bg-blue-900"
+                onSelect={() => {
+                  togglePreviewMode();
+                  onClose?.();
+                }}
+              >
+                Toggle preview mode ({previewMode ? "on" : "off"})
               </Command.Item>
             )}
           </Command.Group>
