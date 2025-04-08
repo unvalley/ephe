@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
+@layer base {
+  button,
+  [role="button"] {
+    /* I think using pointer is better for accessibility */
+    cursor: pointer;
+  }
+}
+
 html {
   font-family: monospace;
 }

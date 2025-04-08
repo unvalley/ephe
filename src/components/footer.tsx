@@ -54,16 +54,10 @@ const _Footer = ({ charCount = 0, taskCount }: FooterProps) => {
               </div>
             )}
           </div>
-          <Link
-            to="/"
-            className="hover:text-neutral-900 dark:hover:text-neutral-100"
-          >
+          <Link to="/" className="hover:text-neutral-900 dark:hover:text-neutral-100">
             Editor
           </Link>
-          <Link
-            to="/history"
-            className={"hover:text-neutral-900 dark:hover:text-neutral-100"}
-          >
+          <Link to="/history" className={"hover:text-neutral-900 dark:hover:text-neutral-100"}>
             History
           </Link>
         </nav>
@@ -74,8 +68,7 @@ const _Footer = ({ charCount = 0, taskCount }: FooterProps) => {
           {hasTasks && (
             <span
               className={`whitespace-nowrap flex items-center rounded ${
-                allTasksCompleted &&
-                "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                allTasksCompleted && "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
               }`}
             >
               {allTasksCompleted && closedTasks > 0 && (
@@ -95,9 +88,7 @@ const _Footer = ({ charCount = 0, taskCount }: FooterProps) => {
           )}
 
           {charCount > 0 && (
-            <span className="whitespace-nowrap flex items-center rounded">
-              {charCount.toLocaleString()} chars
-            </span>
+            <span className="whitespace-nowrap flex items-center rounded">{charCount.toLocaleString()} chars</span>
           )}
           <div className="flex items-center">
             <Avatar
