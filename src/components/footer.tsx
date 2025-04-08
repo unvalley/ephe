@@ -17,11 +17,13 @@ type FooterProps = {
     closed: number;
   };
   editorWidth?: EditorWidth;
+  previewMode?: boolean;
+  togglePreview?: () => void;
 };
 
 const EPHE_VERSION = "0.0.1";
 
-const _Footer = ({ charCount = 0, taskCount }: FooterProps) => {
+const _Footer = ({ charCount = 0, taskCount, previewMode = false, togglePreview }: FooterProps) => {
   const { isSystemMenuOpen, toggleSystemMenu } = useSystemMenu();
 
   // Safe access to task counts with defaults
@@ -60,6 +62,16 @@ const _Footer = ({ charCount = 0, taskCount }: FooterProps) => {
           <Link to="/history" className={"hover:text-neutral-900 dark:hover:text-neutral-100"}>
             History
           </Link>
+          {togglePreview && (
+            <button
+              onClick={togglePreview}
+              className={`hover:text-neutral-900 dark:hover:text-neutral-100 ${
+                previewMode ? "font-medium text-primary-500" : ""
+              }`}
+            >
+              Preview
+            </button>
+          )}
         </nav>
 
         <div className="flex items-center gap-4 min-w-0">

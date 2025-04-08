@@ -116,6 +116,7 @@ module.exports = {
     },
   },
   plugins: [
+    require('@tailwindcss/typography'),
     ({ addComponents, theme }) => {
       const buttons = {
         ".btn-primary": {
