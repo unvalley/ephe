@@ -29,7 +29,6 @@ import { AlreadyOpenDialog } from "../../components/already-open-dialog";
 import { PlaceholderWidget } from "./monaco/placeholder-widget";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { saveSnapshot } from "../snapshots/snapshot-storage";
-import { useToc } from "../toc/toc-context";
 import { TableOfContents } from "./table-of-contents";
 import { showToast } from "../../components/toast";
 import { remark } from "remark";
@@ -39,6 +38,7 @@ import rehypeStringify from "rehype-stringify";
 import { atomWithStorage } from "jotai/utils";
 import { useAtom } from "jotai";
 import { usePreviewMode } from "../../hooks/use-preview-mode";
+import { useToc } from "../../hooks/use-toc";
 
 // Initialize remark processor with GFM plugin
 const remarkProcessor = remark()
@@ -60,12 +60,9 @@ export const EditorApp = () => {
     closed: 0,
   });
 
-  const [localStorageContent, setLocalStorageContent] = useAtom(editorAtom);
   const [placeholder, _] = useState<string>(getRandomQuote());
-  const { isTocVisible, focusOnSection } = useToc({ editorRef });
-  const [editorContent, setEditorContent] = useState<string>(
-    typeof localStorageContent === "string" ? localStorageContent : "",
-  );
+  const { isVisibleToc, focusOnSection } = useToc({ editorRef });
+  const [editorContent, setEditorContent] = useAtom(editorAtom);
   const [renderedHTML, setRenderedHTML] = useState<string>("");
 
   const { theme } = useTheme();
@@ -95,7 +92,7 @@ export const EditorApp = () => {
 
   // Define debounced functions
   const debouncedSetContent = useDebouncedCallback((content: string) => {
-    setLocalStorageContent(content);
+    setEditorContent(content);
   }, 300);
 
   const debouncedCharCountUpdate = useDebouncedCallback(
@@ -256,7 +253,7 @@ export const EditorApp = () => {
         title: "Manual Save",
         description: "",
       });
-      setLocalStorageContent(value);
+      setEditorContent(value);
       showToast("Content formatted and saved", "success");
     };
 
@@ -317,7 +314,7 @@ export const EditorApp = () => {
                 height="100%"
                 width="100%"
                 defaultLanguage="markdown"
-                defaultValue={localStorageContent}
+                defaultValue={editorContent}
                 options={editorOptions}
                 onMount={handleEditorDidMount}
                 beforeMount={(monaco) => {
@@ -343,9 +340,9 @@ export const EditorApp = () => {
           </div>
         </div>
 
-        {editorContent.trim() && !previewMode && (
-          <div className={`toc-wrapper ${isTocVisible ? "visible" : "hidden"}`}>
-            <TableOfContents isVisible={isTocVisible} content={editorContent} onItemClick={focusOnSection} />
+        {!previewMode && editorContent.trim().length > 0 && (
+          <div className={`toc-wrapper ${isVisibleToc ? "visible" : "hidden"}`}>
+            <TableOfContents isVisible={isVisibleToc} content={editorContent} onItemClick={focusOnSection} />
           </div>
         )}
 

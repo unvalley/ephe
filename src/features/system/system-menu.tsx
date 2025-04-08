@@ -3,13 +3,13 @@
 import { useTheme } from "../../hooks/use-theme";
 import { MoonIcon, SunIcon, TableOfContentsIcon, WidthIcon } from "../../components/icons";
 import { usePaperMode } from "../../hooks/use-paper-mode";
-import { useToc } from "../toc/toc-context";
 import { useEditorWidth } from "../../hooks/use-editor-width";
+import { useToc } from "../../hooks/use-toc";
 
 export const SystemMenu = () => {
   const { nextTheme, setTheme, isDarkMode } = useTheme();
   const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
-  const { isTocVisible, toggleToc } = useToc();
+  const { isVisibleToc, toggleToc } = useToc();
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
 
   return (
@@ -37,7 +37,7 @@ export const SystemMenu = () => {
           <span className="flex items-center justify-center w-5 h-5 mr-3">
             <TableOfContentsIcon />
           </span>
-          <span>{isTocVisible ? "Hide ToC" : "Show ToC"}</span>
+          <span>{isVisibleToc ? "Hide ToC" : "Show ToC"}</span>
         </button>
       </SystemMenuSection>
 

@@ -22,80 +22,47 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
   const [tocItems, setTocItems] = useState<TocItem[]>([]);
   const { isDarkMode } = useTheme();
   const prevContentRef = useRef<string>("");
-  const updateTimeoutRef = useRef<number | null>(null);
+  const hasInitializedRef = useRef(false);
 
-  const parseTocItems = useCallback(
-    (content: string, prevContent: string): TocItem[] => {
-      if (!content) return [];
-      if (content === prevContent) {
-        return tocItems;
+  const parseTocItems = useCallback((content: string): TocItem[] => {
+    if (!content) return [];
+
+    const lines = content.split("\n");
+    const items: TocItem[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const match = HEADING_REGEX.exec(line);
+      if (match) {
+        items.push({
+          level: match[1].length,
+          text: match[2].trim(),
+          line: i,
+        });
       }
+    }
 
-      // PERF: partial update by line
-      const newLines = content.split("\n");
-      const prevLines = prevContent ? prevContent.split("\n") : [];
+    return items;
+  }, []);
 
-      // PERF: keep existing items in a map (by line number)
-      const existingItemsMap = new Map<number, TocItem>();
-      for (const item of tocItems) {
-        existingItemsMap.set(item.line, item);
-      }
-
-      const items: TocItem[] = [];
-      let hasChanges = false;
-
-      for (let i = 0; i < newLines.length; i++) {
-        const line = newLines[i];
-
-        // PERF: reuse existing items if the line is the same
-        if (i < prevLines.length && line === prevLines[i] && existingItemsMap.has(i)) {
-          items.push(existingItemsMap.get(i)!);
-          continue;
-        }
-
-        // check if the line is a heading
-        const match = HEADING_REGEX.exec(line);
-        if (match) {
-          hasChanges = true;
-          items.push({
-            level: match[1].length,
-            text: match[2].trim(),
-            line: i,
-          });
-        }
-      }
-
-      return hasChanges ? items : items.length > 0 ? items : tocItems;
-    },
-    [tocItems],
-  );
-
+  // Always parse content on initial render and when content changes
   useEffect(() => {
-    if (!isVisible || !content || content.length < 10) {
+    // Always parse content regardless of visibility
+    if (!content) {
+      setTocItems([]);
       return;
     }
 
-    if (content === prevContentRef.current) {
-      return;
-    }
+    // Always parse on initial load or when content changes
+    const shouldUpdate = !hasInitializedRef.current || content !== prevContentRef.current;
 
-    if (updateTimeoutRef.current !== null) {
-      cancelAnimationFrame(updateTimeoutRef.current);
-    }
-
-    updateTimeoutRef.current = requestAnimationFrame(() => {
-      const newItems = parseTocItems(content, prevContentRef.current);
+    if (shouldUpdate) {
+      const newItems = parseTocItems(content);
       setTocItems(newItems);
       prevContentRef.current = content;
-      updateTimeoutRef.current = null;
-    });
-
-    return () => {
-      if (updateTimeoutRef.current !== null) {
-        cancelAnimationFrame(updateTimeoutRef.current);
-      }
-    };
-  }, [content, isVisible, parseTocItems]);
+      hasInitializedRef.current = true;
+    }
+  }, [content, parseTocItems]);
 
   const handleItemClick = useCallback(
     (line: number) => {
@@ -105,8 +72,9 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
   );
 
   const shouldRender = useMemo(() => {
-    return isVisible && tocItems.length > 0;
-  }, [isVisible, tocItems.length]);
+    // Check if parent component wants to show TOC (isVisibleToc from parent)
+    return isVisible && tocItems.length > 0 && !!content;
+  }, [isVisible, tocItems.length, content]);
 
   if (!shouldRender) {
     return null;
