@@ -116,6 +116,7 @@ module.exports = {
     },
   },
   plugins: [
+    // should remove this in v4
     require('@tailwindcss/typography'),
     ({ addComponents, theme }) => {
       const buttons = {
