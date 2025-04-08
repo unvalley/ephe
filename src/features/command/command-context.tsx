@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef, memo } from "react";
 import { CommandMenu } from "./command-k";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../hooks/use-theme";
@@ -51,7 +51,6 @@ type CommandProviderProps = {
 export const CommandProvider = ({ children }: CommandProviderProps) => {
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
   const [editorInfo, setEditorInfo] = useState<EditorInfo>(defaultEditorInfo);
-  const navigate = useNavigate();
 
   const openCommandMenu = useCallback(() => {
     setIsCommandMenuOpen(true);
@@ -65,11 +64,35 @@ export const CommandProvider = ({ children }: CommandProviderProps) => {
     setIsCommandMenuOpen((prev) => !prev);
   }, []);
 
-  const updateEditorInfo = useCallback((info: Partial<EditorInfo>) => {
-    setEditorInfo(prev => ({ ...prev, ...info }));
-  }, []);
+  const getLatestEditorContent = useCallback(() => {
+    if (editorInfo.editorRef?.current) {
+      const currentContent = editorInfo.editorRef.current.getValue();
+      setEditorInfo(prev => ({
+        ...prev,
+        editorContent: currentContent
+      }));
+    }
+  }, [editorInfo.editorRef]);
 
-  // Add global keyboard shortcut for Cmd+K
+  const updateEditorInfo = useCallback((info: Partial<EditorInfo>) => {
+    if (isCommandMenuOpen) {
+      setEditorInfo(prev => ({ ...prev, ...info }));
+    } else {
+      const minimalInfo: Partial<EditorInfo> = {};
+      
+      if (info.editorRef) minimalInfo.editorRef = info.editorRef;
+      if (info.markdownFormatterRef) minimalInfo.markdownFormatterRef = info.markdownFormatterRef;
+      if (info.cyclePaperMode) minimalInfo.cyclePaperMode = info.cyclePaperMode;
+      if (info.toggleEditorWidth) minimalInfo.toggleEditorWidth = info.toggleEditorWidth;
+      if (info.togglePreviewMode) minimalInfo.togglePreviewMode = info.togglePreviewMode;
+      if (info.paperMode) minimalInfo.paperMode = info.paperMode;
+      if (info.editorWidth) minimalInfo.editorWidth = info.editorWidth;
+      if (info.previewMode !== undefined) minimalInfo.previewMode = info.previewMode;
+      
+      setEditorInfo(prev => ({ ...prev, ...minimalInfo }));
+    }
+  }, [isCommandMenuOpen]);
+
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
@@ -82,19 +105,36 @@ export const CommandProvider = ({ children }: CommandProviderProps) => {
     return () => window.removeEventListener("keydown", handleGlobalKeyDown);
   }, [toggleCommandMenu]);
 
+  useEffect(() => {
+    if (isCommandMenuOpen) {
+      getLatestEditorContent();
+    } else {
+      setEditorInfo(prev => ({
+        ...prev,
+        editorContent: "",
+      }));
+    }
+  }, [isCommandMenuOpen, getLatestEditorContent]);
+
+  const contextValue = {
+    isCommandMenuOpen,
+    openCommandMenu,
+    closeCommandMenu,
+    toggleCommandMenu,
+    updateEditorInfo,
+    editorInfo,
+  };
+
   return (
-    <CommandContext.Provider
-      value={{
-        isCommandMenuOpen,
-        openCommandMenu,
-        closeCommandMenu,
-        toggleCommandMenu,
-        updateEditorInfo,
-        editorInfo,
-      }}
-    >
+    <CommandContext.Provider value={contextValue}>
       {children}
-      <GlobalCommandMenu isOpen={isCommandMenuOpen} onClose={closeCommandMenu} editorInfo={editorInfo} />
+      {isCommandMenuOpen && (
+        <MemoizedGlobalCommandMenu 
+          isOpen={isCommandMenuOpen} 
+          onClose={closeCommandMenu} 
+          editorInfo={editorInfo} 
+        />
+      )}
     </CommandContext.Provider>
   );
 };
@@ -107,7 +147,6 @@ export const useCommandMenu = (): CommandContextType => {
   return context;
 };
 
-// Enhanced global command menu that uses editor info when available
 const GlobalCommandMenu = ({ 
   isOpen, 
   onClose,
@@ -117,8 +156,7 @@ const GlobalCommandMenu = ({
   onClose: () => void;
   editorInfo: EditorInfo; 
 }) => {
-  const navigate = useNavigate();
-  const { toggleTheme } = useTheme();
+  if (!isOpen) return null;
 
   return (
     <CommandMenu
@@ -136,4 +174,6 @@ const GlobalCommandMenu = ({
       togglePreviewMode={editorInfo.togglePreviewMode}
     />
   );
-}; 
+};
+
+const MemoizedGlobalCommandMenu = memo(GlobalCommandMenu); 
