@@ -3,7 +3,7 @@
 import { Link } from "react-router-dom";
 import { memo } from "react";
 import Avatar from "boring-avatars";
-import { SuccessIcon } from "./icons";
+import { SuccessIcon, EyeIcon } from "./icons";
 // TODO: organize depndency direction, don't import from features
 import { SystemMenu } from "../features/system/system-menu";
 import { useSystemMenu } from "../features/system/system-context";
@@ -62,19 +62,23 @@ const _Footer = ({ charCount = 0, taskCount, previewMode = false, togglePreview 
           <Link to="/history" className={"hover:text-neutral-900 dark:hover:text-neutral-100"}>
             History
           </Link>
-          {togglePreview && (
-            <button
-              onClick={togglePreview}
-              className={`hover:text-neutral-900 dark:hover:text-neutral-100 ${
-                previewMode ? "font-medium text-primary-500" : ""
-              }`}
-            >
-              Preview
-            </button>
-          )}
         </nav>
 
         <div className="flex items-center gap-4 min-w-0">
+          {togglePreview && (
+            <button
+              onClick={togglePreview}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-colors ${
+                previewMode 
+                  ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400" 
+                  : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              }`}
+            >
+              <EyeIcon className={`h-3.5 w-3.5 ${previewMode ? "text-primary-500" : ""}`} />
+              <span>{previewMode ? "Edit" : "Preview"}</span>
+            </button>
+          )}
+          
           <DaysDisplay />
 
           {hasTasks && (
