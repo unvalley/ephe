@@ -216,7 +216,7 @@ export const CommandMenu = ({
 }: CommandMenuProps) => {
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const { toggleTheme, toggleTargetTheme } = useTheme();
+  const { setTheme, nextTheme } = useTheme();
   const navigate = useNavigate();
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -427,7 +427,7 @@ export const CommandMenu = ({
                 aria-selected:text-primary-600 dark:aria-selected:text-primary-400
                 transition-colors"
               onSelect={() => {
-                toggleTheme();
+                setTheme(nextTheme);
                 onClose?.();
               }}
               value="theme toggle switch mode light dark"
@@ -435,7 +435,7 @@ export const CommandMenu = ({
               <div className="flex items-center justify-center h-5 w-5 rounded-md bg-gray-100/80 dark:bg-zinc-700/60 text-gray-900 dark:text-gray-100 group-hover:bg-gray-200 dark:group-hover:bg-zinc-600 group-aria-selected:bg-primary-500/20 dark:group-aria-selected:bg-primary-600/20 transition-colors">
                 <ThemeIcon className="h-3.5 w-3.5" />
               </div>
-              <span>Switch to {toggleTargetTheme} mode</span>
+              <span>Switch to {nextTheme} mode</span>
             </Command.Item>
 
             {cyclePaperMode && (

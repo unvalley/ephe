@@ -1,59 +1,32 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
 
-type ColorTheme = "light" | "dark";
+import { useAtom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
+import { SESSION_STORAGE_KEYS } from "../utils/constants";
+import { valueOf } from "../utils/types";
+import { useEffect } from "react";
 
-type ThemeContextType = {
-  theme: ColorTheme;
-  toggleTheme: () => void;
-  toggleTargetTheme: ColorTheme;
-};
+const COLOR_THEME = {
+  LIGHT: "light",
+  DARK: "dark",
+} as const;
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+type ColorTheme = valueOf<typeof COLOR_THEME>;
 
-export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [theme, setTheme] = useState<ColorTheme>("light");
-  const [mounted, setMounted] = useState(false);
+const themeAtom = atomWithStorage<ColorTheme>(SESSION_STORAGE_KEYS.THEME, "light");
 
-  useEffect(() => {
-    setMounted(true);
-    const storedTheme = sessionStorage.getItem("theme") as ColorTheme | undefined;
-
-    if (!storedTheme) {
-      setTheme("light");
-    } else {
-      setTheme(storedTheme);
-    }
-  }, []);
+export const useTheme = () => {
+  const [theme, setTheme] = useAtom(themeAtom);
 
   useEffect(() => {
-    if (!mounted) return;
-
-    // Apply theme to document
-    if (theme === "dark") {
+    if (theme === COLOR_THEME.DARK) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
-  }, [theme, mounted]);
+  }, [theme]);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    sessionStorage.setItem("theme", newTheme);
-  };
-
-  const toggleTargetTheme = theme === "light" ? "dark" : "light";
-
-  return <ThemeContext.Provider value={{ theme, toggleTheme, toggleTargetTheme }}>{children}</ThemeContext.Provider>;
-};
-
-export const useTheme = (): ThemeContextType => {
-  const context = useContext(ThemeContext);
-  // biome-ignore lint/suspicious/noDoubleEquals: undefined check
-  if (context == undefined) {
-    throw new Error("useTheme must be used within a ThemeProvider");
-  }
-  return context;
+  const nextTheme = theme === COLOR_THEME.LIGHT ? COLOR_THEME.DARK : COLOR_THEME.LIGHT;
+  return { theme, nextTheme, setTheme, isDarkMode: theme === COLOR_THEME.DARK };
 };

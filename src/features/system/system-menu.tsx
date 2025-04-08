@@ -7,8 +7,7 @@ import { useToc } from "../toc/toc-context";
 import { useEditorWidth } from "../../hooks/use-editor-width";
 
 export const SystemMenu = () => {
-  const { theme, toggleTheme } = useTheme();
-  const isDarkMode = theme === "dark";
+  const { nextTheme, setTheme, isDarkMode } = useTheme();
   const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
   const { isTocVisible, toggleToc } = useToc();
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
@@ -21,7 +20,7 @@ export const SystemMenu = () => {
       <SystemMenuSection title="System">
         <button
           type="button"
-          onClick={toggleTheme}
+          onClick={() => setTheme(nextTheme)}
           className={`flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
         >
           <span className="flex items-center justify-center w-5 h-5 mr-3">

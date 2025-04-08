@@ -20,8 +20,7 @@ const HEADING_REGEX = /^(#{1,6})\s+(.+)$/;
 
 export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVisible }) => {
   const [tocItems, setTocItems] = useState<TocItem[]>([]);
-  const { theme } = useTheme();
-  const isDarkMode = theme === "dark";
+  const { isDarkMode } = useTheme();
   const prevContentRef = useRef<string>("");
   const updateTimeoutRef = useRef<number | null>(null);
 

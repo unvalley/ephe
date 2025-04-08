@@ -7,8 +7,7 @@ export const DaysDisplay = () => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [hoveredDay, setHoveredDay] = useState<string | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const { isDarkMode } = useTheme();
 
   const currentYear = new Date().getFullYear();
   const today = new Date();
@@ -90,7 +89,7 @@ export const DaysDisplay = () => {
                 style={{
                   width: "5px",
                   height: "5px",
-                  background: day.past || day.current ? (isDark ? "white" : "#333333") : isDark ? "#444444" : "#dddddd",
+                  background: day.past || day.current ? (isDarkMode ? "white" : "#333333") : isDarkMode ? "#444444" : "#dddddd",
                   borderRadius: "50%",
                   transition: "transform 0.2s, background-color 0.2s",
                 }}

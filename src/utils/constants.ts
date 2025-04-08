@@ -6,3 +6,7 @@ export const LOCAL_STORAGE_KEYS = {
   EDITOR_WIDTH: "ephe:editor-width",
   PREVIEW_MODE: "ephe:preview-mode",
 } as const;
+
+export const SESSION_STORAGE_KEYS = {
+  THEME: "ephe:theme",
+} as const;
