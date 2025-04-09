@@ -8,6 +8,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { useTabDetection } from "../../hooks/use-tab-detection";
 import { usePaperMode } from "../../hooks/use-paper-mode";
 import { useEditorWidth } from "../../hooks/use-editor-width";
+import { useEditorTheme } from "../../hooks/use-editor-theme";
 import { CommandMenu } from "../command/command-k";
 import { getRandomQuote } from "./quotes";
 import { SnapshotDialog } from "../snapshots/snapshot-dialog";
@@ -64,6 +65,7 @@ export const EditorApp = () => {
   const [renderedHTML, setRenderedHTML] = useState<string>("");
 
   const { isDarkMode } = useTheme();
+  const { theme: editorTheme } = useEditorTheme();
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
   const { previewMode, togglePreviewMode } = usePreviewMode();
   const { editorWidth, isWideMode, toggleEditorWidth } = useEditorWidth();
@@ -321,10 +323,12 @@ export const EditorApp = () => {
                   monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
                   monaco.editor.defineTheme(MANCHESTER_CITY_LIGHT_THEME.name, MANCHESTER_CITY_LIGHT_THEME.theme);
                   monaco.editor.defineTheme(MANCHESTER_CITY_DARK_THEME.name, MANCHESTER_CITY_DARK_THEME.theme);
+                  
+                  monaco.editor.setTheme(editorTheme);
                 }}
                 className="overflow-visible"
                 loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
-                theme={localStorage.getItem("editor-theme") || (isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name)}
+                theme={editorTheme}
               />
             ) : (
               <div className="h-full overflow-auto px-2 py-2 prose prose-slate dark:prose-invert max-w-none">

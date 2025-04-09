@@ -338,7 +338,7 @@ export const MANCHESTER_CITY_LIGHT_THEME = {
       inherit: true,
       rules: [
         { token: "comment", foreground: "#6CABDD", fontStyle: "italic" },
-        { token: "keyword", foreground: "#1C2C5B" },  // Man City dark blue
+        { token: "keyword", foreground: "#6CABDD" },  // Man City dark blue
         { token: "string", foreground: "#98C5E9" },   // Man City sky blue
         { token: "number", foreground: "#1C2C5B" },   // Man City dark blue
         { token: "type", foreground: "#00285E" },     // Darker blue
@@ -352,7 +352,7 @@ export const MANCHESTER_CITY_LIGHT_THEME = {
         "editor.foreground": "#333333",
         "editorLineNumber.foreground": "#98C5E9",
         "editor.selectionBackground": "#98C5E980",
-        "editorCursor.foreground": "#1C2C5B",
+        "editorCursor.foreground": "#98C5E9",
       },
     } as monaco.editor.IStandaloneThemeData,
   } as const;

@@ -6,6 +6,7 @@ import { usePaperMode } from "../../hooks/use-paper-mode";
 import { useEditorWidth } from "../../hooks/use-editor-width";
 import { useToc } from "../../hooks/use-toc";
 import { useCharCount } from "../../hooks/use-char-count";
+import { useEditorTheme } from "../../hooks/use-editor-theme";
 import { useState, useEffect } from "react";
 import { getTasksByDate } from "../tasks/task-storage";
 
@@ -222,32 +223,8 @@ interface EditorThemeDialogProps {
   onClose: () => void;
 }
 
-const EDITOR_THEMES = [
-  { id: "vs", name: "Light", description: "Default light theme" },
-  { id: "vs-dark", name: "Dark", description: "Default dark theme" },
-  { id: "ephe-light", name: "Ephe Light", description: "Custom light theme for Ephe" },
-  { id: "ephe-dark", name: "Ephe Dark", description: "Custom dark theme for Ephe" },
-  { id: "man-city-light", name: "Man City Light", description: "Manchester City light theme" },
-  { id: "man-city-dark", name: "Man City Dark", description: "Manchester City dark theme" },
-  { id: "hc-black", name: "High Contrast Dark", description: "High contrast dark theme" },
-  { id: "hc-light", name: "High Contrast Light", description: "High contrast light theme" },
-  { id: "github-light", name: "GitHub Light", description: "GitHub light theme" },
-  { id: "github-dark", name: "GitHub Dark", description: "GitHub dark theme" },
-] as const;
-
 const EditorThemeDialog = ({ onClose }: EditorThemeDialogProps) => {
-  const [selectedTheme, setSelectedTheme] = useState(() => {
-    // Get currently selected theme from localStorage or default to vs/vs-dark based on system preference
-    return localStorage.getItem("editor-theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "vs-dark" : "vs");
-  });
-
-  const applyTheme = (themeId: string) => {
-    // Save selected theme to localStorage
-    localStorage.setItem("editor-theme", themeId);
-    // Publish an event that the editor can listen to
-    window.dispatchEvent(new CustomEvent("editor-theme-changed", { detail: { theme: themeId } }));
-    setSelectedTheme(themeId);
-  };
+  const { theme: selectedTheme, setTheme: applyTheme, themes: EDITOR_THEMES } = useEditorTheme();
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
