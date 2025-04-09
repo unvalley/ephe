@@ -45,6 +45,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.31",
+    "rollup-plugin-visualizer": "^5.14.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^6",

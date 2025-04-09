@@ -314,8 +314,9 @@ function toggleListSingleLine(doc: TextDocument, line: number, wsEdit: Workspace
 /**
  * Here we store Regexp to check if the text is the single link.
  */
-const detectLink = /\b(?:[a-z0-9][-a-z0-9]*\.)+(?:com|org|net|edu|gov|mil|io|dev|co|jp|us|app|so|ai|design|info|shop|de|ru|br|uk|is|it|fr|de)(?:\b|\/)/i;
-const detectLinkRegex: RegExp =  new RegExp(detectLink)
+const detectLink =
+  /\b(?:[a-z0-9][-a-z0-9]*\.)+(?:com|org|net|edu|gov|mil|io|dev|co|jp|us|app|so|ai|design|info|shop|de|ru|br|uk|is|it|fr|de)(?:\b|\/)/i;
+const detectLinkRegex: RegExp = new RegExp(detectLink);
 
 // TODO: This is simplified link detection. More complex detection is needed.
 export const isLink = (text: string): boolean => {

@@ -71,7 +71,10 @@ export class MonacoMarkdownExtension {
           return lineContent
             .split(/\s+/)
             .reduce((acc: Array<{ range: IRange; url: string }>, word: string, index: number, array: string[]) => {
-              const currentPos = lineContent.indexOf(word, index > 0 ? lineContent.indexOf(array[index - 1]) + array[index - 1].length : 0);
+              const currentPos = lineContent.indexOf(
+                word,
+                index > 0 ? lineContent.indexOf(array[index - 1]) + array[index - 1].length : 0,
+              );
               if (currentPos === -1) return acc;
 
               if (word.length < 4 || word.startsWith("[") || word.includes("](")) {
@@ -98,7 +101,10 @@ export class MonacoMarkdownExtension {
             }, []);
         };
 
-        const links = lines.reduce<Array<{ range: IRange; url: string }>>((acc, line, index) => [...acc, ...findLinksInLine(line, index)], []);
+        const links = lines.reduce<Array<{ range: IRange; url: string }>>(
+          (acc, line, index) => [...acc, ...findLinksInLine(line, index)],
+          [],
+        );
 
         return { links };
       },
