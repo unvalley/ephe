@@ -24,7 +24,7 @@ import { handleTaskCheckboxToggle } from "./monaco/editor-utils";
 import { DprintMarkdownFormatter } from "./markdown/formatter/dprint-markdown-formatter";
 import type { MarkdownFormatter } from "./markdown/formatter/markdown-formatter";
 import { MonacoMarkdownExtension } from "./monaco/monaco-markdown";
-import { markdownService, type TaskListCount } from "./markdown/ast/markdown-service";
+import { markdownService } from "./markdown/ast/markdown-service";
 import { AlreadyOpenDialog } from "../../components/already-open-dialog";
 import { PlaceholderWidget } from "./monaco/placeholder-widget";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
@@ -39,6 +39,7 @@ import { atomWithStorage } from "jotai/utils";
 import { useAtom } from "jotai";
 import { usePreviewMode } from "../../hooks/use-preview-mode";
 import { useToc } from "../../hooks/use-toc";
+import { useCharCount } from "../../hooks/use-char-count";
 
 // Initialize remark processor with GFM plugin
 const remarkProcessor = remark()
@@ -54,23 +55,17 @@ export const EditorApp = () => {
   const placeholderRef = useRef<PlaceholderWidget | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
-  const [charCount, setCharCount] = useState<number>(0);
-  const [taskCount, setTaskCount] = useState<TaskListCount>({
-    open: 0,
-    closed: 0,
-  });
-
+  const { setCharCount } = useCharCount();
   const [placeholder, _] = useState<string>(getRandomQuote());
   const { isVisibleToc, focusOnSection } = useToc({ editorRef });
   const [editorContent, setEditorContent] = useAtom(editorAtom);
   const [renderedHTML, setRenderedHTML] = useState<string>("");
 
-  const { theme } = useTheme();
+  const { isDarkMode } = useTheme();
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
   const { previewMode, togglePreviewMode } = usePreviewMode();
   const { editorWidth, isWideMode, toggleEditorWidth } = useEditorWidth();
 
-  const isDarkMode = theme === "dark";
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const { shouldShowAlert, dismissAlert } = useTabDetection();
@@ -101,11 +96,6 @@ export const EditorApp = () => {
     },
     50, // Faster updates for character count
   );
-
-  const debouncedTaskCountUpdate = useDebouncedCallback((content: string) => {
-    const { taskCount } = markdownService.processMarkdown(content);
-    setTaskCount(taskCount);
-  }, 100);
 
   // Initialize markdown formatter
   useEffect(() => {
@@ -157,9 +147,7 @@ export const EditorApp = () => {
 
     const content = editor.getValue();
     if (content) {
-      const { taskCount } = markdownService.processMarkdown(content);
       setCharCount(content.length);
-      setTaskCount(taskCount);
     }
 
     // Add decorations for checked tasks
@@ -291,7 +279,6 @@ export const EditorApp = () => {
       setEditorContent(updatedText);
       debouncedSetContent(updatedText);
       debouncedCharCountUpdate(updatedText);
-      debouncedTaskCountUpdate(updatedText);
       handlePlaceholder(updatedText);
     });
   };
@@ -347,9 +334,6 @@ export const EditorApp = () => {
         )}
 
         <Footer
-          charCount={charCount}
-          taskCount={taskCount}
-          editorWidth={editorWidth}
           previewMode={previewMode}
           togglePreview={togglePreviewMode}
         />

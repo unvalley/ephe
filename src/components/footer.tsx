@@ -3,48 +3,32 @@
 import { Link } from "react-router-dom";
 import { memo } from "react";
 import Avatar from "boring-avatars";
-import { SuccessIcon, EyeIcon } from "./icons";
+import { EyeIcon } from "./icons";
 // TODO: organize depndency direction, don't import from features
 import { SystemMenu } from "../features/system/system-menu";
 import { useSystemMenu } from "../features/system/system-context";
 import { DaysDisplay } from "./days-display";
-import type { EditorWidth } from "../hooks/use-editor-width";
 
 type FooterProps = {
-  charCount?: number;
-  taskCount?: {
-    open: number;
-    closed: number;
-  };
-  editorWidth?: EditorWidth;
   previewMode?: boolean;
   togglePreview?: () => void;
 };
 
 const EPHE_VERSION = "0.0.1";
 
-const _Footer = ({ charCount = 0, taskCount, previewMode = false, togglePreview }: FooterProps) => {
+const _Footer = ({  previewMode = false, togglePreview }: FooterProps) => {
   const { isSystemMenuOpen, toggleSystemMenu } = useSystemMenu();
-
-  // Safe access to task counts with defaults
-  const openTasks = taskCount?.open ?? 0;
-  const closedTasks = taskCount?.closed ?? 0;
-  const totalTasks = openTasks + closedTasks;
-
-  // Check if all tasks are completed (only if there are tasks)
-  const hasTasks = totalTasks > 0;
-  const allTasksCompleted = hasTasks && openTasks === 0;
 
   return (
     <footer className="fixed inset-x-0 bottom-0 bg-transparent">
       <div className="flex mx-auto px-2 py-1 text-sm justify-between items-center">
-        <nav className="flex gap-3">
+        <nav className="flex">
           <div className="relative">
             <button
               id="system-menu-trigger"
               type="button"
               onClick={toggleSystemMenu}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 px-2 py-1 rounded-md transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
             >
               <span>System</span>
             </button>
@@ -56,19 +40,21 @@ const _Footer = ({ charCount = 0, taskCount, previewMode = false, togglePreview 
               </div>
             )}
           </div>
-          <Link to="/" className="hover:text-neutral-900 dark:hover:text-neutral-100">
+          <Link to="/" className="flex items-center px-2 py-1 rounded-md transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
             Editor
           </Link>
-          <Link to="/history" className={"hover:text-neutral-900 dark:hover:text-neutral-100"}>
+          <Link to="/history" className="flex items-center px-2 py-1 rounded-md transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
             History
           </Link>
         </nav>
 
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex items-center gap-1 min-w-0">
+          <DaysDisplay />
+
           {togglePreview && (
             <button
               onClick={togglePreview}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-colors ${
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${
                 previewMode
                   ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
                   : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
@@ -79,33 +65,7 @@ const _Footer = ({ charCount = 0, taskCount, previewMode = false, togglePreview 
             </button>
           )}
 
-          <DaysDisplay />
 
-          {hasTasks && (
-            <span
-              className={`whitespace-nowrap flex items-center rounded ${
-                allTasksCompleted && "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-              }`}
-            >
-              {allTasksCompleted && closedTasks > 0 && (
-                <span className="px-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 rounded-full flex items-center">
-                  <SuccessIcon />
-                </span>
-              )}
-              {hasTasks ? (
-                <span>
-                  {closedTasks}/{totalTasks}
-                </span>
-              ) : (
-                <span>0</span>
-              )}
-              <span className="ml-0.5">tasks</span>
-            </span>
-          )}
-
-          {charCount > 0 && (
-            <span className="whitespace-nowrap flex items-center rounded">{charCount.toLocaleString()} chars</span>
-          )}
           <div className="flex items-center">
             <Avatar
               size={12}
