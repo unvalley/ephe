@@ -24,7 +24,7 @@ import { handleTaskCheckboxToggle } from "./monaco/editor-utils";
 import { DprintMarkdownFormatter } from "./markdown/formatter/dprint-markdown-formatter";
 import type { MarkdownFormatter } from "./markdown/formatter/markdown-formatter";
 import { MonacoMarkdownExtension } from "./monaco/monaco-markdown";
-import { markdownService, type TaskListCount } from "./markdown/ast/markdown-service";
+import { markdownService } from "./markdown/ast/markdown-service";
 import { AlreadyOpenDialog } from "../../components/already-open-dialog";
 import { PlaceholderWidget } from "./monaco/placeholder-widget";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";

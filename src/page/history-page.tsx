@@ -17,7 +17,6 @@ import { showToast } from "../components/toast";
 import { Loading } from "../components/loading";
 import { LOCAL_STORAGE_KEYS } from "../utils/constants";
 import { usePaperMode } from "../hooks/use-paper-mode";
-import { useCharCount } from "../hooks/use-char-count";
 
 type DateFilter = {
   year?: number;
