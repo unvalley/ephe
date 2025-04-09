@@ -96,7 +96,11 @@ export class MonacoMarkdownExtension {
             if (currentPos === -1) continue;
 
             // スキップすべき明らかに非URLなものを除外
-            if (word.length < 4 || word.startsWith("[") || word.includes("](")) {
+            if (
+              word.length < 4 || 
+              word.startsWith("[") || 
+              word.includes("](")
+            ) {
               currentPos += word.length;
               continue;
             }

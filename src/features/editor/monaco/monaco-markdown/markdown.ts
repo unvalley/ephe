@@ -122,8 +122,9 @@ export const language = <languages.IMonarchLanguage>{
       // Auto-link URLs with protocols (e.g., http://example.com) - simple and efficient regex
       [/\b(?:https?|ftp):\/\/\S+/, "string.link"],
       // Auto-link URLs without protocols (e.g., example.com) - simple and efficient regex
+      // Modified to prevent framework names ending with .js from being treated as links
       [
-        /\b(?:[a-z0-9][-a-z0-9]*\.)+(?:com|org|net|edu|gov|mil|io|dev|co|jp|us|app|so|ai|design|info|shop|de|ru|br|uk|is|it|fr|de)\b/i,
+        /\b(?:[a-z0-9][-a-z0-9]*\.)+(?:com|org|net|edu|gov|mil|io|dev|co|jp|us|app|so|ai|design|info|shop|de|ru|br|uk|is|it|fr|de)(?:\b|\/)/i,
         "string.link",
       ],
 
