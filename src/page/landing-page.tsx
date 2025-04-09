@@ -2,8 +2,8 @@ import Avatar from "boring-avatars";
 
 export const LandingPage = () => {
   return (
-    <div className="antialiased min-h-screen flex flex-col items-center justify-center px-4 py-6 font-mono bg-neutral-100 dark:bg-mono-700">
-      <div className="max-w-4xl w-full space-y-8 sm:space-y-12">
+    <div className="antialiased min-h-screen flex flex-col items-center justify-center px-4 py-6 font-mono bg-graph-paper">
+      <div className="max-w-3xl w-full space-y-8 sm:space-y-12">
         <div className="space-y-3 sm:space-y-4">
           <h1 className="text-2xl sm:text-3xl font-normal flex items-center">
             <Avatar
@@ -35,23 +35,26 @@ export const LandingPage = () => {
           </ul>
         </div>
 
-        <div className="mt-8 flex gap-2">
+        <div className="">
+          <p>
+            You can see the source code on{" "}
+            <a href="https://github.com/unvalley/ephe" className="text-blue-400 hover:underline">
+              GitHub
+            </a>
+          </p>
+        </div>
+
+        <div className="my-20 flex gap-2 justify-center">
           <a
             href="/"
-            className="px-4 py-2 rounded-md bg-mono-100 dark:bg-mono-200 dark:text-mono-700 hover:bg-mono-200 dark:hover:bg-mono-300 transition-colors"
+            className="px-4 py-2 rounded-md border border-primary-400 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500 dark:hover:text-white transition-colors"
           >
-            Use Ephe
-          </a>
-          <a
-            href="https://github.com/unvalley/ephe"
-            className="px-4 py-2 rounded-md bg-mono-100 dark:bg-mono-200 dark:text-mono-700"
-          >
-            Ephe on GitHub
+            Try Ephe
           </a>
         </div>
       </div>
 
-      <footer className="mt-20 sm:mt-40 text-gray-600 dark:text-gray-400 text-center text-sm sm:text-base">
+      <footer className="text-gray-600 dark:text-gray-400 text-center text-sm sm:text-base">
         This project is built by{" "}
         <a href="https://github.com/unvalley" className="text-blue-400 hover:underline">
           unvalley
