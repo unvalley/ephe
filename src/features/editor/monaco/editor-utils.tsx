@@ -324,8 +324,8 @@ export const EPHE_DARK_THEME = {
       { token: "operator", foreground: "#FF7043" },
     ],
     colors: {
-      "editor.background": "#00000000", // 透明
-      "editor.foreground": "#FFFFFF", // ホワイト
+      "editor.background": "#00000000",
+      "editor.foreground": "#FFFFFF",
     },
   } as monaco.editor.IStandaloneThemeData,
 } as const;
