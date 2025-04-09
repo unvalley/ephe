@@ -20,4 +20,4 @@ export const useCharCount = () => {
   }, [charCount, setCharCount]);
 
   return { charCount, setCharCount };
-}; 
+};

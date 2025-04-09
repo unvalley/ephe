@@ -16,7 +16,7 @@ type FooterProps = {
 
 const EPHE_VERSION = "0.0.1";
 
-const _Footer = ({  previewMode = false, togglePreview }: FooterProps) => {
+const _Footer = ({ previewMode = false, togglePreview }: FooterProps) => {
   const { isSystemMenuOpen, toggleSystemMenu } = useSystemMenu();
 
   return (
@@ -40,10 +40,16 @@ const _Footer = ({  previewMode = false, togglePreview }: FooterProps) => {
               </div>
             )}
           </div>
-          <Link to="/" className="flex items-center px-2 py-1 rounded-md transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
+          <Link
+            to="/"
+            className="flex items-center px-2 py-1 rounded-md transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          >
             Editor
           </Link>
-          <Link to="/history" className="flex items-center px-2 py-1 rounded-md transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
+          <Link
+            to="/history"
+            className="flex items-center px-2 py-1 rounded-md transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          >
             History
           </Link>
         </nav>
@@ -64,7 +70,6 @@ const _Footer = ({  previewMode = false, togglePreview }: FooterProps) => {
               <span>{previewMode ? "Edit" : "Preview"}</span>
             </button>
           )}
-
 
           <div className="flex items-center">
             <Avatar

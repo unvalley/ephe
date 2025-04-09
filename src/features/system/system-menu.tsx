@@ -19,14 +19,14 @@ const useTodayCompletedTasks = () => {
       const tasksByDate = getTasksByDate({
         year: today.getFullYear(),
         month: today.getMonth() + 1, // getMonth is 0-indexed
-        day: today.getDate()
+        day: today.getDate(),
       });
-      
+
       // Count tasks completed today
       const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
       const todayTasks = tasksByDate[todayDateStr] || [];
       setTodayCompletedTasks(todayTasks.length);
-    };  
+    };
 
     loadTodayTasks();
 
@@ -45,7 +45,6 @@ const useTodayCompletedTasks = () => {
 
   return { todayCompletedTasks, setTodayCompletedTasks };
 };
-  
 
 export const SystemMenu = () => {
   const { nextTheme, setTheme, isDarkMode } = useTheme();
@@ -60,33 +59,33 @@ export const SystemMenu = () => {
       id="system-menu-container"
       className="bg-mono-50 dark:bg-mono-700 z-10 w-56 divide-y divide-mono-100 dark:divide-mono-500 rounded-md ring-1 shadow-lg ring-black/5 dark:ring-white/10 ring-opacity-5 focus:outline-none"
     >
-        <SystemMenuSection title="Document Stats">
-          <div className="px-4 py-2.5 text-sm flex items-center">
-            <span className="flex items-center justify-center w-5 h-5 mr-3">
+      <SystemMenuSection title="Document Stats">
+        <div className="px-4 py-2.5 text-sm flex items-center">
+          <span className="flex items-center justify-center w-5 h-5 mr-3">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 5H20V7H4V5Z" fill="currentColor" />
+              <path d="M4 9H20V11H4V9Z" fill="currentColor" />
+              <path d="M4 13H14V15H4V13Z" fill="currentColor" />
+              <path d="M4 17H11V19H4V17Z" fill="currentColor" />
+            </svg>
+          </span>
+          <span>{charCount > 0 ? `${charCount.toLocaleString()} characters` : "No content"}</span>
+        </div>
+        <div className="px-4 py-2.5 text-sm flex items-center">
+          <span className="flex items-center justify-center w-5 h-5 mr-3">
+            {todayCompletedTasks > 0 ? (
+              <SuccessIcon />
+            ) : (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 5H20V7H4V5Z" fill="currentColor" />
-                <path d="M4 9H20V11H4V9Z" fill="currentColor" />
-                <path d="M4 13H14V15H4V13Z" fill="currentColor" />
-                <path d="M4 17H11V19H4V17Z" fill="currentColor" />
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
               </svg>
-            </span>
-            <span>{charCount > 0 ? `${charCount.toLocaleString()} characters` : "No content"}</span>
-          </div>
-          <div className="px-4 py-2.5 text-sm flex items-center">
-            <span className="flex items-center justify-center w-5 h-5 mr-3">
-              {todayCompletedTasks > 0 ? (
-                <SuccessIcon />
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
-                </svg>
-              )}
-            </span>
-            <span className={todayCompletedTasks > 0 ? "text-green-700 dark:text-green-400" : ""}>
-              {todayCompletedTasks > 0 ? `${todayCompletedTasks} closed today` : "No closed today"}
-            </span>
-          </div>
-        </SystemMenuSection>
+            )}
+          </span>
+          <span className={todayCompletedTasks > 0 ? "text-green-700 dark:text-green-400" : ""}>
+            {todayCompletedTasks > 0 ? `${todayCompletedTasks} closed today` : "No closed today"}
+          </span>
+        </div>
+      </SystemMenuSection>
 
       <SystemMenuSection title="System">
         <button
@@ -189,7 +188,6 @@ export const SystemMenu = () => {
           <span>Wide</span>
         </button>
       </SystemMenuSection>
-
     </div>
   );
 };

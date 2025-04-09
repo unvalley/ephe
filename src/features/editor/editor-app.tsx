@@ -333,10 +333,7 @@ export const EditorApp = () => {
           </div>
         )}
 
-        <Footer
-          previewMode={previewMode}
-          togglePreview={togglePreviewMode}
-        />
+        <Footer previewMode={previewMode} togglePreview={togglePreviewMode} />
 
         <CommandMenu
           open={commandMenuOpen}
