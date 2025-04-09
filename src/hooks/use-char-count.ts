@@ -13,7 +13,9 @@ export const useCharCount = () => {
   useEffect(() => {
     if (charCount === 0) {
       const editorContent = localStorage.getItem(LOCAL_STORAGE_KEYS.EDITOR_CONTENT);
-      if (editorContent) {
+      if (editorContent === '""' || editorContent == null) {
+        setCharCount(0);
+      } else {
         setCharCount(editorContent.length);
       }
     }
