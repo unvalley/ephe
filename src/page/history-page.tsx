@@ -17,6 +17,7 @@ import { showToast } from "../components/toast";
 import { Loading } from "../components/loading";
 import { LOCAL_STORAGE_KEYS } from "../utils/constants";
 import { usePaperMode } from "../hooks/use-paper-mode";
+import { useCharCount } from "../hooks/use-char-count";
 
 type DateFilter = {
   year?: number;
@@ -45,6 +46,7 @@ export const HistoryPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const navigate = useNavigate();
   const { paperModeClass } = usePaperMode();
+  const { charCount } = useCharCount();
 
   // Get available years, months, and days from all history
   const [availableYears, setAvailableYears] = useState<number[]>([]);

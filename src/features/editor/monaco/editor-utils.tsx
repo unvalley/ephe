@@ -259,6 +259,9 @@ export const handleTaskCheckboxToggle = (
         deleteCompletedTaskByIdentifier(taskIdentifier);
       }
 
+      // Dispatch custom event to notify about task changes
+      window.dispatchEvent(new CustomEvent("ephe:task-change"));
+
       // Apply the edit to toggle checkbox - only change the checkbox character
       editor.executeEdits("", [
         {

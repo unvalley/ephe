@@ -39,6 +39,7 @@ import { atomWithStorage } from "jotai/utils";
 import { useAtom } from "jotai";
 import { usePreviewMode } from "../../hooks/use-preview-mode";
 import { useToc } from "../../hooks/use-toc";
+import { useCharCount } from "../../hooks/use-char-count";
 
 // Initialize remark processor with GFM plugin
 const remarkProcessor = remark()
@@ -54,23 +55,22 @@ export const EditorApp = () => {
   const placeholderRef = useRef<PlaceholderWidget | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
-  const [charCount, setCharCount] = useState<number>(0);
   const [taskCount, setTaskCount] = useState<TaskListCount>({
     open: 0,
     closed: 0,
   });
 
+  const { charCount, setCharCount } = useCharCount();
   const [placeholder, _] = useState<string>(getRandomQuote());
   const { isVisibleToc, focusOnSection } = useToc({ editorRef });
   const [editorContent, setEditorContent] = useAtom(editorAtom);
   const [renderedHTML, setRenderedHTML] = useState<string>("");
 
-  const { theme } = useTheme();
+  const { isDarkMode } = useTheme();
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
   const { previewMode, togglePreviewMode } = usePreviewMode();
   const { editorWidth, isWideMode, toggleEditorWidth } = useEditorWidth();
 
-  const isDarkMode = theme === "dark";
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const { shouldShowAlert, dismissAlert } = useTabDetection();
@@ -347,9 +347,6 @@ export const EditorApp = () => {
         )}
 
         <Footer
-          charCount={charCount}
-          taskCount={taskCount}
-          editorWidth={editorWidth}
           previewMode={previewMode}
           togglePreview={togglePreviewMode}
         />

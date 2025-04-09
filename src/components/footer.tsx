@@ -3,37 +3,21 @@
 import { Link } from "react-router-dom";
 import { memo } from "react";
 import Avatar from "boring-avatars";
-import { SuccessIcon, EyeIcon } from "./icons";
+import { EyeIcon } from "./icons";
 // TODO: organize depndency direction, don't import from features
 import { SystemMenu } from "../features/system/system-menu";
 import { useSystemMenu } from "../features/system/system-context";
 import { DaysDisplay } from "./days-display";
-import type { EditorWidth } from "../hooks/use-editor-width";
 
 type FooterProps = {
-  charCount?: number;
-  taskCount?: {
-    open: number;
-    closed: number;
-  };
-  editorWidth?: EditorWidth;
   previewMode?: boolean;
   togglePreview?: () => void;
 };
 
 const EPHE_VERSION = "0.0.1";
 
-const _Footer = ({ charCount = 0, taskCount, previewMode = false, togglePreview }: FooterProps) => {
+const _Footer = ({  previewMode = false, togglePreview }: FooterProps) => {
   const { isSystemMenuOpen, toggleSystemMenu } = useSystemMenu();
-
-  // Safe access to task counts with defaults
-  const openTasks = taskCount?.open ?? 0;
-  const closedTasks = taskCount?.closed ?? 0;
-  const totalTasks = openTasks + closedTasks;
-
-  // Check if all tasks are completed (only if there are tasks)
-  const hasTasks = totalTasks > 0;
-  const allTasksCompleted = hasTasks && openTasks === 0;
 
   return (
     <footer className="fixed inset-x-0 bottom-0 bg-transparent">
@@ -64,7 +48,9 @@ const _Footer = ({ charCount = 0, taskCount, previewMode = false, togglePreview 
           </Link>
         </nav>
 
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <DaysDisplay />
+
           {togglePreview && (
             <button
               onClick={togglePreview}
@@ -79,33 +65,7 @@ const _Footer = ({ charCount = 0, taskCount, previewMode = false, togglePreview 
             </button>
           )}
 
-          <DaysDisplay />
 
-          {hasTasks && (
-            <span
-              className={`whitespace-nowrap flex items-center rounded ${
-                allTasksCompleted && "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-              }`}
-            >
-              {allTasksCompleted && closedTasks > 0 && (
-                <span className="px-0.5 text-xs bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400 rounded-full flex items-center">
-                  <SuccessIcon />
-                </span>
-              )}
-              {hasTasks ? (
-                <span>
-                  {closedTasks}/{totalTasks}
-                </span>
-              ) : (
-                <span>0</span>
-              )}
-              <span className="ml-0.5">tasks</span>
-            </span>
-          )}
-
-          {charCount > 0 && (
-            <span className="whitespace-nowrap flex items-center rounded">{charCount.toLocaleString()} chars</span>
-          )}
           <div className="flex items-center">
             <Avatar
               size={12}
