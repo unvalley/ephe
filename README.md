@@ -4,9 +4,6 @@
 
 # Ephe :  An Ephemeral Markdown Paper.
 
-> [!WARNING]
-> This app is in progress. Features are unstable. I accept dirty code now.
-
 You can write ephemeral notes on this app. Ephe stores your notes on browser's local storage, no tracking, no ads, no login.
 
 An alternative to Slack Direct Message to ourself. Ephe is based on [Monaco Editor](https://github.com/microsoft/monaco-editor).
@@ -19,13 +16,15 @@ An alternative to Slack Direct Message to ourself. Ephe is based on [Monaco Edit
 
 ## Fun features
 
-- Dark mode. (WIP)
+- Dark mode.
 - `-[` or `- [` automatically completes to `- [ ] `.
 - Table of Contents.
 - Automatic snapshot.
-- Markdown Format on save (using [dprint](https://github.com/dprint/dprint)).
+- Format on save (using [dprint](https://github.com/dprint/dprint)).
 - Record history (completed tasks and snapshots).
 - Command + k menu.
+- Markdown Preview.
+- Customizable Editor Appearence (Paper, Width).
 
 ## Feature Requests are welcome
 
