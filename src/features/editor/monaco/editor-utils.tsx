@@ -290,19 +290,19 @@ export const EPHE_LIGHT_THEME = {
     base: "vs",
     inherit: true,
     rules: [
-      { token: "comment", foreground: "#8a9aa9", fontStyle: "italic" },
-      { token: "keyword", foreground: "#5d5080" },
-      { token: "string", foreground: "#457464" },
-      { token: "number", foreground: "#a37a55" },
-      { token: "type", foreground: "#44678a" },
-      { token: "function", foreground: "#4a768f" },
-      { token: "variable", foreground: "#566370" },
-      { token: "constant", foreground: "#9e6b60" },
-      { token: "operator", foreground: "#6d5e96" },
+      { token: "comment", foreground: "#999999", fontStyle: "italic" }, // グレー
+      { token: "keyword", foreground: "#FF3C00" }, // メインオレンジ - TE風の鮮やかな色
+      { token: "string", foreground: "#333333" }, // ダークグレー - ミニマル
+      { token: "number", foreground: "#FF6E40" }, // オレンジのライトバリエーション
+      { token: "type", foreground: "#090909" }, // ほぼブラック - コントラスト重視
+      { token: "function", foreground: "#666666" }, // ミディアムグレー - 控えめ
+      { token: "variable", foreground: "#444444" }, // グレー - 読みやすさ重視
+      { token: "constant", foreground: "#CC2F00" }, // オレンジのダークバリエーション
+      { token: "operator", foreground: "#FF3C00" }, // メインオレンジ - アクセント
     ],
     colors: {
-      "editor.background": "#00000000",
-      "editor.foreground": "#3a4550",
+      "editor.background": "#00000000", // 透明
+      "editor.foreground": "#090909", // ブラック
     },
   } as monaco.editor.IStandaloneThemeData,
 } as const;
@@ -313,19 +313,19 @@ export const EPHE_DARK_THEME = {
     base: "vs-dark",
     inherit: true,
     rules: [
-      { token: "comment", foreground: "#8a9aa9", fontStyle: "italic" },
-      { token: "keyword", foreground: "#a08cc0" },
-      { token: "string", foreground: "#7fb49a" },
-      { token: "number", foreground: "#c79d7f" },
-      { token: "type", foreground: "#7a9cbf" },
-      { token: "function", foreground: "#7c9cb3" },
-      { token: "variable", foreground: "#d6d9dd" },
-      { token: "constant", foreground: "#c99a90" },
-      { token: "operator", foreground: "#a99ac6" },
+      { token: "comment", foreground: "#777777", fontStyle: "italic" }, // グレー
+      { token: "keyword", foreground: "#FF8A65" }, // より明るいオレンジ
+      { token: "string", foreground: "#CCCCCC" }, // ライトグレー - 控えめ
+      { token: "number", foreground: "#FF8A65" }, // さらに明るいオレンジ
+      { token: "type", foreground: "#EEEEEE" }, // ペールグレー - 重要性を示す
+      { token: "function", foreground: "#AAAAAA" }, // ミディアムグレー - 控えめ
+      { token: "variable", foreground: "#DDDDDD" }, // ほぼホワイト - 読みやすさ重視
+      { token: "constant", foreground: "#FF7043" }, // 明るいオレンジのバリエーション
+      { token: "operator", foreground: "#FF7043" }, // 明るいオレンジ - アクセント
     ],
     colors: {
-      "editor.background": "#00000000",
-      "editor.foreground": "#d6d9dd",
+      "editor.background": "#00000000", // 透明
+      "editor.foreground": "#FFFFFF", // ホワイト
     },
   } as monaco.editor.IStandaloneThemeData,
 } as const;
