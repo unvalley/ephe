@@ -1,6 +1,6 @@
 import type { editor } from "monaco-editor";
 import { IRange, languages } from "monaco-editor";
-import { activateFormatting, isSingleLink } from "./formatting";
+import { activateFormatting, isLink } from "./formatting";
 import { setWordDefinitionFor, TextEditor } from "./vscode-monaco";
 import { activateListEditing } from "./listEditing";
 import { activateCompletion } from "./completion";
@@ -64,69 +64,41 @@ export class MonacoMarkdownExtension {
 
     monacoInstance.languages.registerLinkProvider(languageId, {
       provideLinks: (model: editor.ITextModel) => {
-        const links: Array<{ range: IRange; url: string }> = [];
         const text = model.getValue();
         const lines = text.split("\n");
 
-        const hasLinkTraces =
-          text.includes("://") ||
-          text.includes("www.") ||
-          text.includes(".com") ||
-          text.includes(".org") ||
-          text.includes(".net") ||
-          text.includes(".io") ||
-          text.includes(".dev") ||
-          text.includes(".app") ||
-          text.includes(".jp");
+        const findLinksInLine = (lineContent: string, lineNumber: number): Array<{ range: IRange; url: string }> => {
+          return lineContent
+            .split(/\s+/)
+            .reduce((acc: Array<{ range: IRange; url: string }>, word: string, index: number, array: string[]) => {
+              const currentPos = lineContent.indexOf(word, index > 0 ? lineContent.indexOf(array[index - 1]) + array[index - 1].length : 0);
+              if (currentPos === -1) return acc;
 
-        if (!hasLinkTraces) {
-          return { links };
-        }
+              if (word.length < 4 || word.startsWith("[") || word.includes("](")) {
+                return acc;
+              }
 
-        // TODO:
-        for (let i = 0; i < lines.length; i++) {
-          const lineContent = lines[i];
+              if (isLink(word)) {
+                const startColumn = currentPos + 1;
+                const endColumn = startColumn + word.length;
+                const { url } = getLinkInfo(word);
 
-          const words = lineContent.split(/\s+/);
-          let currentPos = 0;
+                acc.push({
+                  range: {
+                    startLineNumber: lineNumber + 1,
+                    startColumn,
+                    endLineNumber: lineNumber + 1,
+                    endColumn,
+                  },
+                  url,
+                });
+              }
 
-          for (const word of words) {
-            // 空白をスキップして単語の開始位置を特定
-            currentPos = lineContent.indexOf(word, currentPos);
-            if (currentPos === -1) continue;
+              return acc;
+            }, []);
+        };
 
-            // スキップすべき明らかに非URLなものを除外
-            if (
-              word.length < 4 || 
-              word.startsWith("[") || 
-              word.includes("](")
-            ) {
-              currentPos += word.length;
-              continue;
-            }
-
-            // isSingleLinkを使用してURLかどうかをチェック
-            if (isSingleLink(word)) {
-              const startColumn = currentPos + 1;
-              const endColumn = startColumn + word.length;
-
-              // プロトコルの有無で適切なURLを構築
-              const { url } = getLinkInfo(word);
-
-              links.push({
-                range: {
-                  startLineNumber: i + 1,
-                  startColumn,
-                  endLineNumber: i + 1,
-                  endColumn,
-                },
-                url,
-              });
-            }
-
-            currentPos += word.length;
-          }
-        }
+        const links = lines.reduce<Array<{ range: IRange; url: string }>>((acc, line, index) => [...acc, ...findLinksInLine(line, index)], []);
 
         return { links };
       },

@@ -312,51 +312,14 @@ function toggleListSingleLine(doc: TextDocument, line: number, wsEdit: Workspace
 }
 
 /**
- * Creates Regexp to check if the text is a link (further detailes in the isSingleLink() documentation).
- *
- * @return Regexp
- */
-const createLinkRegex = (): RegExp => {
-  // unicode letters range(must not be a raw string)
-  const ul = "\\u00a1-\\uffff";
-  // IP patterns
-  const ipv4_re = "(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}";
-  const ipv6_re = "\\[[0-9a-f:\\.]+\\]"; // simple regex (in django it is validated additionally)
-
-  // Host patterns
-  const hostname_re = `[a-z${ul}0-9](?:[a-z${ul}0-9-]{0,61}[a-z${ul}0-9])?`;
-  // Max length for domain name labels is 63 characters per RFC 1034 sec. 3.1
-  const domain_re = `(?:\\.(?!-)[a-z${ul}0-9-]{1,63})*`;
-
-  const tld_re = `\\.((?!-)(?:[a-z${ul}-]{2,63}|xn--[a-z0-9]{1,59}))\\.?`; // dot, domain label/punycode, optional trailing dot
-
-  const host_re = `(${hostname_re}${domain_re}${tld_re}|localhost)`;
-
-  // Create two patterns - one with scheme and one without
-  const withSchemePattern = `^(?:[a-z0-9\\.\\-\\+]*)://(?:[^\\s:@/]+(?::[^\\s:@/]*)?@)?(?:${ipv4_re}|${ipv6_re}|${host_re})(?::\\d{2,5})?(?:[/?#][^\\s]*)?$`;
-
-  // Pattern for URLs without protocol (like example.com)
-  const withoutSchemePattern = `^(?:${ipv4_re}|${host_re})(?::\\d{2,5})?(?:[/?#][^\\s]*)?$`;
-
-  // Combine both patterns with OR operator
-  return new RegExp(`${withSchemePattern}|${withoutSchemePattern}`, "i");
-};
-
-/**
  * Here we store Regexp to check if the text is the single link.
  */
-const singleLinkRegex: RegExp = createLinkRegex();
-/**
- * Checks if the string is a link. The list of link examples you can see in the tests file
- * `test/linksRecognition.test.ts`. This code ported from django's
- * [URLValidator](https://github.com/django/django/blob/2.2b1/django/core/validators.py#L74) with some simplifyings.
- *
- * @param text string to check
- *
- * @return boolean
- */
-export const isSingleLink = (text: string): boolean => {
-  return singleLinkRegex.test(text);
+const detectLink = /\b(?:[a-z0-9][-a-z0-9]*\.)+(?:com|org|net|edu|gov|mil|io|dev|co|jp|us|app|so|ai|design|info|shop|de|ru|br|uk|is|it|fr|de)(?:\b|\/)/i;
+const detectLinkRegex: RegExp =  new RegExp(detectLink)
+
+// TODO: This is simplified link detection. More complex detection is needed.
+export const isLink = (text: string): boolean => {
+  return detectLinkRegex.test(text);
 };
 
 const styleByWrapping = (editor: TextEditor, startPattern: string, endPattern?: string): PromiseLike<void> => {
