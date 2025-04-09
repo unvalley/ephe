@@ -329,3 +329,56 @@ export const EPHE_DARK_THEME = {
     },
   } as monaco.editor.IStandaloneThemeData,
 } as const;
+
+
+export const MANCHESTER_CITY_LIGHT_THEME = {
+    name: "man-city-light",
+    theme: {
+      base: "vs",
+      inherit: true,
+      rules: [
+        { token: "comment", foreground: "#6CABDD", fontStyle: "italic" },
+        { token: "keyword", foreground: "#1C2C5B" },  // Man City dark blue
+        { token: "string", foreground: "#98C5E9" },   // Man City sky blue
+        { token: "number", foreground: "#1C2C5B" },   // Man City dark blue
+        { token: "type", foreground: "#00285E" },     // Darker blue
+        { token: "function", foreground: "#6CABDD" }, // Medium blue
+        { token: "variable", foreground: "#333333" },
+        { token: "constant", foreground: "#1C2C5B" }, // Man City dark blue
+        { token: "operator", foreground: "#00285E" }, // Darker blue
+      ],
+      colors: {
+        "editor.background": "#00000000",
+        "editor.foreground": "#333333",
+        "editorLineNumber.foreground": "#98C5E9",
+        "editor.selectionBackground": "#98C5E980",
+        "editorCursor.foreground": "#1C2C5B",
+      },
+    } as monaco.editor.IStandaloneThemeData,
+  } as const;
+  
+  export const MANCHESTER_CITY_DARK_THEME = {
+    name: "man-city-dark",
+    theme: {
+      base: "vs-dark",
+      inherit: true,
+      rules: [
+        { token: "comment", foreground: "#6CABDD", fontStyle: "italic" },
+        { token: "keyword", foreground: "#98C5E9" },  // Man City sky blue
+        { token: "string", foreground: "#8FBAE5" },   // Lighter blue
+        { token: "number", foreground: "#98C5E9" },   // Man City sky blue
+        { token: "type", foreground: "#98C5E9" },     // Man City sky blue
+        { token: "function", foreground: "#6CABDD" }, // Medium blue
+        { token: "variable", foreground: "#DDDDDD" },
+        { token: "constant", foreground: "#FFFFFF" }, // White
+        { token: "operator", foreground: "#98C5E9" }, // Man City sky blue
+      ],
+      colors: {
+        "editor.background": "#00000000",
+        "editor.foreground": "#FFFFFF",
+        "editorLineNumber.foreground": "#98C5E9",
+        "editor.selectionBackground": "#98C5E950",
+        "editorCursor.foreground": "#98C5E9",
+      },
+    } as monaco.editor.IStandaloneThemeData,
+  } as const;

@@ -17,6 +17,8 @@ import {
   editorOptions,
   EPHE_DARK_THEME,
   EPHE_LIGHT_THEME,
+  MANCHESTER_CITY_LIGHT_THEME,
+  MANCHESTER_CITY_DARK_THEME,
 } from "./monaco/editor-utils";
 import { Footer } from "../../components/footer";
 import { Loading } from "../../components/loading";
@@ -149,6 +151,16 @@ export const EditorApp = () => {
     if (content) {
       setCharCount(content.length);
     }
+
+    // Listen for editor theme change events
+    const handleEditorThemeChange = (event: Event) => {
+      if (event instanceof CustomEvent) {
+        const { theme } = event.detail;
+        monaco.editor.setTheme(theme);
+      }
+    };
+    
+    window.addEventListener("editor-theme-changed", handleEditorThemeChange);
 
     // Add decorations for checked tasks
     const updateDecorations = (model: monaco.editor.ITextModel | null) => {
@@ -307,13 +319,12 @@ export const EditorApp = () => {
                 beforeMount={(monaco) => {
                   monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
                   monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
-
-                  const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
-                  monaco.editor.setTheme(themeName);
+                  monaco.editor.defineTheme(MANCHESTER_CITY_LIGHT_THEME.name, MANCHESTER_CITY_LIGHT_THEME.theme);
+                  monaco.editor.defineTheme(MANCHESTER_CITY_DARK_THEME.name, MANCHESTER_CITY_DARK_THEME.theme);
                 }}
                 className="overflow-visible"
                 loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
-                theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
+                theme={localStorage.getItem("editor-theme") || (isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name)}
               />
             ) : (
               <div className="h-full overflow-auto px-2 py-2 prose prose-slate dark:prose-invert max-w-none">
