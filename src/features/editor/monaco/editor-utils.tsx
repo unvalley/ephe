@@ -290,19 +290,19 @@ export const EPHE_LIGHT_THEME = {
     base: "vs",
     inherit: true,
     rules: [
-      { token: "comment", foreground: "#999999", fontStyle: "italic" }, // グレー
-      { token: "keyword", foreground: "#FF3C00" }, // メインオレンジ - TE風の鮮やかな色
-      { token: "string", foreground: "#333333" }, // ダークグレー - ミニマル
-      { token: "number", foreground: "#FF6E40" }, // オレンジのライトバリエーション
-      { token: "type", foreground: "#090909" }, // ほぼブラック - コントラスト重視
-      { token: "function", foreground: "#666666" }, // ミディアムグレー - 控えめ
-      { token: "variable", foreground: "#444444" }, // グレー - 読みやすさ重視
-      { token: "constant", foreground: "#CC2F00" }, // オレンジのダークバリエーション
-      { token: "operator", foreground: "#FF3C00" }, // メインオレンジ - アクセント
+      { token: "comment", foreground: "#999999", fontStyle: "italic" },
+      { token: "keyword", foreground: "#FF3C00" },
+      { token: "string", foreground: "#333333" },
+      { token: "number", foreground: "#FF6E40" },
+      { token: "type", foreground: "#090909" },
+      { token: "function", foreground: "#666666" },
+      { token: "variable", foreground: "#444444" },
+      { token: "constant", foreground: "#CC2F00" },
+      { token: "operator", foreground: "#FF3C00" },
     ],
     colors: {
-      "editor.background": "#00000000", // 透明
-      "editor.foreground": "#090909", // ブラック
+      "editor.background": "#00000000",
+      "editor.foreground": "#090909",
     },
   } as monaco.editor.IStandaloneThemeData,
 } as const;
@@ -313,15 +313,15 @@ export const EPHE_DARK_THEME = {
     base: "vs-dark",
     inherit: true,
     rules: [
-      { token: "comment", foreground: "#777777", fontStyle: "italic" }, // グレー
-      { token: "keyword", foreground: "#FF8A65" }, // より明るいオレンジ
-      { token: "string", foreground: "#CCCCCC" }, // ライトグレー - 控えめ
-      { token: "number", foreground: "#FF8A65" }, // さらに明るいオレンジ
-      { token: "type", foreground: "#EEEEEE" }, // ペールグレー - 重要性を示す
-      { token: "function", foreground: "#AAAAAA" }, // ミディアムグレー - 控えめ
-      { token: "variable", foreground: "#DDDDDD" }, // ほぼホワイト - 読みやすさ重視
-      { token: "constant", foreground: "#FF7043" }, // 明るいオレンジのバリエーション
-      { token: "operator", foreground: "#FF7043" }, // 明るいオレンジ - アクセント
+      { token: "comment", foreground: "#777777", fontStyle: "italic" },
+      { token: "keyword", foreground: "#FF8A65" },
+      { token: "string", foreground: "#CCCCCC" },
+      { token: "number", foreground: "#FF8A65" },
+      { token: "type", foreground: "#EEEEEE" },
+      { token: "function", foreground: "#AAAAAA" },
+      { token: "variable", foreground: "#DDDDDD" },
+      { token: "constant", foreground: "#FF7043" },
+      { token: "operator", foreground: "#FF7043" },
     ],
     colors: {
       "editor.background": "#00000000", // 透明
