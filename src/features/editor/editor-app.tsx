@@ -55,12 +55,7 @@ export const EditorApp = () => {
   const placeholderRef = useRef<PlaceholderWidget | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
-  const [taskCount, setTaskCount] = useState<TaskListCount>({
-    open: 0,
-    closed: 0,
-  });
-
-  const { charCount, setCharCount } = useCharCount();
+  const { setCharCount } = useCharCount();
   const [placeholder, _] = useState<string>(getRandomQuote());
   const { isVisibleToc, focusOnSection } = useToc({ editorRef });
   const [editorContent, setEditorContent] = useAtom(editorAtom);
@@ -101,11 +96,6 @@ export const EditorApp = () => {
     },
     50, // Faster updates for character count
   );
-
-  const debouncedTaskCountUpdate = useDebouncedCallback((content: string) => {
-    const { taskCount } = markdownService.processMarkdown(content);
-    setTaskCount(taskCount);
-  }, 100);
 
   // Initialize markdown formatter
   useEffect(() => {
@@ -157,9 +147,7 @@ export const EditorApp = () => {
 
     const content = editor.getValue();
     if (content) {
-      const { taskCount } = markdownService.processMarkdown(content);
       setCharCount(content.length);
-      setTaskCount(taskCount);
     }
 
     // Add decorations for checked tasks
@@ -291,7 +279,6 @@ export const EditorApp = () => {
       setEditorContent(updatedText);
       debouncedSetContent(updatedText);
       debouncedCharCountUpdate(updatedText);
-      debouncedTaskCountUpdate(updatedText);
       handlePlaceholder(updatedText);
     });
   };

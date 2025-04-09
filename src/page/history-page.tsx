@@ -46,7 +46,6 @@ export const HistoryPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const navigate = useNavigate();
   const { paperModeClass } = usePaperMode();
-  const { charCount } = useCharCount();
 
   // Get available years, months, and days from all history
   const [availableYears, setAvailableYears] = useState<number[]>([]);

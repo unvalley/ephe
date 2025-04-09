@@ -9,18 +9,12 @@ import { useCharCount } from "../../hooks/use-char-count";
 import { useState, useEffect } from "react";
 import { getTasksByDate } from "../tasks/task-storage";
 
-export const SystemMenu = () => {
-  const { nextTheme, setTheme, isDarkMode } = useTheme();
-  const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
-  const { isVisibleToc, toggleToc } = useToc();
-  const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
-  const { charCount } = useCharCount();
+// REFACTOR
+const useTodayCompletedTasks = () => {
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);
 
-  // Load today's completed tasks from localStorage
   useEffect(() => {
     const loadTodayTasks = () => {
-      // Get today's date for filtering
       const today = new Date();
       const tasksByDate = getTasksByDate({
         year: today.getFullYear(),
@@ -32,9 +26,8 @@ export const SystemMenu = () => {
       const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
       const todayTasks = tasksByDate[todayDateStr] || [];
       setTodayCompletedTasks(todayTasks.length);
-    };
+    };  
 
-    // Load initially
     loadTodayTasks();
 
     // Set up event listener for storage changes
@@ -43,18 +36,24 @@ export const SystemMenu = () => {
         loadTodayTasks();
       }
     };
-    
-    window.addEventListener("storage", handleStorageChange);
-    
-    // Custom event for task changes within the same window
-    const handleTaskChange = () => loadTodayTasks();
-    window.addEventListener("ephe:task-change", handleTaskChange);
 
+    window.addEventListener("storage", handleStorageChange);
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("ephe:task-change", handleTaskChange);
     };
   }, []);
+
+  return { todayCompletedTasks, setTodayCompletedTasks };
+};
+  
+
+export const SystemMenu = () => {
+  const { nextTheme, setTheme, isDarkMode } = useTheme();
+  const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
+  const { isVisibleToc, toggleToc } = useToc();
+  const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
+  const { charCount } = useCharCount();
+  const { todayCompletedTasks } = useTodayCompletedTasks();
 
   return (
     <div

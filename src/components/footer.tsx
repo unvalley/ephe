@@ -22,13 +22,13 @@ const _Footer = ({  previewMode = false, togglePreview }: FooterProps) => {
   return (
     <footer className="fixed inset-x-0 bottom-0 bg-transparent">
       <div className="flex mx-auto px-2 py-1 text-sm justify-between items-center">
-        <nav className="flex gap-3">
+        <nav className="flex">
           <div className="relative">
             <button
               id="system-menu-trigger"
               type="button"
               onClick={toggleSystemMenu}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 px-2 py-1 rounded-md transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
             >
               <span>System</span>
             </button>
@@ -40,21 +40,21 @@ const _Footer = ({  previewMode = false, togglePreview }: FooterProps) => {
               </div>
             )}
           </div>
-          <Link to="/" className="hover:text-neutral-900 dark:hover:text-neutral-100">
+          <Link to="/" className="flex items-center px-2 py-1 rounded-md transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
             Editor
           </Link>
-          <Link to="/history" className={"hover:text-neutral-900 dark:hover:text-neutral-100"}>
+          <Link to="/history" className="flex items-center px-2 py-1 rounded-md transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800">
             History
           </Link>
         </nav>
 
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-1 min-w-0">
           <DaysDisplay />
 
           {togglePreview && (
             <button
               onClick={togglePreview}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md transition-colors ${
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors ${
                 previewMode
                   ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
                   : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
