@@ -6,7 +6,7 @@ import Avatar from "boring-avatars";
 import { EyeIcon } from "./icons";
 // TODO: organize depndency direction, don't import from features
 import { SystemMenu } from "../features/system/system-menu";
-import { DaysDisplay } from "./days-display";
+import { HoursDisplay } from "./hours-display";
 
 type FooterProps = {
   previewMode?: boolean;
@@ -41,7 +41,7 @@ const _Footer = ({ previewMode = false, togglePreview }: FooterProps) => {
         </nav>
 
         <div className="flex items-center gap-2 min-w-0">
-          <DaysDisplay />
+          <HoursDisplay />
 
           <div className="flex items-center">
             <Avatar

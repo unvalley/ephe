@@ -3,38 +3,38 @@
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "../hooks/use-theme";
 
-export const DaysDisplay = () => {
+export const HoursDisplay = () => {
   const [showTooltip, setShowTooltip] = useState(false);
-  const [hoveredDay, setHoveredDay] = useState<string | null>(null);
+  const [hoveredHour, setHoveredHour] = useState<string | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const { isDarkMode } = useTheme();
 
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth();
-  const today = new Date();
+  const now = new Date();
+  const currentHour = now.getHours();
 
-  // Format current date based on user's locale
-  const formattedToday = today.toLocaleDateString(undefined, {
+  // Format current time based on user's locale
+  //   const formattedTime = now.toLocaleTimeString(undefined, {
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //   });
+
+  const formattedToday = now.toLocaleDateString(undefined, {
     weekday: "short",
     month: "short",
     day: "numeric",
   });
 
-  // Calculate the number of days in the current month
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  // Calculate hours remaining in the day
+  const hoursRemaining = 24 - currentHour - 1;
+  const minutesRemaining = 60 - now.getMinutes();
 
-  // Calculate days remaining in current month
-  const currentDay = today.getDate();
-  const daysRemaining = daysInMonth - currentDay;
-
-  // Generate array of all days in the current month
-  const daysArray = Array.from({ length: daysInMonth }, (_, i) => {
-    const date = new Date(currentYear, currentMonth, i + 1);
+  // Generate array of all hours in the day
+  const hoursArray = Array.from({ length: 24 }, (_, i) => {
     return {
-      date,
-      current: isSameDay(date, today),
-      past: date < today && !isSameDay(date, today),
-      future: date > today,
+      hour: i,
+      current: i === currentHour,
+      past: i < currentHour,
+      future: i > currentHour,
     };
   });
 
@@ -51,6 +51,11 @@ export const DaysDisplay = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Format hour for display
+  const formatHour = (hour: number): string => {
+    return `${hour.toString().padStart(2, "0")}:00`;
+  };
 
   return (
     <div className="relative">
@@ -76,43 +81,43 @@ export const DaysDisplay = () => {
           onMouseLeave={() => setShowTooltip(false)}
         >
           <div className="text-sm text-mono-500 dark:text-mono-400 text-center mb-2">
-            {daysRemaining > 0 ? `${daysRemaining} days left` : "Last day of the month"}
+            {hoursRemaining > 0 ? `${hoursRemaining}h ${minutesRemaining}m left` : "Almost end of day"}
           </div>
           <div
             className="grid mx-auto"
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(7, 1fr)",
-              gridTemplateRows: "repeat(auto-fill, 1fr)",
+              gridTemplateColumns: "repeat(6, 1fr)",
+              gridTemplateRows: "repeat(4, 1fr)",
               columnGap: "14px",
               rowGap: "14px",
               justifyItems: "center",
               padding: "10px",
             }}
           >
-            {daysArray.map((day) => (
+            {hoursArray.map((hour) => (
               <div
-                key={formatDate(day.date)}
+                key={hour.hour}
                 className="relative group hover:scale-150 hover:z-10"
                 style={{
                   width: "5px",
                   height: "5px",
                   background:
-                    day.past || day.current ? (isDarkMode ? "white" : "#333333") : isDarkMode ? "#444444" : "#dddddd",
+                    hour.past || hour.current ? (isDarkMode ? "white" : "#333333") : isDarkMode ? "#444444" : "#dddddd",
                   borderRadius: "50%",
                   transition: "transform 0.2s, background-color 0.2s",
                 }}
-                onMouseEnter={() => setHoveredDay(formatDate(day.date))}
-                onMouseLeave={() => setHoveredDay(null)}
+                onMouseEnter={() => setHoveredHour(formatHour(hour.hour))}
+                onMouseLeave={() => setHoveredHour(null)}
               >
                 <div
                   className={`absolute bottom-full left-1/2 -translate-x-1/2 transform mb-1 bg-mono-50 dark:bg-mono-700 text-xs rounded whitespace-nowrap transition-all duration-300 ease-out ${
-                    hoveredDay === formatDate(day.date)
+                    hoveredHour === formatHour(hour.hour)
                       ? "opacity-100 translate-y-0 scale-100"
                       : "opacity-0 translate-y-2 scale-95 pointer-events-none"
                   }`}
                 >
-                  {formatDate(day.date)}
+                  {formatHour(hour.hour)}
                 </div>
               </div>
             ))}
@@ -121,21 +126,4 @@ export const DaysDisplay = () => {
       )}
     </div>
   );
-};
-
-// Helper function to check if two dates are the same day
-const isSameDay = (date1: Date, date2: Date): boolean => {
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
-};
-
-// Format date as YYYY/MM/DD
-const formatDate = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const day = date.getDate().toString().padStart(2, "0");
-  return `${year}/${month}/${day}`;
 };
