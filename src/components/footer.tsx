@@ -6,7 +6,6 @@ import Avatar from "boring-avatars";
 import { EyeIcon } from "./icons";
 // TODO: organize depndency direction, don't import from features
 import { SystemMenu } from "../features/system/system-menu";
-import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import { DaysDisplay } from "./days-display";
 
 type FooterProps = {
