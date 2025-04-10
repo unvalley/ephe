@@ -66,7 +66,7 @@ export const DaysDisplay = () => {
       {showTooltip && (
         <div
           ref={tooltipRef}
-          className="absolute bottom-full mb-2 transform p-6 shadow-xl rounded-xl bg-mono-50 dark:bg-mono-700"
+          className="absolute bottom-full mb-2 transform p-8 shadow-xl rounded-xl bg-mono-50 dark:bg-mono-700"
           style={{
             maxWidth: "450px",
             maxHeight: "650px",
@@ -108,8 +108,8 @@ export const DaysDisplay = () => {
                 <div
                   className={`absolute bottom-full left-1/2 -translate-x-1/2 transform mb-1 bg-mono-50 dark:bg-mono-700 text-xs rounded whitespace-nowrap transition-all duration-300 ease-out ${
                     hoveredDay === formatDate(day.date)
-                      ? "opacity-100 translate-y-0 scale-100"
-                      : "opacity-0 translate-y-2 scale-95 pointer-events-none"
+                      ? "opacity-100 translate-y-0 scale-70"
+                      : "opacity-0 translate-y-2 scale-40 pointer-events-none"
                   }`}
                 >
                   {formatDate(day.date)}
