@@ -319,6 +319,7 @@ export const EditorApp = () => {
               <div className="h-full overflow-auto px-2 py-2 prose prose-slate dark:prose-invert max-w-none">
                 <div
                   ref={previewRef}
+                  // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
                   dangerouslySetInnerHTML={{ __html: renderedHTML }}
                   className="min-h-full markdown-preview overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                 />

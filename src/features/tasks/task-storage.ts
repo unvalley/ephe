@@ -1,4 +1,5 @@
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
+import { notifyTaskUpdate } from "../system/system-menu";
 
 export type CompletedTask = {
   id: string;
@@ -32,6 +33,8 @@ export const saveCompletedTask = (task: CompletedTask): void => {
     const existingTasks: CompletedTask[] = existingTasksJson ? JSON.parse(existingTasksJson) : [];
 
     localStorage.setItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS, JSON.stringify([task, ...existingTasks]));
+
+    notifyTaskUpdate();
   } catch (error) {
     console.error("Error saving completed task:", error);
   }
@@ -101,6 +104,8 @@ export const deleteCompletedTask = (taskId: string): void => {
     const tasks = getCompletedTasks();
     const updatedTasks = tasks.filter((task) => task.id !== taskId);
     localStorage.setItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS, JSON.stringify(updatedTasks));
+
+    notifyTaskUpdate();
   } catch (error) {
     console.error("Error deleting completed task:", error);
   }
@@ -114,6 +119,8 @@ export const deleteCompletedTaskByIdentifier = (taskIdentifier: string): void =>
     const tasks = getCompletedTasks();
     const updatedTasks = tasks.filter((task) => task.taskIdentifier !== taskIdentifier);
     localStorage.setItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS, JSON.stringify(updatedTasks));
+
+    notifyTaskUpdate();
   } catch (error) {
     console.error("Error deleting completed task by identifier:", error);
   }
@@ -125,6 +132,8 @@ export const deleteCompletedTaskByIdentifier = (taskIdentifier: string): void =>
 export const purgeCompletedTasks = (): void => {
   try {
     localStorage.setItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS, JSON.stringify([]));
+
+    notifyTaskUpdate();
   } catch (error) {
     console.error("Error purging completed tasks:", error);
   }
