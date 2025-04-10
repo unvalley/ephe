@@ -41,7 +41,7 @@ const _Footer = ({ previewMode = false, togglePreview }: FooterProps) => {
           )}
         </nav>
 
-        <div className="flex items-center gap-1 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
           <DaysDisplay />
 
           <div className="flex items-center">

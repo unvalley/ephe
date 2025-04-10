@@ -10,6 +10,7 @@ export const DaysDisplay = () => {
   const { isDarkMode } = useTheme();
 
   const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth();
   const today = new Date();
 
   // Format current date based on user's locale
@@ -19,13 +20,16 @@ export const DaysDisplay = () => {
     day: "numeric",
   });
 
-  // Calculate the number of days in the current year
-  const daysInYear = new Date(currentYear, 11, 31).getDate() === 31 ? 365 : 366;
-  //   const daysInMonth = new Date(currentYear, today.getMonth(), 0).getDate();
+  // Calculate the number of days in the current month
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-  // Generate array of all days in the current year
-  const daysArray = Array.from({ length: daysInYear }, (_, i) => {
-    const date = new Date(currentYear, 0, i + 1);
+  // Calculate days remaining in current month
+  const currentDay = today.getDate();
+  const daysRemaining = daysInMonth - currentDay;
+
+  // Generate array of all days in the current month
+  const daysArray = Array.from({ length: daysInMonth }, (_, i) => {
+    const date = new Date(currentYear, currentMonth, i + 1);
     return {
       date,
       current: isSameDay(date, today),
@@ -62,24 +66,28 @@ export const DaysDisplay = () => {
       {showTooltip && (
         <div
           ref={tooltipRef}
-          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 transform p-10 shadow-xl rounded-xl bg-mono-50 dark:bg-mono-700"
+          className="absolute bottom-full mb-2 transform p-6 shadow-xl rounded-xl bg-mono-50 dark:bg-mono-700"
           style={{
             maxWidth: "450px",
             maxHeight: "650px",
             overflow: "hidden",
+            transform: "translateX(-30%)",
           }}
           onMouseLeave={() => setShowTooltip(false)}
         >
+          <div className="text-sm text-mono-500 dark:text-mono-400 text-center mb-2">
+            {daysRemaining > 0 ? `${daysRemaining} days left` : "Last day of the month"}
+          </div>
           <div
             className="grid mx-auto"
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(15, 1fr)",
+              gridTemplateColumns: "repeat(7, 1fr)",
               gridTemplateRows: "repeat(auto-fill, 1fr)",
-              columnGap: "18px",
-              rowGap: "18px",
+              columnGap: "14px",
+              rowGap: "14px",
               justifyItems: "center",
-              padding: "20px",
+              padding: "10px",
             }}
           >
             {daysArray.map((day) => (
