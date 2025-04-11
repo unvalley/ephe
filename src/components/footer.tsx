@@ -6,7 +6,7 @@ import Avatar from "boring-avatars";
 import { EyeIcon } from "./icons";
 // TODO: organize depndency direction, don't import from features
 import { SystemMenu } from "../features/system/system-menu";
-import { HoursDisplay } from "./hours-display";
+import { HoursDisplay } from "../features/time-display/hours-display";
 
 type FooterProps = {
   previewMode?: boolean;
