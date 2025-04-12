@@ -3,7 +3,9 @@ description:
 globs: src/features/editor/**/*.ts,src/features/editor/**/*.tsx
 alwaysApply: false
 ---
-# Editor
+# React
+
+## Editor
 
 We build an Markdown Editor based on monaco-editor.
 
@@ -16,3 +18,8 @@ We use packages below to handler text:
 
 We focus on English and Japanese.
 The editor must be performant.
+
+## Components
+
+We use tailwindcss v4. 
+This is version is actually different from v3. Please take a look at https://tailwindcss.com/blog/tailwindcss-v4 .

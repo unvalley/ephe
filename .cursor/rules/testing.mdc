@@ -1,0 +1,23 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Testing Guidelines
+
+## Testing Framework
+
+- `vitest` is used for unit testing
+- `playwirhgt` is used for e2e testing
+ 
+## Unit Testing Best Practices
+
+- Tests are colocated next to the tested file
+  - e.g. `dir/index.ts` and `dir/index.test.ts`  
+- Each test should be independent
+- Use descriptive test names
+- Use mocks only if external dependencies are needed
+
+## E2E Testing Best Practices
+
+- Reliable tests
