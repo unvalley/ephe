@@ -1,6 +1,6 @@
 ---
 description: 
-globs: 
+globs: *.ts,*.tsx
 alwaysApply: false
 ---
 # Testing Guidelines
