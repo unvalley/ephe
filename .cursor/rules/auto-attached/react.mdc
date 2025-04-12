@@ -1,6 +1,6 @@
 ---
 description: 
-globs: src/features/editor/**/*.ts,src/features/editor/**/*.tsx
+globs: *.tsx
 alwaysApply: false
 ---
 # React

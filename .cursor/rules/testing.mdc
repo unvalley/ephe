@@ -7,8 +7,8 @@ alwaysApply: false
 
 ## Testing Framework
 
-- `vitest` is used for unit testing
-- `playwirhgt` is used for e2e testing
+- Use `vitest` for unit testing
+- Use `playwirhgt` for e2e testing
  
 ## Unit Testing Best Practices
 

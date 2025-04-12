@@ -1,14 +1,9 @@
 ---
 description: 
-globs: *.ts,*.tsx
+globs: *.tsx,*.ts
 alwaysApply: false
 ---
-## General Rule
-
-- Write comments in English.
-- Write performance code.
-
-## TypeScript and React Rule
+## TypeScript
 
 - Use strict types.
 - Use camelCase for variable and function names.
@@ -16,4 +11,3 @@ alwaysApply: false
 - Use double quotes for strings, use template literal if it's suitable.
 - Use arrow functions.
 - Use async/await for asynchronous code.
-- Use vitest to write tests.

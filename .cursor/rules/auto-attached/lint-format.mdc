@@ -1,0 +1,10 @@
+---
+description: 
+globs: *.ts,*.tsx
+alwaysApply: false
+---
+# Lint and Format
+
+- Use `@biomejs/biome` for lint and format
+- Lint by `biome lint`
+- Format by `biome format --write`
