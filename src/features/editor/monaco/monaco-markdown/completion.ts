@@ -3,7 +3,7 @@ import { type CancellationToken, type editor, languages, type Position as _Posit
 
 import { TextDocument, type TextEditor } from "./vscode-monaco";
 
-import { Range, SnippetString, Position } from "./extHostTypes";
+import { Range, SnippetString, Position } from "./ext-host-types";
 
 import { slugify } from "./util";
 

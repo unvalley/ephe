@@ -2,7 +2,7 @@ import type { TextEditor, TextEditorEdit } from "./vscode-monaco";
 
 import { isInFencedCodeBlock } from "./util";
 import { KeyCode, KeyMod, type Thenable } from "monaco-editor";
-import { Position, WorkspaceEdit, Range, Selection, TextEditorRevealType } from "./extHostTypes";
+import { Position, WorkspaceEdit, Range, Selection, TextEditorRevealType } from "./ext-host-types";
 import { addKeybinding } from "./formatting";
 import { isTaskLine } from "../task-list-utils";
 

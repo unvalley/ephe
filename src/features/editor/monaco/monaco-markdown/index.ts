@@ -2,9 +2,8 @@ import type { editor } from "monaco-editor";
 import { IRange, languages } from "monaco-editor";
 import { activateFormatting, isLink } from "./formatting";
 import { setWordDefinitionFor, TextEditor } from "./vscode-monaco";
-import { activateListEditing } from "./listEditing";
+import { activateListEditing } from "./list-editing";
 import { activateCompletion } from "./completion";
-import { activateTableFormatter } from "./tableFormatter";
 
 import { activateMarkdownMath } from "./markdown.contribution";
 
@@ -22,7 +21,6 @@ export class MonacoMarkdownExtension {
     activateFormatting(textEditor);
     activateListEditing(textEditor);
     activateCompletion(textEditor);
-    activateTableFormatter(textEditor);
 
     this.registerLinkProvider(editor);
 

@@ -1,8 +1,8 @@
-import { EndOfLine, Position, Range, type Selection, TextEditorRevealType, type WorkspaceEdit } from "./extHostTypes";
+import { EndOfLine, Position, Range, type Selection, TextEditorRevealType, type WorkspaceEdit } from "./ext-host-types";
 
 import { editor, type Selection as _Selection, type IRange, type Uri, type Thenable } from "monaco-editor";
 import { regExpLeadsToEndlessLoop } from "./vscode-utils";
-import { ensureValidWordDefinition, getWordAtText } from "./wordHelper";
+import { ensureValidWordDefinition, getWordAtText } from "./word-helper";
 
 import * as TypeConverters from "./vscode-converters";
 import type { TextLine } from "./vscode-common";

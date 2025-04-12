@@ -1,4 +1,4 @@
-import type { Range } from "./extHostTypes";
+import type { Range } from "./ext-host-types";
 
 /**
  * Represents a line of text, such as a line of source code.

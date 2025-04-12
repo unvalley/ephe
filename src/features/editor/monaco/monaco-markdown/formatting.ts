@@ -1,8 +1,8 @@
 import { editor, KeyCode, KeyMod } from "monaco-editor";
 
-import { fixMarker } from "./listEditing";
+import { fixMarker } from "./list-editing";
 import type { TextDocument, TextEditor } from "./vscode-monaco";
-import { Position, Selection, Range, WorkspaceEdit } from "./extHostTypes";
+import { Position, Selection, Range, WorkspaceEdit } from "./ext-host-types";
 
 export const addKeybinding = (
   editor: TextEditor,
@@ -66,11 +66,9 @@ export const activateFormatting = (editor: TextEditor) => {
     "",
   );
   addKeybinding(editor, "toggleList", toggleList, [KeyMod.CtrlCmd | KeyCode.KeyL], "Toggle list", "");
-  // addKeybinding(editor, paste, [KeyMod.CtrlCmd | KeyCode.KEY_B], "Toggle bold");
 };
 
 // Return Promise because need to chain operations in unit tests
-
 const toggleBold = (editor: TextEditor) => {
   return styleByWrapping(editor, "**");
 };
@@ -88,7 +86,7 @@ const toggleStrikethrough = (editor: TextEditor) => {
   return styleByWrapping(editor, "~~");
 };
 
-const maxHeading = "######";
+const MAX_HEADING = "######";
 
 const toggleHeadingUp = (editor: TextEditor) => {
   const lineIndex = editor.selection.active.line;
@@ -98,9 +96,9 @@ const toggleHeadingUp = (editor: TextEditor) => {
     if (!lineText.startsWith("#")) {
       // Not a heading
       editBuilder.insert(new Position(lineIndex, 0), "# ");
-    } else if (lineText.startsWith(maxHeading)) {
+    } else if (lineText.startsWith(MAX_HEADING)) {
       // Reset heading at 6 level
-      const deleteIndex = lineText.startsWith(`${maxHeading} `) ? maxHeading.length + 1 : maxHeading.length;
+      const deleteIndex = lineText.startsWith(`${MAX_HEADING} `) ? MAX_HEADING.length + 1 : MAX_HEADING.length;
       editBuilder.delete(new Range(new Position(lineIndex, 0), new Position(lineIndex, deleteIndex)));
     } else {
       editBuilder.insert(new Position(lineIndex, 0), "#");
@@ -121,7 +119,7 @@ const toggleHeadingDown = (editor: TextEditor) => {
       editBuilder.delete(new Range(new Position(lineIndex, 0), new Position(lineIndex, 1)));
     } else {
       // No heading
-      editBuilder.insert(new Position(lineIndex, 0), `${maxHeading} `);
+      editBuilder.insert(new Position(lineIndex, 0), `${MAX_HEADING} `);
     }
   });
 };
@@ -166,12 +164,12 @@ const getMathState = (editor: TextEditor, cursor: Position): MathBlockState => {
  * @param oldMathBlockState
  * @param newMathBlockState
  */
-function setMathState(
+const setMathState = (
   editor: TextEditor,
   cursor: Position,
   oldMathBlockState: MathBlockState,
   newMathBlockState: MathBlockState,
-) {
+) => {
   // Step 1: Delete old math block.
   editor
     .edit((editBuilder) => {

@@ -7,7 +7,7 @@ import {
   type IPosition,
 } from "monaco-editor";
 
-import * as vscode from "./extHostTypes";
+import * as vscode from "./ext-host-types";
 
 export type PositionLike = {
   line: number;
