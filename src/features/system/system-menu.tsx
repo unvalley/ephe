@@ -114,7 +114,7 @@ const useSnapshotCount = () => {
 };
 
 export const SystemMenu = () => {
-  const { theme, setTheme, isDarkMode } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
   const { isVisibleToc, toggleToc } = useToc();
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
