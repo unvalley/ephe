@@ -1,3 +1,4 @@
+import "./utils/theme-initializer";
 import "./globals.css";
 import React from "react";
 import ReactDOM from "react-dom/client";

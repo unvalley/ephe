@@ -11,6 +11,7 @@ import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import type { PaperMode } from "../../hooks/use-paper-mode";
 import type { EditorWidth } from "../../hooks/use-editor-width";
 import { EyeIcon } from "../../components/icons";
+import { COLOR_THEME } from "../../utils/theme-initializer";
 
 // Icons - you might need to install react-icons package if not already installed
 function ThemeIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -158,11 +159,33 @@ export const CommandMenu = ({
   previewMode = false,
   togglePreviewMode,
 }: CommandMenuProps) => {
+  const { theme, setTheme } = useTheme();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const { setTheme, nextTheme } = useTheme();
-  const navigate = useNavigate();
   const listRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  // Function to cycle through theme modes
+  const cycleTheme = () => {
+    if (theme === COLOR_THEME.LIGHT) {
+      setTheme(COLOR_THEME.DARK);
+    } else if (theme === COLOR_THEME.DARK) {
+      setTheme(COLOR_THEME.SYSTEM);
+    } else {
+      setTheme(COLOR_THEME.LIGHT);
+    }
+  };
+
+  // Get the next theme in the cycle for display
+  const getNextThemeText = () => {
+    if (theme === COLOR_THEME.LIGHT) {
+      return "dark";
+    } else if (theme === COLOR_THEME.DARK) {
+      return "system";
+    } else {
+      return "light";
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -352,15 +375,15 @@ export const CommandMenu = ({
                 aria-selected:text-primary-600 dark:aria-selected:text-primary-400
                 transition-colors"
               onSelect={() => {
-                setTheme(nextTheme);
+                cycleTheme();
                 onClose?.();
               }}
-              value="theme toggle switch mode light dark"
+              value="theme toggle switch mode light dark system"
             >
               <div className="flex items-center justify-center h-5 w-5 rounded-md bg-gray-100/80 dark:bg-zinc-700/60 text-gray-900 dark:text-gray-100 group-hover:bg-gray-200 dark:group-hover:bg-zinc-600 group-aria-selected:bg-primary-500/20 dark:group-aria-selected:bg-primary-600/20 transition-colors">
                 <ThemeIcon className="h-3.5 w-3.5" />
               </div>
-              <span>Switch to {nextTheme} mode</span>
+              <span>Switch to {getNextThemeText()} mode</span>
             </Command.Item>
 
             {cyclePaperMode && (

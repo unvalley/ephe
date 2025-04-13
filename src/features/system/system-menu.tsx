@@ -11,6 +11,7 @@ import { getTasksByDate } from "../tasks/task-storage";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Link } from "react-router-dom";
 import { getSnapshots } from "../snapshots/snapshot-storage";
+import { COLOR_THEME } from "../../utils/theme-initializer";
 
 export const TASK_CHANNEL_NAME = "ephe:task-updates";
 
@@ -113,7 +114,7 @@ const useSnapshotCount = () => {
 };
 
 export const SystemMenu = () => {
-  const { nextTheme, setTheme, isDarkMode } = useTheme();
+  const { theme, setTheme, isDarkMode } = useTheme();
   const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
   const { isVisibleToc, toggleToc } = useToc();
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
@@ -225,13 +226,40 @@ export const SystemMenu = () => {
                 <MenuItem as="div">
                   <button
                     type="button"
-                    onClick={() => setTheme(nextTheme)}
+                    onClick={() => {
+                      // Cycle through theme modes
+                      if (theme === COLOR_THEME.LIGHT) {
+                        setTheme(COLOR_THEME.DARK);
+                      } else if (theme === COLOR_THEME.DARK) {
+                        setTheme(COLOR_THEME.SYSTEM);
+                      } else {
+                        setTheme(COLOR_THEME.LIGHT);
+                      }
+                    }}
                     className="w-full text-left flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150"
                   >
                     <span className="flex items-center justify-center w-5 h-5 mr-3">
-                      {isDarkMode ? <SunIcon /> : <MoonIcon />}
+                      {theme === COLOR_THEME.LIGHT ? (
+                        <SunIcon />
+                      ) : theme === COLOR_THEME.DARK ? (
+                        <MoonIcon />
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <title>System Theme Icon</title>
+                          <path
+                            d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                      )}
                     </span>
-                    <span>{isDarkMode ? "Light mode" : "Dark mode"}</span>
+                    <span>
+                      {theme === COLOR_THEME.LIGHT
+                        ? "Light mode"
+                        : theme === COLOR_THEME.DARK
+                          ? "Dark mode"
+                          : "System mode"}
+                    </span>
                   </button>
                 </MenuItem>
 
@@ -255,55 +283,39 @@ export const SystemMenu = () => {
                 <MenuItem as="div">
                   <button
                     type="button"
-                    onClick={toggleNormalMode}
-                    className={`w-full text-left ${
-                      paperMode === "normal" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
-                    } flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+                    onClick={() => {
+                      // Cycle through paper modes
+                      if (paperMode === "normal") {
+                        toggleGraphMode();
+                      } else if (paperMode === "graph") {
+                        toggleDotsMode();
+                      } else {
+                        toggleNormalMode();
+                      }
+                    }}
+                    className="w-full text-left flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150"
                   >
                     <span className="flex items-center justify-center w-5 h-5 mr-3">
-                      <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"></span>
+                      {paperMode === "normal" ? (
+                        <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"></span>
+                      ) : paperMode === "graph" ? (
+                        <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 grid grid-cols-3 opacity-70">
+                          <span
+                            className="col-span-3 border-b border-gray-400 dark:border-gray-500"
+                            style={{ height: "33%" }}
+                          ></span>
+                          <span
+                            className="col-span-3 border-b border-gray-400 dark:border-gray-500"
+                            style={{ height: "66%" }}
+                          ></span>
+                        </span>
+                      ) : (
+                        <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 flex items-center justify-center">
+                          <span className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500"></span>
+                        </span>
+                      )}
                     </span>
-                    <span>Normal</span>
-                  </button>
-                </MenuItem>
-                <MenuItem as="div">
-                  <button
-                    type="button"
-                    onClick={toggleGraphMode}
-                    className={`w-full text-left ${
-                      paperMode === "graph" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
-                    } flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
-                  >
-                    <span className="flex items-center justify-center w-5 h-5 mr-3">
-                      <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 grid grid-cols-3 opacity-70">
-                        <span
-                          className="col-span-3 border-b border-gray-400 dark:border-gray-500"
-                          style={{ height: "33%" }}
-                        ></span>
-                        <span
-                          className="col-span-3 border-b border-gray-400 dark:border-gray-500"
-                          style={{ height: "66%" }}
-                        ></span>
-                      </span>
-                    </span>
-                    <span>Graph</span>
-                  </button>
-                </MenuItem>
-
-                <MenuItem as="div">
-                  <button
-                    type="button"
-                    onClick={toggleDotsMode}
-                    className={`w-full text-left ${
-                      paperMode === "dots" ? "font-semibold bg-gray-50 dark:bg-gray-700/50" : ""
-                    } flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
-                  >
-                    <span className="flex items-center justify-center w-5 h-5 mr-3">
-                      <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                        <span className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500"></span>
-                      </span>
-                    </span>
-                    <span>Dots</span>
+                    <span className="capitalize">{paperMode}</span>
                   </button>
                 </MenuItem>
               </div>
@@ -314,29 +326,16 @@ export const SystemMenu = () => {
                 <MenuItem as="div">
                   <button
                     type="button"
-                    onClick={setNormalWidth}
-                    className={`w-full text-left ${
-                      editorWidth === "normal" ? "font-semibold bg-gray-100 dark:bg-gray-700/50" : ""
-                    } flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
+                    onClick={() => {
+                      // Toggle editor width
+                      editorWidth === "normal" ? setWideWidth() : setNormalWidth();
+                    }}
+                    className="w-full text-left flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150"
                   >
                     <span className="flex items-center justify-center w-5 h-5 mr-3">
                       <WidthIcon />
                     </span>
-                    <span>Normal</span>
-                  </button>
-                </MenuItem>
-                <MenuItem as="div">
-                  <button
-                    type="button"
-                    onClick={setWideWidth}
-                    className={`w-full text-left ${
-                      editorWidth === "wide" ? "font-semibold bg-gray-100 dark:bg-gray-700/50" : ""
-                    } flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150`}
-                  >
-                    <span className="flex items-center justify-center w-5 h-5 mr-3">
-                      <WidthIcon />
-                    </span>
-                    <span>Wide</span>
+                    <span className="capitalize">{editorWidth}</span>
                   </button>
                 </MenuItem>
               </div>

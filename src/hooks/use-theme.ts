@@ -2,35 +2,38 @@
 
 import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import type { ValueOf } from "../utils/types";
 import { useEffect } from "react";
 import { LOCAL_STORAGE_KEYS } from "../utils/constants";
+import { COLOR_THEME, type ColorTheme, applyTheme } from "../utils/theme-initializer";
 
-const COLOR_THEME = {
-  LIGHT: "light",
-  DARK: "dark",
-  SYSTEM: "system",
-} as const;
-
-type ColorTheme = ValueOf<typeof COLOR_THEME>;
-
-const themeAtom = atomWithStorage<ColorTheme>(LOCAL_STORAGE_KEYS.THEME, "system");
+const themeAtom = atomWithStorage<ColorTheme>(LOCAL_STORAGE_KEYS.THEME, COLOR_THEME.SYSTEM);
 
 export const useTheme = () => {
   const [theme, setTheme] = useAtom(themeAtom);
 
+  // Apply theme changes when theme state changes
   useEffect(() => {
-    if (theme === COLOR_THEME.SYSTEM) {
-      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        document.documentElement.classList.add("dark");
-      }
-    } else if (theme === COLOR_THEME.DARK) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    applyTheme(theme);
   }, [theme]);
-  
+
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleThemeChange = () => {
+      if (theme === COLOR_THEME.SYSTEM) {
+        applyTheme(theme);
+      }
+    };
+    mediaQuery.addEventListener("change", handleThemeChange);
+    return () => {
+      mediaQuery.removeEventListener("change", handleThemeChange);
+    };
+  }, [theme]);
+
   const nextTheme = theme === COLOR_THEME.LIGHT ? COLOR_THEME.DARK : COLOR_THEME.LIGHT;
-  return { theme, nextTheme, setTheme, isDarkMode: theme === COLOR_THEME.DARK };
+  const isDarkMode =
+    theme === COLOR_THEME.DARK ||
+    (theme === COLOR_THEME.SYSTEM && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  return { theme, nextTheme, setTheme, isDarkMode };
 };
