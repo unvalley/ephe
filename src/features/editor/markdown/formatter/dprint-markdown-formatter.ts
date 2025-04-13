@@ -14,7 +14,6 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
   private isInitialized = false;
   private config: FormatterConfig;
   private static readonly WASM_URL = "/wasm/dprint-markdown.wasm";
-  private isLoading = false;
 
   /**
    * Private constructor to enforce singleton pattern
@@ -46,20 +45,13 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
    */
   private async loadWasmBuffer(): Promise<Uint8Array> {
     if (this.isBrowser()) {
-      // In browser environment, fetch WASM from static assets - use dynamic import with Vite
-      try {
-        // Use dynamic import with Vite for WASM
-        const wasmUrl = new URL(DprintMarkdownFormatter.WASM_URL, import.meta.url).href;
-        const response = await fetch(wasmUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch WASM: ${response.statusText}`);
-        }
-        const arrayBuffer = await response.arrayBuffer();
-        return new Uint8Array(arrayBuffer);
-      } catch (error) {
-        console.error("Error loading WASM:", error);
-        throw error;
+      // In browser environment, fetch WASM from static assets
+      const response = await fetch(DprintMarkdownFormatter.WASM_URL);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch WASM: ${response.statusText}`);
       }
+      const arrayBuffer = await response.arrayBuffer();
+      return new Uint8Array(arrayBuffer);
     }
 
     // In Node.js environment, load WASM directly from file
@@ -71,8 +63,7 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
   }
 
   private async initialize(): Promise<void> {
-    if (this.isInitialized || this.isLoading) return;
-    this.isLoading = true;
+    if (this.isInitialized) return;
 
     try {
       // Load WASM buffer based on current environment
@@ -91,8 +82,6 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
     } catch (error) {
       console.error("Failed to initialize dprint markdown formatter:", error);
       throw error;
-    } finally {
-      this.isLoading = false;
     }
   }
 

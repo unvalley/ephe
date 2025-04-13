@@ -1,8 +1,8 @@
 "use client";
 
 import * as monaco from "monaco-editor";
-import { useState, useEffect, useRef, useCallback, Suspense, lazy } from "react";
-// import { Editor } from "@monaco-editor/react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { Editor } from "@monaco-editor/react";
 import { useTheme } from "../../hooks/use-theme";
 import { useDebouncedCallback } from "use-debounce";
 import { useTabDetection } from "../../hooks/use-tab-detection";
@@ -31,36 +31,21 @@ import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { saveSnapshot } from "../snapshots/snapshot-storage";
 import { TableOfContents } from "./table-of-contents";
 import { showToast } from "../../components/toast";
+import { remark } from "remark";
+import remarkGfm from "remark-gfm";
+import remarkRehype from "remark-rehype";
+import rehypeStringify from "rehype-stringify";
 import { atomWithStorage } from "jotai/utils";
 import { useAtom } from "jotai";
 import { usePreviewMode } from "../../hooks/use-preview-mode";
 import { useToc } from "../../hooks/use-toc";
 import { useCharCount } from "../../hooks/use-char-count";
 
-// Lazy load Monaco Editor
-const MonacoEditor = lazy(() => import("@monaco-editor/react").then(module => ({
-  default: module.Editor 
-})));
-
-// Lazy load remark and plugins
-const loadRemarkProcessor = async () => {
-  const [
-    { remark },
-    { default: remarkGfm },
-    { default: remarkRehype },
-    { default: rehypeStringify }
-  ] = await Promise.all([
-    import("remark"),
-    import("remark-gfm"),
-    import("remark-rehype"),
-    import("rehype-stringify")
-  ]);
-
-  return remark()
-    .use(remarkGfm)
-    .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeStringify, { allowDangerousHtml: true });
-};
+// Initialize remark processor with GFM plugin
+const remarkProcessor = remark()
+  .use(remarkGfm)
+  .use(remarkRehype, { allowDangerousHtml: true })
+  .use(rehypeStringify, { allowDangerousHtml: true });
 
 const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
@@ -84,35 +69,9 @@ export const EditorApp = () => {
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const { shouldShowAlert, dismissAlert } = useTabDetection();
-  
-  const [remarkProcessor, setRemarkProcessor] = useState<any>(null);
-  
-  // Initialize remark processor - lazily load it
-  useEffect(() => {
-    let isMounted = true;
-    
-    const initRemark = async () => {
-      try {
-        const processor = await loadRemarkProcessor();
-        if (isMounted) {
-          setRemarkProcessor(processor);
-        }
-      } catch (error) {
-        console.error("Failed to load remark processor:", error);
-      }
-    };
-    
-    initRemark();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // Render markdown when content changes
   useEffect(() => {
-    if (!remarkProcessor || !editorContent) return;
-    
     const renderMarkdown = async () => {
       try {
         const result = await remarkProcessor.process(editorContent);
@@ -124,7 +83,7 @@ export const EditorApp = () => {
     };
 
     renderMarkdown();
-  }, [editorContent, remarkProcessor]);
+  }, [editorContent]);
 
   // Define debounced functions
   const debouncedSetContent = useDebouncedCallback((content: string) => {
@@ -140,24 +99,17 @@ export const EditorApp = () => {
 
   // Initialize markdown formatter
   useEffect(() => {
-    let isMounted = true;
-    
     const initMarkdownFormatter = async () => {
       try {
-        // Lazy load formatter only when needed
         const formatter = await DprintMarkdownFormatter.getInstance();
-        if (isMounted) {
-          formatterRef.current = formatter;
-        }
+        formatterRef.current = formatter;
       } catch (error) {
         console.error("Failed to initialize markdown formatter:", error);
       }
     };
-    
     initMarkdownFormatter();
 
     return () => {
-      isMounted = false;
       formatterRef.current = null;
     };
   }, []);
@@ -345,26 +297,24 @@ export const EditorApp = () => {
         <div className="flex justify-center h-full">
           <div className={`w-full ${isWideMode ? "max-w-6xl" : "max-w-2xl"} px-4 sm:px-6 md:px-2 relative`}>
             {!previewMode ? (
-              <Suspense fallback={<Loading className="h-screen w-screen flex items-center justify-center" />}>
-                <MonacoEditor
-                  height="100%"
-                  width="100%"
-                  defaultLanguage="markdown"
-                  defaultValue={editorContent}
-                  options={editorOptions}
-                  onMount={handleEditorDidMount}
-                  beforeMount={(monaco) => {
-                    monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
-                    monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
+              <Editor
+                height="100%"
+                width="100%"
+                defaultLanguage="markdown"
+                defaultValue={editorContent}
+                options={editorOptions}
+                onMount={handleEditorDidMount}
+                beforeMount={(monaco) => {
+                  monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
+                  monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
 
-                    const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
-                    monaco.editor.setTheme(themeName);
-                  }}
-                  className="overflow-visible"
-                  theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
-                  loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
-                />
-              </Suspense>
+                  const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
+                  monaco.editor.setTheme(themeName);
+                }}
+                className="overflow-visible"
+                loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
+                theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
+              />
             ) : (
               <div className="h-full overflow-auto px-2 py-2 prose prose-slate dark:prose-invert max-w-none">
                 <div
