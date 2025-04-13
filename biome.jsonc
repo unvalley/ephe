@@ -16,6 +16,15 @@
             "ignoreNull": true
           }
         }
+      },
+      "nursery": {
+        "useSortedClasses": {
+          "level": "error",
+          "options": {
+            "attributes": [],
+            "functions": []
+          }
+        }
       }
     }
   },
