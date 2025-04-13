@@ -1,6 +1,6 @@
 import { useAtom } from "jotai";
 import { atom } from "jotai";
-import { LOCAL_STORAGE_KEYS } from "../utils/constants";
+import { LOCAL_STORAGE_KEYS } from "../constants";
 import { useEffect } from "react";
 
 export const charCountAtom = atom<number>(0);

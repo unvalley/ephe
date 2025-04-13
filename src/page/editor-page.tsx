@@ -1,6 +1,6 @@
 import "../globals.css";
 import { EditorApp } from "../features/editor/editor-app";
-import { usePaperMode } from "../hooks/use-paper-mode";
+import { usePaperMode } from "../utils/hooks/use-paper-mode";
 
 export const EditorPage = () => {
   const { paperModeClass } = usePaperMode();

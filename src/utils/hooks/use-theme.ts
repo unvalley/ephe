@@ -3,8 +3,8 @@
 import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { useEffect } from "react";
-import { LOCAL_STORAGE_KEYS } from "../utils/constants";
-import { COLOR_THEME, type ColorTheme, applyTheme } from "../utils/theme-initializer";
+import { LOCAL_STORAGE_KEYS } from "../constants";
+import { COLOR_THEME, type ColorTheme, applyTheme } from "../theme-initializer";
 
 const themeAtom = atomWithStorage<ColorTheme>(LOCAL_STORAGE_KEYS.THEME, COLOR_THEME.SYSTEM);
 

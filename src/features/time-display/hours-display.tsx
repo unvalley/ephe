@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useTheme } from "../../hooks/use-theme";
+import { useTheme } from "../../utils/hooks/use-theme";
 
 export const HoursDisplay = () => {
   const [showTooltip, setShowTooltip] = useState(false);

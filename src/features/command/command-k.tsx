@@ -2,15 +2,15 @@
 
 import { Command } from "cmdk";
 import { useEffect, useRef, useState } from "react";
-import { useTheme } from "../../hooks/use-theme";
+import { useTheme } from "../../utils/hooks/use-theme";
 import { useNavigate } from "react-router-dom";
 import type * as monaco from "monaco-editor";
 import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-formatter";
-import { showToast } from "../../components/toast";
+import { showToast } from "../../utils/components/toast";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
-import type { PaperMode } from "../../hooks/use-paper-mode";
-import type { EditorWidth } from "../../hooks/use-editor-width";
-import { EyeIcon } from "../../components/icons";
+import type { PaperMode } from "../../utils/hooks/use-paper-mode";
+import type { EditorWidth } from "../../utils/hooks/use-editor-width";
+import { EyeIcon } from "../../utils/components/icons";
 import { COLOR_THEME } from "../../utils/theme-initializer";
 
 // Icons - you might need to install react-icons package if not already installed

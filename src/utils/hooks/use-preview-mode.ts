@@ -1,6 +1,6 @@
 import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { LOCAL_STORAGE_KEYS } from "../utils/constants";
+import { LOCAL_STORAGE_KEYS } from "../constants";
 
 export const previewModeAtom = atomWithStorage<boolean>(LOCAL_STORAGE_KEYS.PREVIEW_MODE, false);
 

@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { RefObject } from "react";
 import type { editor } from "monaco-editor";
-import { LOCAL_STORAGE_KEYS } from "../utils/constants";
+import { LOCAL_STORAGE_KEYS } from "../constants";
 import { atomWithStorage } from "jotai/utils";
 import { useAtom } from "jotai";
 

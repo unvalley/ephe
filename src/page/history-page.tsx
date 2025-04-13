@@ -9,14 +9,14 @@ import {
   purgeCompletedTasks,
   type CompletedTask,
 } from "../features/tasks/task-storage";
-import { Footer } from "../components/footer";
+import { Footer } from "../utils/components/footer";
 import { SnapshotDiff } from "../features/snapshots/snapshot-diff";
 import { SnapshotViewer } from "../features/snapshots/snapshot-viewer";
 import { useNavigate } from "react-router-dom";
-import { showToast } from "../components/toast";
-import { Loading } from "../components/loading";
+import { showToast } from "../utils/components/toast";
+import { Loading } from "../utils/components/loading";
 import { LOCAL_STORAGE_KEYS } from "../utils/constants";
-import { usePaperMode } from "../hooks/use-paper-mode";
+import { usePaperMode } from "../utils/hooks/use-paper-mode";
 
 type DateFilter = {
   year?: number;

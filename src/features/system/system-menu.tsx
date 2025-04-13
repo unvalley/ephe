@@ -1,11 +1,11 @@
 "use client";
 
-import { useTheme } from "../../hooks/use-theme";
-import { MoonIcon, SunIcon, TableOfContentsIcon, WidthIcon, SuccessIcon } from "../../components/icons";
-import { usePaperMode } from "../../hooks/use-paper-mode";
-import { useEditorWidth } from "../../hooks/use-editor-width";
-import { useToc } from "../../hooks/use-toc";
-import { useCharCount } from "../../hooks/use-char-count";
+import { useTheme } from "../../utils/hooks/use-theme";
+import { MoonIcon, SunIcon, TableOfContentsIcon, WidthIcon, SuccessIcon } from "../../utils/components/icons";
+import { usePaperMode } from "../../utils/hooks/use-paper-mode";
+import { useEditorWidth } from "../../utils/hooks/use-editor-width";
+import { useToc } from "../../utils/hooks/use-toc";
+import { useCharCount } from "../../utils/hooks/use-char-count";
 import { useState, useEffect, useRef } from "react";
 import { getTasksByDate } from "../tasks/task-storage";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
@@ -39,7 +39,10 @@ const useTodayCompletedTasks = () => {
       });
 
       // Count tasks completed today
-      const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
+        2,
+        "0",
+      )}-${String(today.getDate()).padStart(2, "0")}`;
       const todayTasks = tasksByDate[todayDateStr] || [];
       setTodayCompletedTasks(todayTasks.length);
     };

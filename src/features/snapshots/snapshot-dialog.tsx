@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { showToast } from "../../components/toast";
+import { showToast } from "../../utils/components/toast";
 import { saveSnapshot } from "./snapshot-storage";
 
 type SnapshotDialogProps = {

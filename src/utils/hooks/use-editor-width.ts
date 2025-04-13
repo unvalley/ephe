@@ -1,7 +1,7 @@
-import { LOCAL_STORAGE_KEYS } from "../utils/constants";
+import { LOCAL_STORAGE_KEYS } from "../constants";
 import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import type { ValueOf } from "../utils/types";
+import type { ValueOf } from "../types";
 
 const EDITOR_WITH = {
   NORMAL: "normal",
@@ -26,5 +26,11 @@ export const useEditorWidth = () => {
   const setWideWidth = () => {
     setEditorWidth(EDITOR_WITH.WIDE);
   };
-  return { editorWidth, toggleEditorWidth, isWideMode: editorWidth === EDITOR_WITH.WIDE, setNormalWidth, setWideWidth };
+  return {
+    editorWidth,
+    toggleEditorWidth,
+    isWideMode: editorWidth === EDITOR_WITH.WIDE,
+    setNormalWidth,
+    setWideWidth,
+  };
 };

@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useTheme } from "../../hooks/use-theme";
+import { useTheme } from "../../utils/hooks/use-theme";
 
 type TocItem = {
   level: number;
