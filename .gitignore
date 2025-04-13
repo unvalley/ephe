@@ -43,3 +43,4 @@ yarn-error.log*
 next-env.d.ts
 
 bundle-size.html
+.specstory
