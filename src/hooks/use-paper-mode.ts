@@ -1,5 +1,6 @@
-import { useSyncExternalStore } from "react";
 import { LOCAL_STORAGE_KEYS } from "../utils/constants";
+import { atomWithStorage } from "jotai/utils";
+import { useAtom } from "jotai";
 
 export type PaperMode = "normal" | "graph" | "dots";
 
@@ -9,79 +10,37 @@ export const PAPER_MODE_CLASSES: Record<PaperMode, string> = {
   dots: "bg-dots-paper",
 };
 
-const createPaperModeStore = () => {
-  const subscribers = new Set<() => void>();
+const paperModeAtom = atomWithStorage<PaperMode>(LOCAL_STORAGE_KEYS.PAPER_MODE, "normal");
 
-  const getCurrentMode = (): PaperMode => {
-    if (typeof window === "undefined") return "normal";
-
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEYS.PAPER_MODE);
-    return (saved as PaperMode) || "normal";
-  };
-
-  let currentMode = getCurrentMode();
-
-  const setMode = (mode: PaperMode) => {
-    if (currentMode === mode) return;
-
-    currentMode = mode;
-    localStorage.setItem(LOCAL_STORAGE_KEYS.PAPER_MODE, mode);
-
-    // Notify all subscribers
-    for (const callback of subscribers) {
-      callback();
-    }
-  };
+export const usePaperMode = () => {
+  const [paperMode, setPaperMode] = useAtom(paperModeAtom);
 
   const cycleMode = () => {
     const modes: PaperMode[] = ["normal", "graph", "dots"];
-    const currentIndex = modes.indexOf(currentMode);
+    const currentIndex = modes.indexOf(paperMode);
     const nextIndex = (currentIndex + 1) % modes.length;
-    setMode(modes[nextIndex]);
+    setPaperMode(modes[nextIndex]);
     return modes[nextIndex];
   };
 
-  const toggleMode = (mode: PaperMode) => {
-    setMode(currentMode === mode ? "normal" : mode);
-    return currentMode;
+  const toggleNormalMode = () => {
+    setPaperMode((prev) => (prev === "normal" ? "normal" : "normal"));
   };
 
-  const subscribe = (callback: () => void) => {
-    subscribers.add(callback);
-    return () => {
-      subscribers.delete(callback);
-    };
+  const toggleGraphMode = () => {
+    setPaperMode((prev) => (prev === "graph" ? "normal" : "graph"));
   };
 
-  const getSnapshot = () => {
-    return currentMode;
+  const toggleDotsMode = () => {
+    setPaperMode((prev) => (prev === "dots" ? "normal" : "dots"));
   };
 
   return {
-    subscribe,
-    getSnapshot,
-    setMode,
+    paperMode,
+    paperModeClass: PAPER_MODE_CLASSES[paperMode],
     cycleMode,
-    toggleMode,
-  };
-};
-
-const paperModeStore = createPaperModeStore();
-
-/**
- * Custom hook to manage paper mode
- * @returns Paper mode state and operations
- */
-export const usePaperMode = () => {
-  const mode = useSyncExternalStore(paperModeStore.subscribe, paperModeStore.getSnapshot);
-
-  return {
-    paperMode: mode,
-    paperModeClass: PAPER_MODE_CLASSES[mode],
-    setMode: paperModeStore.setMode,
-    cycleMode: paperModeStore.cycleMode,
-    toggleNormalMode: () => paperModeStore.toggleMode("normal"),
-    toggleGraphMode: () => paperModeStore.toggleMode("graph"),
-    toggleDotsMode: () => paperModeStore.toggleMode("dots"),
+    toggleNormalMode,
+    toggleGraphMode,
+    toggleDotsMode,
   };
 };

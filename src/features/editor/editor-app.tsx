@@ -53,7 +53,7 @@ export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const formatterRef = useRef<MarkdownFormatter | null>(null);
   const placeholderRef = useRef<PlaceholderWidget | null>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement | null>(null);
 
   const { setCharCount } = useCharCount();
   const [placeholder, _] = useState<string>(getRandomQuote());

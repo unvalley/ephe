@@ -239,7 +239,7 @@ const setMathState = (
           editor.selection = new Selection(newPosition, newPosition);
         });
     });
-}
+};
 
 const transTable = [
   MathBlockState.NONE,

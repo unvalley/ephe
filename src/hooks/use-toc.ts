@@ -6,7 +6,7 @@ import { atomWithStorage } from "jotai/utils";
 import { useAtom } from "jotai";
 
 type UseTocProps = {
-  editorRef?: RefObject<editor.IStandaloneCodeEditor | null>;
+  editorRef: RefObject<editor.IStandaloneCodeEditor | null>;
 };
 
 const tocAtom = atomWithStorage<boolean>(LOCAL_STORAGE_KEYS.TOC_MODE, false);
@@ -27,7 +27,7 @@ export const useToc = (props?: UseTocProps) => {
 
   const toggleToc = useCallback(() => {
     setIsVisibleToc((prev) => !prev);
-  }, []);
+  }, [setIsVisibleToc]);
 
   return {
     isVisibleToc,

@@ -2,7 +2,7 @@
 
 import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { valueOf } from "../utils/types";
+import { ValueOf } from "../utils/types";
 import { useEffect } from "react";
 import { LOCAL_STORAGE_KEYS } from "../utils/constants";
 
@@ -11,7 +11,7 @@ const COLOR_THEME = {
   DARK: "dark",
 } as const;
 
-type ColorTheme = valueOf<typeof COLOR_THEME>;
+type ColorTheme = ValueOf<typeof COLOR_THEME>;
 
 const themeAtom = atomWithStorage<ColorTheme>(LOCAL_STORAGE_KEYS.THEME, "light");
 
