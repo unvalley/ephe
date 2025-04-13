@@ -24,30 +24,6 @@ html.dark {
   --focus-border-dark: #00000000;
 }
 
-/* Make sure content is still scrollable */
-.monaco-editor .monaco-scrollable-element {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-.monaco-editor .monaco-scrollable-element::-webkit-scrollbar {
-  display: none;
-}
-
-/* Hide scrollbar but maintain scrollability */
-.scrollbar-hide {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-.monaco-editor textarea {
-  outline: none;
-}
-
 /* Make the checkbox part clickable */
 span.task-checkbox {
   cursor: pointer;
@@ -61,19 +37,7 @@ span.task-checkbox {
   --vscode-focusBorder: var(--focus-border-light) !important;
 }
 
-/* Add these styles to remove Monaco editor blue border */
-.monaco-editor .monaco-editor-background,
-.monaco-editor .inputarea.ime-input {
-  outline: none !important;
-  border: none !important;
-}
-
 .monaco-editor:focus-within {
-  outline: none !important;
-  border: none !important;
-}
-
-.monaco-editor-container {
   outline: none !important;
   border: none !important;
 }
