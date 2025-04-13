@@ -42,4 +42,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# bundle-size.html
+bundle-size.html
