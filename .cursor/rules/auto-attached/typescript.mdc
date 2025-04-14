@@ -5,7 +5,8 @@ alwaysApply: false
 ---
 ## TypeScript
 
-- Use strict types.
+- Use strict types, type-safe is VERY important.
+- Use `type` instead of `interface`.
 - Use camelCase for variable and function names.
 - Use PascalCase for component names.
 - Use double quotes for strings, use template literal if it's suitable.
