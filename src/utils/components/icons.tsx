@@ -184,9 +184,9 @@ export const WidthIcon = () => {
       className="text-gray-500 dark:text-gray-400"
     >
       <title>Editor width</title>
-      <path d="M21 3H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"></path>
-      <line x1="9" y1="3" x2="9" y2="21"></line>
-      <line x1="15" y1="3" x2="15" y2="21"></line>
+      <path d="M21 3H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z" />
+      <line x1="9" y1="3" x2="9" y2="21" />
+      <line x1="15" y1="3" x2="15" y2="21" />
     </svg>
   );
 };
@@ -207,8 +207,8 @@ export const EyeIcon = ({ className = "" }: { className?: string }) => {
       className={className || "text-gray-500 dark:text-gray-400"}
     >
       <title>Preview</title>
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-      <circle cx="12" cy="12" r="3"></circle>
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
     </svg>
   );
 };

@@ -144,7 +144,7 @@ export const SystemMenu = () => {
       {({ open }) => (
         <>
           <MenuButton
-            className="flex items-center gap-1 px-2 py-1 rounded-md transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            className="flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
             onClick={() => setIsOpen(!isOpen)}
           >
             System
@@ -152,16 +152,16 @@ export const SystemMenu = () => {
 
           {(open || isOpen) && (
             <MenuItems
-              className="absolute bottom-full mb-2 left-0 z-10 bg-mono-50 dark:bg-mono-700 rounded-md overflow-hidden shadow-lg focus:outline-none w-56"
+              className="absolute bottom-full left-0 z-10 mb-2 w-56 overflow-hidden rounded-md bg-mono-50 shadow-lg focus:outline-none dark:bg-mono-700"
               portal={false}
               static
             >
               {/* Document Stats Section */}
               <div className="py-1">
-                <div className="px-3 py-2 text-xs text-mono-400 dark:text-mono-300">Document Stats</div>
+                <div className="px-3 py-2 text-mono-400 text-xs dark:text-mono-300">Document Stats</div>
                 <MenuItem disabled>
-                  <div className="px-4 py-2.5 text-sm flex items-center data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30">
-                    <span className="flex items-center justify-center w-5 h-5 mr-3">
+                  <div className="flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30">
+                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <title>Characters Icon</title>
                         <path d="M4 5H20V7H4V5Z" fill="currentColor" />
@@ -177,10 +177,10 @@ export const SystemMenu = () => {
                 <MenuItem as="div">
                   <Link
                     to="/history"
-                    className="px-4 py-2.5 text-sm flex items-center hover:bg-gray-50 dark:hover:bg-gray-700/70 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 w-full"
+                    className="flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
                     onClick={() => setIsOpen(false)}
                   >
-                    <span className="flex items-center justify-center w-5 h-5 mr-3">
+                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
                       {todayCompletedTasks > 0 ? (
                         <SuccessIcon />
                       ) : (
@@ -199,10 +199,10 @@ export const SystemMenu = () => {
                 <MenuItem as="div">
                   <Link
                     to="/history"
-                    className="px-4 py-2.5 text-sm flex items-center hover:bg-gray-50 dark:hover:bg-gray-700/70 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 w-full"
+                    className="flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
                     onClick={() => setIsOpen(false)}
                   >
-                    <span className="flex items-center justify-center w-5 h-5 mr-3">
+                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -225,7 +225,7 @@ export const SystemMenu = () => {
               </div>
 
               <div className="py-1">
-                <div className="px-3 py-2 text-xs text-mono-400 dark:text-mono-300">Appearence</div>
+                <div className="px-3 py-2 text-mono-400 text-xs dark:text-mono-300">Appearence</div>
                 <MenuItem as="div">
                   <button
                     type="button"
@@ -239,9 +239,9 @@ export const SystemMenu = () => {
                         setTheme(COLOR_THEME.LIGHT);
                       }
                     }}
-                    className="w-full text-left flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150"
+                    className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
                   >
-                    <span className="flex items-center justify-center w-5 h-5 mr-3">
+                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
                       {theme === COLOR_THEME.LIGHT ? (
                         <SunIcon />
                       ) : theme === COLOR_THEME.DARK ? (
@@ -270,9 +270,9 @@ export const SystemMenu = () => {
                   <button
                     type="button"
                     onClick={toggleToc}
-                    className="w-full text-left flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150"
+                    className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
                   >
-                    <span className="flex items-center justify-center w-5 h-5 mr-3">
+                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
                       <TableOfContentsIcon />
                     </span>
                     <span>{isVisibleToc ? "Hide ToC" : "Show ToC"}</span>
@@ -282,7 +282,7 @@ export const SystemMenu = () => {
 
               {/* Paper Mode Section */}
               <div className="py-1">
-                <div className="px-3 py-2 text-xs text-mono-400 dark:text-mono-300">Paper Mode</div>
+                <div className="px-3 py-2 text-mono-400 text-xs dark:text-mono-300">Paper Mode</div>
                 <MenuItem as="div">
                   <button
                     type="button"
@@ -296,25 +296,25 @@ export const SystemMenu = () => {
                         toggleNormalMode();
                       }
                     }}
-                    className="w-full text-left flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150"
+                    className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
                   >
-                    <span className="flex items-center justify-center w-5 h-5 mr-3">
+                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
                       {paperMode === "normal" ? (
-                        <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"></span>
+                        <span className="h-4 w-4 border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700" />
                       ) : paperMode === "graph" ? (
-                        <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 grid grid-cols-3 opacity-70">
+                        <span className="grid h-4 w-4 grid-cols-3 border border-gray-300 opacity-70 dark:border-gray-600">
                           <span
-                            className="col-span-3 border-b border-gray-400 dark:border-gray-500"
+                            className="col-span-3 border-gray-400 border-b dark:border-gray-500"
                             style={{ height: "33%" }}
-                          ></span>
+                          />
                           <span
-                            className="col-span-3 border-b border-gray-400 dark:border-gray-500"
+                            className="col-span-3 border-gray-400 border-b dark:border-gray-500"
                             style={{ height: "66%" }}
-                          ></span>
+                          />
                         </span>
                       ) : (
-                        <span className="w-4 h-4 border border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                          <span className="w-1 h-1 rounded-full bg-gray-400 dark:bg-gray-500"></span>
+                        <span className="flex h-4 w-4 items-center justify-center border border-gray-300 dark:border-gray-600">
+                          <span className="h-1 w-1 rounded-full bg-gray-400 dark:bg-gray-500" />
                         </span>
                       )}
                     </span>
@@ -325,7 +325,7 @@ export const SystemMenu = () => {
 
               {/* Editor Width Section */}
               <div className="py-1">
-                <div className="px-3 py-2 text-xs text-mono-400 dark:text-mono-300">Editor Width</div>
+                <div className="px-3 py-2 text-mono-400 text-xs dark:text-mono-300">Editor Width</div>
                 <MenuItem as="div">
                   <button
                     type="button"
@@ -333,9 +333,9 @@ export const SystemMenu = () => {
                       // Toggle editor width
                       editorWidth === "normal" ? setWideWidth() : setNormalWidth();
                     }}
-                    className="w-full text-left flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 hover:bg-gray-50 dark:hover:bg-gray-700/70 transition-colors duration-150"
+                    className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
                   >
-                    <span className="flex items-center justify-center w-5 h-5 mr-3">
+                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
                       <WidthIcon />
                     </span>
                     <span className="capitalize">{editorWidth}</span>

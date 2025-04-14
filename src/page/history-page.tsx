@@ -220,10 +220,10 @@ export const HistoryPage = () => {
       const time = new Date(snapshot.timestamp).toLocaleTimeString();
 
       return (
-        <div className="flex group border-b border-gray-200 dark:border-gray-700 py-3 px-2 bg-mono-50 dark:bg-mono-800">
-          <div className="flex-1 flex items-start">
+        <div className="group flex border-gray-200 border-b bg-mono-50 px-2 py-3 dark:border-gray-700 dark:bg-mono-800">
+          <div className="flex flex-1 items-start">
             <div className="flex items-center">
-              <svg className="h-4 w-4 mr-2" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" role="img">
+              <svg className="mr-2 h-4 w-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" role="img">
                 <path
                   fillRule="evenodd"
                   d="M3.75 1.5a.25.25 0 00-.25.25v12.5c0 .138.112.25.25.25h9.5a.25.25 0 00.25-.25V6h-2.75A1.75 1.75 0 019 4.25V1.5H3.75zm6.75.062V4.25c0 .138.112.25.25.25h2.688a.252.252 0 00-.011-.013l-2.914-2.914a.272.272 0 00-.013-.011zM2 1.75C2 .784 2.784 0 3.75 0h6.586c.464 0 .909.184 1.237.513l2.914 2.914c.329.328.513.773.513 1.237v9.586A1.75 1.75 0 0113.25 16h-9.5A1.75 1.75 0 012 14.25V1.75z"
@@ -231,13 +231,13 @@ export const HistoryPage = () => {
               </svg>
               <div className="ml-1">
                 <button
-                  className="cursor-pointer hover:underline text-gray-600 dark:text-gray-100"
+                  className="cursor-pointer text-gray-600 hover:underline dark:text-gray-100"
                   onClick={() => handleViewSnapshot(snapshot)}
                   type="button"
                 >
                   {snapshot.title}
                 </button>
-                <div className="text-gray-500 dark:text-gray-400 text-xs">Saved at {time}</div>
+                <div className="text-gray-500 text-xs dark:text-gray-400">Saved at {time}</div>
               </div>
             </div>
           </div>
@@ -248,14 +248,14 @@ export const HistoryPage = () => {
                 navigate("/");
                 showToast("Snapshot restored to editor", "success");
               }}
-              className="text-xs px-2 py-1 rounded bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
+              className="rounded bg-green-100 px-2 py-1 text-green-700 text-xs hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50"
               type="button"
             >
               Restore
             </button>
             <button
               onClick={() => handleDeleteItem(snapshot.id, "snapshot")}
-              className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+              className="rounded bg-red-100 px-2 py-1 text-red-700 text-xs hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
               type="button"
             >
               Delete
@@ -270,11 +270,11 @@ export const HistoryPage = () => {
     const time = new Date(task.completedAt).toLocaleTimeString();
 
     return (
-      <div className="flex group border-b border-gray-200 dark:border-gray-700 py-3 px-2 bg-mono-50 dark:bg-mono-800">
-        <div className="flex-1 flex items-start min-w-0">
-          <div className="flex items-center min-w-0">
+      <div className="group flex border-gray-200 border-b bg-mono-50 px-2 py-3 dark:border-gray-700 dark:bg-mono-800">
+        <div className="flex min-w-0 flex-1 items-start">
+          <div className="flex min-w-0 items-center">
             <svg
-              className="h-4 w-4 mr-2 text-green-600 dark:text-green-400 flex-shrink-0"
+              className="mr-2 h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400"
               viewBox="0 0 16 16"
               fill="currentColor"
               aria-hidden="true"
@@ -283,17 +283,17 @@ export const HistoryPage = () => {
               <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z" />
             </svg>
             <div className="ml-1 min-w-0">
-              <span className="text-sm block truncate">{task.content}</span>
-              <div className="text-gray-500 dark:text-gray-400 text-xs">
+              <span className="block truncate text-sm">{task.content}</span>
+              <div className="text-gray-500 text-xs dark:text-gray-400">
                 Completed {task.section && <span>in {task.section} </span>} at {time}
               </div>
             </div>
           </div>
         </div>
-        <div className="flex space-x-2 flex-shrink-0">
+        <div className="flex flex-shrink-0 space-x-2">
           <button
             onClick={() => handleDeleteItem(task.id, "task")}
-            className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+            className="rounded bg-red-100 px-2 py-1 text-red-700 text-xs hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
             type="button"
           >
             Delete
@@ -310,7 +310,7 @@ export const HistoryPage = () => {
 
     return (
       <div key={date} className="mb-8">
-        <div className="mb-2 text-sm text-gray-800 dark:text-gray-100 py-2 border-b border-gray-200 dark:border-gray-700">
+        <div className="mb-2 border-gray-200 border-b py-2 text-gray-800 text-sm dark:border-gray-700 dark:text-gray-100">
           {formatDate(date)}
         </div>
 
@@ -328,14 +328,14 @@ export const HistoryPage = () => {
 
           return (
             <div key={historyItemType} className="mb-4 bg-mono-50 dark:bg-mono-800">
-              <div className="border border-gray-100 dark:border-gray-700 rounded-md overflow-hidden">
+              <div className="overflow-hidden rounded-md border border-gray-100 dark:border-gray-700">
                 {displayItems.map((item) => (
                   <div key={isSnapshot(item) ? item.id : (item as CompletedTask).id}>{renderHistoryItem(item)}</div>
                 ))}
                 {typeItems.length > limit && (
                   <button
                     onClick={() => toggleTypeExpansion(`${date}-${historyItemType}`)}
-                    className="w-full py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-mono-100 dark:hover:bg-mono-700"
+                    className="w-full py-2 text-blue-600 text-sm hover:bg-mono-100 dark:text-blue-400 dark:hover:bg-mono-700"
                     type="button"
                   >
                     {isExpanded ? "Show less" : `Show ${typeItems.length - limit} more...`}
@@ -350,18 +350,18 @@ export const HistoryPage = () => {
   };
 
   return (
-    <div className={`h-screen w-screen flex flex-col antialiased ${paperModeClass}`}>
+    <div className={`flex h-screen w-screen flex-col antialiased ${paperModeClass}`}>
       {isLoading ? (
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex flex-1 items-center justify-center">
           <Loading className="flex items-center justify-center" />
         </div>
       ) : (
-        <div className="flex-1 pt-16 pb-8 overflow-auto">
+        <div className="flex-1 overflow-auto pt-16 pb-8">
           <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center mb-6">
+            <div className="mb-6 flex items-center justify-between">
               <div>
                 <h1 className="text-md">History</h1>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Your completed tasks and snapshots.</p>
+                <p className="mt-1 text-gray-600 text-sm dark:text-gray-400">Your completed tasks and snapshots.</p>
               </div>
 
               {/* Purge button */}
@@ -371,7 +371,7 @@ export const HistoryPage = () => {
                     setPurgeType("all");
                     setShowPurgeConfirm(true);
                   }}
-                  className="px-3 py-1.5 text-sm rounded-md bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-colors focus:outline-none"
+                  className="rounded-md bg-red-100 px-3 py-1.5 text-red-600 text-sm transition-colors hover:bg-red-200 focus:outline-none dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
                   type="button"
                 >
                   Delete All
@@ -379,9 +379,9 @@ export const HistoryPage = () => {
               )}
             </div>
 
-            <div className="mb-6 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm bg-mono-50 dark:bg-mono-800">
-              <div className="flex flex-col sm:flex-row p-2 gap-2 items-center">
-                <div className="w-full sm:w-auto flex-1">
+            <div className="mb-6 rounded-md border border-gray-200 bg-mono-50 shadow-sm dark:border-gray-700 dark:bg-mono-800">
+              <div className="flex flex-col items-center gap-2 p-2 sm:flex-row">
+                <div className="w-full flex-1 sm:w-auto">
                   <div className="relative rounded-md shadow-sm">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                       <svg
@@ -400,7 +400,7 @@ export const HistoryPage = () => {
                     </div>
                     <input
                       type="text"
-                      className="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset sm:text-sm"
+                      className="block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm dark:text-gray-100 dark:ring-gray-600 dark:placeholder:text-gray-500"
                       placeholder="Search in history...(unimplemented)"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -416,7 +416,7 @@ export const HistoryPage = () => {
                       const value = e.target.value as HistoryItemType;
                       updateFilter("types", value ? [value] : undefined);
                     }}
-                    className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset sm:text-sm"
+                    className="block w-full rounded-md border-0 py-1.5 pr-10 pl-3 text-gray-900 ring-1 ring-gray-300 ring-inset focus:ring-2 focus:ring-inset sm:text-sm dark:text-gray-100 dark:ring-gray-600"
                   >
                     <option value="">All Types</option>
                     <option value="task">Tasks</option>
@@ -443,7 +443,7 @@ export const HistoryPage = () => {
                         updateFilter("month", undefined);
                       }
                     }}
-                    className="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 dark:text-gray-100 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset sm:text-sm"
+                    className="block w-full rounded-md border-0 py-1.5 pr-10 pl-3 text-gray-900 ring-1 ring-gray-300 ring-inset focus:ring-2 focus:ring-inset sm:text-sm dark:text-gray-100 dark:ring-gray-600"
                   >
                     <option value="">All Time</option>
                     {availableYears.map((year) => (
@@ -468,11 +468,11 @@ export const HistoryPage = () => {
                       resetFilters();
                       setSearchQuery("");
                     }}
-                    className="w-full sm:w-auto px-3 py-1.5 text-sm rounded-md flex items-center justify-center  hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors focus:outline-none"
+                    className="flex w-full items-center justify-center rounded-md px-3 py-1.5 text-sm transition-colors hover:bg-gray-200 focus:outline-none sm:w-auto dark:hover:bg-gray-800"
                     type="button"
                   >
                     <svg
-                      className="h-3 w-3 mr-1 text-gray-500 dark:text-gray-400"
+                      className="mr-1 h-3 w-3 text-gray-500 dark:text-gray-400"
                       viewBox="0 0 20 20"
                       fill="currentColor"
                       aria-hidden="true"
@@ -491,7 +491,7 @@ export const HistoryPage = () => {
             </div>
 
             {sortedDates.length === 0 ? (
-              <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="rounded-lg border border-gray-200 bg-white py-12 text-center shadow-sm dark:border-gray-700 dark:bg-gray-800">
                 <svg
                   className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
                   fill="none"
@@ -513,7 +513,7 @@ export const HistoryPage = () => {
                     Try adjusting your filters or{" "}
                     <button
                       onClick={resetFilters}
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                      className="text-blue-600 hover:underline dark:text-blue-400"
                       type="button"
                     >
                       reset them
@@ -536,23 +536,23 @@ export const HistoryPage = () => {
 
       {/* Confirmation Modal */}
       {showPurgeConfirm && (
-        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg text-gray-900 dark:text-gray-100 mb-3">Confirm Deletion</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 dark:bg-black/70">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
+            <h3 className="mb-3 text-gray-900 text-lg dark:text-gray-100">Confirm Deletion</h3>
+            <p className="mb-4 text-gray-600 dark:text-gray-400">
               Are you sure you want to delete all history? This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowPurgeConfirm(false)}
-                className="px-4 py-2 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 text-sm transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                 type="button"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePurgeHistory}
-                className="px-4 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 transition-colors"
+                className="rounded-md bg-red-500 px-4 py-2 text-sm text-white transition-colors hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700"
                 type="button"
               >
                 Delete All

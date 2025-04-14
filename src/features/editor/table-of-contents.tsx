@@ -81,13 +81,12 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
   }
 
   return (
-    <div className="toc-container overflow-auto max-h-screen">
+    <div className="toc-container max-h-screen overflow-auto">
       <ul className="space-y-1">
         {tocItems.map((item) => (
           <li
             key={item.line}
-            className={`cursor-pointer py-1 px-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 break-words whitespace-normal
-                ${isDarkMode ? "text-gray-400 hover:text-gray-200" : "text-gray-500 hover:text-gray-800"}`}
+            className={`cursor-pointer whitespace-normal break-words rounded px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 ${isDarkMode ? "text-gray-400 hover:text-gray-200" : "text-gray-500 hover:text-gray-800"}`}
             style={{
               paddingLeft: `${(item.level - 1) * 0.75 + 0.5}rem`,
               lineHeight: 1.3,

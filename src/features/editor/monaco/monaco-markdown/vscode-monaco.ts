@@ -113,7 +113,7 @@ export class TextDocument {
     let result = this._textLines[line];
     if (!result || result.lineNumber !== line || result.text !== this._lines[line]) {
       const text = this._lines[line];
-      const firstNonWhitespaceCharacterIndex = /^(\s*)/.exec(text)![1].length;
+      const firstNonWhitespaceCharacterIndex = /^(\s*)/.exec(text)?.[1].length;
       const range = new Range(line, 0, line, text.length);
       const rangeIncludingLineBreak = line < this._lines.length - 1 ? new Range(line, 0, line + 1, 0) : range;
 

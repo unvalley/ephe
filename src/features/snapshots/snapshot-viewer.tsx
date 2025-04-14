@@ -80,12 +80,12 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full h-[80vh] flex flex-col">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 dark:bg-black/70">
+      <div className="flex h-[80vh] w-full max-w-4xl flex-col rounded-lg bg-white shadow-xl dark:bg-gray-800">
+        <div className="flex items-center justify-between border-gray-200 border-b p-4 dark:border-gray-700">
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{snapshot.title}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <h3 className="font-medium text-gray-900 text-lg dark:text-gray-100">{snapshot.title}</h3>
+            <p className="text-gray-500 text-sm dark:text-gray-400">
               {formattedDate} • {snapshot.charCount.toLocaleString()} characters
             </p>
           </div>
@@ -109,13 +109,13 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
         </div>
 
         {snapshot.description && (
-          <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-600 dark:text-gray-400">{snapshot.description}</p>
+          <div className="border-gray-200 border-b px-4 py-2 dark:border-gray-700">
+            <p className="text-gray-600 text-sm dark:text-gray-400">{snapshot.description}</p>
           </div>
         )}
 
         <div className="flex-1 overflow-hidden">
-          {isLoading && <Loading className="h-full w-full flex items-center justify-center" />}
+          {isLoading && <Loading className="flex h-full w-full items-center justify-center" />}
 
           <Editor
             height="100%"
@@ -145,11 +145,11 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
           />
         </div>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between">
+        <div className="flex justify-between border-gray-200 border-t p-4 dark:border-gray-700">
           <div className="flex space-x-2">
             <button
               onClick={handleRestore}
-              className="px-4 py-2 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 text-sm transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               type="button"
             >
               Restore
@@ -157,7 +157,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
 
             <button
               onClick={handleExport}
-              className="px-4 py-2 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 text-sm transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               type="button"
             >
               Export
@@ -167,7 +167,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
           <div className="flex space-x-2">
             <button
               onClick={handleDelete}
-              className="px-4 py-2 text-sm rounded-md bg-gray-100 text-red-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-red-400 dark:hover:bg-gray-600 transition-colors"
+              className="rounded-md bg-gray-100 px-4 py-2 text-red-600 text-sm transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-red-400 dark:hover:bg-gray-600"
               type="button"
             >
               Delete
@@ -175,7 +175,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
 
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="rounded-md bg-gray-100 px-4 py-2 text-gray-700 text-sm transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               type="button"
             >
               Close

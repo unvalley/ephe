@@ -27,18 +27,18 @@ export const AlreadyOpenDialog = ({ shouldShowAlert: isOpen, onContinue }: Alrea
 
   return (
     <div
-      className={`fixed inset-0 bg-black/50 z-50 flex items-center justify-center transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`}
     >
       <dialog
         open={isOpen}
-        className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full mx-4 transition-all duration-300 ${
-          isOpen ? "transform-none" : "transform scale-95"
-        } fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 m-0 border-none`}
+        className={`mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-lg transition-all duration-300 dark:bg-gray-800 ${
+          isOpen ? "transform-none" : "scale-95 transform"
+        } -translate-x-1/2 -translate-y-1/2 fixed top-1/2 left-1/2 m-0 border-none`}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
         aria-labelledby="dialog-title"
       >
-        <h2 id="dialog-title" className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+        <h2 id="dialog-title" className="mb-4 font-bold text-gray-900 text-xl dark:text-gray-100">
           App Already Open
         </h2>
         <p className="mb-6 text-gray-700 dark:text-gray-300">

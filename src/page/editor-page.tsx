@@ -6,7 +6,7 @@ export const EditorPage = () => {
   const { paperModeClass } = usePaperMode();
 
   return (
-    <div className={`antialiased h-full w-full ${paperModeClass}`}>
+    <div className={`h-full w-full antialiased ${paperModeClass}`}>
       <EditorApp />
     </div>
   );

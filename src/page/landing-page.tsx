@@ -2,10 +2,10 @@ import Avatar from "boring-avatars";
 
 export const LandingPage = () => {
   return (
-    <div className="antialiased min-h-screen flex flex-col items-center justify-center px-4 py-6 font-mono bg-graph-paper">
-      <div className="max-w-3xl w-full space-y-8 sm:space-y-12">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-graph-paper px-4 py-6 font-mono antialiased">
+      <div className="w-full max-w-3xl space-y-8 sm:space-y-12">
         <div className="space-y-3 sm:space-y-4">
-          <h1 className="text-2xl sm:text-3xl font-normal flex items-center">
+          <h1 className="flex items-center font-normal text-2xl sm:text-3xl">
             <Avatar
               size={28}
               name="Georgia O"
@@ -26,9 +26,9 @@ export const LandingPage = () => {
         </div>
 
         <div className="space-y-3 sm:space-y-4">
-          <h2 className="text-xl sm:text-2xl font-normal">Why Ephe?</h2>
+          <h2 className="font-normal text-xl sm:text-2xl">Why Ephe?</h2>
 
-          <ul className="text-sm sm:text-base space-y-2">
+          <ul className="space-y-2 text-sm sm:text-base">
             <li>- Traditional to-do apps can be time-consuming and quickly overwhelming.</li>
             <li>- A single page is all you need to organize your day.</li>
             <li>- Focus on easily capturing your todos, thoughts, and ideas.</li>
@@ -44,17 +44,17 @@ export const LandingPage = () => {
           </p>
         </div>
 
-        <div className="my-20 flex gap-2 justify-center">
+        <div className="my-20 flex justify-center gap-2">
           <a
             href="/"
-            className="px-4 py-2 rounded-md border border-primary-400 text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-500 dark:hover:text-white transition-colors"
+            className="rounded-md border border-primary-400 px-4 py-2 text-primary-500 transition-colors hover:bg-primary-50 dark:hover:bg-primary-500 dark:hover:text-white"
           >
             Try Ephe
           </a>
         </div>
       </div>
 
-      <footer className="text-gray-600 dark:text-gray-400 text-center text-sm sm:text-base">
+      <footer className="text-center text-gray-600 text-sm sm:text-base dark:text-gray-400">
         This project is built by{" "}
         <a href="https://github.com/unvalley" className="text-blue-400 hover:underline">
           unvalley

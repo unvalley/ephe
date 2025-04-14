@@ -180,11 +180,11 @@ export const CommandMenu = ({
   const getNextThemeText = () => {
     if (theme === COLOR_THEME.LIGHT) {
       return "dark";
-    } else if (theme === COLOR_THEME.DARK) {
-      return "system";
-    } else {
-      return "light";
     }
+    if (theme === COLOR_THEME.DARK) {
+      return "system";
+    }
+    return "light";
   };
 
   useEffect(() => {
@@ -324,7 +324,7 @@ export const CommandMenu = ({
       {open && (
         // biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
         <div
-          className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-[1px] z-40 transition-opacity"
+          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px] transition-opacity dark:bg-black/50"
           onClick={(e) => {
             e.preventDefault();
             onClose?.();
@@ -334,14 +334,11 @@ export const CommandMenu = ({
 
       <Command
         label="Command Menu"
-        className={`fixed top-[20%] left-1/2 transform -translate-x-1/2 w-[90vw] max-w-[640px] rounded-xl 
-          bg-white dark:bg-zinc-900 shadow-2xl border border-gray-200 dark:border-zinc-800 
-          z-50 overflow-hidden transition-all duration-100
-          ${open ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}
+        className={`-translate-x-1/2 fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] transform overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900 ${open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"}`}
         onValueChange={setInputValue}
       >
-        <div className="border-b border-gray-200 dark:border-zinc-800 px-3 pt-2 pb-1.5">
-          <div className="search-icon ml-2 mr-3 text-gray-400 dark:text-gray-500 pointer-events-none absolute text-[0.9rem] mt-[0.7rem]">
+        <div className="border-gray-200 border-b px-3 pt-2 pb-1.5 dark:border-zinc-800">
+          <div className="search-icon pointer-events-none absolute mt-[0.7rem] mr-3 ml-2 text-[0.9rem] text-gray-400 dark:text-gray-500">
             <svg width="1em" height="1em" viewBox="0 0 16 16" className="opacity-70" aria-hidden="true">
               <path
                 fill="currentColor"
@@ -355,32 +352,28 @@ export const CommandMenu = ({
             value={inputValue}
             onValueChange={setInputValue}
             placeholder="Type a command or search..."
-            className="w-full py-2.5 pl-9 pr-2 bg-transparent text-gray-900 dark:text-gray-100 outline-none text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            className="w-full bg-transparent py-2.5 pr-2 pl-9 text-gray-900 text-sm outline-none placeholder:text-gray-400 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
         </div>
 
         <Command.List
           ref={listRef}
-          className="max-h-[300px] overflow-auto p-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-100 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent"
+          className="scrollbar-thin scrollbar-thumb-gray-100 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent max-h-[300px] overflow-auto overflow-y-auto p-2"
         >
-          <Command.Empty className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+          <Command.Empty className="py-6 text-center text-gray-500 text-sm dark:text-gray-400">
             No results found.
           </Command.Empty>
 
-          <Command.Group heading="Interface Mode" className="px-1 mb-1 text-xs text-mono-400 dark:text-mono-200">
+          <Command.Group heading="Interface Mode" className="mb-1 px-1 text-mono-400 text-xs dark:text-mono-200">
             <Command.Item
-              className="mt-1 px-2 py-2.5 rounded-md text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2
-                cursor-pointer group hover:bg-gray-100 dark:hover:bg-zinc-800 
-                aria-selected:bg-primary-500/10 dark:aria-selected:bg-primary-500/20
-                aria-selected:text-primary-600 dark:aria-selected:text-primary-400
-                transition-colors"
+              className="group mt-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
               onSelect={() => {
                 cycleTheme();
                 onClose?.();
               }}
               value="theme toggle switch mode light dark system"
             >
-              <div className="flex items-center justify-center h-5 w-5 rounded-md bg-gray-100/80 dark:bg-zinc-700/60 text-gray-900 dark:text-gray-100 group-hover:bg-gray-200 dark:group-hover:bg-zinc-600 group-aria-selected:bg-primary-500/20 dark:group-aria-selected:bg-primary-600/20 transition-colors">
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                 <ThemeIcon className="h-3.5 w-3.5" />
               </div>
               <span>Switch to {getNextThemeText()} mode</span>
@@ -388,63 +381,51 @@ export const CommandMenu = ({
 
             {cyclePaperMode && (
               <Command.Item
-                className="px-2 py-2.5 rounded-md text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2
-                  cursor-pointer group hover:bg-gray-100 dark:hover:bg-zinc-800 
-                  aria-selected:bg-primary-500/10 dark:aria-selected:bg-primary-500/20
-                  aria-selected:text-primary-600 dark:aria-selected:text-primary-400
-                  transition-colors"
+                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 onSelect={() => {
                   cyclePaperMode();
                   onClose?.();
                 }}
                 value="paper mode cycle switch paper"
               >
-                <div className="flex items-center justify-center h-5 w-5 rounded-md bg-gray-100/80 dark:bg-zinc-700/60 text-gray-900 dark:text-gray-100 group-hover:bg-gray-200 dark:group-hover:bg-zinc-600 group-aria-selected:bg-primary-500/20 dark:group-aria-selected:bg-primary-600/20 transition-colors">
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                   <PaperIcon className="h-3.5 w-3.5" />
                 </div>
                 <span>
-                  Cycle paper mode <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">{paperMode}</span>
+                  Cycle paper mode <span className="ml-1 text-gray-500 text-xs dark:text-gray-400">{paperMode}</span>
                 </span>
               </Command.Item>
             )}
 
             {toggleEditorWidth && (
               <Command.Item
-                className="px-2 py-2.5 rounded-md text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2
-                  cursor-pointer group hover:bg-gray-100 dark:hover:bg-zinc-800 
-                  aria-selected:bg-primary-500/10 dark:aria-selected:bg-primary-500/20
-                  aria-selected:text-primary-600 dark:aria-selected:text-primary-400
-                  transition-colors"
+                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 onSelect={() => {
                   toggleEditorWidth();
                   onClose?.();
                 }}
                 value="editor width toggle resize"
               >
-                <div className="flex items-center justify-center h-5 w-5 rounded-md bg-gray-100/80 dark:bg-zinc-700/60 text-gray-900 dark:text-gray-100 group-hover:bg-gray-200 dark:group-hover:bg-zinc-600 group-aria-selected:bg-primary-500/20 dark:group-aria-selected:bg-primary-600/20 transition-colors">
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                   <WidthIcon className="h-3.5 w-3.5" />
                 </div>
                 <span>
                   Toggle editor width{" "}
-                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">{editorWidth}</span>
+                  <span className="ml-1 text-gray-500 text-xs dark:text-gray-400">{editorWidth}</span>
                 </span>
               </Command.Item>
             )}
 
             {togglePreviewMode && (
               <Command.Item
-                className="px-2 py-2.5 rounded-md text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2
-                  cursor-pointer group hover:bg-gray-100 dark:hover:bg-zinc-800 
-                  aria-selected:bg-primary-500/10 dark:aria-selected:bg-primary-500/20
-                  aria-selected:text-primary-600 dark:aria-selected:text-primary-400
-                  transition-colors"
+                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 onSelect={() => {
                   togglePreviewMode();
                   onClose?.();
                 }}
                 value="preview mode toggle switch"
               >
-                <div className="flex items-center justify-center h-5 w-5 rounded-md bg-gray-100/80 dark:bg-zinc-700/60 text-gray-900 dark:text-gray-100 group-hover:bg-gray-200 dark:group-hover:bg-zinc-600 group-aria-selected:bg-primary-500/20 dark:group-aria-selected:bg-primary-600/20 transition-colors">
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                   <EyeIcon className="h-3.5 w-3.5" />
                 </div>
                 <span>Toggle preview mode ({previewMode ? "on" : "off"})</span>
@@ -452,85 +433,65 @@ export const CommandMenu = ({
             )}
           </Command.Group>
 
-          <Command.Group heading="Operations" className="px-1 mb-1 text-xs text-mono-400 dark:text-mono-200">
+          <Command.Group heading="Operations" className="mb-1 px-1 text-mono-400 text-xs dark:text-mono-200">
             <Command.Item
-              className="mt-1 px-2 py-2.5 rounded-md text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2
-                cursor-pointer group hover:bg-gray-100 dark:hover:bg-zinc-800 
-                aria-selected:bg-primary-500/10 dark:aria-selected:bg-primary-500/20
-                aria-selected:text-primary-600 dark:aria-selected:text-primary-400
-                transition-colors"
+              className="group mt-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
               onSelect={handleExportMarkdown}
               value="export markdown save download"
             >
-              <div className="flex items-center justify-center h-5 w-5 rounded-md bg-gray-100/80 dark:bg-zinc-700/60 text-gray-900 dark:text-gray-100 group-hover:bg-gray-200 dark:group-hover:bg-zinc-600 group-aria-selected:bg-primary-500/20 dark:group-aria-selected:bg-primary-600/20 transition-colors">
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                 <ExportIcon className="h-3.5 w-3.5" />
               </div>
               <span>Export markdown</span>
             </Command.Item>
 
             <Command.Item
-              className="px-2 py-2.5 rounded-md text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2
-                cursor-pointer group hover:bg-gray-100 dark:hover:bg-zinc-800 
-                aria-selected:bg-primary-500/10 dark:aria-selected:bg-primary-500/20
-                aria-selected:text-primary-600 dark:aria-selected:text-primary-400
-                transition-colors"
+              className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
               onSelect={handleFormatDocument}
               value="format document prettify"
             >
-              <div className="flex items-center justify-center h-5 w-5 rounded-md bg-gray-100/80 dark:bg-zinc-700/60 text-gray-900 dark:text-gray-100 group-hover:bg-gray-200 dark:group-hover:bg-zinc-600 group-aria-selected:bg-primary-500/20 dark:group-aria-selected:bg-primary-600/20 transition-colors">
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                 <FormatIcon className="h-3.5 w-3.5" />
               </div>
               <span>Format document</span>
             </Command.Item>
 
             <Command.Item
-              className="px-2 py-2.5 rounded-md text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2
-                cursor-pointer group hover:bg-gray-100 dark:hover:bg-zinc-800 
-                aria-selected:bg-primary-500/10 dark:aria-selected:bg-primary-500/20
-                aria-selected:text-primary-600 dark:aria-selected:text-primary-400
-                transition-colors"
+              className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
               onSelect={handleInsertGitHubIssues}
               value="github issues insert fetch public repos"
             >
-              <div className="flex items-center justify-center h-5 w-5 rounded-md bg-gray-100/80 dark:bg-zinc-700/60 text-gray-900 dark:text-gray-100 group-hover:bg-gray-200 dark:group-hover:bg-zinc-600 group-aria-selected:bg-primary-500/20 dark:group-aria-selected:bg-primary-600/20 transition-colors">
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                 <GitHubIcon className="h-3.5 w-3.5" />
               </div>
               <span>Insert GitHub Issues (Public Repos)</span>
             </Command.Item>
           </Command.Group>
 
-          <Command.Group heading="Move" className="px-1 mb-1 text-xs text-mono-400 dark:text-mono-200">
+          <Command.Group heading="Move" className="mb-1 px-1 text-mono-400 text-xs dark:text-mono-200">
             <Command.Item
-              className="mt-1 px-2 py-2.5 rounded-md text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2
-                cursor-pointer group hover:bg-gray-100 dark:hover:bg-zinc-800 
-                aria-selected:bg-primary-500/10 dark:aria-selected:bg-primary-500/20
-                aria-selected:text-primary-600 dark:aria-selected:text-primary-400
-                transition-colors"
+              className="group mt-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
               onSelect={() => {
                 window.open("https://github.com/unvalley/ephe", "_blank");
                 onClose?.();
               }}
               value="github ephe repo project"
             >
-              <div className="flex items-center justify-center h-5 w-5 rounded-md bg-gray-100/80 dark:bg-zinc-700/60 text-gray-900 dark:text-gray-100 group-hover:bg-gray-200 dark:group-hover:bg-zinc-600 group-aria-selected:bg-primary-500/20 dark:group-aria-selected:bg-primary-600/20 transition-colors">
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                 <LinkIcon className="h-3.5 w-3.5" />
               </div>
               <span>Go to Ephe GitHub Repo</span>
             </Command.Item>
 
             <Command.Item
-              className="px-2 py-2.5 rounded-md text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2
-                cursor-pointer group hover:bg-gray-100 dark:hover:bg-zinc-800 
-                aria-selected:bg-primary-500/10 dark:aria-selected:bg-primary-500/20
-                aria-selected:text-primary-600 dark:aria-selected:text-primary-400
-                transition-colors"
+              className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
               onSelect={() => {
                 navigate("/history");
                 onClose?.();
               }}
               value="history document past versions"
             >
-              <div className="flex items-center justify-center h-5 w-5 rounded-md bg-gray-100/80 dark:bg-zinc-700/60 text-gray-900 dark:text-gray-100 group-hover:bg-gray-200 dark:group-hover:bg-zinc-600 group-aria-selected:bg-primary-500/20 dark:group-aria-selected:bg-primary-600/20 transition-colors">
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                 <HistoryIcon className="h-3.5 w-3.5" />
               </div>
               <span>Go to History</span>
@@ -538,7 +499,7 @@ export const CommandMenu = ({
           </Command.Group>
         </Command.List>
 
-        <div className="border-t border-gray-200 dark:border-zinc-800 px-2 py-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-between border-gray-200 border-t px-2 py-2 text-gray-500 text-xs dark:border-zinc-800 dark:text-gray-400">
           <div className="flex gap-2">
             {footerLinks.map((link) => (
               <div key={link.key} className="flex items-center gap-1" title={link.title}>

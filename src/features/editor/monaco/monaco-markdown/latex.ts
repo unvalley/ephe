@@ -852,4 +852,4 @@ export const begin_args = [
   "Vmatrix",
 ];
 
-export const all = [..._c1, ..._c2, ..._c3, ..._begin].map((i) => "\\" + i);
+export const all = [..._c1, ..._c2, ..._c3, ..._begin].map((i) => `\\${i}`);

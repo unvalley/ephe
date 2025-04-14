@@ -1,5 +1,5 @@
 import type { editor } from "monaco-editor";
-import { IRange, languages } from "monaco-editor";
+import type { IRange, languages } from "monaco-editor";
 import { activateFormatting, isLink } from "./formatting";
 import { setWordDefinitionFor, TextEditor } from "./vscode-monaco";
 import { activateListEditing } from "./list-editing";

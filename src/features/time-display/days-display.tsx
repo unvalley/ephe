@@ -66,7 +66,7 @@ export const DaysDisplay = () => {
       {showTooltip && (
         <div
           ref={tooltipRef}
-          className="absolute bottom-full mb-2 transform p-6 shadow-xl rounded-xl bg-mono-50 dark:bg-mono-700"
+          className="absolute bottom-full mb-2 transform rounded-xl bg-mono-50 p-6 shadow-xl dark:bg-mono-700"
           style={{
             maxWidth: "450px",
             maxHeight: "650px",
@@ -75,11 +75,11 @@ export const DaysDisplay = () => {
           }}
           onMouseLeave={() => setShowTooltip(false)}
         >
-          <div className="text-sm text-mono-500 dark:text-mono-400 text-center mb-2">
+          <div className="mb-2 text-center text-mono-500 text-sm dark:text-mono-400">
             {daysRemaining > 0 ? `${daysRemaining} days left` : "Last day of the month"}
           </div>
           <div
-            className="grid mx-auto"
+            className="mx-auto grid"
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(7, 1fr)",
@@ -93,7 +93,7 @@ export const DaysDisplay = () => {
             {daysArray.map((day) => (
               <div
                 key={formatDate(day.date)}
-                className="relative group hover:scale-150 hover:z-10"
+                className="group relative hover:z-10 hover:scale-150"
                 style={{
                   width: "5px",
                   height: "5px",
@@ -106,10 +106,10 @@ export const DaysDisplay = () => {
                 onMouseLeave={() => setHoveredDay(null)}
               >
                 <div
-                  className={`absolute bottom-full left-1/2 -translate-x-1/2 transform mb-1 bg-mono-50 dark:bg-mono-700 text-xs rounded whitespace-nowrap transition-all duration-300 ease-out ${
+                  className={`-translate-x-1/2 absolute bottom-full left-1/2 mb-1 transform whitespace-nowrap rounded bg-mono-50 text-xs transition-all duration-300 ease-out dark:bg-mono-700 ${
                     hoveredDay === formatDate(day.date)
-                      ? "opacity-100 translate-y-0 scale-100"
-                      : "opacity-0 translate-y-2 scale-95 pointer-events-none"
+                      ? "translate-y-0 scale-100 opacity-100"
+                      : "pointer-events-none translate-y-2 scale-95 opacity-0"
                   }`}
                 >
                   {formatDate(day.date)}

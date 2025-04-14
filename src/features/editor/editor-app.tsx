@@ -1,6 +1,6 @@
 "use client";
 
-import * as monaco from "monaco-editor";
+import type * as monaco from "monaco-editor";
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { Editor } from "@monaco-editor/react";
 import { useTheme } from "../../utils/hooks/use-theme";
@@ -292,10 +292,10 @@ export const EditorApp = () => {
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents:
-    <div className="h-screen w-screen flex flex-col" onClick={handlePageClick}>
-      <div className="flex-1 pt-16 pb-8 overflow-hidden">
-        <div className="flex justify-center h-full">
-          <div className={`w-full ${isWideMode ? "max-w-6xl" : "max-w-2xl"} px-4 sm:px-6 md:px-2 relative`}>
+    <div className="flex h-screen w-screen flex-col" onClick={handlePageClick}>
+      <div className="flex-1 overflow-hidden pt-16 pb-8">
+        <div className="flex h-full justify-center">
+          <div className={`w-full ${isWideMode ? "max-w-6xl" : "max-w-2xl"} relative px-4 sm:px-6 md:px-2`}>
             {!previewMode ? (
               <Editor
                 height="100%"
@@ -312,16 +312,16 @@ export const EditorApp = () => {
                   monaco.editor.setTheme(themeName);
                 }}
                 className="overflow-visible"
-                loading={<Loading className="h-screen w-screen flex items-center justify-center" />}
+                loading={<Loading className="flex h-screen w-screen items-center justify-center" />}
                 theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
               />
             ) : (
-              <div className="h-full overflow-auto px-2 py-2 prose prose-slate dark:prose-invert max-w-none">
+              <div className="prose prose-slate dark:prose-invert h-full max-w-none overflow-auto px-2 py-2">
                 <div
                   ref={previewRef}
                   // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
                   dangerouslySetInnerHTML={{ __html: renderedHTML }}
-                  className="min-h-full markdown-preview overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                  className="markdown-preview min-h-full overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 />
               </div>
             )}
@@ -351,7 +351,7 @@ export const EditorApp = () => {
         />
 
         {snapshotDialogOpen && (
-          <Suspense fallback={<Loading className="h-screen w-screen flex items-center justify-center" />}>
+          <Suspense fallback={<Loading className="flex h-screen w-screen items-center justify-center" />}>
             <SnapshotDialog
               isOpen={snapshotDialogOpen}
               onClose={() => setSnapshotDialogOpen(false)}
