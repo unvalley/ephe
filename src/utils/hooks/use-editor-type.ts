@@ -26,4 +26,4 @@ export function useEditorType() {
     isCodeMirror: editorType === "codemirror",
     toggleEditorType,
   };
-} 
+}

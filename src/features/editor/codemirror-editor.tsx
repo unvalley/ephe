@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { defaultKeymap, history } from "@codemirror/commands";
@@ -12,11 +12,234 @@ import { languages } from "@codemirror/language-data";
 import { atomWithStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { useAtom } from "jotai";
-import { ref } from "process";
+import { DprintMarkdownFormatter } from "./markdown/formatter/dprint-markdown-formatter";
+import { showToast } from "../../utils/components/toast";
+
+export const useMarkdownEditor = () => {
+  const editor = useRef<HTMLDivElement | null>(null);
+  const [container, setContainer] = useState<HTMLDivElement>();
+  const [view, setView] = useState<EditorView>();
+  const formatterRef = useRef<DprintMarkdownFormatter | null>(null);
+
+  const [content, setContent] = useAtom(editorAtom);
+  const { isDarkMode } = useTheme();
+
+  // Formatter initialization is a side effect, isolated in useEffect
+  useEffect(() => {
+    let mounted = true;
+    const initFormatter = async () => {
+      try {
+        const formatter = await DprintMarkdownFormatter.getInstance();
+        if (mounted) formatterRef.current = formatter;
+      } catch (error) {
+        console.error("Failed to initialize markdown formatter:", error);
+      }
+    };
+    initFormatter();
+    return () => {
+      mounted = false;
+      formatterRef.current = null;
+    };
+  }, []);
+
+  // Format document is pure except for toast/dispatch (side effects isolated)
+  const formatDocument = useCallback(async (view: EditorView) => {
+    if (!formatterRef.current) {
+      showToast("Formatter not initialized yet", "error");
+      return false;
+    }
+    try {
+      const { state } = view;
+      const scrollTop = view.scrollDOM.scrollTop;
+      const cursorPos = state.selection.main.head;
+      const cursorLine = state.doc.lineAt(cursorPos);
+      const cursorLineNumber = cursorLine.number;
+      const cursorColumn = cursorPos - cursorLine.from;
+      const currentText = state.doc.toString();
+      const formattedText = await formatterRef.current.formatMarkdown(currentText);
+      if (formattedText !== currentText) {
+        view.dispatch({
+          changes: { from: 0, to: state.doc.length, insert: formattedText },
+        });
+        // Restore cursor position after formatting
+        try {
+          const newState = view.state;
+          const newDocLineCount = newState.doc.lines;
+          if (cursorLineNumber <= newDocLineCount) {
+            const newLine = newState.doc.line(cursorLineNumber);
+            const newColumn = Math.min(cursorColumn, newLine.length);
+            const newPos = newLine.from + newColumn;
+            view.dispatch({ selection: { anchor: newPos, head: newPos } });
+          }
+        } catch (selectionError) {
+          view.dispatch({ selection: { anchor: 0, head: 0 } });
+        }
+        view.scrollDOM.scrollTop = Math.min(scrollTop, view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight);
+      }
+      showToast("Document formatted successfully", "default");
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown";
+      showToast(`Error formatting document: ${message}`, "error");
+      return false;
+    }
+  }, []);
+
+  // Memoize highlight style for performance
+  const getHighlightStyle = useCallback((isDarkMode: boolean) => {
+    const COLORS = isDarkMode ? epheColors.dark : epheColors.light;
+
+    const epheHighlightStyle = HighlightStyle.define([
+      { tag: tags.comment, color: COLORS.comment, fontStyle: "italic" },
+      { tag: tags.keyword, color: COLORS.keyword, fontWeight: "bold" },
+      { tag: tags.string, color: COLORS.string },
+      { tag: tags.number, color: COLORS.number },
+      { tag: tags.typeName, color: COLORS.type, fontWeight: "bold" },
+      { tag: tags.function(tags.variableName), color: COLORS.function },
+      { tag: tags.definition(tags.variableName), color: COLORS.variable },
+      { tag: tags.variableName, color: COLORS.variable },
+      {
+        tag: tags.constant(tags.variableName),
+        color: COLORS.constant,
+        fontWeight: "bold",
+      },
+      { tag: tags.operator, color: COLORS.operator },
+
+      // Markdown Style
+      { tag: tags.heading, color: COLORS.heading, fontWeight: "bold" },
+      {
+        tag: tags.heading1,
+        color: COLORS.heading,
+        fontWeight: "bold",
+        fontSize: "1.4em",
+      }, // prevent size changing between `#` and `##`
+      {
+        tag: tags.heading2,
+        color: COLORS.heading,
+        fontWeight: "bold",
+        fontSize: "1.4em",
+      },
+      {
+        tag: tags.heading3,
+        color: COLORS.heading,
+        fontWeight: "bold",
+        fontSize: "1.2em",
+      },
+      { tag: tags.emphasis, color: COLORS.emphasis, fontStyle: "italic" },
+      { tag: tags.strong, color: COLORS.emphasis, fontWeight: "bold" },
+      { tag: tags.link, color: COLORS.string, textDecoration: "underline" },
+      { tag: tags.url, color: COLORS.string, textDecoration: "underline" },
+      { tag: tags.monospace, color: COLORS.constant, fontFamily: "monospace" },
+    ]);
+
+    const theme = {
+      "&": {
+        height: "100%",
+        width: "100%",
+        background: COLORS.background,
+        color: COLORS.foreground,
+      },
+      ".cm-content": {
+        fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace",
+        fontSize: "16px",
+        padding: "10px 20px",
+        lineHeight: "1.6",
+        maxWidth: "680px",
+        margin: "0 auto",
+      },
+      ".cm-cursor": {
+        borderLeftColor: COLORS.foreground,
+        borderLeftWidth: "2px",
+      },
+      "&.cm-editor": {
+        outline: "none",
+        border: "none",
+        background: "transparent",
+      },
+      "&.cm-focused": {
+        outline: "none",
+      },
+      ".cm-scroller": {
+        fontFamily: "monospace",
+        background: "transparent",
+      },
+      ".cm-gutters": {
+        background: "transparent",
+        border: "none",
+      },
+      ".cm-activeLineGutter": {
+        background: "transparent",
+      },
+      ".cm-line": {
+        padding: "0 4px 0 0",
+      },
+    };
+
+    return {
+      epheHighlightStyle,
+      theme,
+    };
+  }, []);
+
+  useEffect(() => {
+    if (editor.current) setContainer(editor.current);
+  }, []);
+
+  useEffect(() => {
+    if (!view && container) {
+      const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode);
+      const state = EditorState.create({
+        doc: content,
+        extensions: [
+          history(),
+          markdown({
+            base: markdownLanguage,
+            codeLanguages: languages,
+            addKeymap: true,
+          }),
+          EditorView.lineWrapping,
+          syntaxHighlighting(epheHighlightStyle, { fallback: true }),
+          EditorView.updateListener.of((update) => {
+            if (update.docChanged) {
+              setContent(update.state.doc.toString());
+            }
+          }),
+          EditorView.theme(theme),
+          keymap.of(defaultKeymap),
+          keymap.of([
+            {
+              key: "Mod-s",
+              run: (view) => {
+                formatDocument(view);
+                return true;
+              },
+              preventDefault: true,
+            },
+          ]),
+        ],
+      });
+      const viewCurrent = new EditorView({ state, parent: container });
+      setView(viewCurrent);
+    }
+  }, [view, container, content, isDarkMode, setContent, getHighlightStyle, formatDocument]);
+
+  return {
+    editor,
+    view,
+    formatDocument: view ? () => formatDocument(view) : undefined,
+  };
+};
+
+const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
+
+export const CodeMirrorEditor = () => {
+  const { editor } = useMarkdownEditor();
+  return <div ref={editor} className="mx-auto h-full w-full" />;
+};
 
 const epheColors = {
   light: {
-    background: "#00000000", // 透明に近いが、わずかに色を付ける
+    background: "#00000000",
     foreground: "#090909",
     comment: "#999999",
     keyword: "#FF3C00",
@@ -28,7 +251,7 @@ const epheColors = {
     constant: "#CC2F00",
     operator: "#FF3C00",
     heading: "#FF6E40",
-    emphasis: "#D95E00"
+    emphasis: "#D95E00",
   },
   dark: {
     background: "#00000000",
@@ -43,128 +266,6 @@ const epheColors = {
     constant: "#FF7043",
     operator: "#FF7043",
     heading: "#FF7043",
-    emphasis: "#FFAA00"
+    emphasis: "#FFAA00",
   },
 } as const;
-
-const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
-
-export const CodeMirrorEditor = () => {
-  const [content, setContent] = useAtom(editorAtom);
-  const editorRef = useRef<HTMLDivElement>(null);
-  const viewRef = useRef<EditorView | null>(null);
-  const { isDarkMode } = useTheme();
-
-  // Setup
-  useEffect(() => {
-    if (!editorRef.current) return; 
-    if (viewRef.current) {
-      viewRef.current.destroy();
-      viewRef.current = null;
-    }
-
-    const COLORS = isDarkMode ? epheColors.dark : epheColors.light;
-
-    const epheHighlightStyle = HighlightStyle.define([
-      { tag: tags.comment, color: COLORS.comment, fontStyle: "italic" },
-      { tag: tags.keyword, color: COLORS.keyword, fontWeight: "bold" },
-      { tag: tags.string, color: COLORS.string },
-      { tag: tags.number, color: COLORS.number },
-      { tag: tags.typeName, color: COLORS.type, fontWeight: "bold" },
-      { tag: tags.function(tags.variableName), color: COLORS.function },
-      { tag: tags.definition(tags.variableName), color: COLORS.variable },
-      { tag: tags.variableName, color: COLORS.variable },
-      { tag: tags.constant(tags.variableName), color: COLORS.constant, fontWeight: "bold" },
-      { tag: tags.operator, color: COLORS.operator },
-      
-      // Markdown Style
-      { tag: tags.heading, color: COLORS.heading, fontWeight: "bold" },
-      { tag: tags.heading1, color: COLORS.heading, fontWeight: "bold", fontSize: "1.4em" }, // prevent size changing between `#` and `##`
-      { tag: tags.heading2, color: COLORS.heading, fontWeight: "bold", fontSize: "1.4em" },
-      { tag: tags.heading3, color: COLORS.heading, fontWeight: "bold", fontSize: "1.2em" },
-      { tag: tags.emphasis, color: COLORS.emphasis, fontStyle: "italic" },
-      { tag: tags.strong, color: COLORS.emphasis, fontWeight: "bold" },
-      { tag: tags.link, color: COLORS.string, textDecoration: "underline" },
-      { tag: tags.url, color: COLORS.string, textDecoration: "underline" },
-      { tag: tags.monospace, color: COLORS.constant, fontFamily: "monospace" },
-    ]);
-
-    const theme = {
-        "&": {
-            height: "100%",
-            width: "100%",
-            background: COLORS.background,
-            color: COLORS.foreground,
-          },
-          ".cm-content": {
-            fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace",
-            fontSize: "16px",
-            padding: "10px 20px",
-            lineHeight: "1.6",
-            maxWidth: "680px",
-            margin: "0 auto",
-          },
-          ".cm-cursor": {
-            borderLeftColor: COLORS.foreground,
-            borderLeftWidth: "2px",
-          },
-          "&.cm-editor": {
-            outline: "none", 
-            border: "none",
-            background: "transparent",
-          },
-          "&.cm-focused": {
-            outline: "none", 
-          },
-          ".cm-scroller": {
-            fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace",
-            background: "transparent",
-          },
-          ".cm-gutters": {
-            background: "transparent",
-            border: "none",
-          },
-          ".cm-activeLineGutter": {
-            background: "transparent",
-          },
-          ".cm-line": {
-            padding: "0 4px 0 0",
-          },
-    }
-
-    const view = new EditorView({
-      state: EditorState.create({
-        doc: content,
-        // minimal extensions
-        extensions: [
-          history(),
-          keymap.of(defaultKeymap),
-          markdown({
-            base: markdownLanguage,
-            codeLanguages: languages,
-            addKeymap: true,
-          }),
-          
-          EditorView.lineWrapping,
-          syntaxHighlighting(epheHighlightStyle, { fallback: true }),
-          EditorView.updateListener.of(update => {
-            if (update.docChanged) {
-              setContent(update.state.doc.toString());
-            }
-          }),
-          EditorView.theme(theme),
-        ],
-      }),
-      parent: editorRef.current
-    });
-
-    viewRef.current = view; 
-    setTimeout(() => view.focus(), 100);
-
-    return () => {
-      view.destroy();
-    };
-  }, [isDarkMode]);
-
-  return <div ref={editorRef} className="h-full w-full mx-auto" />
-} 

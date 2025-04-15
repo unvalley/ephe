@@ -41,7 +41,7 @@ import { useAtom } from "jotai";
 import { usePreviewMode } from "../../utils/hooks/use-preview-mode";
 import { useToc } from "../../utils/hooks/use-toc";
 import { useCharCount } from "../../utils/hooks/use-char-count";
-import { CodeMirrorEditor, type CodeMirrorEditorRef } from "./codemirror/codemirror-editor";
+import { CodeMirrorEditor, type CodeMirrorEditorRef } from "./codemirror/old-codemirror-editor";
 import { SimpleCodeMirrorEditor } from "./simple-codemirror-editor";
 
 // Initialize remark processor with GFM plugin
@@ -73,7 +73,7 @@ export const EditorApp = () => {
   const isCodeMirror = editorTypeHook.isCodeMirror;
   const isMonaco = editorTypeHook.isMonaco;
   const toggleEditorType = editorTypeHook.toggleEditorType;
-  
+
   // SimpleCodeMirrorかどうかを文字列として直接判定
   const isSimpleCodeMirror = String(editorTypeHook.editorType) === "simple-codemirror";
 
@@ -289,7 +289,10 @@ export const EditorApp = () => {
     // Add key binding for Cmd+Shift+E / Ctrl+Shift+E to toggle editor type
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyE, () => {
       toggleEditorType();
-      showToast(`Editor type: ${isMonaco ? "CodeMirror" : isSimpleCodeMirror ? "Simple CodeMirror" : "Monaco"}`, "default");
+      showToast(
+        `Editor type: ${isMonaco ? "CodeMirror" : isSimpleCodeMirror ? "Simple CodeMirror" : "Monaco"}`,
+        "default",
+      );
     });
 
     // Setup content change handler
@@ -417,13 +420,13 @@ export const EditorApp = () => {
     editorWidth,
     previewMode,
     isMonaco,
-    showEditorTypeChange
+    showEditorTypeChange,
   ]);
 
   // 次のuseEffectを追加して、エディタの幅を調整するスタイルを適用
   useEffect(() => {
     // CodeMirrorエディタ用のスタイルを追加
-    const styleElement = document.createElement('style');
+    const styleElement = document.createElement("style");
     styleElement.textContent = `
       .cm-content-container .cm-content {
         max-width: 680px !important;
@@ -434,7 +437,7 @@ export const EditorApp = () => {
       }
     `;
     document.head.appendChild(styleElement);
-    
+
     return () => {
       if (styleElement.parentNode) {
         styleElement.parentNode.removeChild(styleElement);
@@ -457,8 +460,8 @@ export const EditorApp = () => {
                   defaultValue={editorContent}
                   options={{
                     ...editorOptions,
-                    wordWrap: 'on',
-                    wrappingIndent: 'same'
+                    wordWrap: "on",
+                    wrappingIndent: "same",
                   }}
                   onMount={handleEditorDidMount}
                   beforeMount={(monaco) => {
@@ -468,9 +471,9 @@ export const EditorApp = () => {
                     // カスタムCSSを追加してエディタコンテンツ幅を制限
                     const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
                     monaco.editor.setTheme(themeName);
-                    
+
                     // カスタムスタイルを追加
-                    const styleElement = document.createElement('style');
+                    const styleElement = document.createElement("style");
                     styleElement.textContent = `
                       .monaco-editor .lines-content {
                         max-width: 680px !important;

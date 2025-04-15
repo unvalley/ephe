@@ -517,7 +517,9 @@ export function CommandMenu({
 
       <Command
         label="Command Menu"
-        className={`-translate-x-1/2 fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] transform overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900 ${open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"}`}
+        className={`-translate-x-1/2 fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] transform overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900 ${
+          open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
+        }`}
         onValueChange={setInputValue}
       >
         <div className="border-gray-200 border-b px-3 pt-2 pb-1.5 dark:border-zinc-800">

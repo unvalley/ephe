@@ -65,7 +65,7 @@ export function SimpleCodeMirrorEditor({
       },
       // 行のハイライト
       "&.cm-editor .cm-activeLine": {
-        backgroundColor: isDarkMode ? "#ffffff0f" : "#0000000f", 
+        backgroundColor: isDarkMode ? "#ffffff0f" : "#0000000f",
       },
     });
   }, [height, width, isDarkMode]);
@@ -79,7 +79,7 @@ export function SimpleCodeMirrorEditor({
         onChange(value);
       }
     },
-    [onChange]
+    [onChange],
   );
 
   // 拡張機能の定義
@@ -141,18 +141,18 @@ export function SimpleCodeMirrorEditor({
   // 外部からの値の変更を処理
   useEffect(() => {
     if (!editorView) return;
-    
+
     const currentValue = editorView.state.doc.toString();
     if (initialValue !== currentValue) {
       // 現在の選択状態を保存
       const selection = editorView.state.selection;
-      
+
       // トランザクションで値を更新
       editorView.dispatch({
-        changes: { 
-          from: 0, 
-          to: currentValue.length, 
-          insert: initialValue 
+        changes: {
+          from: 0,
+          to: currentValue.length,
+          insert: initialValue,
         },
         selection,
       });

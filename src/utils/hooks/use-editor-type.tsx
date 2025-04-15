@@ -13,7 +13,7 @@ export function useEditorType() {
     }
     return "monaco"; // デフォルト値
   });
-  
+
   // エディタタイプが変更されたらローカルストレージを更新
   useEffect(() => {
     localStorage.setItem(LOCAL_STORAGE_KEYS.EDITOR_TYPE, editorType);
@@ -37,4 +37,4 @@ export function useEditorType() {
     isSimpleCodeMirror: editorType === "simple-codemirror",
     toggleEditorType,
   };
-} 
+}
