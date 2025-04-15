@@ -24,9 +24,9 @@ ReactDOM.createRoot(root).render(
       }}
     >
       <Routes>
-        <Route path="/" element={<CodeMirrorEditorPage />} />
         <Route path="landing" element={<LandingPage />} />
-        <Route path="old" element={<EditorPage />} />
+        <Route path="/" element={<EditorPage />} />
+        <Route path="/cm" element={<CodeMirrorEditorPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
