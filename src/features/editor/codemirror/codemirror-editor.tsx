@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { defaultKeymap, history } from "@codemirror/commands";
@@ -14,7 +14,7 @@ import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { useAtom } from "jotai";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import { showToast } from "../../../utils/components/toast";
-import { EPHE_COLORS, EPHE_COLORS } from "./codemirror-utils";
+import { EPHE_COLORS } from "./codemirror-utils";
 
 export const useMarkdownEditor = () => {
   const editor = useRef<HTMLDivElement | null>(null);
