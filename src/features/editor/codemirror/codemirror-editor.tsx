@@ -1,19 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useCallback, useEffect, useRef, useState } from "react";
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { defaultKeymap, history } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { useTheme } from "../../utils/hooks/use-theme";
+import { useTheme } from "../../../utils/hooks/use-theme";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { languages } from "@codemirror/language-data";
 import { atomWithStorage } from "jotai/utils";
-import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
+import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { useAtom } from "jotai";
-import { DprintMarkdownFormatter } from "./markdown/formatter/dprint-markdown-formatter";
-import { showToast } from "../../utils/components/toast";
+import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
+import { showToast } from "../../../utils/components/toast";
+import { EPHE_COLORS, EPHE_COLORS } from "./codemirror-utils";
 
 export const useMarkdownEditor = () => {
   const editor = useRef<HTMLDivElement | null>(null);
@@ -87,7 +88,7 @@ export const useMarkdownEditor = () => {
 
   // Memoize highlight style for performance
   const getHighlightStyle = useCallback((isDarkMode: boolean) => {
-    const COLORS = isDarkMode ? epheColors.dark : epheColors.light;
+    const COLORS = isDarkMode ? EPHE_COLORS.dark : EPHE_COLORS.light;
 
     const epheHighlightStyle = HighlightStyle.define([
       { tag: tags.comment, color: COLORS.comment, fontStyle: "italic" },
@@ -236,36 +237,3 @@ export const CodeMirrorEditor = () => {
   const { editor } = useMarkdownEditor();
   return <div ref={editor} className="mx-auto h-full w-full" />;
 };
-
-const epheColors = {
-  light: {
-    background: "#00000000",
-    foreground: "#090909",
-    comment: "#999999",
-    keyword: "#FF3C00",
-    string: "#0066BB",
-    number: "#FF6E40",
-    type: "#090909",
-    function: "#666666",
-    variable: "#444444",
-    constant: "#CC2F00",
-    operator: "#FF3C00",
-    heading: "#FF6E40",
-    emphasis: "#D95E00",
-  },
-  dark: {
-    background: "#00000000",
-    foreground: "#FFFFFF",
-    comment: "#777777",
-    keyword: "#FF8A65",
-    string: "#88DDFF",
-    number: "#FF8A65",
-    type: "#EEEEEE",
-    function: "#AAAAAA",
-    variable: "#DDDDDD",
-    constant: "#FF7043",
-    operator: "#FF7043",
-    heading: "#FF7043",
-    emphasis: "#FFAA00",
-  },
-} as const;

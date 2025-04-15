@@ -1,5 +1,5 @@
 import "../globals.css";
-import { EditorApp } from "../features/editor/editor-app";
+import { EditorApp } from "../features/editor/monaco/monaco-editor-app";
 import { usePaperMode } from "../utils/hooks/use-paper-mode";
 
 export const EditorPage = () => {

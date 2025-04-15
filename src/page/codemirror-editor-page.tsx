@@ -1,5 +1,5 @@
 import "../globals.css";
-import { CodeMirrorEditor } from "../features/editor/codemirror-editor";
+import { CodeMirrorEditor } from "../features/editor/codemirror/codemirror-editor";
 import { usePaperMode } from "../utils/hooks/use-paper-mode";
 import { Footer } from "../utils/components/footer";
 import { useState } from "react";

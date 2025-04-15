@@ -3,46 +3,46 @@
 import type * as monaco from "monaco-editor";
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { Editor } from "@monaco-editor/react";
-import { useTheme } from "../../utils/hooks/use-theme";
+import { useTheme } from "../../../utils/hooks/use-theme";
 import { useDebouncedCallback } from "use-debounce";
-import { useTabDetection } from "./use-tab-detection";
-import { usePaperMode } from "../../utils/hooks/use-paper-mode";
-import { useEditorWidth } from "../../utils/hooks/use-editor-width";
-import { useEditorType } from "../../utils/hooks/use-editor-type";
-import { CommandMenu } from "../command/command-k";
-import { getRandomQuote } from "./quotes";
-import { SnapshotDialog } from "../snapshots/snapshot-dialog";
+import { useTabDetection } from "../use-tab-detection";
+import { usePaperMode } from "../../../utils/hooks/use-paper-mode";
+import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
+import { useEditorType } from "../../../utils/hooks/use-editor-type";
+import { CommandMenu } from "../../command/command-k";
+import { getRandomQuote } from "../quotes";
+import { SnapshotDialog } from "../../snapshots/snapshot-dialog";
 import {
   handleKeyDown,
   applyTaskCheckboxDecorations,
   editorOptions,
   EPHE_DARK_THEME,
   EPHE_LIGHT_THEME,
-} from "./monaco/editor-utils";
-import { Footer } from "../../utils/components/footer";
-import { Loading } from "../../utils/components/loading";
-import { handleTaskCheckboxToggle } from "./monaco/editor-utils";
-import { DprintMarkdownFormatter } from "./markdown/formatter/dprint-markdown-formatter";
-import type { MarkdownFormatter } from "./markdown/formatter/markdown-formatter";
-import { MonacoMarkdownExtension } from "./monaco/monaco-markdown";
-import { markdownService } from "./markdown/ast/markdown-service";
-import { AlreadyOpenDialog } from "../../utils/components/already-open-dialog";
-import { PlaceholderWidget } from "./monaco/placeholder-widget";
-import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
-import { saveSnapshot } from "../snapshots/snapshot-storage";
-import { TableOfContents } from "./table-of-contents";
-import { showToast } from "../../utils/components/toast";
+} from "./editor-utils";
+import { Footer } from "../../../utils/components/footer";
+import { Loading } from "../../../utils/components/loading";
+import { handleTaskCheckboxToggle } from "./editor-utils";
+import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
+import type { MarkdownFormatter } from "../markdown/formatter/markdown-formatter";
+import { MonacoMarkdownExtension } from "./monaco-markdown";
+import { markdownService } from "../markdown/ast/markdown-service";
+import { AlreadyOpenDialog } from "../../../utils/components/already-open-dialog";
+import { PlaceholderWidget } from "./placeholder-widget";
+import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
+import { saveSnapshot } from "../../snapshots/snapshot-storage";
+import { TableOfContents } from "../table-of-contents";
+import { showToast } from "../../../utils/components/toast";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 import { atomWithStorage } from "jotai/utils";
 import { useAtom } from "jotai";
-import { usePreviewMode } from "../../utils/hooks/use-preview-mode";
-import { useToc } from "../../utils/hooks/use-toc";
-import { useCharCount } from "../../utils/hooks/use-char-count";
-import { CodeMirrorEditor, type CodeMirrorEditorRef } from "./codemirror/old-codemirror-editor";
-import { SimpleCodeMirrorEditor } from "./simple-codemirror-editor";
+import { usePreviewMode } from "../../../utils/hooks/use-preview-mode";
+import { useToc } from "../../../utils/hooks/use-toc";
+import { useCharCount } from "../../../utils/hooks/use-char-count";
+import { CodeMirrorEditor, type CodeMirrorEditorRef } from "../codemirror/old-codemirror-editor";
+import { SimpleCodeMirrorEditor } from "../simple-codemirror-editor";
 
 // Initialize remark processor with GFM plugin
 const remarkProcessor = remark()
