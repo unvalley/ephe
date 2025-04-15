@@ -11,17 +11,16 @@ export class MonacoMarkdownExtension {
   activate(editor: editor.IStandaloneCodeEditor) {
     const textEditor = new TextEditor(editor);
 
-    activateFormatting(textEditor);
+    // activateFormatting(textEditor);
     activateListEditing(textEditor);
     activateCompletion(textEditor);
-
     this.registerLinkProvider(editor);
 
     // Allow `*` in word pattern for quick styling
-    setWordDefinitionFor(
-      textEditor.languageId,
-      /(-?\d*\.\d\w*)|([^\!\@\#\%\^\&\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s\，\。\《\》\？\；\：\'\"\'\"\（\）\【\】\、]+)/g,
-    );
+    // setWordDefinitionFor(
+    //   textEditor.languageId,
+    //   /(-?\d*\.\d\w*)|([^\!\@\#\%\^\&\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s\，\。\《\》\？\；\：\'\"\'\"\（\）\【\】\、]+)/g,
+    // );
   }
 
   /**
@@ -30,7 +29,7 @@ export class MonacoMarkdownExtension {
   private registerLinkProvider(editor: editor.IStandaloneCodeEditor) {
     // Use the directly imported monaco instance instead of looking for it in the global scope
     const monacoInstance = monacoModule;
-    
+
     if (!monacoInstance) {
       console.error("Monaco instance not found");
       return;

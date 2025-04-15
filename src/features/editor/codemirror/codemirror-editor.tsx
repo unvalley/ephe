@@ -21,38 +21,38 @@ const checklistAutoComplete: Extension = EditorView.inputHandler.of((view, from,
   // Only handle single character inputs (when user types '[' after '-' or '- ')
   if (text !== "[") return false;
   const doc = view.state.doc;
-  
+
   // Safety check: ensure we're within document boundaries
   if (from < 0 || from > doc.length) return false;
-  
+
   const line = doc.lineAt(from);
   const linePrefix = doc.sliceString(line.from, from);
-  
+
   // Check for patterns that should trigger auto-completion
   const hasDashSpace = linePrefix.endsWith("- ");
   const hasDash = linePrefix.endsWith("-") && !hasDashSpace;
-  
+
   if (hasDash || hasDashSpace) {
-    const insertFrom = hasDash 
+    const insertFrom = hasDash
       ? from - 1 // replace from the '-'
       : from - 2; // replace from the '- '
-    
+
     // Safety checks to ensure valid range
     if (insertFrom < 0 || insertFrom > doc.length) return false;
     // Calculate the "to" position safely, capped to document length
     const insertTo = Math.min(from + 1, doc.length);
     // Replace the matched pattern with a properly formatted checklist item
     view.dispatch({
-      changes: { 
-        from: insertFrom, 
+      changes: {
+        from: insertFrom,
         to: insertTo, // safely capped to document length
-        insert: "- [ ] " 
+        insert: "- [ ] ",
       },
-      selection: { anchor: insertFrom + 6 } // Place cursor after "- [ ] "
+      selection: { anchor: insertFrom + 6 }, // Place cursor after "- [ ] "
     });
     return true;
   }
-  
+
   return false;
 });
 
@@ -232,7 +232,7 @@ export const useMarkdownEditor = () => {
       const state = EditorState.create({
         doc: content,
         extensions: [
-            basicSetup,
+          basicSetup,
           history(),
           markdown({
             base: markdownLanguage,
