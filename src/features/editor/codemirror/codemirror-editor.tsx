@@ -232,6 +232,7 @@ export const useMarkdownEditor = () => {
       const state = EditorState.create({
         doc: content,
         extensions: [
+            basicSetup,
           history(),
           markdown({
             base: markdownLanguage,
@@ -242,7 +243,12 @@ export const useMarkdownEditor = () => {
           syntaxHighlighting(epheHighlightStyle, { fallback: true }),
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {
-              setContent(update.state.doc.toString());
+              // Use debounced update for content state to prevent cursor jumps
+              // but still maintain content synchronization
+              const updatedContent = update.state.doc.toString();
+              window.requestAnimationFrame(() => {
+                setContent(updatedContent);
+              });
             }
           }),
           EditorView.theme(theme),

@@ -1,18 +1,11 @@
-import type { editor } from "monaco-editor";
-import type { IRange, languages } from "monaco-editor";
-import { activateFormatting, isLink } from "./formatting";
+import type { editor, languages } from "monaco-editor";
+import * as monacoModule from "monaco-editor"; // Import monaco module directly
+import { activateFormatting } from "./formatting";
 import { setWordDefinitionFor, TextEditor } from "./vscode-monaco";
 import { activateListEditing } from "./list-editing";
 import { activateCompletion } from "./completion";
 
 import { activateMarkdownMath } from "./markdown.contribution";
-
-// Define a type for the Monaco global object
-interface MonacoGlobal {
-  languages: typeof languages;
-}
-
-const protocolRegex = /^https?:\/\//;
 
 export class MonacoMarkdownExtension {
   activate(editor: editor.IStandaloneCodeEditor) {
@@ -35,76 +28,81 @@ export class MonacoMarkdownExtension {
    * Register a link provider for Markdown links
    */
   private registerLinkProvider(editor: editor.IStandaloneCodeEditor) {
-    // TODO: remove
-    // Get the Monaco instance from the editor
-    let monacoInstance: MonacoGlobal | undefined;
-
-    if (typeof window !== "undefined") {
-      const windowWithMonaco = window as unknown as { monaco?: MonacoGlobal };
-      if (windowWithMonaco.monaco) {
-        monacoInstance = windowWithMonaco.monaco;
-      }
-    }
-
+    // Use the directly imported monaco instance instead of looking for it in the global scope
+    const monacoInstance = monacoModule;
+    
     if (!monacoInstance) {
       console.error("Monaco instance not found");
       return;
     }
 
-    const getLinkInfo = (text: string): { url: string } => {
-      if (protocolRegex.test(text)) {
-        return { url: text };
-      }
-      return { url: `https://${text}` };
-    };
-
     const languageId = editor.getModel()?.getLanguageId() ?? "markdown";
 
+    // Register link provider
     monacoInstance.languages.registerLinkProvider(languageId, {
-      provideLinks: (model: editor.ITextModel) => {
-        const text = model.getValue();
-        const lines = text.split("\n");
+      provideLinks: (model) => {
+        const links: languages.ILink[] = [];
+        const modelLines = model.getLinesContent();
 
-        const findLinksInLine = (lineContent: string, lineNumber: number): Array<{ range: IRange; url: string }> => {
-          return lineContent
-            .split(/\s+/)
-            .reduce((acc: Array<{ range: IRange; url: string }>, word: string, index: number, array: string[]) => {
-              const currentPos = lineContent.indexOf(
-                word,
-                index > 0 ? lineContent.indexOf(array[index - 1]) + array[index - 1].length : 0,
-              );
-              if (currentPos === -1) return acc;
+        modelLines.forEach((line, lineNumber) => {
+          // Find URLs in the line
+          const urlMatches = line.matchAll(/https?:\/\/\S+/g);
+          for (const match of urlMatches) {
+            if (match.index !== undefined) {
+              const url = match[0].replace(/[.,;:?!)]$/, ""); // Clean trailing punctuation
+              links.push({
+                range: {
+                  startLineNumber: lineNumber + 1,
+                  startColumn: match.index + 1,
+                  endLineNumber: lineNumber + 1,
+                  endColumn: match.index + url.length + 1,
+                },
+                url: url,
+              });
+            }
+          }
 
-              if (word.length < 4 || word.startsWith("[") || word.includes("](")) {
-                return acc;
+          // Find domain names in the line
+          const domainMatches = line.matchAll(
+            /\b(?:[a-z0-9][-a-z0-9]*\.)+(?:com|org|net|edu|gov|mil|io|dev|co|jp|us|app|so|ai|design|info|shop|de|ru|br|uk|is|it|fr|de)(?:\b|\/)/gi,
+          );
+          for (const match of domainMatches) {
+            if (match.index !== undefined) {
+              // Skip if this is already part of a URL link we added
+              let isInUrl = false;
+              for (const link of links) {
+                const linkLine = link.range.startLineNumber - 1;
+                if (
+                  linkLine === lineNumber &&
+                  match.index >= link.range.startColumn - 1 &&
+                  match.index + match[0].length <= link.range.endColumn - 1
+                ) {
+                  isInUrl = true;
+                  break;
+                }
               }
 
-              if (isLink(word)) {
-                const startColumn = currentPos + 1;
-                const endColumn = startColumn + word.length;
-                const { url } = getLinkInfo(word);
-
-                acc.push({
+              if (!isInUrl) {
+                const domain = match[0].replace(/[.,;:?!)]$/, ""); // Clean trailing punctuation
+                links.push({
                   range: {
                     startLineNumber: lineNumber + 1,
-                    startColumn,
+                    startColumn: match.index + 1,
                     endLineNumber: lineNumber + 1,
-                    endColumn,
+                    endColumn: match.index + domain.length + 1,
                   },
-                  url,
+                  url: `https://${domain}`,
                 });
               }
-
-              return acc;
-            }, []);
-        };
-
-        const links = lines.reduce<Array<{ range: IRange; url: string }>>(
-          (acc, line, index) => [...acc, ...findLinksInLine(line, index)],
-          [],
-        );
+            }
+          }
+        });
 
         return { links };
+      },
+      resolveLink: (link: languages.ILink) => {
+        // You can modify the link here if needed
+        return link;
       },
     });
   }

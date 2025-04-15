@@ -1,16 +1,14 @@
 "use client";
 
-import type * as monaco from "monaco-editor";
+import * as monaco from "monaco-editor";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { Editor } from "@monaco-editor/react";
 import { useTheme } from "../../../utils/hooks/use-theme";
 import { useDebouncedCallback } from "use-debounce";
 import { useTabDetection } from "../use-tab-detection";
 import { usePaperMode } from "../../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
-import { CommandMenu } from "../../command/command-k";
+// import { CommandMenu } from "../../command/command-k";
 import { getRandomQuote } from "../quotes";
-import { SnapshotDialog } from "../../snapshots/snapshot-dialog";
 import {
   handleKeyDown,
   applyTaskCheckboxDecorations,
@@ -18,18 +16,15 @@ import {
   EPHE_DARK_THEME,
   EPHE_LIGHT_THEME,
 } from "./editor-utils";
-import { Footer } from "../../../utils/components/footer";
-import { Loading } from "../../../utils/components/loading";
 import { handleTaskCheckboxToggle } from "./editor-utils";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import type { MarkdownFormatter } from "../markdown/formatter/markdown-formatter";
 import { MonacoMarkdownExtension } from "./monaco-markdown";
 import { markdownService } from "../markdown/ast/markdown-service";
-import { AlreadyOpenDialog } from "../../../utils/components/already-open-dialog";
 import { PlaceholderWidget } from "./placeholder-widget";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { saveSnapshot } from "../../snapshots/snapshot-storage";
-import { TableOfContents } from "../table-of-contents";
+// import { TableOfContents } from "../table-of-contents";
 import { showToast } from "../../../utils/components/toast";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
@@ -40,6 +35,7 @@ import { useAtom } from "jotai";
 import { usePreviewMode } from "../../../utils/hooks/use-preview-mode";
 import { useToc } from "../../../utils/hooks/use-toc";
 import { useCharCount } from "../../../utils/hooks/use-char-count";
+import { Loading } from "../../../utils/components/loading";
 
 // Initialize remark processor with GFM plugin
 const remarkProcessor = remark()
@@ -51,9 +47,12 @@ const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, ""
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const editorContainerRef = useRef<HTMLDivElement>(null);
   const formatterRef = useRef<MarkdownFormatter | null>(null);
   const placeholderRef = useRef<PlaceholderWidget | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
+  const [isEditorReady, setIsEditorReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const { setCharCount } = useCharCount();
   const [placeholder, _] = useState<string>(getRandomQuote());
@@ -66,8 +65,7 @@ export const EditorApp = () => {
   const { previewMode, togglePreviewMode } = usePreviewMode();
   const { editorWidth, isWideMode, toggleEditorWidth } = useEditorWidth();
 
-
-//   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
+  const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const { shouldShowAlert, dismissAlert } = useTabDetection();
 
@@ -118,12 +116,12 @@ export const EditorApp = () => {
   // Focus the editor when clicking anywhere in the page container
   const handlePageClick = () => {
     if (!previewMode && editorRef.current) {
-        editorRef.current.focus();
+      editorRef.current.focus();
     }
   };
 
   const handlePlaceholder = (updatedText: string) => {
-    if (placeholder === "" || editorRef.current == null) return;
+    if (placeholder === "" || !editorRef.current) return;
 
     if (placeholderRef.current == null) {
       placeholderRef.current = new PlaceholderWidget(editorRef.current, placeholder);
@@ -136,21 +134,8 @@ export const EditorApp = () => {
     }
   };
 
-  // Handle Monaco editor mounting
-  const handleEditorDidMount = (
-    editor: monaco.editor.IStandaloneCodeEditor,
-    monaco: typeof import("monaco-editor"),
-  ) => {
-    editorRef.current = editor;
-
-    const markdownExtension = new MonacoMarkdownExtension();
-    markdownExtension.activate(editor);
-
-    const content = editor.getValue();
-    if (content) {
-      setCharCount(content.length);
-    }
-
+  // Setup editor decorations for tasks
+  const setupEditorDecorations = (editor: monaco.editor.IStandaloneCodeEditor) => {
     // Add decorations for checked tasks
     const updateDecorations = (model: monaco.editor.ITextModel | null) => {
       if (!model) return;
@@ -199,18 +184,44 @@ export const EditorApp = () => {
       }
     };
 
-    // Add event handlers
-    editor.onKeyDown((event) => handleKeyDown(event, editor, editor.getModel(), editor.getPosition()));
-    editor.onMouseDown((event) => handleTaskCheckboxToggle(event, editor, editor.getModel()));
+    // Setup content change handler
+    editor.onDidChangeModelContent(() => {
+      const updatedText = editor.getValue();
+      const model = editor.getModel();
+      
+      // Update decorations first (this doesn't affect cursor position)
+      updateDecorations(model);
+      
+      // Store cursor position and scroll state BEFORE any state updates
+      const selection = editor.getSelection();
+      const scrollPosition = editor.getScrollTop();
+      
+      // Defer state updates to prevent UI flickering
+      window.requestAnimationFrame(() => {
+        // Update application state
+        setEditorContent(updatedText);
+        debouncedSetContent(updatedText);
+        debouncedCharCountUpdate(updatedText);
+        
+        // IMPORTANT: Restore cursor position and scroll state AFTER state updates
+        if (selection && editor) {
+          editor.setSelection(selection);
+          editor.setScrollTop(scrollPosition);
+        }
+      });
+      
+      handlePlaceholder(updatedText);
+    });
 
-    // Update decorations initially and on content change
+    // Update decorations initially
     const model = editor.getModel();
     if (model) {
       updateDecorations(model);
     }
+  };
 
-    handlePlaceholder(editor.getValue());
-
+  // Setup editor commands
+  const setupEditorCommands = (editor: monaco.editor.IStandaloneCodeEditor) => {
     const commandSave = async () => {
       let value = editor.getValue();
 
@@ -271,20 +282,97 @@ export const EditorApp = () => {
       togglePreviewMode();
       showToast(`Preview mode: ${!previewMode ? "On" : "Off"}`, "default");
     });
-
-    // Setup content change handler
-    editor.onDidChangeModelContent(() => {
-      const updatedText = editor.getValue();
-
-      updateDecorations(model);
-      setEditorContent(updatedText);
-      debouncedSetContent(updatedText);
-      debouncedCharCountUpdate(updatedText);
-      handlePlaceholder(updatedText);
-    });
   };
 
-  // Global keyboard shortcuts for CodeMirror
+  // Initialize Monaco Editor
+  useEffect(() => {
+    // setIsLoading(true);
+    
+    // Define theme
+    monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
+    monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
+    
+    // Set active theme
+    const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
+    monaco.editor.setTheme(themeName);
+
+    // Create model if it doesn't exist
+    let model = monaco.editor.getModels().find(m => m.uri.path === '/ephe.md');
+    
+    if (!model) {
+      model = monaco.editor.createModel(
+        editorContent,
+        'markdown',
+        monaco.Uri.parse('file:///ephe.md')
+      );
+    }
+
+    if (editorContainerRef.current) {
+        editorRef.current = monaco.editor.create(editorContainerRef.current, {
+        ...editorOptions
+        });
+    }
+
+    setIsLoading(false);
+    
+    return () => { // cleanup
+        if (editorRef.current) {
+            // editorRef.current.dispose();
+            editorRef.current = null;
+        }
+    }
+    
+    // // Set up extensions and event handlers
+    // const markdownExtension = new MonacoMarkdownExtension();
+    // markdownExtension.activate(monaco.editor);
+    
+    // // Event handlers
+    // monaco.editor.onKeyDown((event) => handleKeyDown(event, monaco.editor, monaco.editor.getModel(), monaco.editor.getPosition()));
+    // monaco.editor.onMouseDown((event) => handleTaskCheckboxToggle(event, monaco.editor, monaco.editor.getModel()));
+    
+    // setupEditorDecorations(monaco.editor);
+    // setupEditorCommands(monaco.editor);
+    
+    // // Initialize placeholders
+    // handlePlaceholder(monaco.editor.getValue());
+    
+    // setCharCount(monaco.editor.getValue().length);
+    // setIsEditorReady(true);
+
+    // // Update editor layout on window resize
+    // const handleResize = () => {
+    //   if (editorRef.current) {
+    //     editorRef.current.layout();
+    //   }
+    // };
+    
+    // window.addEventListener('resize', handleResize);
+    
+    // // Cleanup on unmount
+    // return () => {
+    //   window.removeEventListener('resize', handleResize);
+    //   if (editorRef.current) {
+    //     editorRef.current.dispose();
+    //     editorRef.current = null;
+    //   }
+    // };
+  }, [
+    editorContent, 
+    isDarkMode, 
+    previewMode,
+    debouncedCharCountUpdate,
+    debouncedSetContent,
+  ]);
+
+  // Update editor theme when theme changes
+  useEffect(() => {
+    if (editorRef.current) {
+      const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
+      monaco.editor.setTheme(themeName);
+    }
+  }, [isDarkMode]);
+
+  // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyboardShortcuts = (e: KeyboardEvent) => {
       // Cmd/Ctrl + K to open command menu
@@ -360,87 +448,99 @@ export const EditorApp = () => {
   ]);
 
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents:
+    // // biome-ignore lint/a11y/useKeyWithClickEvents:
     // <div className="flex h-screen w-screen flex-col" onClick={handlePageClick}>
     //   <div className="flex-1 overflow-hidden pt-16 pb-8">
-        // <div className="flex h-full justify-center">
-          <div className={"mx-auto h-full w-full"}>
-            {!previewMode ? (
-                <Editor
-                  height="100%"
-                  width="100%"
-                  defaultLanguage="markdown"
-                  defaultValue={editorContent}
-                  options={{
-                    ...editorOptions,
-                    wordWrap: "on",
-                    wrappingIndent: "same",
-                    fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace",
-                    fontSize: 16,
-                    lineHeight: 1.6,
-                    padding: { top: 10, bottom: 10 },
-                  }}
-                  onMount={handleEditorDidMount}
-                  beforeMount={(monaco) => {
-                    monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
-                    monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
-                    const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
-                    monaco.editor.setTheme(themeName);
-                  }}
-                  className="overflow-visible"
-                  loading={<Loading className="flex h-screen w-screen items-center justify-center" />}
-                  theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
-                />
-            ) : (
-              <div className="prose prose-slate dark:prose-invert h-full max-w-[680px] mx-auto overflow-auto px-2 py-2">
-                <div
-                  ref={previewRef}
-                  // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-                  dangerouslySetInnerHTML={{ __html: renderedHTML }}
-                  className="markdown-preview min-h-full overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    //     <div className="flex h-full justify-center">
+    <div className="h-full w-full">
+                {isLoading && <Loading className="flex h-full w-full items-center justify-center" />}
+                <div 
+                  ref={editorContainerRef} 
+                  className=""
+                  style={{ visibility: isLoading ? 'hidden' : 'visible' }}
                 />
               </div>
-            )}
-          {/* </div> */}
-        {/* // </div> */}
+    //         ) : (
+    //           <div className="prose prose-slate dark:prose-invert h-full max-w-[680px] mx-auto overflow-auto px-2 py-2">
+    //             <div
+    //               ref={previewRef}
+    //               // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+    //               dangerouslySetInnerHTML={{ __html: renderedHTML }}
+    //               className="markdown-preview min-h-full overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    //             />
+    //           </div>
+    //         )}
+    //       </div>
+    //     </div>
 
-        {!previewMode && editorContent.trim().length > 0 && (
-          <div className={`toc-wrapper ${isVisibleToc ? "visible" : "hidden"}`}>
-            <TableOfContents isVisible={isVisibleToc} content={editorContent} onItemClick={focusOnSection} />
-          </div>
-        )}
+    //     {!previewMode && editorContent.trim().length > 0 && (
+    //       <div className={`toc-wrapper ${isVisibleToc ? "visible" : "hidden"}`}>
+    //         <TableOfContents isVisible={isVisibleToc} content={editorContent} onItemClick={focusOnSection} />
+    //       </div>
+    //     )}
 
-        {/* <Footer
-          previewMode={previewMode}
-          togglePreview={togglePreviewMode}
-        /> */}
+    //     <Footer
+    //       previewMode={previewMode}
+    //       togglePreview={togglePreviewMode}
+    //     />
 
-        {/* <CommandMenu
-          open={commandMenuOpen}
-          onClose={() => setCommandMenuOpen(false)}
-          editorContent={editorContent}
-          editorRef={editorRef}
-          markdownFormatterRef={formatterRef}
-          paperMode={paperMode}
-          cyclePaperMode={cyclePaperMode}
-          editorWidth={editorWidth}
-          toggleEditorWidth={toggleEditorWidth}
-          previewMode={previewMode}
-          togglePreviewMode={togglePreviewMode}
-        /> */}
+    //     {/* <CommandMenu
+    //       open={commandMenuOpen}
+    //       onClose={() => setCommandMenuOpen(false)}
+    //       editorContent={editorContent}
+    //       editorRef={editorRef}
+    //       markdownFormatterRef={formatterRef}
+    //       paperMode={paperMode}
+    //       cyclePaperMode={cyclePaperMode}
+    //       editorWidth={editorWidth}
+    //       toggleEditorWidth={toggleEditorWidth}
+    //       previewMode={previewMode}
+    //       togglePreviewMode={togglePreviewMode}
+    //     /> */}
 
-        {/* {snapshotDialogOpen && (
-          <Suspense fallback={<Loading className="flex h-screen w-screen items-center justify-center" />}>
-            <SnapshotDialog
-              isOpen={snapshotDialogOpen}
-              onClose={() => setSnapshotDialogOpen(false)}
-              editorContent={editorContent}
-            />
-          </Suspense>
-        )} */}
+    //     {snapshotDialogOpen && (
+    //       <Suspense fallback={<Loading className="flex h-screen w-screen items-center justify-center" />}>
+    //         <SnapshotDialog
+    //           isOpen={snapshotDialogOpen}
+    //           onClose={() => setSnapshotDialogOpen(false)}
+    //           editorContent={editorContent}
+    //         />
+    //       </Suspense>
+    //     )}
 
-        {/* <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} /> */}
-    {/* //   </div> */}
-    </div>
+    //     <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />
+    //   </div>
+    // </div>
   );
 };
+
+// import React, { useRef, useEffect, useState } from 'react';
+// import * as monaco from 'monaco-editor';
+
+// // CSSや他のアセットを適切にロードするために必要（環境による）
+// // import 'monaco-editor/esm/vs/editor/editor.all.js';
+// // import 'monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution';
+// // import 'monaco-editor/esm/vs/editor/contrib/find/browser/findController.js'; // 例: 検索機能
+// // import 'monaco-editor/esm/vs/basic-languages/typescript/typescript.contribution'; // TypeScriptサポート
+// // ... 必要な言語や機能を追加
+
+// // Web Workerの設定（推奨）
+// // Create React Appなどでは public/ ディレクトリに配置することが一般的
+// self.MonacoEnvironment = {
+//     getWorkerUrl: function (moduleId, label) {
+//         if (label === 'json') {
+//             return './json.worker.bundle.js'; // パスは環境に合わせて調整
+//         }
+//         if (label === 'css' || label === 'scss' || label === 'less') {
+//             return './css.worker.bundle.js';
+//         }
+//         if (label === 'html' || label === 'handlebars' || label === 'razor') {
+//             return './html.worker.bundle.js';
+//         }
+//         if (label === 'typescript' || label === 'javascript') {
+//             return './ts.worker.bundle.js';
+//         }
+//         return './editor.worker.bundle.js'; // デフォルト
+//     }
+// };
+

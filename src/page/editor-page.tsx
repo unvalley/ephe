@@ -1,10 +1,11 @@
 import "../globals.css";
-import { EditorApp } from "../features/editor/monaco/monaco-editor-app";
+// import { EditorApp } from "../features/editor/monaco/monaco-editor-app";
 import { usePaperMode } from "../utils/hooks/use-paper-mode";
 import { useTabDetection } from "../features/editor/use-tab-detection";
 import { AlreadyOpenDialog } from "../utils/components/already-open-dialog";
 import { Footer } from "../utils/components/footer";
 import { useState } from "react";
+import { NewMonacoEditor } from "../features/editor/monaco/new-monaco-editor-app";
 
 const usePreviewMode = () => {
   const [previewMode, setPreviewMode] = useState(false);
@@ -20,7 +21,7 @@ export const EditorPage = () => {
   return (
     <div className={`flex h-screen flex-col antialiased ${paperModeClass} overflow-hidden`}>
       <div className="flex flex-1 flex-col overflow-hidden">
-        <EditorApp />
+        <NewMonacoEditor />
       </div>
 
       <div className="w-full">
