@@ -303,6 +303,9 @@ export const EPHE_LIGHT_THEME = {
     colors: {
       "editor.background": "#00000000",
       "editor.foreground": "#090909",
+      // Set consistent padding and width similar to CodeMirror
+      "editor.padding.top": "10px",
+      "editor.padding.bottom": "10px",
     },
   } as monaco.editor.IStandaloneThemeData,
 } as const;
@@ -326,6 +329,13 @@ export const EPHE_DARK_THEME = {
     colors: {
       "editor.background": "#00000000",
       "editor.foreground": "#FFFFFF",
+      "editor.lineHighlightBackground": "#1F1F1F",
+      "editor.lineHighlightBorder": "#00000000",
+      "editorCursor.foreground": "#FFFFFF",
+      "editorLineNumber.foreground": "#555555",
+      // Set consistent padding and width similar to CodeMirror
+      "editor.padding.top": "10px",
+      "editor.padding.bottom": "10px",
     },
   } as monaco.editor.IStandaloneThemeData,
 } as const;

@@ -67,7 +67,7 @@ export const EditorApp = () => {
   const { editorWidth, isWideMode, toggleEditorWidth } = useEditorWidth();
 
 
-  const [commandMenuOpen, setCommandMenuOpen] = useState(false);
+//   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
   const { shouldShowAlert, dismissAlert } = useTabDetection();
 
@@ -359,34 +359,12 @@ export const EditorApp = () => {
     previewMode,
   ]);
 
-  // 次のuseEffectを追加して、エディタの幅を調整するスタイルを適用
-  useEffect(() => {
-    // CodeMirrorエディタ用のスタイルを追加
-    const styleElement = document.createElement("style");
-    styleElement.textContent = `
-      .cm-content-container .cm-content {
-        max-width: 680px !important;
-        margin: 0 auto !important;
-        padding: 10px 20px !important;
-        line-height: 1.6 !important;
-        font-size: 16px !important;
-      }
-    `;
-    document.head.appendChild(styleElement);
-
-    return () => {
-      if (styleElement.parentNode) {
-        styleElement.parentNode.removeChild(styleElement);
-      }
-    };
-  }, []);
-
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents:
-    <div className="flex h-screen w-screen flex-col" onClick={handlePageClick}>
-      <div className="flex-1 overflow-hidden pt-16 pb-8">
-        <div className="flex h-full justify-center">
-          <div className={`w-full max-w-[800px] relative px-4 sm:px-6 md:px-2`}>
+    // <div className="flex h-screen w-screen flex-col" onClick={handlePageClick}>
+    //   <div className="flex-1 overflow-hidden pt-16 pb-8">
+        // <div className="flex h-full justify-center">
+          <div className={"mx-auto h-full w-full"}>
             {!previewMode ? (
                 <Editor
                   height="100%"
@@ -397,25 +375,17 @@ export const EditorApp = () => {
                     ...editorOptions,
                     wordWrap: "on",
                     wrappingIndent: "same",
+                    fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace",
+                    fontSize: 16,
+                    lineHeight: 1.6,
+                    padding: { top: 10, bottom: 10 },
                   }}
                   onMount={handleEditorDidMount}
                   beforeMount={(monaco) => {
                     monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
                     monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
-
-                    // カスタムCSSを追加してエディタコンテンツ幅を制限
                     const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
                     monaco.editor.setTheme(themeName);
-
-                    // カスタムスタイルを追加
-                    const styleElement = document.createElement("style");
-                    styleElement.textContent = `
-                      .monaco-editor .lines-content {
-                        max-width: 680px !important;
-                        margin: 0 auto !important;
-                      }
-                    `;
-                    document.head.appendChild(styleElement);
                   }}
                   className="overflow-visible"
                   loading={<Loading className="flex h-screen w-screen items-center justify-center" />}
@@ -431,8 +401,8 @@ export const EditorApp = () => {
                 />
               </div>
             )}
-          </div>
-        </div>
+          {/* </div> */}
+        {/* // </div> */}
 
         {!previewMode && editorContent.trim().length > 0 && (
           <div className={`toc-wrapper ${isVisibleToc ? "visible" : "hidden"}`}>
@@ -440,12 +410,12 @@ export const EditorApp = () => {
           </div>
         )}
 
-        <Footer
+        {/* <Footer
           previewMode={previewMode}
           togglePreview={togglePreviewMode}
-        />
+        /> */}
 
-        <CommandMenu
+        {/* <CommandMenu
           open={commandMenuOpen}
           onClose={() => setCommandMenuOpen(false)}
           editorContent={editorContent}
@@ -457,9 +427,9 @@ export const EditorApp = () => {
           toggleEditorWidth={toggleEditorWidth}
           previewMode={previewMode}
           togglePreviewMode={togglePreviewMode}
-        />
+        /> */}
 
-        {snapshotDialogOpen && (
+        {/* {snapshotDialogOpen && (
           <Suspense fallback={<Loading className="flex h-screen w-screen items-center justify-center" />}>
             <SnapshotDialog
               isOpen={snapshotDialogOpen}
@@ -467,10 +437,10 @@ export const EditorApp = () => {
               editorContent={editorContent}
             />
           </Suspense>
-        )}
+        )} */}
 
-        <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />
-      </div>
+        {/* <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} /> */}
+    {/* //   </div> */}
     </div>
   );
 };
