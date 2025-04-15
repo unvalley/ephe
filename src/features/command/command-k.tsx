@@ -9,7 +9,6 @@ import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-fo
 import { showToast } from "../../utils/components/toast";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import type { PaperMode } from "../../utils/hooks/use-paper-mode";
-import type { EditorWidth } from "../../utils/hooks/use-editor-width";
 import { EyeIcon } from "../../utils/components/icons";
 import { COLOR_THEME } from "../../utils/theme-initializer";
 
@@ -178,10 +177,6 @@ export type CommandMenuProps = {
   toggleEditorWidth: () => void;
   previewMode: boolean;
   togglePreviewMode: () => void;
-  isCodeMirror: boolean;
-  toggleEditorType: () => void;
-  useSimpleEditor?: boolean;
-  toggleSimpleEditor?: () => void;
 };
 
 export function CommandMenu({
@@ -196,10 +191,6 @@ export function CommandMenu({
   toggleEditorWidth,
   previewMode,
   togglePreviewMode,
-  isCodeMirror,
-  toggleEditorType,
-  useSimpleEditor = false,
-  toggleSimpleEditor,
 }: CommandMenuProps) {
   const { theme, setTheme } = useTheme();
   const [inputValue, setInputValue] = useState("");
@@ -413,30 +404,6 @@ export function CommandMenu({
         },
       },
       {
-        id: "editor-type",
-        name: `Switch to ${isCodeMirror ? "Monaco" : "CodeMirror"} Editor`,
-        icon: <WidthIcon />,
-        shortcut: "⌘⇧E",
-        perform: () => {
-          toggleEditorType();
-          onClose();
-        },
-      },
-      ...(toggleSimpleEditor
-        ? [
-            {
-              id: "toggle-simple-editor",
-              name: `Switch to ${useSimpleEditor ? "Standard" : "Simple"} CodeMirror`,
-              icon: <CodeMirrorIcon />,
-              shortcut: "⌘⌥E",
-              perform: () => {
-                toggleSimpleEditor();
-                onClose();
-              },
-            },
-          ]
-        : []),
-      {
         id: "export-markdown",
         name: "Export markdown",
         icon: <ExportIcon />,
@@ -485,9 +452,6 @@ export function CommandMenu({
     cyclePaperMode,
     toggleEditorWidth,
     togglePreviewMode,
-    toggleEditorType,
-    useSimpleEditor,
-    toggleSimpleEditor,
     handleExportMarkdown,
     handleFormatDocument,
     handleInsertGitHubIssues,
@@ -495,7 +459,6 @@ export function CommandMenu({
     paperMode,
     editorWidth,
     previewMode,
-    isCodeMirror,
     navigate,
     onClose,
   ]);

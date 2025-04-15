@@ -11,13 +11,11 @@ import { HoursDisplay } from "../../features/time-display/hours-display";
 type FooterProps = {
   previewMode?: boolean;
   togglePreview?: () => void;
-  editorType?: "monaco" | "codemirror";
-  toggleEditorType?: () => void;
 };
 
 const EPHE_VERSION = "0.0.1";
 
-const _Footer = ({ previewMode = false, togglePreview, editorType, toggleEditorType }: FooterProps) => {
+const _Footer = ({ previewMode = false, togglePreview }: FooterProps) => {
   return (
     <footer className="fixed inset-x-0 bottom-0 bg-transparent">
       <div className="mx-auto flex items-center justify-between px-2 py-1 text-sm">
@@ -38,17 +36,6 @@ const _Footer = ({ previewMode = false, togglePreview, editorType, toggleEditorT
             >
               <EyeIcon className={`h-3.5 w-3.5 ${previewMode ? "text-primary-500" : ""}`} />
               <span>{previewMode ? "Edit" : "Preview"}</span>
-            </button>
-          )}
-
-          {toggleEditorType && editorType && (
-            <button
-              onClick={toggleEditorType}
-              type="button"
-              className="flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
-            >
-              <CodeIcon className="h-3.5 w-3.5" />
-              <span>{editorType === "monaco" ? "Try CodeMirror" : "Back to Monaco"}</span>
             </button>
           )}
         </nav>

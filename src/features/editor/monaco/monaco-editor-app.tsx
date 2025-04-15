@@ -1,14 +1,13 @@
 "use client";
 
 import type * as monaco from "monaco-editor";
-import { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { Editor } from "@monaco-editor/react";
 import { useTheme } from "../../../utils/hooks/use-theme";
 import { useDebouncedCallback } from "use-debounce";
 import { useTabDetection } from "../use-tab-detection";
 import { usePaperMode } from "../../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
-import { useEditorType } from "../../../utils/hooks/use-editor-type";
 import { CommandMenu } from "../../command/command-k";
 import { getRandomQuote } from "../quotes";
 import { SnapshotDialog } from "../../snapshots/snapshot-dialog";
@@ -41,8 +40,6 @@ import { useAtom } from "jotai";
 import { usePreviewMode } from "../../../utils/hooks/use-preview-mode";
 import { useToc } from "../../../utils/hooks/use-toc";
 import { useCharCount } from "../../../utils/hooks/use-char-count";
-import { CodeMirrorEditor, type CodeMirrorEditorRef } from "../codemirror/old-codemirror-editor";
-import { SimpleCodeMirrorEditor } from "../simple-codemirror-editor";
 
 // Initialize remark processor with GFM plugin
 const remarkProcessor = remark()
@@ -54,7 +51,6 @@ const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, ""
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const codemirrorRef = useRef<CodeMirrorEditorRef | null>(null);
   const formatterRef = useRef<MarkdownFormatter | null>(null);
   const placeholderRef = useRef<PlaceholderWidget | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
@@ -69,13 +65,7 @@ export const EditorApp = () => {
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
   const { previewMode, togglePreviewMode } = usePreviewMode();
   const { editorWidth, isWideMode, toggleEditorWidth } = useEditorWidth();
-  const editorTypeHook = useEditorType();
-  const isCodeMirror = editorTypeHook.isCodeMirror;
-  const isMonaco = editorTypeHook.isMonaco;
-  const toggleEditorType = editorTypeHook.toggleEditorType;
 
-  // SimpleCodeMirrorかどうかを文字列として直接判定
-  const isSimpleCodeMirror = String(editorTypeHook.editorType) === "simple-codemirror";
 
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
@@ -127,17 +117,13 @@ export const EditorApp = () => {
 
   // Focus the editor when clicking anywhere in the page container
   const handlePageClick = () => {
-    if (!previewMode) {
-      if (isMonaco && editorRef.current) {
+    if (!previewMode && editorRef.current) {
         editorRef.current.focus();
-      } else if (isCodeMirror && codemirrorRef.current) {
-        codemirrorRef.current.focus();
-      }
     }
   };
 
   const handlePlaceholder = (updatedText: string) => {
-    if (placeholder === "" || editorRef.current == null || isCodeMirror) return;
+    if (placeholder === "" || editorRef.current == null) return;
 
     if (placeholderRef.current == null) {
       placeholderRef.current = new PlaceholderWidget(editorRef.current, placeholder);
@@ -286,15 +272,6 @@ export const EditorApp = () => {
       showToast(`Preview mode: ${!previewMode ? "On" : "Off"}`, "default");
     });
 
-    // Add key binding for Cmd+Shift+E / Ctrl+Shift+E to toggle editor type
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyE, () => {
-      toggleEditorType();
-      showToast(
-        `Editor type: ${isMonaco ? "CodeMirror" : isSimpleCodeMirror ? "Simple CodeMirror" : "Monaco"}`,
-        "default",
-      );
-    });
-
     // Setup content change handler
     editor.onDidChangeModelContent(() => {
       const updatedText = editor.getValue();
@@ -307,38 +284,8 @@ export const EditorApp = () => {
     });
   };
 
-  // Handle CodeMirror content change
-  const handleCodeMirrorChange = (value: string) => {
-    setEditorContent(value);
-    debouncedSetContent(value);
-    debouncedCharCountUpdate(value);
-  };
-
-  // エディタの状態を切り替えるときのメッセージを定義
-  const getEditorTypeName = useCallback(() => {
-    if (isMonaco) return "Monaco";
-    if (isSimpleCodeMirror) return "Simple CodeMirror";
-    return "CodeMirror";
-  }, [isMonaco, isSimpleCodeMirror]);
-
-  // 切り替えメッセージを表示するユーティリティ
-  const showEditorTypeChange = useCallback(() => {
-    showToast(`Editor type: ${getEditorTypeName()}`, "default");
-  }, [getEditorTypeName]);
-
-  const handleCloseCommandMenu = useCallback(() => {
-    setCommandMenuOpen(false);
-    if (isMonaco && editorRef.current) {
-      editorRef.current.focus();
-    } else if (isCodeMirror && codemirrorRef.current) {
-      codemirrorRef.current.focus();
-    }
-  }, [isMonaco, isCodeMirror]);
-
   // Global keyboard shortcuts for CodeMirror
   useEffect(() => {
-    if (!isCodeMirror) return;
-
     const handleKeyboardShortcuts = (e: KeyboardEvent) => {
       // Cmd/Ctrl + K to open command menu
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -364,13 +311,6 @@ export const EditorApp = () => {
         e.preventDefault();
         togglePreviewMode();
         showToast(`Preview mode: ${!previewMode ? "On" : "Off"}`, "default");
-      }
-
-      // Cmd/Ctrl + Shift + E to toggle editor type
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "e") {
-        e.preventDefault();
-        toggleEditorType();
-        showEditorTypeChange();
       }
 
       // Cmd/Ctrl + S to save content
@@ -413,14 +353,10 @@ export const EditorApp = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally not including all dependencies to prevent unnecessary re-creation of event handlers
   }, [
-    isCodeMirror,
-    toggleEditorType,
     toggleEditorWidth,
     togglePreviewMode,
     editorWidth,
     previewMode,
-    isMonaco,
-    showEditorTypeChange,
   ]);
 
   // 次のuseEffectを追加して、エディタの幅を調整するスタイルを適用
@@ -452,7 +388,6 @@ export const EditorApp = () => {
         <div className="flex h-full justify-center">
           <div className={`w-full max-w-[800px] relative px-4 sm:px-6 md:px-2`}>
             {!previewMode ? (
-              isMonaco ? (
                 <Editor
                   height="100%"
                   width="100%"
@@ -486,27 +421,6 @@ export const EditorApp = () => {
                   loading={<Loading className="flex h-screen w-screen items-center justify-center" />}
                   theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
                 />
-              ) : isSimpleCodeMirror ? (
-                <SimpleCodeMirrorEditor
-                  initialValue={editorContent}
-                  onChange={handleCodeMirrorChange}
-                  height="100%"
-                  width="100%"
-                  className="h-full w-full cm-content-container"
-                  isDarkMode={isDarkMode}
-                />
-              ) : (
-                <CodeMirrorEditor
-                  ref={codemirrorRef}
-                  value={editorContent}
-                  onChange={handleCodeMirrorChange}
-                  height="100%"
-                  width="100%"
-                  className="h-full w-full cm-content-container"
-                  isDarkMode={isDarkMode}
-                  autoFocus={true}
-                />
-              )
             ) : (
               <div className="prose prose-slate dark:prose-invert h-full max-w-[680px] mx-auto overflow-auto px-2 py-2">
                 <div
@@ -529,13 +443,11 @@ export const EditorApp = () => {
         <Footer
           previewMode={previewMode}
           togglePreview={togglePreviewMode}
-          editorType={isMonaco ? "monaco" : "codemirror"}
-          toggleEditorType={toggleEditorType}
         />
 
         <CommandMenu
           open={commandMenuOpen}
-          onClose={handleCloseCommandMenu}
+          onClose={() => setCommandMenuOpen(false)}
           editorContent={editorContent}
           editorRef={editorRef}
           markdownFormatterRef={formatterRef}
@@ -545,9 +457,6 @@ export const EditorApp = () => {
           toggleEditorWidth={toggleEditorWidth}
           previewMode={previewMode}
           togglePreviewMode={togglePreviewMode}
-          isCodeMirror={isCodeMirror}
-          toggleEditorType={toggleEditorType}
-          useSimpleEditor={isSimpleCodeMirror}
         />
 
         {snapshotDialogOpen && (
