@@ -10,4 +10,5 @@ export const LOCAL_STORAGE_KEYS = {
   TOC_VISIBILITY: "ephe-toc-visibility",
   CHAR_COUNT: "ephe-char-count",
   USE_CODEMIRROR: "ephe-use-codemirror",
+  EDITOR_TYPE: "ephe-editor-type",
 } as const;

@@ -41,7 +41,8 @@ import { useAtom } from "jotai";
 import { usePreviewMode } from "../../utils/hooks/use-preview-mode";
 import { useToc } from "../../utils/hooks/use-toc";
 import { useCharCount } from "../../utils/hooks/use-char-count";
-import { CodeMirrorEditor } from "./codemirror/codemirror-editor";
+import { CodeMirrorEditor, type CodeMirrorEditorRef } from "./codemirror/codemirror-editor";
+import { SimpleCodeMirrorEditor } from "./simple-codemirror-editor";
 
 // Initialize remark processor with GFM plugin
 const remarkProcessor = remark()
@@ -53,6 +54,7 @@ const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, ""
 
 export const EditorApp = () => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const codemirrorRef = useRef<CodeMirrorEditorRef | null>(null);
   const formatterRef = useRef<MarkdownFormatter | null>(null);
   const placeholderRef = useRef<PlaceholderWidget | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
@@ -67,7 +69,13 @@ export const EditorApp = () => {
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
   const { previewMode, togglePreviewMode } = usePreviewMode();
   const { editorWidth, isWideMode, toggleEditorWidth } = useEditorWidth();
-  const { isCodeMirror, isMonaco, toggleEditorType } = useEditorType();
+  const editorTypeHook = useEditorType();
+  const isCodeMirror = editorTypeHook.isCodeMirror;
+  const isMonaco = editorTypeHook.isMonaco;
+  const toggleEditorType = editorTypeHook.toggleEditorType;
+  
+  // SimpleCodeMirrorかどうかを文字列として直接判定
+  const isSimpleCodeMirror = String(editorTypeHook.editorType) === "simple-codemirror";
 
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
@@ -119,8 +127,12 @@ export const EditorApp = () => {
 
   // Focus the editor when clicking anywhere in the page container
   const handlePageClick = () => {
-    if (editorRef.current && !previewMode && isMonaco) {
-      editorRef.current.focus();
+    if (!previewMode) {
+      if (isMonaco && editorRef.current) {
+        editorRef.current.focus();
+      } else if (isCodeMirror && codemirrorRef.current) {
+        codemirrorRef.current.focus();
+      }
     }
   };
 
@@ -277,7 +289,7 @@ export const EditorApp = () => {
     // Add key binding for Cmd+Shift+E / Ctrl+Shift+E to toggle editor type
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyE, () => {
       toggleEditorType();
-      showToast(`Editor type: ${isMonaco ? "CodeMirror" : "Monaco"}`, "default");
+      showToast(`Editor type: ${isMonaco ? "CodeMirror" : isSimpleCodeMirror ? "Simple CodeMirror" : "Monaco"}`, "default");
     });
 
     // Setup content change handler
@@ -299,12 +311,26 @@ export const EditorApp = () => {
     debouncedCharCountUpdate(value);
   };
 
+  // エディタの状態を切り替えるときのメッセージを定義
+  const getEditorTypeName = useCallback(() => {
+    if (isMonaco) return "Monaco";
+    if (isSimpleCodeMirror) return "Simple CodeMirror";
+    return "CodeMirror";
+  }, [isMonaco, isSimpleCodeMirror]);
+
+  // 切り替えメッセージを表示するユーティリティ
+  const showEditorTypeChange = useCallback(() => {
+    showToast(`Editor type: ${getEditorTypeName()}`, "default");
+  }, [getEditorTypeName]);
+
   const handleCloseCommandMenu = useCallback(() => {
     setCommandMenuOpen(false);
-    if (editorRef.current && isMonaco) {
+    if (isMonaco && editorRef.current) {
       editorRef.current.focus();
+    } else if (isCodeMirror && codemirrorRef.current) {
+      codemirrorRef.current.focus();
     }
-  }, [isMonaco]);
+  }, [isMonaco, isCodeMirror]);
 
   // Global keyboard shortcuts for CodeMirror
   useEffect(() => {
@@ -341,7 +367,7 @@ export const EditorApp = () => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "e") {
         e.preventDefault();
         toggleEditorType();
-        showToast(`Editor type: ${isMonaco ? "CodeMirror" : "Monaco"}`, "default");
+        showEditorTypeChange();
       }
 
       // Cmd/Ctrl + S to save content
@@ -382,23 +408,46 @@ export const EditorApp = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyboardShortcuts);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally not including all dependencies to prevent unnecessary re-creation of event handlers
   }, [
     isCodeMirror,
     toggleEditorType,
     toggleEditorWidth,
     togglePreviewMode,
-    editorContent,
     editorWidth,
     previewMode,
     isMonaco,
+    showEditorTypeChange
   ]);
+
+  // 次のuseEffectを追加して、エディタの幅を調整するスタイルを適用
+  useEffect(() => {
+    // CodeMirrorエディタ用のスタイルを追加
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      .cm-content-container .cm-content {
+        max-width: 680px !important;
+        margin: 0 auto !important;
+        padding: 10px 20px !important;
+        line-height: 1.6 !important;
+        font-size: 16px !important;
+      }
+    `;
+    document.head.appendChild(styleElement);
+    
+    return () => {
+      if (styleElement.parentNode) {
+        styleElement.parentNode.removeChild(styleElement);
+      }
+    };
+  }, []);
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents:
     <div className="flex h-screen w-screen flex-col" onClick={handlePageClick}>
       <div className="flex-1 overflow-hidden pt-16 pb-8">
         <div className="flex h-full justify-center">
-          <div className={`w-full ${isWideMode ? "max-w-6xl" : "max-w-2xl"} relative px-4 sm:px-6 md:px-2`}>
+          <div className={`w-full max-w-[800px] relative px-4 sm:px-6 md:px-2`}>
             {!previewMode ? (
               isMonaco ? (
                 <Editor
@@ -406,31 +455,57 @@ export const EditorApp = () => {
                   width="100%"
                   defaultLanguage="markdown"
                   defaultValue={editorContent}
-                  options={editorOptions}
+                  options={{
+                    ...editorOptions,
+                    wordWrap: 'on',
+                    wrappingIndent: 'same'
+                  }}
                   onMount={handleEditorDidMount}
                   beforeMount={(monaco) => {
                     monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
                     monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
 
+                    // カスタムCSSを追加してエディタコンテンツ幅を制限
                     const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
                     monaco.editor.setTheme(themeName);
+                    
+                    // カスタムスタイルを追加
+                    const styleElement = document.createElement('style');
+                    styleElement.textContent = `
+                      .monaco-editor .lines-content {
+                        max-width: 680px !important;
+                        margin: 0 auto !important;
+                      }
+                    `;
+                    document.head.appendChild(styleElement);
                   }}
                   className="overflow-visible"
                   loading={<Loading className="flex h-screen w-screen items-center justify-center" />}
                   theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
                 />
+              ) : isSimpleCodeMirror ? (
+                <SimpleCodeMirrorEditor
+                  initialValue={editorContent}
+                  onChange={handleCodeMirrorChange}
+                  height="100%"
+                  width="100%"
+                  className="h-full w-full cm-content-container"
+                  isDarkMode={isDarkMode}
+                />
               ) : (
                 <CodeMirrorEditor
+                  ref={codemirrorRef}
                   value={editorContent}
                   onChange={handleCodeMirrorChange}
                   height="100%"
                   width="100%"
-                  className="h-full w-full"
+                  className="h-full w-full cm-content-container"
                   isDarkMode={isDarkMode}
+                  autoFocus={true}
                 />
               )
             ) : (
-              <div className="prose prose-slate dark:prose-invert h-full max-w-none overflow-auto px-2 py-2">
+              <div className="prose prose-slate dark:prose-invert h-full max-w-[680px] mx-auto overflow-auto px-2 py-2">
                 <div
                   ref={previewRef}
                   // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
@@ -469,6 +544,7 @@ export const EditorApp = () => {
           togglePreviewMode={togglePreviewMode}
           isCodeMirror={isCodeMirror}
           toggleEditorType={toggleEditorType}
+          useSimpleEditor={isSimpleCodeMirror}
         />
 
         {snapshotDialogOpen && (
