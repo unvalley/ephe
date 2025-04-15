@@ -5,7 +5,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { LandingPage } from "./page/landing-page";
 import { EditorPage } from "./page/editor-page";
-import { JapaneseEditorPage } from "./page/japanese-editor-page";
+import { CodeMirrorEditorPage } from "./page/codemirror-editor-page";
 import { HistoryPage } from "./page/history-page";
 import { ToastContainer } from "./utils/components/toast";
 import { NotFound } from "./page/404-page";
@@ -26,7 +26,7 @@ ReactDOM.createRoot(root).render(
       <Routes>
         <Route path="/" element={<EditorPage />} />
         <Route path="landing" element={<LandingPage />} />
-        <Route path="japanese" element={<JapaneseEditorPage />} />
+        <Route path="japanese" element={<CodeMirrorEditorPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

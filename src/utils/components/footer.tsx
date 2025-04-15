@@ -68,13 +68,6 @@ const _Footer = ({ previewMode = false, togglePreview, editorType, toggleEditorT
               Ephe v{EPHE_VERSION}
             </Link>
           </div>
-
-          <Link 
-            to="/japanese" 
-            className="flex items-center gap-1 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer"
-          >
-            <span>日本語エディタ</span>
-          </Link>
         </div>
       </div>
     </footer>
