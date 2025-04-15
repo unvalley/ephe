@@ -130,6 +130,28 @@ function HistoryIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+function CodeMirrorIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <path
+        d="M4 2C2.89543 2 2 2.89543 2 4V11C2 12.1046 2.89543 13 4 13H11C12.1046 13 13 12.1046 13 11V4C13 2.89543 12.1046 2 11 2H4ZM4 3H11C11.5523 3 12 3.44772 12 4V11C12 11.5523 11.5523 12 11 12H4C3.44772 12 3 11.5523 3 11V4C3 3.44772 3.44772 3 4 3Z"
+        fill="currentColor"
+        fillRule="evenodd"
+        clipRule="evenodd"
+      />
+      <path
+        d="M9.5 4.5C9.5 4.22386 9.27614 4 9 4C8.72386 4 8.5 4.22386 8.5 4.5V10.5C8.5 10.7761 8.72386 11 9 11C9.27614 11 9.5 10.7761 9.5 10.5V4.5Z"
+        fill="currentColor"
+        fillRule="evenodd"
+        clipRule="evenodd"
+      />
+      <path
+        d="M10.8536 5.14645C10.6583 4.95118 10.3417 4.95118 10.1464 5.14645C9.95118 5.34171 9.95118 5.65829 10.1464 5.85355L11.1464 6.85355C11.3417 7.04882 11.6583 7.04882 11.8536 6.85355L12.8536 5.85355C13.0488 5.65829 13.0488 5.34171 12.8536 5.14645C12.6583 4.95118 12.3417 4.95118 12.1464 5.14645L11.5 5.79289L10.8536 5.14645Z"
+        fill="currentColor"
+        fillRule="evenodd"
+        clipRule="evenodd"
+      />
+      <path
 type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;

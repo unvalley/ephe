@@ -8,6 +8,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { useTabDetection } from "./use-tab-detection";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
+import { useEditorType } from "../../utils/hooks/use-editor-type";
 import { CommandMenu } from "../command/command-k";
 import { getRandomQuote } from "./quotes";
 import { SnapshotDialog } from "../snapshots/snapshot-dialog";
@@ -40,6 +41,7 @@ import { useAtom } from "jotai";
 import { usePreviewMode } from "../../utils/hooks/use-preview-mode";
 import { useToc } from "../../utils/hooks/use-toc";
 import { useCharCount } from "../../utils/hooks/use-char-count";
+import { CodeMirrorEditor } from "./codemirror/codemirror-editor";
 
 // Initialize remark processor with GFM plugin
 const remarkProcessor = remark()
@@ -65,6 +67,7 @@ export const EditorApp = () => {
   const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
   const { previewMode, togglePreviewMode } = usePreviewMode();
   const { editorWidth, isWideMode, toggleEditorWidth } = useEditorWidth();
+  const { isCodeMirror, isMonaco, toggleEditorType } = useEditorType();
 
   const [commandMenuOpen, setCommandMenuOpen] = useState(false);
   const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
@@ -116,13 +119,13 @@ export const EditorApp = () => {
 
   // Focus the editor when clicking anywhere in the page container
   const handlePageClick = () => {
-    if (editorRef.current && !previewMode) {
+    if (editorRef.current && !previewMode && isMonaco) {
       editorRef.current.focus();
     }
   };
 
   const handlePlaceholder = (updatedText: string) => {
-    if (placeholder === "" || editorRef.current == null) return;
+    if (placeholder === "" || editorRef.current == null || isCodeMirror) return;
 
     if (placeholderRef.current == null) {
       placeholderRef.current = new PlaceholderWidget(editorRef.current, placeholder);
@@ -135,7 +138,7 @@ export const EditorApp = () => {
     }
   };
 
-  // Handle editor mounting
+  // Handle Monaco editor mounting
   const handleEditorDidMount = (
     editor: monaco.editor.IStandaloneCodeEditor,
     monaco: typeof import("monaco-editor"),
@@ -271,6 +274,12 @@ export const EditorApp = () => {
       showToast(`Preview mode: ${!previewMode ? "On" : "Off"}`, "default");
     });
 
+    // Add key binding for Cmd+Shift+E / Ctrl+Shift+E to toggle editor type
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyE, () => {
+      toggleEditorType();
+      showToast(`Editor type: ${isMonaco ? "CodeMirror" : "Monaco"}`, "default");
+    });
+
     // Setup content change handler
     editor.onDidChangeModelContent(() => {
       const updatedText = editor.getValue();
@@ -283,12 +292,106 @@ export const EditorApp = () => {
     });
   };
 
+  // Handle CodeMirror content change
+  const handleCodeMirrorChange = (value: string) => {
+    setEditorContent(value);
+    debouncedSetContent(value);
+    debouncedCharCountUpdate(value);
+  };
+
   const handleCloseCommandMenu = useCallback(() => {
     setCommandMenuOpen(false);
-    if (editorRef.current) {
+    if (editorRef.current && isMonaco) {
       editorRef.current.focus();
     }
-  }, []);
+  }, [isMonaco]);
+
+  // Global keyboard shortcuts for CodeMirror
+  useEffect(() => {
+    if (!isCodeMirror) return;
+
+    const handleKeyboardShortcuts = (e: KeyboardEvent) => {
+      // Cmd/Ctrl + K to open command menu
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setCommandMenuOpen((prev) => !prev);
+      }
+
+      // Cmd/Ctrl + Shift + S to open snapshot dialog
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "s") {
+        e.preventDefault();
+        setSnapshotDialogOpen(true);
+      }
+
+      // Cmd/Ctrl + Shift + W to toggle editor width
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "w") {
+        e.preventDefault();
+        toggleEditorWidth();
+        showToast(`Editor width mode: ${editorWidth === "normal" ? "Wide" : "Normal"}`, "default");
+      }
+
+      // Cmd/Ctrl + P to toggle preview mode
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === "p") {
+        e.preventDefault();
+        togglePreviewMode();
+        showToast(`Preview mode: ${!previewMode ? "On" : "Off"}`, "default");
+      }
+
+      // Cmd/Ctrl + Shift + E to toggle editor type
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "e") {
+        e.preventDefault();
+        toggleEditorType();
+        showToast(`Editor type: ${isMonaco ? "CodeMirror" : "Monaco"}`, "default");
+      }
+
+      // Cmd/Ctrl + S to save content
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === "s") {
+        e.preventDefault();
+        if (formatterRef.current) {
+          formatterRef.current
+            .formatMarkdown(editorContent)
+            .then((formatted) => {
+              if (formatted !== editorContent) {
+                setEditorContent(formatted);
+              }
+
+              saveSnapshot({
+                content: formatted,
+                charCount: formatted.length,
+                title: "Manual Save",
+                description: "",
+              });
+              showToast("Content formatted and saved", "success");
+            })
+            .catch(() => {
+              showToast("Failed to format content", "error");
+            });
+        } else {
+          saveSnapshot({
+            content: editorContent,
+            charCount: editorContent.length,
+            title: "Manual Save",
+            description: "",
+          });
+          showToast("Content saved", "success");
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyboardShortcuts);
+    return () => {
+      window.removeEventListener("keydown", handleKeyboardShortcuts);
+    };
+  }, [
+    isCodeMirror,
+    toggleEditorType,
+    toggleEditorWidth,
+    togglePreviewMode,
+    editorContent,
+    editorWidth,
+    previewMode,
+    isMonaco,
+  ]);
 
   return (
     // biome-ignore lint/a11y/useKeyWithClickEvents:
@@ -297,24 +400,35 @@ export const EditorApp = () => {
         <div className="flex h-full justify-center">
           <div className={`w-full ${isWideMode ? "max-w-6xl" : "max-w-2xl"} relative px-4 sm:px-6 md:px-2`}>
             {!previewMode ? (
-              <Editor
-                height="100%"
-                width="100%"
-                defaultLanguage="markdown"
-                defaultValue={editorContent}
-                options={editorOptions}
-                onMount={handleEditorDidMount}
-                beforeMount={(monaco) => {
-                  monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
-                  monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
+              isMonaco ? (
+                <Editor
+                  height="100%"
+                  width="100%"
+                  defaultLanguage="markdown"
+                  defaultValue={editorContent}
+                  options={editorOptions}
+                  onMount={handleEditorDidMount}
+                  beforeMount={(monaco) => {
+                    monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
+                    monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
 
-                  const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
-                  monaco.editor.setTheme(themeName);
-                }}
-                className="overflow-visible"
-                loading={<Loading className="flex h-screen w-screen items-center justify-center" />}
-                theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
-              />
+                    const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
+                    monaco.editor.setTheme(themeName);
+                  }}
+                  className="overflow-visible"
+                  loading={<Loading className="flex h-screen w-screen items-center justify-center" />}
+                  theme={isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name}
+                />
+              ) : (
+                <CodeMirrorEditor
+                  value={editorContent}
+                  onChange={handleCodeMirrorChange}
+                  height="100%"
+                  width="100%"
+                  className="h-full w-full"
+                  isDarkMode={isDarkMode}
+                />
+              )
             ) : (
               <div className="prose prose-slate dark:prose-invert h-full max-w-none overflow-auto px-2 py-2">
                 <div
@@ -334,7 +448,12 @@ export const EditorApp = () => {
           </div>
         )}
 
-        <Footer previewMode={previewMode} togglePreview={togglePreviewMode} />
+        <Footer
+          previewMode={previewMode}
+          togglePreview={togglePreviewMode}
+          editorType={isMonaco ? "monaco" : "codemirror"}
+          toggleEditorType={toggleEditorType}
+        />
 
         <CommandMenu
           open={commandMenuOpen}
@@ -348,6 +467,8 @@ export const EditorApp = () => {
           toggleEditorWidth={toggleEditorWidth}
           previewMode={previewMode}
           togglePreviewMode={togglePreviewMode}
+          isCodeMirror={isCodeMirror}
+          toggleEditorType={toggleEditorType}
         />
 
         {snapshotDialogOpen && (
