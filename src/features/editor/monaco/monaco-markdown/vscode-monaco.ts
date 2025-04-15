@@ -122,7 +122,7 @@ export class TextDocument {
         range,
         rangeIncludingLineBreak,
         text,
-        firstNonWhitespaceCharacterIndex, //TODO@api, rename to 'leadingWhitespaceLength'
+        firstNonWhitespaceCharacterIndex: firstNonWhitespaceCharacterIndex ?? 0,
         isEmptyOrWhitespace: firstNonWhitespaceCharacterIndex === text.length,
       });
 
