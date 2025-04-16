@@ -1,11 +1,11 @@
 import { Extension } from "@codemirror/state";
-import { taskDecoration, taskHoverField, taskMouseInteraction, TaskHandler } from "./close-task";
+import { taskDecoration, taskHoverField, taskMouseInteraction, TaskHandler } from "./task-close";
 import { taskKeyMap } from "./keymap";
 import { taskAutoComplete } from "./auto-complete";
 import {
+  deleteCompletedTaskByIdentifier,
   generateTaskIdentifier,
   saveCompletedTask,
-  reOpenTaskByIdentifier,
 } from "../../../../features/tasks/task-storage";
 
 export const createDefaultTaskHandler = (): TaskHandler => ({
@@ -26,16 +26,10 @@ export const createDefaultTaskHandler = (): TaskHandler => ({
   },
   onTaskOpen: (taskContent: string) => {
     const taskIdentifier = generateTaskIdentifier(taskContent);
-    reOpenTaskByIdentifier(taskIdentifier);
+    deleteCompletedTaskByIdentifier(taskIdentifier);
   },
 });
 
 export const createChecklistPlugin = (taskHandler: TaskHandler): Extension => {
-  return [
-    taskDecoration,
-    taskHoverField,
-    taskMouseInteraction(taskHandler),
-    taskAutoComplete,
-    taskKeyMap,
-  ];
+  return [taskDecoration, taskHoverField, taskMouseInteraction(taskHandler), taskAutoComplete, taskKeyMap];
 };

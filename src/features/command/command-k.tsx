@@ -4,10 +4,10 @@ import { Command } from "cmdk";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
 import { useNavigate } from "react-router-dom";
-import type * as monaco from "monaco-editor";
+// import type * as monaco from "monaco-editor";
 import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-formatter";
 import { showToast } from "../../utils/components/toast";
-import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
+// import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import type { PaperMode } from "../../utils/hooks/use-paper-mode";
 import { EyeIcon } from "../../utils/components/icons";
 import { COLOR_THEME, ColorTheme } from "../../utils/theme-initializer";
@@ -39,34 +39,33 @@ function ExportIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+// function FormatIcon(props: React.SVGProps<SVGSVGElement>) {
+//   return (
+//     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+//       <title>Format</title>
+//       <path
+//         d="M1.99998 2.5C1.99998 2.22386 2.22383 2 2.49998 2H12.5C12.7761 2 13 2.22386 13 2.5C13 2.77614 12.7761 3 12.5 3H2.49998C2.22383 3 1.99998 2.77614 1.99998 2.5ZM1.99998 7.5C1.99998 7.22386 2.22383 7 2.49998 7H7.5C7.77615 7 8 7.22386 8 7.5C8 7.77614 7.77615 8 7.5 8H2.49998C2.22383 8 1.99998 7.77614 1.99998 7.5ZM2.49998 12C2.22383 12 1.99998 12.2239 1.99998 12.5C1.99998 12.7761 2.22383 13 2.49998 13H9.50001C9.77616 13 10 12.7761 10 12.5C10 12.2239 9.77616 12 9.50001 12H2.49998Z"
+//         fill="currentColor"
+//         fillRule="evenodd"
+//         clipRule="evenodd"
+//       />
+//     </svg>
+//   );
+// }
 
-function FormatIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <title>Format</title>
-      <path
-        d="M1.99998 2.5C1.99998 2.22386 2.22383 2 2.49998 2H12.5C12.7761 2 13 2.22386 13 2.5C13 2.77614 12.7761 3 12.5 3H2.49998C2.22383 3 1.99998 2.77614 1.99998 2.5ZM1.99998 7.5C1.99998 7.22386 2.22383 7 2.49998 7H7.5C7.77615 7 8 7.22386 8 7.5C8 7.77614 7.77615 8 7.5 8H2.49998C2.22383 8 1.99998 7.77614 1.99998 7.5ZM2.49998 12C2.22383 12 1.99998 12.2239 1.99998 12.5C1.99998 12.7761 2.22383 13 2.49998 13H9.50001C9.77616 13 10 12.7761 10 12.5C10 12.2239 9.77616 12 9.50001 12H2.49998Z"
-        fill="currentColor"
-        fillRule="evenodd"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
-
-function GitHubIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <title>GitHub</title>
-      <path
-        d="M7.49933 0.25C3.49635 0.25 0.25 3.49593 0.25 7.50024C0.25 10.703 2.32715 13.4206 5.2081 14.3797C5.57084 14.446 5.70302 14.2222 5.70302 14.0299C5.70302 13.8576 5.69679 13.4019 5.69323 12.797C3.67661 13.235 3.25112 11.825 3.25112 11.825C2.92132 10.9874 2.44599 10.7644 2.44599 10.7644C1.78773 10.3149 2.49584 10.3238 2.49584 10.3238C3.22353 10.375 3.60629 11.0711 3.60629 11.0711C4.25298 12.1788 5.30335 11.8588 5.71638 11.6732C5.78225 11.205 5.96962 10.8854 6.17658 10.7043C4.56675 10.5209 2.87415 9.89918 2.87415 7.12104C2.87415 6.32925 3.15677 5.68257 3.62053 5.17563C3.54576 4.99226 3.29697 4.25521 3.69174 3.25691C3.69174 3.25691 4.30015 3.06196 5.68522 3.99973C6.26337 3.83906 6.8838 3.75895 7.50022 3.75583C8.1162 3.75895 8.73619 3.83906 9.31523 3.99973C10.6994 3.06196 11.3069 3.25691 11.3069 3.25691C11.7026 4.25521 11.4538 4.99226 11.3795 5.17563C11.8441 5.68257 12.1245 6.32925 12.1245 7.12104C12.1245 9.9063 10.4292 10.5192 8.81452 10.6985C9.07444 10.9224 9.30633 11.3648 9.30633 12.0413C9.30633 13.0102 9.29742 13.7922 9.29742 14.0299C9.29742 14.2239 9.42828 14.4496 9.79591 14.3788C12.6746 13.4179 14.75 10.7025 14.75 7.50024C14.75 3.49593 11.5036 0.25 7.49933 0.25Z"
-        fill="currentColor"
-        fillRule="evenodd"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
+// function GitHubIcon(props: React.SVGProps<SVGSVGElement>) {
+//   return (
+//     <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+//       <title>GitHub</title>
+//       <path
+//         d="M7.49933 0.25C3.49635 0.25 0.25 3.49593 0.25 7.50024C0.25 10.703 2.32715 13.4206 5.2081 14.3797C5.57084 14.446 5.70302 14.2222 5.70302 14.0299C5.70302 13.8576 5.69679 13.4019 5.69323 12.797C3.67661 13.235 3.25112 11.825 3.25112 11.825C2.92132 10.9874 2.44599 10.7644 2.44599 10.7644C1.78773 10.3149 2.49584 10.3238 2.49584 10.3238C3.22353 10.375 3.60629 11.0711 3.60629 11.0711C4.25298 12.1788 5.30335 11.8588 5.71638 11.6732C5.78225 11.205 5.96962 10.8854 6.17658 10.7043C4.56675 10.5209 2.87415 9.89918 2.87415 7.12104C2.87415 6.32925 3.15677 5.68257 3.62053 5.17563C3.54576 4.99226 3.29697 4.25521 3.69174 3.25691C3.69174 3.25691 4.30015 3.06196 5.68522 3.99973C6.26337 3.83906 6.8838 3.75895 7.50022 3.75583C8.1162 3.75895 8.73619 3.83906 9.31523 3.99973C10.6994 3.06196 11.3069 3.25691 11.3069 3.25691C11.7026 4.25521 11.4538 4.99226 11.3795 5.17563C11.8441 5.68257 12.1245 6.32925 12.1245 7.12104C12.1245 9.9063 10.4292 10.5192 8.81452 10.6985C9.07444 10.9224 9.30633 11.3648 9.30633 12.0413C9.30633 13.0102 9.29742 13.7922 9.29742 14.0299C9.29742 14.2239 9.42828 14.4496 9.79591 14.3788C12.6746 13.4179 14.75 10.7025 14.75 7.50024C14.75 3.49593 11.5036 0.25 7.49933 0.25Z"
+//         fill="currentColor"
+//         fillRule="evenodd"
+//         clipRule="evenodd"
+//       />
+//     </svg>
+//   );
+//
 
 function WidthIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -138,40 +137,12 @@ function HistoryIcon(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
-function CodeMirrorIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <title>CodeMirror</title>
-      <path
-        d="M1.5 1.5C1.5 1.22386 1.72386 1 2 1H13C13.2761 1 13.5 1.22386 13.5 1.5V13.5C13.5 13.7761 13.2761 14 13 14H2C1.72386 14 1.5 13.7761 1.5 13.5V1.5ZM2.5 2V13H12.5V2H2.5Z"
-        fill="currentColor"
-        fillRule="evenodd"
-        clipRule="evenodd"
-      />
-      <path
-        d="M4.5 4.5L6.5 6.5L4.5 8.5"
-        stroke="currentColor"
-        strokeWidth="1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M10.5 4.5L8.5 6.5L10.5 8.5"
-        stroke="currentColor"
-        strokeWidth="1"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;
   onOpen?: () => void; // 現在未使用のため、不要なら削除検討
   editorContent?: string;
-  editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
+//   editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
   markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
   paperMode?: PaperMode;
   cyclePaperMode?: () => PaperMode;
@@ -195,7 +166,6 @@ export function CommandMenu({
   open,
   onClose = () => {}, // デフォルトの空関数を設定
   editorContent = "",
-  editorRef,
   markdownFormatterRef,
   paperMode,
   cyclePaperMode,
@@ -286,76 +256,76 @@ export function CommandMenu({
     }
   }, [editorContent, handleClose]);
 
-  const handleFormatDocumentCallback = useCallback(async () => {
-    if (!editorRef?.current || !markdownFormatterRef?.current) {
-      showToast("Editor or markdown formatter not available", "error");
-      handleClose();
-      return;
-    }
-    try {
-      const editor = editorRef.current;
-      const selection = editor.getSelection();
-      const scrollTop = editor.getScrollTop();
-      const content = editor.getValue();
-      const formattedContent = await markdownFormatterRef.current.formatMarkdown(content); // formatMarkdownはPromiseを返すと仮定
+//   const handleFormatDocumentCallback = useCallback(async () => {
+//     if (!editorRef?.current || !markdownFormatterRef?.current) {
+//       showToast("Editor or markdown formatter not available", "error");
+//       handleClose();
+//       return;
+//     }
+//     try {
+//       const editor = editorRef.current;
+//       const selection = editor.getSelection();
+//       const scrollTop = editor.getScrollTop();
+//       const content = editor.getValue();
+//       const formattedContent = await markdownFormatterRef.current.formatMarkdown(content); // formatMarkdownはPromiseを返すと仮定
 
-      editor.setValue(formattedContent);
+//       editor.setValue(formattedContent);
 
-      // カーソル位置とスクロール位置を復元
-      if (selection) {
-        editor.setSelection(selection);
-      }
-      // setValue後のレンダリングを待ってからスクロール位置を復元
-      setTimeout(() => editor.setScrollTop(scrollTop), 0);
+//       // カーソル位置とスクロール位置を復元
+//       if (selection) {
+//         editor.setSelection(selection);
+//       }
+//       // setValue後のレンダリングを待ってからスクロール位置を復元
+//       setTimeout(() => editor.setScrollTop(scrollTop), 0);
 
-      showToast("Document formatted successfully", "default");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "unknown";
-      showToast(`Error formatting document: ${message}`, "error");
-      console.error("Formatting error:", error);
-    } finally {
-      handleClose();
-    }
-  }, [editorRef, markdownFormatterRef, handleClose]);
+//       showToast("Document formatted successfully", "default");
+//     } catch (error) {
+//       const message = error instanceof Error ? error.message : "unknown";
+//       showToast(`Error formatting document: ${message}`, "error");
+//       console.error("Formatting error:", error);
+//     } finally {
+//       handleClose();
+//     }
+//   }, [markdownFormatterRef, handleClose]);
 
-  const handleInsertGitHubIssuesCallback = useCallback(async () => {
-    if (!editorRef?.current) {
-      showToast("Editor not available", "error");
-      handleClose();
-      return;
-    }
-    try {
-      const github_user_id = prompt("Enter GitHub User ID:");
-      if (!github_user_id) {
-        handleClose(); // キャンセルまたは空入力時は閉じる
-        return;
-      }
-      const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id); // fetchGitHubIssuesTaskListはPromiseを返すと仮定
-      const editor = editorRef.current;
-      const selection = editor.getSelection();
-      const position = editor.getPosition();
+//   const handleInsertGitHubIssuesCallback = useCallback(async () => {
+//     if (!editorRef?.current) {
+//       showToast("Editor not available", "error");
+//       handleClose();
+//       return;
+//     }
+//     try {
+//       const github_user_id = prompt("Enter GitHub User ID:");
+//       if (!github_user_id) {
+//         handleClose(); // キャンセルまたは空入力時は閉じる
+//         return;
+//       }
+//       const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id); // fetchGitHubIssuesTaskListはPromiseを返すと仮定
+//       const editor = editorRef.current;
+//       const selection = editor.getSelection();
+//       const position = editor.getPosition();
 
-      let range: monaco.IRange;
-      if (selection && !selection.isEmpty()) {
-        range = selection;
-      } else if (position) {
-        // 選択範囲がない場合は現在のカーソル位置に挿入
-        range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
-      } else {
-        // カーソル位置もない場合（エディタが空など）は先頭に挿入
-        range = new monaco.Range(1, 1, 1, 1);
-      }
+//       let range: monaco.IRange;
+//       if (selection && !selection.isEmpty()) {
+//         range = selection;
+//       } else if (position) {
+//         // 選択範囲がない場合は現在のカーソル位置に挿入
+//         range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
+//       } else {
+//         // カーソル位置もない場合（エディタが空など）は先頭に挿入
+//         range = new monaco.Range(1, 1, 1, 1);
+//       }
 
-      editor.executeEdits("insert-github-issues", [{ range, text: issuesTaskList, forceMoveMarkers: true }]);
+//       editor.executeEdits("insert-github-issues", [{ range, text: issuesTaskList, forceMoveMarkers: true }]);
 
-      showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
-    } catch (error) {
-      console.error("Error inserting GitHub issues:", error);
-      showToast("Failed to insert GitHub issues", "error");
-    } finally {
-      handleClose();
-    }
-  }, [editorRef, handleClose]);
+//       showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
+//     } catch (error) {
+//       console.error("Error inserting GitHub issues:", error);
+//       showToast("Failed to insert GitHub issues", "error");
+//     } finally {
+//       handleClose();
+//     }
+//   }, [editorRef, handleClose]);
 
   const goToGitHubRepo = useCallback(() => {
     window.open("https://github.com/unvalley/ephe", "_blank");
@@ -367,7 +337,6 @@ export function CommandMenu({
     handleClose();
   }, [navigate, handleClose]);
 
-  // --- useMemo を使ってコマンドリストを生成 ---
   const commandsList = useMemo((): CommandItem[] => {
     const list: CommandItem[] = [
       {
@@ -380,7 +349,6 @@ export function CommandMenu({
       },
     ];
 
-    // 各コマンドを条件に応じてリストに追加
     if (cyclePaperMode) {
       list.push({
         id: "paper-mode",
@@ -412,7 +380,6 @@ export function CommandMenu({
       });
     }
     if (editorContent) {
-      // コンテンツがある場合のみ表示
       list.push({
         id: "export-markdown",
         name: "Export markdown",
@@ -422,28 +389,27 @@ export function CommandMenu({
         keywords: "export markdown save download file md text document",
       });
     }
-    if (editorRef?.current && markdownFormatterRef?.current) {
-      // エディタとフォーマッターが存在する場合のみ表示
-      list.push({
-        id: "format-document",
-        name: "Format document",
-        icon: <FormatIcon className="h-3.5 w-3.5" />,
-        shortcut: "⌘F", // ブラウザの検索と競合する可能性あり
-        perform: handleFormatDocumentCallback,
-        keywords: "format document prettify code style arrange beautify markdown lint tidy",
-      });
-    }
-    if (editorRef?.current) {
-      // エディタが存在する場合のみ表示
-      list.push({
-        id: "insert-github-issues",
-        name: "Insert GitHub Issues (Public Repos)",
-        icon: <GitHubIcon className="h-3.5 w-3.5" />,
-        shortcut: "⌘G", // ショートカットは要検討
-        perform: handleInsertGitHubIssuesCallback,
-        keywords: "github issues insert fetch task todo list import integrate",
-      });
-    }
+    // if (editorRef?.current && markdownFormatterRef?.current) {
+    //   list.push({
+    //     id: "format-document",
+    //     name: "Format document",
+    //     icon: <FormatIcon className="h-3.5 w-3.5" />,
+    //     shortcut: "⌘F", // ブラウザの検索と競合する可能性あり
+    //     perform: handleFormatDocumentCallback,
+    //     keywords: "format document prettify code style arrange beautify markdown lint tidy",
+    //   });
+    // }
+    // if (editorRef?.current) {
+    //   // エディタが存在する場合のみ表示
+    //   list.push({
+    //     id: "insert-github-issues",
+    //     name: "Insert GitHub Issues (Public Repos)",
+    //     icon: <GitHubIcon className="h-3.5 w-3.5" />,
+    //     shortcut: "⌘G", // ショートカットは要検討
+    //     perform: handleInsertGitHubIssuesCallback,
+    //     keywords: "github issues insert fetch task todo list import integrate",
+    //   });
+    // }
     list.push(
       {
         id: "github-repo",
@@ -465,7 +431,6 @@ export function CommandMenu({
 
     return list;
   }, [
-    // useMemo の依存配列: リストの内容や表示テキスト、実行される関数が変わる可能性のあるものを列挙
     getNextThemeText,
     cycleThemeCallback,
     cyclePaperMode,
@@ -476,53 +441,41 @@ export function CommandMenu({
     togglePreviewModeCallback,
     editorContent,
     handleExportMarkdownCallback,
-    editorRef,
+    // editorRef,
     markdownFormatterRef,
-    handleFormatDocumentCallback,
-    handleInsertGitHubIssuesCallback, // ref自体は通常変わらないが、.currentの有無をチェックするため含める
+    // handleFormatDocumentCallback,
     goToGitHubRepo,
     goToHistory,
     // paperMode, editorWidth, previewMode, // これらの値がリスト項目名自体に含まれる場合は依存配列に追加。今回はItem側で表示するため不要
   ]);
 
-  // フッターリンク (静的なので useMemo で囲む必要性は低いが、一貫性のために)
-  const footerLinks = useMemo(() => [{ key: "shortcuts", text: "⌘ K", title: "Command menu" }], []);
-
   return (
     <>
-      {/* オーバーレイ */}
       {open && (
-        // biome-ignore lint/a11y/useKeyWithClickEvents: クリック専用の装飾要素のため
         <div
           className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px] transition-opacity dark:bg-black/50"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            handleClose(); // メモ化されたクローズハンドラを使用
+            handleClose(); 
           }}
           aria-hidden="true"
         />
       )}
 
-      {/* コマンドメニュー本体 */}
       <Command
         label="Command Menu"
         className={`fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] -translate-x-1/2 transform overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900 ${
           open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
         }`}
         onKeyDown={(e) => {
-          // Escapeキーで閉じる
           if (e.key === "Escape") {
             e.preventDefault();
             handleClose();
           }
         }}
-        // `filter` prop でカスタムフィルタリングも可能
-        // loop // リストの循環選択を有効にする場合
       >
-        {/* 入力フィールド */}
         <div className="relative border-b border-gray-200 dark:border-zinc-800">
-          {/* 検索アイコン (SVG) */}
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -544,18 +497,14 @@ export function CommandMenu({
           />
         </div>
 
-        {/* コマンドリスト */}
         <Command.List
           ref={listRef}
-          // スクロールバーのスタイル (必要なら Tailwind プラグイン等で調整)
           className="scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent max-h-[min(60vh,350px)] overflow-y-auto p-2" // 高さを調整
         >
           <Command.Empty className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
             No results found.
           </Command.Empty>
 
-          {/* コマンドグループとアイテムを動的にレンダリング */}
-          {/* ここでは例としてIDに基づいてグループ分けしていますが、CommandItemにgroupプロパティ等を持たせる方が柔軟です */}
           <Command.Group
             heading="Interface Mode"
             className="mb-1 px-1 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
@@ -578,7 +527,6 @@ export function CommandMenu({
                     {/* コマンド名と状態表示 */}
                     <span className="flex-grow truncate">
                       {" "}
-                      {/* 長い場合に省略 */}
                       {command.name}
                       {command.id === "paper-mode" && paperMode && (
                         <span className="ml-1.5 text-xs text-gray-500 dark:text-gray-400">({paperMode})</span>
@@ -593,7 +541,6 @@ export function CommandMenu({
                       )}
                     </span>
                   </div>
-                  {/* ショートカット表示 */}
                   {command.shortcut && (
                     <kbd className="hidden flex-shrink-0 select-none rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-xs font-medium text-gray-500 group-hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400 sm:inline-block">
                       {command.shortcut}
@@ -660,10 +607,8 @@ export function CommandMenu({
           </Command.Group>
         </Command.List>
 
-        {/* フッター */}
         <div className="flex items-center justify-between border-t border-gray-200 px-3 py-2 text-xs text-gray-500 dark:border-zinc-800 dark:text-gray-400">
           <div className="flex items-center gap-1">
-            {/* フッター表示を簡略化 */}
             <kbd className="rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-medium text-gray-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400">
               ⌘
             </kbd>
@@ -673,7 +618,7 @@ export function CommandMenu({
             <span className="ml-1">to open</span>
           </div>
           <div>
-            <span>Ephe</span> {/* アプリ名など */}
+            <span>Ephe</span> 
           </div>
         </div>
       </Command>

@@ -25,33 +25,15 @@ export const generateTaskIdentifier = (taskContent: string): string => {
 };
 
 /**
- * Get all completed tasks from localStorage
- */
-export const getCompletedTasks = (): ReadonlyArray<CompletedTask> => {
-  try {
-    const tasksJson = localStorage.getItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS);
-    const tasks = tasksJson ? JSON.parse(tasksJson) : [];
-
-    // Return frozen array to ensure immutability
-    return Object.freeze(tasks);
-  } catch (error) {
-    console.error("Error retrieving completed tasks:", error);
-    return Object.freeze([]);
-  }
-};
-
-/**
  * Save a completed task to localStorage
  */
 export const saveCompletedTask = (task: CompletedTask): void => {
   try {
-    // Get current tasks as immutable array
-    const existingTasks = getCompletedTasks();
+    const existingTasksJson = localStorage.getItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS);
+    const existingTasks: CompletedTask[] = existingTasksJson ? JSON.parse(existingTasksJson) : [];
 
-    // Create a new array with the task added at the beginning
-    const updatedTasks = Object.freeze([task, ...existingTasks]);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS, JSON.stringify([task, ...existingTasks]));
 
-    localStorage.setItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS, JSON.stringify(updatedTasks));
     notifyTaskUpdate();
   } catch (error) {
     console.error("Error saving completed task:", error);
@@ -59,36 +41,15 @@ export const saveCompletedTask = (task: CompletedTask): void => {
 };
 
 /**
- * Delete a completed task by ID
+ * Get all completed tasks from localStorage
  */
-export const deleteCompletedTask = (taskId: string): void => {
+export const getCompletedTasks = (): CompletedTask[] => {
   try {
-    const tasks = getCompletedTasks();
-
-    // Create new array without the task to delete
-    const updatedTasks = Object.freeze(tasks.filter((task) => task.id !== taskId));
-
-    localStorage.setItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS, JSON.stringify(updatedTasks));
-    notifyTaskUpdate();
+    const tasksJson = localStorage.getItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS);
+    return tasksJson ? JSON.parse(tasksJson) : [];
   } catch (error) {
-    console.error("Error deleting completed task:", error);
-  }
-};
-
-/**
- * Re-open (delete) a completed task by its unique identifier
- */
-export const reOpenTaskByIdentifier = (taskIdentifier: string): void => {
-  try {
-    const tasks = getCompletedTasks();
-
-    // Create new array without the task to delete
-    const updatedTasks = Object.freeze(tasks.filter((task) => task.taskIdentifier !== taskIdentifier));
-
-    localStorage.setItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS, JSON.stringify(updatedTasks));
-    notifyTaskUpdate();
-  } catch (error) {
-    console.error("Error deleting completed task by identifier:", error);
+    console.error("Error retrieving completed tasks:", error);
+    return [];
   }
 };
 
@@ -99,37 +60,70 @@ export const getTasksByDate = (filter?: {
   year?: number;
   month?: number;
   day?: number;
-}): Record<string, CompletedTask> => {
+}): Record<string, CompletedTask[]> => {
   const tasks = getCompletedTasks();
   const tasksByDate: Record<string, CompletedTask[]> = {};
 
-  for (const task of tasks) {
-    const completedDate = new Date(task.completedAt);
+  // Filter tasks if filter is provided
+  const filteredTasks = tasks.filter((task) => {
+    if (!filter) return true;
 
-    // Apply filter if provided
-    if (filter) {
-      if (filter.year && completedDate.getFullYear() !== filter.year) continue;
-      if (filter.month && completedDate.getMonth() + 1 !== filter.month) continue; // +1 because getMonth() is 0-indexed
-      if (filter.day && completedDate.getDate() !== filter.day) continue;
+    const date = new Date(task.completedAt);
+    const taskYear = date.getFullYear();
+    const taskMonth = date.getMonth() + 1; // JavaScript months are 0-indexed
+    const taskDay = date.getDate();
+
+    // Apply filters
+    if (filter.year && taskYear !== filter.year) return false;
+    if (filter.month && taskMonth !== filter.month) return false;
+    if (filter.day && taskDay !== filter.day) return false;
+
+    return true;
+  });
+
+  // Group filtered tasks by date
+  for (const task of filteredTasks) {
+    const date = new Date(task.completedAt);
+    // Format date as YYYY-MM-DD in local timezone
+    const localDateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+    if (!tasksByDate[localDateStr]) {
+      tasksByDate[localDateStr] = [];
     }
-
-    // Get date string in YYYY-MM-DD format
-    const localeDateStr = completedDate.toISOString().split("T")[0];
-
-    if (!tasksByDate[localeDateStr]) {
-      tasksByDate[localeDateStr] = [];
-    }
-
-    // Immutably add task to the array
-    tasksByDate[localeDateStr] = [...tasksByDate[localeDateStr], task];
-  }
-
-  // Freeze each task array and the overall object for immutability
-  for (const date in tasksByDate) {
-    tasksByDate[date] = tasksByDate[date];
+    tasksByDate[localDateStr].push(task);
   }
 
   return tasksByDate;
+};
+
+/**
+ * Delete a completed task by ID
+ */
+export const deleteCompletedTask = (taskId: string): void => {
+  try {
+    const tasks = getCompletedTasks();
+    const updatedTasks = tasks.filter((task) => task.id !== taskId);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS, JSON.stringify(updatedTasks));
+
+    notifyTaskUpdate();
+  } catch (error) {
+    console.error("Error deleting completed task:", error);
+  }
+};
+
+/**
+ * Delete a completed task by its unique identifier
+ */
+export const deleteCompletedTaskByIdentifier = (taskIdentifier: string): void => {
+  try {
+    const tasks = getCompletedTasks();
+    const updatedTasks = tasks.filter((task) => task.taskIdentifier !== taskIdentifier);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS, JSON.stringify(updatedTasks));
+
+    notifyTaskUpdate();
+  } catch (error) {
+    console.error("Error deleting completed task by identifier:", error);
+  }
 };
 
 /**
@@ -137,10 +131,8 @@ export const getTasksByDate = (filter?: {
  */
 export const purgeCompletedTasks = (): void => {
   try {
-    // Create empty immutable array
-    const emptyTasks = Object.freeze([]);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS, JSON.stringify([]));
 
-    localStorage.setItem(LOCAL_STORAGE_KEYS.COMPLETED_TASKS, JSON.stringify(emptyTasks));
     notifyTaskUpdate();
   } catch (error) {
     console.error("Error purging completed tasks:", error);

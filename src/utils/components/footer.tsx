@@ -3,7 +3,7 @@
 import { Link } from "react-router-dom";
 import { memo } from "react";
 import Avatar from "boring-avatars";
-import { EyeIcon, CodeIcon } from "./icons";
+import { EyeIcon } from "./icons";
 // TODO: organize depndency direction, don't import from features
 import { SystemMenu } from "../../features/system/system-menu";
 import { HoursDisplay } from "../../features/time-display/hours-display";

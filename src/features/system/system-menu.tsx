@@ -5,13 +5,15 @@ import { MoonIcon, SunIcon, TableOfContentsIcon, WidthIcon, SuccessIcon } from "
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { getTasksByDate } from "../tasks/task-storage";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Link } from "react-router-dom";
 import { getSnapshots } from "../snapshots/snapshot-storage";
 import { COLOR_THEME } from "../../utils/theme-initializer";
-import { useTableOfContents } from "../../utils/hooks/use-toc";
+import { useAtom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
+import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 
 export const TASK_CHANNEL_NAME = "ephe:task-updates";
 
@@ -116,21 +118,23 @@ const useSnapshotCount = () => {
   return { snapshotCount };
 };
 
-type EditorRef = React.RefObject<HTMLDivElement | null>;
+const tocVisibilityAtom = atomWithStorage<boolean>(LOCAL_STORAGE_KEYS.TOC_MODE, false);
 
-export const SystemMenu = (editorRef: EditorRef) => {
+export const SystemMenu = () => {
   const { theme, setTheme } = useTheme();
   const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
-  const { isVisibleToc, toggleToc } = useTableOfContents({
-    editorRef,
-    content: "## test",
-  });
+  const [isVisibleToc, setIsVisibleToc] = useAtom(tocVisibilityAtom);
+  
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
   const { charCount } = useCharCount();
   const { todayCompletedTasks } = useTodayCompletedTasks();
   const { snapshotCount } = useSnapshotCount();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const toggleToc = useCallback(() => {
+    setIsVisibleToc((prev) => !prev)
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
