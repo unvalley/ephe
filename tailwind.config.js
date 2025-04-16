@@ -100,7 +100,7 @@ module.exports = {
       },
     },
     fontFamily: {
-      "space-mono": ["var(--font-space-mono)"],
+      //   "space-mono": ["var(--font-space-mono)"],
     },
     gridTemplateColumns: {
       24: "repeat(24, minmax(0, 1fr))",

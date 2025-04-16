@@ -363,10 +363,10 @@ export const EditorApp = () => {
   useEffect(() => {
     const handleKeyboardShortcuts = (e: KeyboardEvent) => {
       // Cmd/Ctrl + K to open command menu
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setCommandMenuOpen((prev) => !prev);
-      }
+      //   if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      //     e.preventDefault();
+      //     setCommandMenuOpen((prev) => !prev);
+      //   }
 
       // Cmd/Ctrl + Shift + S to open snapshot dialog
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "s") {
