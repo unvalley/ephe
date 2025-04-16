@@ -5,7 +5,6 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { useTheme } from "../../../utils/hooks/use-theme";
 import { useDebouncedCallback } from "use-debounce";
 import { useTabDetection } from "../use-tab-detection";
-import { usePaperMode } from "../../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 // import { CommandMenu } from "../../command/command-k";
 import { getRandomQuote } from "../quotes";
@@ -315,40 +314,40 @@ export const EditorApp = () => {
       }
     };
 
-    // // Set up extensions and event handlers
-    // const markdownExtension = new MonacoMarkdownExtension();
-    // markdownExtension.activate(monaco.editor);
+    // Set up extensions and event handlers
+    const markdownExtension = new MonacoMarkdownExtension();
+    markdownExtension.activate(monaco.editor);
 
-    // // Event handlers
-    // monaco.editor.onKeyDown((event) => handleKeyDown(event, monaco.editor, monaco.editor.getModel(), monaco.editor.getPosition()));
-    // monaco.editor.onMouseDown((event) => handleTaskCheckboxToggle(event, monaco.editor, monaco.editor.getModel()));
+    // Event handlers
+    monaco.editor.onKeyDown((event) => handleKeyDown(event, monaco.editor, monaco.editor.getModel(), monaco.editor.getPosition()));
+    monaco.editor.onMouseDown((event) => handleTaskCheckboxToggle(event, monaco.editor, monaco.editor.getModel()));
 
-    // setupEditorDecorations(monaco.editor);
-    // setupEditorCommands(monaco.editor);
+    setupEditorDecorations(monaco.editor);
+    setupEditorCommands(monaco.editor);
 
-    // // Initialize placeholders
-    // handlePlaceholder(monaco.editor.getValue());
+    // Initialize placeholders
+    handlePlaceholder(monaco.editor.getValue());
 
-    // setCharCount(monaco.editor.getValue().length);
-    // setIsEditorReady(true);
+    setCharCount(monaco.editor.getValue().length);
+    setIsEditorReady(true);
 
-    // // Update editor layout on window resize
-    // const handleResize = () => {
-    //   if (editorRef.current) {
-    //     editorRef.current.layout();
-    //   }
-    // };
+    // Update editor layout on window resize
+    const handleResize = () => {
+      if (editorRef.current) {
+        editorRef.current.layout();
+      }
+    };
 
-    // window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize);
 
-    // // Cleanup on unmount
-    // return () => {
-    //   window.removeEventListener('resize', handleResize);
-    //   if (editorRef.current) {
-    //     editorRef.current.dispose();
-    //     editorRef.current = null;
-    //   }
-    // };
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (editorRef.current) {
+        editorRef.current.dispose();
+        editorRef.current = null;
+      }
+    };
   }, [editorContent, isDarkMode, previewMode, debouncedCharCountUpdate, debouncedSetContent]);
 
   // Update editor theme when theme changes

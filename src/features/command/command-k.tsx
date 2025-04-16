@@ -1,7 +1,7 @@
 "use client";
 
 import { Command } from "cmdk";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
 import { useNavigate } from "react-router-dom";
 import type * as monaco from "monaco-editor";
@@ -10,7 +10,7 @@ import { showToast } from "../../utils/components/toast";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import type { PaperMode } from "../../utils/hooks/use-paper-mode";
 import { EyeIcon } from "../../utils/components/icons";
-import { COLOR_THEME } from "../../utils/theme-initializer";
+import { COLOR_THEME, ColorTheme } from "../../utils/theme-initializer";
 import { EditorWidth } from "src/utils/hooks/use-editor-width";
 
 // Icons - you might need to install react-icons package if not already installed
@@ -169,7 +169,7 @@ function CodeMirrorIcon(props: React.SVGProps<SVGSVGElement>) {
 export type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;
-  onOpen?: () => void;
+  onOpen?: () => void; // 現在未使用のため、不要なら削除検討
   editorContent?: string;
   editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
   markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
@@ -181,9 +181,19 @@ export type CommandMenuProps = {
   togglePreviewMode?: () => void;
 };
 
+// コマンドアイテムの型定義 (keywords を追加)
+type CommandItem = {
+  id: string;
+  name: string;
+  icon?: React.ReactNode;
+  shortcut?: string;
+  perform: () => void;
+  keywords?: string; // cmdkでの検索用キーワード
+};
+
 export function CommandMenu({
   open,
-  onClose,
+  onClose = () => {}, // デフォルトの空関数を設定
   editorContent = "",
   editorRef,
   markdownFormatterRef,
@@ -200,310 +210,329 @@ export function CommandMenu({
   const listRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // 追加: コマンドリストを管理するためのstate
-  type CommandItem = {
-    id: string;
-    name: string;
-    icon?: React.ReactNode;
-    shortcut?: string;
-    perform: () => void;
-  };
-  const [commands, setCommands] = useState<CommandItem[]>([]);
-
-  // Function to cycle through theme modes
-  const cycleTheme = () => {
-    if (theme === COLOR_THEME.LIGHT) {
-      setTheme(COLOR_THEME.DARK);
-    } else if (theme === COLOR_THEME.DARK) {
-      setTheme(COLOR_THEME.SYSTEM);
-    } else {
-      setTheme(COLOR_THEME.LIGHT);
-    }
-  };
-
-  // Get the next theme in the cycle for display
-  const getNextThemeText = () => {
-    if (theme === COLOR_THEME.LIGHT) {
-      return "dark";
-    }
-    if (theme === COLOR_THEME.DARK) {
-      return "system";
-    }
-    return "light";
-  };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
-        e.preventDefault();
-        if (open) {
-          onClose();
-        } else {
-          // onOpen?.();
-        }
-      }
-
-      // Make ESC key close the command menu immediately
-      if (e.key === "Escape" && open) {
-        e.preventDefault();
-        e.stopPropagation(); // ensure the event doesn't reach Monaco editor
-        onClose();
-      }
-    };
-
-    // Use capture phase to handle the event before it reaches Monaco editor
-    document.addEventListener("keydown", handleKeyDown, true);
-    return () => document.removeEventListener("keydown", handleKeyDown, true);
-  }, [open, onClose]);
-
+  // --- メニューオープン時のフォーカス設定 ---
   useEffect(() => {
     if (open) {
-      // Ensure focus is set reliably with a slight delay
       const timer = setTimeout(() => {
         inputRef.current?.focus();
-        setInputValue("");
-      }, 10);
+        setInputValue(""); // 開く度に入力値をクリア
+      }, 50); // 少し遅延させて確実にフォーカス
       return () => clearTimeout(timer);
     }
   }, [open]);
 
-  // Function to export markdown content
-  const handleExportMarkdown = () => {
+  // --- コールバック関数のメモ化 ---
+  const handleClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
+  const cycleThemeCallback = useCallback(() => {
+    let nextTheme: ColorTheme;
+    if (theme === COLOR_THEME.LIGHT) {
+      nextTheme = COLOR_THEME.DARK;
+    } else if (theme === COLOR_THEME.DARK) {
+      nextTheme = COLOR_THEME.SYSTEM;
+    } else {
+      nextTheme = COLOR_THEME.LIGHT;
+    }
+    setTheme(nextTheme);
+    handleClose();
+  }, [theme, setTheme, handleClose]);
+
+  const getNextThemeText = useCallback(() => {
+    if (theme === COLOR_THEME.LIGHT) return "dark";
+    if (theme === COLOR_THEME.DARK) return "system";
+    return "light";
+  }, [theme]);
+
+  const cyclePaperModeCallback = useCallback(() => {
+    cyclePaperMode?.(); // Optional chaining で呼び出し
+    handleClose();
+  }, [cyclePaperMode, handleClose]);
+
+  const toggleEditorWidthCallback = useCallback(() => {
+    toggleEditorWidth?.();
+    handleClose();
+  }, [toggleEditorWidth, handleClose]);
+
+  const togglePreviewModeCallback = useCallback(() => {
+    togglePreviewMode?.();
+    handleClose();
+  }, [togglePreviewMode, handleClose]);
+
+  const handleExportMarkdownCallback = useCallback(() => {
     if (!editorContent) {
       showToast("No content to export", "error");
-      onClose?.();
+      handleClose();
       return;
     }
+    try {
+      const blob = new Blob([editorContent], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const date = new Date().toISOString().split("T")[0];
+      a.href = url;
+      a.download = `ephe_${date}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("Markdown exported", "success");
+    } catch (error) {
+      console.error("Export failed:", error);
+      showToast("Failed to export markdown", "error");
+    } finally {
+      handleClose(); // 成功・失敗に関わらず閉じる
+    }
+  }, [editorContent, handleClose]);
 
-    const blob = new Blob([editorContent], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const date = new Date().toISOString().split("T")[0];
-    a.href = url;
-    a.download = `ephe_${date}.md`;
-
-    // Trigger the download
-    document.body.appendChild(a);
-    a.click();
-
-    // Clean up
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    onClose();
-  };
-
-  // Function to format document using dprint
-  const handleFormatDocument = async () => {
+  const handleFormatDocumentCallback = useCallback(async () => {
     if (!editorRef?.current || !markdownFormatterRef?.current) {
       showToast("Editor or markdown formatter not available", "error");
-      onClose?.();
+      handleClose();
       return;
     }
-
     try {
       const editor = editorRef.current;
-      // Save current cursor position and selection
       const selection = editor.getSelection();
       const scrollTop = editor.getScrollTop();
-
       const content = editor.getValue();
-      const formattedContent = await markdownFormatterRef.current.formatMarkdown(content);
+      const formattedContent = await markdownFormatterRef.current.formatMarkdown(content); // formatMarkdownはPromiseを返すと仮定
 
-      // Apply the formatted content
       editor.setValue(formattedContent);
 
-      // Restore cursor position and selection
+      // カーソル位置とスクロール位置を復元
       if (selection) {
         editor.setSelection(selection);
-        editor.setScrollTop(scrollTop);
       }
+      // setValue後のレンダリングを待ってからスクロール位置を復元
+      setTimeout(() => editor.setScrollTop(scrollTop), 0);
 
       showToast("Document formatted successfully", "default");
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown";
       showToast(`Error formatting document: ${message}`, "error");
+      console.error("Formatting error:", error);
+    } finally {
+      handleClose();
     }
+  }, [editorRef, markdownFormatterRef, handleClose]);
 
-    onClose();
-  };
-
-  // Function to fetch and insert GitHub issues as tasks
-  const handleInsertGitHubIssues = async () => {
+  const handleInsertGitHubIssuesCallback = useCallback(async () => {
     if (!editorRef?.current) {
       showToast("Editor not available", "error");
-      onClose?.();
+      handleClose();
       return;
     }
-
     try {
       const github_user_id = prompt("Enter GitHub User ID:");
-
-      // If user cancels the prompt or enters empty string, abort
       if (!github_user_id) {
-        onClose?.();
+        handleClose(); // キャンセルまたは空入力時は閉じる
         return;
       }
-
-      // Fetch GitHub issues
-      const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id);
-
-      // Insert issues at current cursor position
+      const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id); // fetchGitHubIssuesTaskListはPromiseを返すと仮定
       const editor = editorRef.current;
       const selection = editor.getSelection();
+      const position = editor.getPosition();
 
-      if (selection) {
-        editor.executeEdits("", [
-          {
-            range: selection,
-            text: issuesTaskList,
-            forceMoveMarkers: true,
-          },
-        ]);
+      let range: monaco.IRange;
+      if (selection && !selection.isEmpty()) {
+        range = selection;
+      } else if (position) {
+        // 選択範囲がない場合は現在のカーソル位置に挿入
+        range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
+      } else {
+        // カーソル位置もない場合（エディタが空など）は先頭に挿入
+        range = new monaco.Range(1, 1, 1, 1);
       }
+
+      editor.executeEdits("insert-github-issues", [{ range, text: issuesTaskList, forceMoveMarkers: true }]);
 
       showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
     } catch (error) {
       console.error("Error inserting GitHub issues:", error);
       showToast("Failed to insert GitHub issues", "error");
+    } finally {
+      handleClose();
     }
+  }, [editorRef, handleClose]);
 
-    onClose();
-  };
+  const goToGitHubRepo = useCallback(() => {
+    window.open("https://github.com/unvalley/ephe", "_blank");
+    handleClose();
+  }, [handleClose]);
 
-  const footerLinks = [{ key: "shortcuts", text: "⌘+K", title: "Command menu" }];
+  const goToHistory = useCallback(() => {
+    navigate("/history");
+    handleClose();
+  }, [navigate, handleClose]);
 
-  useEffect(() => {
-    const initialCommands: CommandItem[] = [
+  // --- useMemo を使ってコマンドリストを生成 ---
+  const commandsList = useMemo((): CommandItem[] => {
+    const list: CommandItem[] = [
       {
         id: "theme-toggle",
         name: `Switch to ${getNextThemeText()} mode`,
-        icon: <ThemeIcon />,
-        shortcut: "⌘T",
-        perform: () => {
-          cycleTheme();
-          onClose();
-        },
+        icon: <ThemeIcon className="h-3.5 w-3.5" />,
+        shortcut: "⌘T", // Mac以外も考慮するなら修飾キーの表示を工夫する必要あり
+        perform: cycleThemeCallback,
+        keywords: "theme toggle switch mode light dark system color appearance",
       },
-      {
+    ];
+
+    // 各コマンドを条件に応じてリストに追加
+    if (cyclePaperMode) {
+      list.push({
         id: "paper-mode",
-        name: `Cycle paper mode ${paperMode}`,
-        icon: <PaperIcon />,
+        name: `Cycle paper mode`, // 現在の状態は Item 側で表示
+        icon: <PaperIcon className="h-3.5 w-3.5" />,
         shortcut: "⌘P",
-        perform: () => {
-          cyclePaperMode();
-          onClose();
-        },
-      },
-      {
+        perform: cyclePaperModeCallback,
+        keywords: "paper mode cycle switch document style layout background",
+      });
+    }
+    if (toggleEditorWidth) {
+      list.push({
         id: "editor-width",
-        name: `Toggle editor width ${editorWidth}`,
-        icon: <WidthIcon />,
+        name: `Toggle editor width`, // 現在の状態は Item 側で表示
+        icon: <WidthIcon className="h-3.5 w-3.5" />,
         shortcut: "⌘W",
-        perform: () => {
-          toggleEditorWidth();
-          onClose();
-        },
-      },
-      {
+        perform: toggleEditorWidthCallback,
+        keywords: "editor width toggle resize narrow wide full layout column",
+      });
+    }
+    if (togglePreviewMode) {
+      list.push({
         id: "preview-mode",
-        name: `Toggle preview mode ${previewMode ? "on" : "off"}`,
-        icon: <EyeIcon />,
+        name: `Toggle preview mode`, // 現在の状態は Item 側で表示
+        icon: <EyeIcon className="h-3.5 w-3.5" />,
         shortcut: "⌘⇧P",
-        perform: () => {
-          togglePreviewMode();
-          onClose();
-        },
-      },
-      {
+        perform: togglePreviewModeCallback,
+        keywords: "preview markdown toggle on off view show hide live render",
+      });
+    }
+    if (editorContent) {
+      // コンテンツがある場合のみ表示
+      list.push({
         id: "export-markdown",
         name: "Export markdown",
-        icon: <ExportIcon />,
+        icon: <ExportIcon className="h-3.5 w-3.5" />,
         shortcut: "⌘S",
-        perform: handleExportMarkdown,
-      },
-      {
+        perform: handleExportMarkdownCallback,
+        keywords: "export markdown save download file md text document",
+      });
+    }
+    if (editorRef?.current && markdownFormatterRef?.current) {
+      // エディタとフォーマッターが存在する場合のみ表示
+      list.push({
         id: "format-document",
         name: "Format document",
-        icon: <FormatIcon />,
-        shortcut: "⌘F",
-        perform: handleFormatDocument,
-      },
-      {
+        icon: <FormatIcon className="h-3.5 w-3.5" />,
+        shortcut: "⌘F", // ブラウザの検索と競合する可能性あり
+        perform: handleFormatDocumentCallback,
+        keywords: "format document prettify code style arrange beautify markdown lint tidy",
+      });
+    }
+    if (editorRef?.current) {
+      // エディタが存在する場合のみ表示
+      list.push({
         id: "insert-github-issues",
         name: "Insert GitHub Issues (Public Repos)",
-        icon: <GitHubIcon />,
-        shortcut: "⌘G",
-        perform: handleInsertGitHubIssues,
-      },
+        icon: <GitHubIcon className="h-3.5 w-3.5" />,
+        shortcut: "⌘G", // ショートカットは要検討
+        perform: handleInsertGitHubIssuesCallback,
+        keywords: "github issues insert fetch task todo list import integrate",
+      });
+    }
+    list.push(
       {
         id: "github-repo",
         name: "Go to Ephe GitHub Repo",
-        icon: <LinkIcon />,
-        shortcut: "⌘R",
-        perform: () => {
-          window.open("https://github.com/unvalley/ephe", "_blank");
-          onClose();
-        },
+        icon: <LinkIcon className="h-3.5 w-3.5" />,
+        shortcut: "⌘R", // ブラウザのリロードと競合する可能性あり
+        perform: goToGitHubRepo,
+        keywords: "github ephe repository project code source link open website source-code",
       },
       {
         id: "history",
         name: "Go to History",
-        icon: <HistoryIcon />,
-        shortcut: "⌘H",
-        perform: () => {
-          navigate("/history");
-          onClose();
-        },
+        icon: <HistoryIcon className="h-3.5 w-3.5" />,
+        shortcut: "⌘H", // ブラウザの履歴と競合する可能性あり
+        perform: goToHistory,
+        keywords: "history document version past previous changes log revisions browse",
       },
-    ];
+    );
 
-    setCommands(initialCommands);
+    return list;
   }, [
-    cycleTheme,
-    cyclePaperMode,
-    toggleEditorWidth,
-    togglePreviewMode,
-    handleExportMarkdown,
-    handleFormatDocument,
-    handleInsertGitHubIssues,
+    // useMemo の依存配列: リストの内容や表示テキスト、実行される関数が変わる可能性のあるものを列挙
     getNextThemeText,
-    paperMode,
-    editorWidth,
-    previewMode,
-    navigate,
-    onClose,
+    cycleThemeCallback,
+    cyclePaperMode,
+    cyclePaperModeCallback, // prop自体も依存に含める（有無で項目が変わるため）
+    toggleEditorWidth,
+    toggleEditorWidthCallback,
+    togglePreviewMode,
+    togglePreviewModeCallback,
+    editorContent,
+    handleExportMarkdownCallback,
+    editorRef,
+    markdownFormatterRef,
+    handleFormatDocumentCallback,
+    handleInsertGitHubIssuesCallback, // ref自体は通常変わらないが、.currentの有無をチェックするため含める
+    goToGitHubRepo,
+    goToHistory,
+    // paperMode, editorWidth, previewMode, // これらの値がリスト項目名自体に含まれる場合は依存配列に追加。今回はItem側で表示するため不要
   ]);
+
+  // フッターリンク (静的なので useMemo で囲む必要性は低いが、一貫性のために)
+  const footerLinks = useMemo(() => [{ key: "shortcuts", text: "⌘ K", title: "Command menu" }], []);
 
   return (
     <>
-      {/* Animated overlay */}
+      {/* オーバーレイ */}
       {open && (
-        // biome-ignore lint/a11y/useKeyWithClickEvents: The overlay is only clickable and not focusable by design
+        // biome-ignore lint/a11y/useKeyWithClickEvents: クリック専用の装飾要素のため
         <div
           className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px] transition-opacity dark:bg-black/50"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            onClose();
+            handleClose(); // メモ化されたクローズハンドラを使用
           }}
+          aria-hidden="true"
         />
       )}
 
+      {/* コマンドメニュー本体 */}
       <Command
         label="Command Menu"
-        className={`-translate-x-1/2 fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] transform overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900 ${
+        className={`fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] -translate-x-1/2 transform overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900 ${
           open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
         }`}
-        onValueChange={setInputValue}
+        onKeyDown={(e) => {
+          // Escapeキーで閉じる
+          if (e.key === "Escape") {
+            e.preventDefault();
+            handleClose();
+          }
+        }}
+        // `filter` prop でカスタムフィルタリングも可能
+        // loop // リストの循環選択を有効にする場合
       >
-        <div className="border-gray-200 border-b px-3 pt-2 pb-1.5 dark:border-zinc-800">
-          <div className="search-icon pointer-events-none absolute mt-[0.7rem] mr-3 ml-2 text-[0.9rem] text-gray-400 dark:text-gray-500">
-            <svg width="1em" height="1em" viewBox="0 0 16 16" className="opacity-70" aria-hidden="true">
-              <path
-                fill="currentColor"
-                d="M7 14c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7ZM7 1.5C3.69 1.5 1 4.19 1 7.5s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6Z"
-              />
-              <path fill="currentColor" d="m11.45 13.89 4.25 4.25a.5.5 0 0 0 .71-.71l-4.25-4.25a.5.5 0 0 0-.71.71Z" />
+        {/* 入力フィールド */}
+        <div className="relative border-b border-gray-200 dark:border-zinc-800">
+          {/* 検索アイコン (SVG) */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 text-gray-400 dark:text-gray-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           <Command.Input
@@ -511,169 +540,140 @@ export function CommandMenu({
             value={inputValue}
             onValueChange={setInputValue}
             placeholder="Type a command or search..."
-            className="w-full bg-transparent py-2.5 pr-2 pl-9 text-gray-900 text-sm outline-none placeholder:text-gray-400 dark:text-gray-100 dark:placeholder:text-gray-500"
+            className="w-full border-none bg-transparent py-2.5 pl-9 pr-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:ring-0 dark:text-gray-100 dark:placeholder:text-gray-500" // focus:ring-0 でフォーカス時のリングを消去
           />
         </div>
 
+        {/* コマンドリスト */}
         <Command.List
           ref={listRef}
-          className="scrollbar-thin scrollbar-thumb-gray-100 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent max-h-[300px] overflow-auto overflow-y-auto p-2"
+          // スクロールバーのスタイル (必要なら Tailwind プラグイン等で調整)
+          className="scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent max-h-[min(60vh,350px)] overflow-y-auto p-2" // 高さを調整
         >
-          <Command.Empty className="py-6 text-center text-gray-500 text-sm dark:text-gray-400">
+          <Command.Empty className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
             No results found.
           </Command.Empty>
 
-          <Command.Group heading="Interface Mode" className="mb-1 px-1 text-mono-400 text-xs dark:text-mono-200">
-            <Command.Item
-              className="group mt-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-              onSelect={() => {
-                cycleTheme();
-                onClose?.();
-              }}
-              value="theme toggle switch mode light dark system"
-            >
-              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                <ThemeIcon className="h-3.5 w-3.5" />
-              </div>
-              <span>Switch to {getNextThemeText()} mode</span>
-            </Command.Item>
-
-            {cyclePaperMode && (
-              <Command.Item
-                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                onSelect={() => {
-                  cyclePaperMode();
-                  onClose?.();
-                }}
-                value="paper mode cycle switch paper"
-              >
-                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                  <PaperIcon className="h-3.5 w-3.5" />
-                </div>
-                <span>
-                  Cycle paper mode <span className="ml-1 text-gray-500 text-xs dark:text-gray-400">{paperMode}</span>
-                </span>
-              </Command.Item>
-            )}
-
-            {toggleEditorWidth && (
-              <Command.Item
-                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                onSelect={() => {
-                  toggleEditorWidth();
-                  onClose?.();
-                }}
-                value="editor width toggle resize"
-              >
-                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                  <WidthIcon className="h-3.5 w-3.5" />
-                </div>
-                <span>
-                  Toggle editor width{" "}
-                  <span className="ml-1 text-gray-500 text-xs dark:text-gray-400">{editorWidth}</span>
-                </span>
-              </Command.Item>
-            )}
-
-            {togglePreviewMode && (
-              <Command.Item
-                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                onSelect={() => {
-                  togglePreviewMode();
-                  onClose?.();
-                }}
-                value="preview mode toggle switch"
-              >
-                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                  <EyeIcon className="h-3.5 w-3.5" />
-                </div>
-                <span>Toggle preview mode ({previewMode ? "on" : "off"})</span>
-              </Command.Item>
-            )}
+          {/* コマンドグループとアイテムを動的にレンダリング */}
+          {/* ここでは例としてIDに基づいてグループ分けしていますが、CommandItemにgroupプロパティ等を持たせる方が柔軟です */}
+          <Command.Group
+            heading="Interface Mode"
+            className="mb-1 px-1 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+          >
+            {commandsList
+              .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width", "preview-mode"].includes(cmd.id))
+              .map((command) => (
+                <Command.Item
+                  key={command.id}
+                  // value に name と keywords を含めて検索対象にする
+                  value={`${command.name} ${command.keywords || ""}`}
+                  onSelect={command.perform}
+                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-gray-900 transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:hover:bg-zinc-800 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400"
+                >
+                  <div className="flex items-center gap-2">
+                    {/* アイコン表示エリア */}
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-hover:bg-zinc-600 dark:group-aria-selected:bg-primary-600/20">
+                      {command.icon}
+                    </div>
+                    {/* コマンド名と状態表示 */}
+                    <span className="flex-grow truncate">
+                      {" "}
+                      {/* 長い場合に省略 */}
+                      {command.name}
+                      {command.id === "paper-mode" && paperMode && (
+                        <span className="ml-1.5 text-xs text-gray-500 dark:text-gray-400">({paperMode})</span>
+                      )}
+                      {command.id === "editor-width" && editorWidth && (
+                        <span className="ml-1.5 text-xs text-gray-500 dark:text-gray-400">({editorWidth})</span>
+                      )}
+                      {command.id === "preview-mode" && (
+                        <span className="ml-1.5 text-xs text-gray-500 dark:text-gray-400">
+                          ({previewMode ? "on" : "off"})
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  {/* ショートカット表示 */}
+                  {command.shortcut && (
+                    <kbd className="hidden flex-shrink-0 select-none rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-xs font-medium text-gray-500 group-hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400 sm:inline-block">
+                      {command.shortcut}
+                    </kbd>
+                  )}
+                </Command.Item>
+              ))}
           </Command.Group>
 
-          <Command.Group heading="Operations" className="mb-1 px-1 text-mono-400 text-xs dark:text-mono-200">
-            {editorContent && (
-              <Command.Item
-                className="group mt-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                onSelect={handleExportMarkdown}
-                value="export markdown save download"
-              >
-                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                  <ExportIcon className="h-3.5 w-3.5" />
-                </div>
-                <span>Export markdown</span>
-              </Command.Item>
-            )}
-
-            {editorRef?.current && markdownFormatterRef?.current && (
-              <Command.Item
-                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                onSelect={handleFormatDocument}
-                value="format document prettify"
-              >
-                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                  <FormatIcon className="h-3.5 w-3.5" />
-                </div>
-                <span>Format document</span>
-              </Command.Item>
-            )}
-
-            {editorRef?.current && (
-              <Command.Item
-                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                onSelect={handleInsertGitHubIssues}
-                value="github issues insert fetch public repos"
-              >
-                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                  <GitHubIcon className="h-3.5 w-3.5" />
-                </div>
-                <span>Insert GitHub Issues (Public Repos)</span>
-              </Command.Item>
-            )}
+          <Command.Group
+            heading="Operations"
+            className="mb-1 px-1 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+          >
+            {commandsList
+              .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues"].includes(cmd.id))
+              .map((command) => (
+                <Command.Item
+                  key={command.id}
+                  value={`${command.name} ${command.keywords || ""}`}
+                  onSelect={command.perform}
+                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-gray-900 transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:hover:bg-zinc-800 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-hover:bg-zinc-600 dark:group-aria-selected:bg-primary-600/20">
+                      {command.icon}
+                    </div>
+                    <span className="flex-grow truncate">{command.name}</span>
+                  </div>
+                  {command.shortcut && (
+                    <kbd className="hidden flex-shrink-0 select-none rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-xs font-medium text-gray-500 group-hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400 sm:inline-block">
+                      {command.shortcut}
+                    </kbd>
+                  )}
+                </Command.Item>
+              ))}
           </Command.Group>
 
-          <Command.Group heading="Move" className="mb-1 px-1 text-mono-400 text-xs dark:text-mono-200">
-            <Command.Item
-              className="group mt-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-              onSelect={() => {
-                window.open("https://github.com/unvalley/ephe", "_blank");
-                onClose?.();
-              }}
-              value="github ephe repo project"
-            >
-              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                <LinkIcon className="h-3.5 w-3.5" />
-              </div>
-              <span>Go to Ephe GitHub Repo</span>
-            </Command.Item>
-
-            <Command.Item
-              className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-              onSelect={() => {
-                navigate("/history");
-                onClose?.();
-              }}
-              value="history document past versions"
-            >
-              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                <HistoryIcon className="h-3.5 w-3.5" />
-              </div>
-              <span>Go to History</span>
-            </Command.Item>
+          <Command.Group
+            heading="Navigation"
+            className="mb-1 px-1 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+          >
+            {commandsList
+              .filter((cmd) => ["github-repo", "history"].includes(cmd.id))
+              .map((command) => (
+                <Command.Item
+                  key={command.id}
+                  value={`${command.name} ${command.keywords || ""}`}
+                  onSelect={command.perform}
+                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-gray-900 transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:hover:bg-zinc-800 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-hover:bg-zinc-600 dark:group-aria-selected:bg-primary-600/20">
+                      {command.icon}
+                    </div>
+                    <span className="flex-grow truncate">{command.name}</span>
+                  </div>
+                  {command.shortcut && (
+                    <kbd className="hidden flex-shrink-0 select-none rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-xs font-medium text-gray-500 group-hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400 sm:inline-block">
+                      {command.shortcut}
+                    </kbd>
+                  )}
+                </Command.Item>
+              ))}
           </Command.Group>
         </Command.List>
 
-        <div className="flex items-center justify-between border-gray-200 border-t px-2 py-2 text-gray-500 text-xs dark:border-zinc-800 dark:text-gray-400">
-          <div className="flex gap-2">
-            {footerLinks.map((link) => (
-              <div key={link.key} className="flex items-center gap-1" title={link.title}>
-                <span>{link.text}</span>
-              </div>
-            ))}
+        {/* フッター */}
+        <div className="flex items-center justify-between border-t border-gray-200 px-3 py-2 text-xs text-gray-500 dark:border-zinc-800 dark:text-gray-400">
+          <div className="flex items-center gap-1">
+            {/* フッター表示を簡略化 */}
+            <kbd className="rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-medium text-gray-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400">
+              ⌘
+            </kbd>
+            <kbd className="rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-medium text-gray-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400">
+              K
+            </kbd>
+            <span className="ml-1">to open</span>
           </div>
-          <div className="text-xs">
-            <span>Ephe</span>
+          <div>
+            <span>Ephe</span> {/* アプリ名など */}
           </div>
         </div>
       </Command>
