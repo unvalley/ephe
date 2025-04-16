@@ -10,7 +10,9 @@
     "lint": "biome lint .",
     "format": "biome format --write .",
     "test": "vitest",
-    "copy-wasm": "node --experimental-strip-types src/scripts/copy-wasm.ts"
+    "copy-wasm": "node --experimental-strip-types src/scripts/copy-wasm.ts",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.6",
@@ -47,6 +49,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.0-beta.1",
+    "@playwright/test": "^1.51.1",
     "@tailwindcss/postcss": "^4.0.14",
     "@tailwindcss/vite": "^4.0.14",
     "@types/node": "^22",

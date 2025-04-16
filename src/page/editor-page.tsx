@@ -35,12 +35,7 @@ export const CodeMirrorEditorPage = () => {
         <Footer />
       </div>
 
-      {isCommandMenuOpen && (
-        <CommandMenu
-          open={isCommandMenuOpen}
-          onClose={toggleCommandMenu}
-        />
-      )}
+      {isCommandMenuOpen && <CommandMenu open={isCommandMenuOpen} onClose={toggleCommandMenu} />}
       {shouldShowAlert && <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />}
 
       {/* <TableOfContents 

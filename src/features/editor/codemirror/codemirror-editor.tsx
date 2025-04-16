@@ -268,5 +268,5 @@ export const useMarkdownEditor = () => {
 export const CodeMirrorEditor = () => {
   const { editor } = useMarkdownEditor();
 
-  return <div ref={editor} className="mx-auto h-full w-full" />;
+  return <div data-testid="code-mirror-editor" ref={editor} className="mx-auto h-full w-full" />;
 };

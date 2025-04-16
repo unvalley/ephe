@@ -44,3 +44,5 @@ next-env.d.ts
 
 bundle-size.html
 .specstory
+playwright-report
+test-results

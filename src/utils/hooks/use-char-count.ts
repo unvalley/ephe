@@ -12,7 +12,7 @@ export const useCharCount = () => {
   useEffect(() => {
     if (charCount === 0) {
       const editorContent = localStorage.getItem(LOCAL_STORAGE_KEYS.EDITOR_CONTENT);
-      const DOUBLE_QUOTE_SIZE = 2
+      const DOUBLE_QUOTE_SIZE = 2;
       if (editorContent == null) {
         setCharCount(0);
       } else {
