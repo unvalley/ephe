@@ -7,12 +7,11 @@ alwaysApply: false
 
 ## Editor
 
-We build an Markdown Editor based on monaco-editor.
+We build an Markdown Editor based on CodeMirror v6.
 
 We use packages below to handler text:
 
-- monaco-editor
-- @monaco-editor/react
+- CodeMirror v6
 - @textlint/ast-node-types
 - @textlint/markdown-to-ast
 
@@ -22,4 +21,4 @@ The editor must be performant.
 ## Components
 
 We use tailwindcss v4. 
-This is version is actually different from v3. Please take a look at https://tailwindcss.com/blog/tailwindcss-v4 .
+This version is actually different from v3. Please take a look at https://tailwindcss.com/blog/tailwindcss-v4 .

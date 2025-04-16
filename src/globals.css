@@ -2,156 +2,143 @@
 @config "../tailwind.config.js";
 
 @layer base {
-  button,
-  [role="button"] {
-    /* I think using pointer is better for accessibility */
-    cursor: pointer;
-  }
+
+    button,
+    [role="button"] {
+        /* I think using pointer is better for accessibility */
+        cursor: pointer;
+    }
 }
 
 html {
-  /* font-family: "Inter"; */
+    /* font-family: "Inter"; */
 }
 
 /* Dark mode transitions */
 html.dark {
-  color-scheme: dark;
+    color-scheme: dark;
 }
 
 /* CSS variables for theming */
 :root {
-  --focus-border-light: #00000000;
-  --focus-border-dark: #00000000;
+    --focus-border-light: #00000000;
+    --focus-border-dark: #00000000;
 }
 
 /* Make the task part clickable */
 span.task-task {
-  cursor: pointer;
-  user-select: none;
-  display: inline-block;
-  margin-right: 0.25rem;
-  font-weight: normal;
-}
-
-.monaco-editor {
-  --vscode-focusBorder: var(--focus-border-light) !important;
-}
-
-.monaco-editor:focus-within {
-  outline: none !important;
-  border: none !important;
-}
-
-/* Dark mode specific styles */
-.dark .monaco-editor {
-  --vscode-focusBorder: var(--focus-border-dark) !important;
+    cursor: pointer;
+    user-select: none;
+    display: inline-block;
+    margin-right: 0.25rem;
+    font-weight: normal;
 }
 
 /* Styling for completed tasks - using opacity instead of strikethrough */
 .task-completed-line {
-  opacity: 0.5;
+    opacity: 0.5;
 }
 
 /* TOC styles */
 .toc-container {
-  position: sticky;
-  top: 1rem;
-  max-height: calc(100vh - 8rem);
-  width: 100%;
-  font-size: 0.875rem;
-  transition: all 0.3s ease;
-  background-color: transparent;
-  border-radius: 0.375rem;
-  padding: 0.5rem;
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 8rem);
+    width: 100%;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    background-color: transparent;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
 }
 
 .dark .toc-container {
-  background-color: transparent;
-  border-color: transparent;
+    background-color: transparent;
+    border-color: transparent;
 }
 
 .toc-wrapper {
-  position: fixed;
-  right: 15rem;
-  top: 10rem;
-  width: 15rem;
-  transition: all 0.3s ease-in-out;
+    position: fixed;
+    right: 15rem;
+    top: 10rem;
+    width: 15rem;
+    transition: all 0.3s ease-in-out;
 }
 
 .toc-wrapper.visible {
-  opacity: 1;
-  transform: translateX(0);
+    opacity: 1;
+    transform: translateX(0);
 }
 
 .toc-wrapper.hidden {
-  opacity: 0;
-  transform: translateX(100%);
-  pointer-events: none;
+    opacity: 0;
+    transform: translateX(100%);
+    pointer-events: none;
 }
 
 @media (max-width: 1280px) {
-  .toc-wrapper {
-    position: fixed;
-    right: 2rem;
-    top: 4rem;
-    max-width: 16rem;
-  }
+    .toc-wrapper {
+        position: fixed;
+        right: 2rem;
+        top: 4rem;
+        max-width: 16rem;
+    }
 }
 
 @media (max-width: 768px) {
-  .toc-wrapper {
-    right: 0;
-    top: 0;
-    height: 100%;
-    width: 16rem;
-  }
+    .toc-wrapper {
+        right: 0;
+        top: 0;
+        height: 100%;
+        width: 16rem;
+    }
 
-  .toc-container {
-    height: 100%;
-    border-radius: 0;
-    margin-left: 0;
-    padding-top: 2rem;
-  }
+    .toc-container {
+        height: 100%;
+        border-radius: 0;
+        margin-left: 0;
+        padding-top: 2rem;
+    }
 }
 
 /* Paper Mode: Graph Paper (Light Mode) */
 .bg-graph-paper {
-  background-image: linear-gradient(rgba(210, 210, 210, 0.3) 1px, transparent 1px),
-    linear-gradient(to right, rgba(210, 210, 210, 0.3) 1px, transparent 1px);
-  background-size: 12px 12px;
-  background-color: #fff;
-  background-position: -14px 14px;
+    background-image: linear-gradient(rgba(210, 210, 210, 0.3) 1px, transparent 1px),
+        linear-gradient(to right, rgba(210, 210, 210, 0.3) 1px, transparent 1px);
+    background-size: 12px 12px;
+    background-color: #fff;
+    background-position: -14px 14px;
 }
 
 /* Paper Mode: Graph Paper (Dark Mode) */
 .dark .bg-graph-paper {
-  background-image: linear-gradient(rgba(80, 80, 80, 0.3) 1px, transparent 1px),
-    linear-gradient(to right, rgba(80, 80, 80, 0.3) 1px, transparent 1px);
-  background-size: 12px 12px;
-  background-color: #0d1117;
-  background-position: -14px 14px;
+    background-image: linear-gradient(rgba(80, 80, 80, 0.3) 1px, transparent 1px),
+        linear-gradient(to right, rgba(80, 80, 80, 0.3) 1px, transparent 1px);
+    background-size: 12px 12px;
+    background-color: #0d1117;
+    background-position: -14px 14px;
 }
 
 /* Paper Mode: Dots (Light Mode) */
 .bg-dots-paper {
-  background-image: radial-gradient(rgba(210, 210, 210, 0.5) 1px, transparent 1px);
-  background-size: 24px 24px;
-  background-color: #fff;
+    background-image: radial-gradient(rgba(210, 210, 210, 0.5) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-color: #fff;
 }
 
 /* Paper Mode: Dots (Dark Mode) */
 .dark .bg-dots-paper {
-  background-image: radial-gradient(rgba(80, 80, 80, 0.5) 1px, transparent 1px);
-  background-size: 16px 16px;
-  background-color: #0d1117;
+    background-image: radial-gradient(rgba(80, 80, 80, 0.5) 1px, transparent 1px);
+    background-size: 16px 16px;
+    background-color: #0d1117;
 }
 
 .cm-task-hover {
-  cursor: pointer;
-  background-color: rgba(128, 128, 128, 0.1);
+    cursor: pointer;
+    background-color: rgba(128, 128, 128, 0.1);
 }
 
 /* Dark mode hover style */
 .dark .cm-task-hover {
-  background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.1);
 }
