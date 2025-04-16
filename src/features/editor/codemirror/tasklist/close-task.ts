@@ -1,183 +1,244 @@
 import { EditorView, ViewPlugin, ViewUpdate, Decoration, DecorationSet } from "@codemirror/view";
-import { StateEffect, StateField } from "@codemirror/state"; // Precを使う場合
-import { type Extension } from "@codemirror/state"; // Extension型のため
+import { StateEffect, StateField, RangeSetBuilder } from "@codemirror/state";
+import { type Extension } from "@codemirror/state";
 
-// チェックリストアイテムの基本的な正規表現
-// 行頭の空白、リストマーカー `-` または `*`、チェックボックス `[ ]` または `[x]` を捉える
-const checklistRegex = /^(\s*[-*])\s*\[([ x])]/;
+// チェックリストアイテムの正規表現 - より正確なパターンを定義
+const checklistRegex = /^(\s*[-*]\s+)\[([\ xX])\]/;
 
-// チェックボックス部分の情報を保持するインターフェース
-type CheckboxPosition = {
-  lineFrom: number; // 行の開始位置
-  checkboxFrom: number; // '[' のドキュメント上の位置
-  checkboxTo: number; // ']' の次のドキュメント上の位置
-  checked: boolean; // 現在のチェック状態
+// チェックボックスの情報を保持する型
+type CheckboxInfo = {
+  from: number; // チェックボックス全体の開始位置 ('[')
+  to: number; // チェックボックス全体の終了位置 (']'の次)
+  contentPos: number; // チェックボックス内容の位置 ('['の次)
+  checked: boolean; // チェック状態
 };
 
-// ホバー効果を適用するためのデコレーション
-const hoverDecoration = Decoration.mark({ class: "" });
+// ホバー中のチェックボックスを追跡するための Effect
+const hoverCheckbox = StateEffect.define<CheckboxInfo | null>();
 
-export function checklistInteraction(): Extension {
-  return ViewPlugin.fromClass(
-    class ChecklistInteractionPlugin {
-      decorations = Decoration.none;
-      currentHoverPos: CheckboxPosition | null = null; // 現在ホバー中のチェックボックス情報
+// すべてのチェックボックスに適用するポインタスタイルのデコレーション
+const checkboxBaseStyle = Decoration.mark({
+  class: "cursor-pointer",
+  inclusive: false,
+});
 
-      constructor(readonly view: EditorView) {
-        this.handleMouseMove = this.handleMouseMove.bind(this);
-        this.handleMouseLeave = this.handleMouseLeave.bind(this);
-        this.handleMouseDown = this.handleMouseDown.bind(this);
+// ホバー時にだけ適用する追加のハイライトデコレーション
+const checkboxHoverStyle = Decoration.mark({
+  class: "cm-checklist-hover",
+  inclusive: false,
+});
 
-        // イベントリスナーを登録
-        this.view.dom.addEventListener("mousemove", this.handleMouseMove);
-        this.view.dom.addEventListener("mouseleave", this.handleMouseLeave);
-        this.view.dom.addEventListener("mousedown", this.handleMouseDown);
-      }
+// チェックボックスをすべて検出してデコレーションを作成するプラグイン
+const checkboxPlugin = ViewPlugin.fromClass(
+  class {
+    checkboxes: CheckboxInfo[] = [];
+    decorations: DecorationSet;
 
-      update(update: ViewUpdate) {
-        // ドキュメントやビューポートの変更があればデコレーションを再計算
-        // （ホバー状態もリセットされるべきか検討）
-        if (update.docChanged || update.viewportChanged) {
-          // ドキュメントが変わったらホバー状態もリセット
-          this.currentHoverPos = null;
-          this.updateDecorations(null); // ホバーデコレーション解除
-        } else if (update.geometryChanged) {
-          // スクロールなどでビューポートが変わった場合も再計算が必要な場合がある
-          // ここでは単純化のため docChanged のみでリセット
-        }
-      }
+    constructor(view: EditorView) {
+      this.checkboxes = this.findAllCheckboxes(view);
+      this.decorations = this.createBaseDecorations(this.checkboxes);
+    }
 
-      destroy() {
-        // プラグイン破棄時にリスナーを解除
-        this.view.dom.removeEventListener("mousemove", this.handleMouseMove);
-        this.view.dom.removeEventListener("mouseleave", this.handleMouseLeave);
-        this.view.dom.removeEventListener("mousedown", this.handleMouseDown);
-      }
+    // ドキュメント内のすべてのチェックボックスを検出する
+    findAllCheckboxes(view: EditorView): CheckboxInfo[] {
+      const result: CheckboxInfo[] = [];
+      const { state } = view;
+      const { doc } = state;
 
-      // マウス座標からチェックボックスの位置情報を取得
-      getCheckboxPosition(pos: number | null): CheckboxPosition | null {
-        if (pos === null) return null;
+      // 各行に対してチェックボックスを検索
+      for (let i = 1; i <= doc.lines; i++) {
+        const line = doc.line(i);
+        const match = line.text.match(checklistRegex);
 
-        try {
-          const line = this.view.state.doc.lineAt(pos);
-          const match = line.text.match(checklistRegex);
-          if (!match) return null;
+        if (match) {
+          // チェックボックスのパターン全体を検索して正確な位置を特定
+          const matchIndex = match.index || 0;
+          const prefixLength = match[1].length;
 
-          // チェックボックス '[' の行内での開始インデックスを計算
-          const checkboxStartIndexInLine = line.text.indexOf("[");
-          if (checkboxStartIndexInLine === -1) return null; // '[' が見つからない場合
+          // '[' の位置を計算
+          const checkboxStartPos = matchIndex + prefixLength;
+          const from = line.from + checkboxStartPos;
+          const contentPos = from + 1; // '[' の次、つまり内容の位置
+          const to = from + 3; // '[' + 内容 + ']' = 3文字分
 
-          const checkboxFrom = line.from + checkboxStartIndexInLine; // '[' のドキュメント位置
-          const checkboxTo = checkboxFrom + 3; // ']' の次のドキュメント位置
-
-          // マウスカーソル位置 `pos` がチェックボックスの範囲 `[ ]` または `[x]` 内か判定
-          if (pos >= checkboxFrom && pos < checkboxTo) {
-            return {
-              lineFrom: line.from,
-              checkboxFrom: checkboxFrom,
-              checkboxTo: checkboxTo,
-              checked: match[2] === "x",
-            };
-          }
-        } catch (e) {
-          // lineAtでエラーになる場合などを無視
-        }
-        return null;
-      }
-
-      // ホバーデコレーションを更新する
-      updateDecorations(target: CheckboxPosition | null) {
-        if (target) {
-          // 新しいターゲットにホバーデコレーションを適用
-          this.decorations = Decoration.set([hoverDecoration.range(target.checkboxFrom, target.checkboxTo)]);
-        } else {
-          // ホバー中でなければデコレーションをクリア
-          this.decorations = Decoration.none;
-        }
-        // デコレーションの変更をビューに通知（再描画をトリガー）
-        // updateメソッド外からdispatchが必要
-        if (this.view.state.field(checklistInteractionField, false) !== this.decorations) {
-          this.view.dispatch({
-            effects: setChecklistDecorations.of(this.decorations),
+          const checkChar = match[2];
+          result.push({
+            from,
+            to,
+            contentPos,
+            checked: checkChar === "x" || checkChar === "X",
           });
         }
       }
+      return result;
+    }
 
-      // MouseMove イベントハンドラ
-      handleMouseMove(event: MouseEvent) {
-        const pos = this.view.posAtCoords({ x: event.clientX, y: event.clientY }, false); // falseで要素外を許容しない
-        const target = this.getCheckboxPosition(pos);
-
-        // ホバー状態が変わったか確認
-        const changed = this.currentHoverPos?.checkboxFrom !== target?.checkboxFrom;
-
-        if (changed) {
-          this.currentHoverPos = target; // 現在のホバー位置を更新
-          this.updateDecorations(target); // デコレーションを更新
-        }
+    // すべてのチェックボックスにベースとなるカーソルポインタ装飾を作成
+    createBaseDecorations(checkboxes: CheckboxInfo[]): DecorationSet {
+      const builder = new RangeSetBuilder<Decoration>();
+      for (const { from, to } of checkboxes) {
+        builder.add(from, to, checkboxBaseStyle);
       }
+      return builder.finish();
+    }
 
-      // MouseLeave イベントハンドラ (エディタ領域から離れた時)
-      handleMouseLeave(event: MouseEvent) {
-        if (this.currentHoverPos) {
-          this.currentHoverPos = null;
-          this.updateDecorations(null); // ホバー解除
-        }
+    // ドキュメントが変更されたときにチェックボックスを再検出
+    update(update: ViewUpdate) {
+      if (update.docChanged) {
+        this.checkboxes = this.findAllCheckboxes(update.view);
+        this.decorations = this.createBaseDecorations(this.checkboxes);
       }
+    }
+  },
+  {
+    decorations: (v) => v.decorations,
+  },
+);
 
-      // MouseDown イベントハンドラ
-      handleMouseDown(event: MouseEvent) {
-        // 左クリック以外は無視
-        if (event.button !== 0) return;
-
-        // 現在ホバー中のチェックボックスがあればそれを処理対象とする
-        const target = this.currentHoverPos;
-
-        if (target) {
-          event.preventDefault(); // デフォルトのクリック動作（テキスト選択など）を抑制
-
-          // チェック状態をトグルする
-          const newChar = target.checked ? " " : "x";
-          // チェックボックスの中身の位置 ( '[' の次 )
-          const changeFrom = target.checkboxFrom + 1;
-          const changeTo = changeFrom + 1; // 1文字だけ置換
-
-          this.view.dispatch({
-            changes: { from: changeFrom, to: changeTo, insert: newChar },
-            userEvent: "input.toggleChecklist", // 変更の種類を示すユーザーイベント
-          });
-
-          // クリック後もホバーが継続する場合があるので、状態を更新しておく
-          // （dispatchによりupdateが呼ばれ、そこでリセットされる可能性もある）
-          // this.currentHoverPos = { ...target, checked: !target.checked };
-          // this.updateDecorations(this.currentHoverPos);
-        }
-      }
-    },
-    {
-      // このViewPluginが提供するデコレーションを指定
-      decorations: (v) => v.decorations,
-    },
-  );
-}
-
-// デコレーションを保持・更新するための StateField と Effect
-const setChecklistDecorations = StateEffect.define<DecorationSet>();
-
-const checklistInteractionField = StateField.define<DecorationSet>({
+// ホバー状態を管理するための StateField
+const checkboxHoverField = StateField.define<DecorationSet>({
   create() {
     return Decoration.none;
   },
   update(decorations, tr) {
-    // 他のトランザクションによる変更があればデコレーションを調整する必要があるかもしれないが、
-    // ここでは Effect による更新のみ受け付ける
-    for (let e of tr.effects) {
-      if (e.is(setChecklistDecorations)) return e.value;
+    // ドキュメント変更でデコレーションを更新
+    decorations = decorations.map(tr.changes);
+
+    // ホバー状態の変更を処理
+    for (const e of tr.effects) {
+      if (e.is(hoverCheckbox)) {
+        const hoverInfo = e.value;
+        if (hoverInfo) {
+          // 新しいホバー効果を作成
+          const builder = new RangeSetBuilder<Decoration>();
+          builder.add(hoverInfo.from, hoverInfo.to, checkboxHoverStyle);
+          return builder.finish();
+        } else {
+          // ホバー効果をクリア
+          return Decoration.none;
+        }
+      }
     }
-    // ドキュメント変更でデコレーションがずれるのを map で対応
-    return decorations.map(tr.changes);
+
+    return decorations;
   },
   provide: (f) => EditorView.decorations.from(f),
 });
 
-export const checklistPlugin: Extension = [checklistInteraction(), checklistInteractionField];
+// マウス操作を処理するためのプラグイン
+const checkboxInteractionPlugin = ViewPlugin.fromClass(
+  class {
+    constructor(readonly view: EditorView) {
+      this.handleMouseMove = this.handleMouseMove.bind(this);
+      this.handleMouseLeave = this.handleMouseLeave.bind(this);
+      this.handleMouseDown = this.handleMouseDown.bind(this);
+
+      // マウスイベントリスナーの登録
+      this.view.dom.addEventListener("mousemove", this.handleMouseMove);
+      this.view.dom.addEventListener("mouseleave", this.handleMouseLeave);
+      this.view.dom.addEventListener("mousedown", this.handleMouseDown);
+    }
+
+    // プラグインが破棄されるときのクリーンアップ
+    destroy() {
+      this.view.dom.removeEventListener("mousemove", this.handleMouseMove);
+      this.view.dom.removeEventListener("mouseleave", this.handleMouseLeave);
+      this.view.dom.removeEventListener("mousedown", this.handleMouseDown);
+    }
+
+    // マウス位置に対応するチェックボックスを取得
+    getCheckboxAt(pos: number): CheckboxInfo | null {
+      try {
+        // 現在の行のテキストを取得
+        const line = this.view.state.doc.lineAt(pos);
+        const match = line.text.match(checklistRegex);
+        if (!match) return null;
+
+        // チェックボックスの開始位置を計算
+        const matchIndex = match.index || 0;
+        const prefixLength = match[1].length;
+
+        // '[' の位置を計算
+        const checkboxStartPos = matchIndex + prefixLength;
+        const from = line.from + checkboxStartPos;
+        const contentPos = from + 1; // '[' の次、つまり内容の位置
+        const to = from + 3; // '[' + 内容 + ']' = 3文字分
+
+        // マウス位置がチェックボックスの範囲内かチェック
+        if (pos >= from && pos <= to) {
+          const checkChar = match[2];
+          return {
+            from,
+            to,
+            contentPos,
+            checked: checkChar === "x" || checkChar === "X",
+          };
+        }
+      } catch (e) {
+        // エラーが発生した場合は無視
+      }
+      return null;
+    }
+
+    // マウス移動イベントの処理
+    handleMouseMove(event: MouseEvent) {
+      // マウス位置をドキュメント上の位置に変換
+      const pos = this.view.posAtCoords({ x: event.clientX, y: event.clientY });
+      if (pos === null) return;
+
+      // マウス位置に対応するチェックボックスを取得
+      const checkbox = this.getCheckboxAt(pos);
+
+      // ホバー状態の更新
+      this.view.dispatch({
+        effects: hoverCheckbox.of(checkbox),
+      });
+    }
+
+    // マウスがエディタ領域から出たときの処理
+    handleMouseLeave() {
+      // ホバー状態をリセット
+      this.view.dispatch({
+        effects: hoverCheckbox.of(null),
+      });
+    }
+
+    // マウスクリックイベントの処理
+    handleMouseDown(event: MouseEvent) {
+      // 左クリックのみ処理
+      if (event.button !== 0) return;
+
+      // クリック位置をドキュメント上の位置に変換
+      const pos = this.view.posAtCoords({ x: event.clientX, y: event.clientY });
+      if (pos === null) return;
+
+      // クリック位置に対応するチェックボックスを取得
+      const checkbox = this.getCheckboxAt(pos);
+      if (!checkbox) return;
+
+      // デフォルトの選択動作を防止
+      event.preventDefault();
+
+      // チェックボックスの状態をトグル
+      const newChar = checkbox.checked ? " " : "x";
+
+      // 変更を適用 - チェックボックス内の文字のみを変更
+      this.view.dispatch({
+        changes: {
+          from: checkbox.contentPos,
+          to: checkbox.contentPos + 1,
+          insert: newChar,
+        },
+        userEvent: "input.toggleChecklist",
+      });
+    }
+  },
+);
+
+// エクスポートするExtension
+export const checklistPlugin: Extension = [checkboxPlugin, checkboxHoverField, checkboxInteractionPlugin];
+
+// 従来の関数（互換性のために維持）
+export function checklistInteraction(): Extension {
+  return [];
+}

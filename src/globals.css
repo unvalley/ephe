@@ -148,7 +148,11 @@ span.task-checkbox {
 
 .cm-checklist-hover {
   cursor: pointer;
-  /* オプション: ホバーを視覚的に分かりやすくする背景色 */
+  /* ホバー時の背景色 (light mode) */
   background-color: rgba(128, 128, 128, 0.1);
-  background-color: #eee;
+}
+
+/* Dark mode hover style */
+.dark .cm-checklist-hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
