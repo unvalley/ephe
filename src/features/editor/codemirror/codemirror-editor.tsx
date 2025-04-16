@@ -97,42 +97,38 @@ export const useMarkdownEditor = () => {
 
     const epheHighlightStyle = HighlightStyle.define([
       { tag: tags.comment, color: COLORS.comment, fontStyle: "italic" },
-      { tag: tags.keyword, color: COLORS.keyword, fontWeight: "bold" },
+      { tag: tags.keyword, color: COLORS.keyword },
       { tag: tags.string, color: COLORS.string },
       { tag: tags.number, color: COLORS.number },
-      { tag: tags.typeName, color: COLORS.type, fontWeight: "bold" },
+      { tag: tags.typeName, color: COLORS.type },
       { tag: tags.function(tags.variableName), color: COLORS.function },
       { tag: tags.definition(tags.variableName), color: COLORS.variable },
       { tag: tags.variableName, color: COLORS.variable },
       {
         tag: tags.constant(tags.variableName),
         color: COLORS.constant,
-        fontWeight: "bold",
       },
       { tag: tags.operator, color: COLORS.operator },
 
       // Markdown Style
-      { tag: tags.heading, color: COLORS.heading, fontWeight: "bold" },
+      { tag: tags.heading, color: COLORS.heading },
       {
         tag: tags.heading1,
         color: COLORS.heading,
-        fontWeight: "bold",
-        fontSize: "1.4em",
-      }, // prevent size changing between `#` and `##`
+        fontSize: "1.2em", // prevent size changing between `#` and `##`
+      },
       {
         tag: tags.heading2,
         color: COLORS.heading,
-        fontWeight: "bold",
-        fontSize: "1.4em",
+        fontSize: "1.2em",
       },
       {
         tag: tags.heading3,
         color: COLORS.heading,
-        fontWeight: "bold",
-        fontSize: "1.2em",
+        fontSize: "1.1em",
       },
       { tag: tags.emphasis, color: COLORS.emphasis, fontStyle: "italic" },
-      { tag: tags.strong, color: COLORS.emphasis, fontWeight: "bold" },
+      { tag: tags.strong, color: COLORS.emphasis },
       { tag: tags.link, color: COLORS.string, textDecoration: "underline" },
       { tag: tags.url, color: COLORS.string, textDecoration: "underline" },
       { tag: tags.monospace, color: COLORS.constant, fontFamily: "monospace" },

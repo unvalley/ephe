@@ -29,8 +29,9 @@ export const CodeMirrorEditorPage = () => {
 
       <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />
 
-      {/* // Cmd+k */}
+      {/* Cmd+k */}
       {/* preview */}
+      {/* TOC */}
     </div>
   );
 };

@@ -1,10 +1,10 @@
 import { indentMore, indentLess } from "@codemirror/commands";
-// import { indentUnit } from "@codemirror/language";
 import { KeyBinding, EditorView } from "@codemirror/view";
 
 // チェックリスト行の開始部分を判定 (行頭空白とマーカー)
 const checklistLineStartRegex = /^(\s*)(?:[-*])\s*\[[ x]\]\s*/;
-const indentUnit = "  ";
+
+const INDENT_SPACE = "  ";
 
 export const checklistIndentKeymap: readonly KeyBinding[] = [
   {
@@ -12,10 +12,9 @@ export const checklistIndentKeymap: readonly KeyBinding[] = [
     run: (view: EditorView): boolean => {
       const { state } = view;
       if (state.readOnly || state.selection.ranges.length > 1) return false;
-
       const { head, empty } = state.selection.main;
+
       if (!empty) {
-        // 範囲選択時は標準のインデントコマンドを試す
         return indentMore(view);
       }
 
@@ -26,15 +25,11 @@ export const checklistIndentKeymap: readonly KeyBinding[] = [
       if (match && head <= line.from + match[0].length) {
         // 行頭にインデント単位を挿入
         view.dispatch({
-          changes: { from: line.from, insert: indentUnit },
+          changes: { from: line.from, insert: INDENT_SPACE },
           userEvent: "input.indent",
-          // 必要であればカーソル位置も調整
-          // selection: { anchor: head + indentUnit.length }
         });
-        return true; // Tabキーのデフォルト動作を抑制
+        return true;
       }
-
-      // 上記条件外なら、標準のインデント動作を試みる (失敗すれば false)
       return indentMore(view);
     },
   },
@@ -46,17 +41,13 @@ export const checklistIndentKeymap: readonly KeyBinding[] = [
       const { head, empty } = state.selection.main;
       // 範囲選択、または単一カーソルで行頭にインデント単位がある場合
       const line = state.doc.lineAt(head);
-      if (empty && line.text.startsWith(indentUnit)) {
-        // 行頭のインデント単位を削除
+      if (empty && line.text.startsWith(INDENT_SPACE)) {
         view.dispatch({
-          changes: { from: line.from, to: line.from + indentUnit.length, insert: "" },
+          changes: { from: line.from, to: line.from + INDENT_SPACE.length, insert: "" },
           userEvent: "delete.dedent",
-          // selection: { anchor: Math.max(line.from, head - indentUnit.length) }
         });
-        return true; // デフォルト動作を抑制
+        return true;
       }
-
-      // 上記条件外なら、標準のインデント解除動作を試みる
       return indentLess(view);
     },
   },

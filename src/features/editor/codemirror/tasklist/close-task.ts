@@ -7,12 +7,12 @@ import { type Extension } from "@codemirror/state"; // Extension型のため
 const checklistRegex = /^(\s*[-*])\s*\[([ x])]/;
 
 // チェックボックス部分の情報を保持するインターフェース
-interface CheckboxPosition {
+type CheckboxPosition = {
   lineFrom: number; // 行の開始位置
   checkboxFrom: number; // '[' のドキュメント上の位置
   checkboxTo: number; // ']' の次のドキュメント上の位置
   checked: boolean; // 現在のチェック状態
-}
+};
 
 // ホバー効果を適用するためのデコレーション
 const hoverDecoration = Decoration.mark({ class: "" });

@@ -60,7 +60,6 @@ export const EditorApp = () => {
   const [renderedHTML, setRenderedHTML] = useState<string>("");
 
   const { isDarkMode } = useTheme();
-  const { paperMode, cycleMode: cyclePaperMode } = usePaperMode();
   const { previewMode, togglePreviewMode } = usePreviewMode();
   const { editorWidth, isWideMode, toggleEditorWidth } = useEditorWidth();
 
