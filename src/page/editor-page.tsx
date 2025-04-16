@@ -9,7 +9,6 @@ import { CodeMirrorEditor } from "../features/editor/codemirror/codemirror-edito
 
 export const CodeMirrorEditorPage = () => {
   const { paperModeClass } = usePaperMode();
-  const { previewMode, togglePreviewMode } = usePreviewMode();
   const { shouldShowAlert, dismissAlert } = useTabDetection();
   const { isCommandMenuOpen, toggleCommandMenu } = useCommandMenu();
 
@@ -33,11 +32,15 @@ export const CodeMirrorEditorPage = () => {
       </div>
 
       <div className="w-full">
-        <Footer previewMode={previewMode} togglePreview={togglePreviewMode} />
+        <Footer />
       </div>
 
-      {/* preview */}
-      {isCommandMenuOpen && <CommandMenu open={isCommandMenuOpen} onClose={toggleCommandMenu} />}
+      {isCommandMenuOpen && (
+        <CommandMenu
+          open={isCommandMenuOpen}
+          onClose={toggleCommandMenu}
+        />
+      )}
       {shouldShowAlert && <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />}
 
       {/* <TableOfContents 
@@ -47,12 +50,6 @@ export const CodeMirrorEditorPage = () => {
       /> */}
     </div>
   );
-};
-
-const usePreviewMode = () => {
-  const [previewMode, setPreviewMode] = useState(false);
-  const togglePreviewMode = () => setPreviewMode(!previewMode);
-  return { previewMode, togglePreviewMode };
 };
 
 const useCommandMenu = () => {

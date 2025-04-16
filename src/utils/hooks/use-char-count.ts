@@ -12,10 +12,11 @@ export const useCharCount = () => {
   useEffect(() => {
     if (charCount === 0) {
       const editorContent = localStorage.getItem(LOCAL_STORAGE_KEYS.EDITOR_CONTENT);
-      if (editorContent === '""' || editorContent == null) {
+      const DOUBLE_QUOTE_SIZE = 2
+      if (editorContent == null) {
         setCharCount(0);
       } else {
-        setCharCount(editorContent.length);
+        setCharCount(editorContent.length - DOUBLE_QUOTE_SIZE);
       }
     }
   }, [charCount, setCharCount]);

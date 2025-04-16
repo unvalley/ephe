@@ -4,12 +4,10 @@ import { Command } from "cmdk";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
 import { useNavigate } from "react-router-dom";
-// import type * as monaco from "monaco-editor";
 import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-formatter";
 import { showToast } from "../../utils/components/toast";
 // import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import type { PaperMode } from "../../utils/hooks/use-paper-mode";
-import { EyeIcon } from "../../utils/components/icons";
 import { COLOR_THEME, type ColorTheme } from "../../utils/theme-initializer";
 import type { EditorWidth } from "../../utils/hooks/use-editor-width";
 
@@ -171,8 +169,6 @@ export function CommandMenu({
   cyclePaperMode,
   editorWidth,
   toggleEditorWidth,
-  previewMode,
-  togglePreviewMode,
 }: CommandMenuProps) {
   const { theme, setTheme } = useTheme();
   const [inputValue, setInputValue] = useState("");
@@ -224,11 +220,6 @@ export function CommandMenu({
     toggleEditorWidth?.();
     handleClose();
   }, [toggleEditorWidth, handleClose]);
-
-  const togglePreviewModeCallback = useCallback(() => {
-    togglePreviewMode?.();
-    handleClose();
-  }, [togglePreviewMode, handleClose]);
 
   const handleExportMarkdownCallback = useCallback(() => {
     if (!editorContent) {
@@ -369,16 +360,6 @@ export function CommandMenu({
         keywords: "editor width toggle resize narrow wide full layout column",
       });
     }
-    if (togglePreviewMode) {
-      list.push({
-        id: "preview-mode",
-        name: "Toggle preview mode", // 現在の状態は Item 側で表示
-        icon: <EyeIcon className="h-3.5 w-3.5" />,
-        // shortcut: "⌘⇧P",
-        perform: togglePreviewModeCallback,
-        keywords: "preview markdown toggle on off view show hide live render",
-      });
-    }
     if (editorContent) {
       list.push({
         id: "export-markdown",
@@ -435,8 +416,6 @@ export function CommandMenu({
     cyclePaperModeCallback, // prop自体も依存に含める（有無で項目が変わるため）
     toggleEditorWidth,
     toggleEditorWidthCallback,
-    togglePreviewMode,
-    togglePreviewModeCallback,
     editorContent,
     handleExportMarkdownCallback,
     // editorRef,
@@ -444,7 +423,7 @@ export function CommandMenu({
     // handleFormatDocumentCallback,
     goToGitHubRepo,
     goToHistory,
-    // paperMode, editorWidth, previewMode, // これらの値がリスト項目名自体に含まれる場合は依存配列に追加。今回はItem側で表示するため不要
+    // paperMode, editorWidth, // これらの値がリスト項目名自体に含まれる場合は依存配列に追加。今回はItem側で表示するため不要
   ]);
 
   return (
@@ -508,7 +487,7 @@ export function CommandMenu({
             className="mb-1 px-1 font-medium text-gray-500 text-xs tracking-wider dark:text-gray-400"
           >
             {commandsList
-              .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width", "preview-mode"].includes(cmd.id))
+              .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width"].includes(cmd.id))
               .map((command) => (
                 <Command.Item
                   key={command.id}
@@ -531,11 +510,6 @@ export function CommandMenu({
                       )}
                       {command.id === "editor-width" && editorWidth && (
                         <span className="ml-1.5 text-gray-500 text-xs dark:text-gray-400">({editorWidth})</span>
-                      )}
-                      {command.id === "preview-mode" && (
-                        <span className="ml-1.5 text-gray-500 text-xs dark:text-gray-400">
-                          ({previewMode ? "on" : "off"})
-                        </span>
                       )}
                     </span>
                   </div>
