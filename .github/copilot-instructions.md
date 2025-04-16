@@ -13,10 +13,6 @@
 - Use immutable data structure
 - Isolate Side Effects
 
-## CHECK
-
-
-
 ## Rules
 
 - Please read .cursor/rules even if you are not Cursor.

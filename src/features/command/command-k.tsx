@@ -11,6 +11,7 @@ import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import type { PaperMode } from "../../utils/hooks/use-paper-mode";
 import { EyeIcon } from "../../utils/components/icons";
 import { COLOR_THEME } from "../../utils/theme-initializer";
+import { EditorWidth } from "src/utils/hooks/use-editor-width";
 
 // Icons - you might need to install react-icons package if not already installed
 function ThemeIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -167,22 +168,23 @@ function CodeMirrorIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export type CommandMenuProps = {
   open: boolean;
-  onClose: () => void;
-  editorContent: string;
-  editorRef: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
-  markdownFormatterRef: React.RefObject<MarkdownFormatter | null>;
-  paperMode: PaperMode;
-  cyclePaperMode: () => void;
-  editorWidth: string;
-  toggleEditorWidth: () => void;
-  previewMode: boolean;
-  togglePreviewMode: () => void;
+  onClose?: () => void;
+  onOpen?: () => void;
+  editorContent?: string;
+  editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
+  markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
+  paperMode?: PaperMode;
+  cyclePaperMode?: () => PaperMode;
+  editorWidth?: EditorWidth;
+  toggleEditorWidth?: () => void;
+  previewMode?: boolean;
+  togglePreviewMode?: () => void;
 };
 
 export function CommandMenu({
   open,
   onClose,
-  editorContent,
+  editorContent = "",
   editorRef,
   markdownFormatterRef,
   paperMode,
@@ -267,6 +269,12 @@ export function CommandMenu({
 
   // Function to export markdown content
   const handleExportMarkdown = () => {
+    if (!editorContent) {
+      showToast("No content to export", "error");
+      onClose?.();
+      return;
+    }
+
     const blob = new Blob([editorContent], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -287,7 +295,8 @@ export function CommandMenu({
   // Function to format document using dprint
   const handleFormatDocument = async () => {
     if (!editorRef?.current || !markdownFormatterRef?.current) {
-      console.error("Editor or markdown formatter not available");
+      showToast("Editor or markdown formatter not available", "error");
+      onClose?.();
       return;
     }
 
@@ -322,6 +331,7 @@ export function CommandMenu({
   const handleInsertGitHubIssues = async () => {
     if (!editorRef?.current) {
       showToast("Editor not available", "error");
+      onClose?.();
       return;
     }
 
@@ -330,6 +340,7 @@ export function CommandMenu({
 
       // If user cancels the prompt or enters empty string, abort
       if (!github_user_id) {
+        onClose?.();
         return;
       }
 
@@ -512,38 +523,145 @@ export function CommandMenu({
             No results found.
           </Command.Empty>
 
-          {/* コマンドアイテムの表示 */}
-          {commands.length > 0 && (
-            <Command.Group>
-              {commands.map((command) => (
-                <Command.Item
-                  key={command.id}
-                  value={command.id}
-                  onSelect={() => command.perform()}
-                  className="group flex cursor-pointer items-center justify-between rounded px-2 py-2 text-gray-900 hover:bg-gray-100 active:bg-gray-200 aria-selected:bg-gray-100 dark:text-gray-100 dark:hover:bg-zinc-800 dark:active:bg-zinc-700 aria-selected:dark:bg-zinc-800"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-gray-500 dark:text-gray-400">
-                      {command.icon}
-                    </div>
-                    <span>{command.name}</span>
-                  </div>
-                  {command.shortcut && (
-                    <div className="flex items-center gap-1">
-                      {command.shortcut.split("+").map((key, index) => (
-                        <kbd
-                          key={index}
-                          className="font-sans rounded bg-gray-100 px-1.5 text-xs font-medium text-gray-800 shadow-[0_1px_0_0_rgba(0,0,0,0.2)] dark:bg-zinc-800 dark:text-zinc-400 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.1)]"
-                        >
-                          {key}
-                        </kbd>
-                      ))}
-                    </div>
-                  )}
-                </Command.Item>
-              ))}
-            </Command.Group>
-          )}
+          <Command.Group heading="Interface Mode" className="mb-1 px-1 text-mono-400 text-xs dark:text-mono-200">
+            <Command.Item
+              className="group mt-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+              onSelect={() => {
+                cycleTheme();
+                onClose?.();
+              }}
+              value="theme toggle switch mode light dark system"
+            >
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                <ThemeIcon className="h-3.5 w-3.5" />
+              </div>
+              <span>Switch to {getNextThemeText()} mode</span>
+            </Command.Item>
+
+            {cyclePaperMode && (
+              <Command.Item
+                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                onSelect={() => {
+                  cyclePaperMode();
+                  onClose?.();
+                }}
+                value="paper mode cycle switch paper"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                  <PaperIcon className="h-3.5 w-3.5" />
+                </div>
+                <span>
+                  Cycle paper mode <span className="ml-1 text-gray-500 text-xs dark:text-gray-400">{paperMode}</span>
+                </span>
+              </Command.Item>
+            )}
+
+            {toggleEditorWidth && (
+              <Command.Item
+                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                onSelect={() => {
+                  toggleEditorWidth();
+                  onClose?.();
+                }}
+                value="editor width toggle resize"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                  <WidthIcon className="h-3.5 w-3.5" />
+                </div>
+                <span>
+                  Toggle editor width{" "}
+                  <span className="ml-1 text-gray-500 text-xs dark:text-gray-400">{editorWidth}</span>
+                </span>
+              </Command.Item>
+            )}
+
+            {togglePreviewMode && (
+              <Command.Item
+                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                onSelect={() => {
+                  togglePreviewMode();
+                  onClose?.();
+                }}
+                value="preview mode toggle switch"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                  <EyeIcon className="h-3.5 w-3.5" />
+                </div>
+                <span>Toggle preview mode ({previewMode ? "on" : "off"})</span>
+              </Command.Item>
+            )}
+          </Command.Group>
+
+          <Command.Group heading="Operations" className="mb-1 px-1 text-mono-400 text-xs dark:text-mono-200">
+            {editorContent && (
+              <Command.Item
+                className="group mt-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                onSelect={handleExportMarkdown}
+                value="export markdown save download"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                  <ExportIcon className="h-3.5 w-3.5" />
+                </div>
+                <span>Export markdown</span>
+              </Command.Item>
+            )}
+
+            {editorRef?.current && markdownFormatterRef?.current && (
+              <Command.Item
+                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                onSelect={handleFormatDocument}
+                value="format document prettify"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                  <FormatIcon className="h-3.5 w-3.5" />
+                </div>
+                <span>Format document</span>
+              </Command.Item>
+            )}
+
+            {editorRef?.current && (
+              <Command.Item
+                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                onSelect={handleInsertGitHubIssues}
+                value="github issues insert fetch public repos"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                  <GitHubIcon className="h-3.5 w-3.5" />
+                </div>
+                <span>Insert GitHub Issues (Public Repos)</span>
+              </Command.Item>
+            )}
+          </Command.Group>
+
+          <Command.Group heading="Move" className="mb-1 px-1 text-mono-400 text-xs dark:text-mono-200">
+            <Command.Item
+              className="group mt-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+              onSelect={() => {
+                window.open("https://github.com/unvalley/ephe", "_blank");
+                onClose?.();
+              }}
+              value="github ephe repo project"
+            >
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                <LinkIcon className="h-3.5 w-3.5" />
+              </div>
+              <span>Go to Ephe GitHub Repo</span>
+            </Command.Item>
+
+            <Command.Item
+              className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+              onSelect={() => {
+                navigate("/history");
+                onClose?.();
+              }}
+              value="history document past versions"
+            >
+              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                <HistoryIcon className="h-3.5 w-3.5" />
+              </div>
+              <span>Go to History</span>
+            </Command.Item>
+          </Command.Group>
         </Command.List>
 
         <div className="flex items-center justify-between border-gray-200 border-t px-2 py-2 text-gray-500 text-xs dark:border-zinc-800 dark:text-gray-400">
