@@ -86,9 +86,9 @@ export const taskKeyBindings: readonly KeyBinding[] = [
         console.log("Root level item, fallback to indentMore");
         return indentMore(view);
       }
-        // 既にインデントされており、適切な兄弟が直前にない場合は、Tabキーでのインデントをブロック
-        console.log("Not root, no suitable sibling above, blocking Tab indent.");
-        return true;
+      // 既にインデントされており、適切な兄弟が直前にない場合は、Tabキーでのインデントをブロック
+      console.log("Not root, no suitable sibling above, blocking Tab indent.");
+      return true;
 
       // 通常は上記で処理されるはずだが、念のためのフォールバック
       // return false; // or indentMore(view);

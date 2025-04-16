@@ -115,8 +115,8 @@ export const taskHoverField = StateField.define<DecorationSet>({
           builder.add(hoverInfo.from, hoverInfo.to, taskHoverStyle);
           return builder.finish();
         }
-          // Clear hover decoration
-          return Decoration.none;
+        // Clear hover decoration
+        return Decoration.none;
       }
     }
 
