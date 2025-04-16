@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { EditorState, Prec } from "@codemirror/state";
+import { EditorState, Prec, Compartment } from "@codemirror/state";
 import { EditorView, keymap, placeholder } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
@@ -29,6 +29,9 @@ export const useMarkdownEditor = () => {
 
   const [content, setContent] = useAtom(editorAtom);
   const { isDarkMode } = useTheme();
+
+  const themeCompartment = useRef(new Compartment()).current;
+  const highlightCompartment = useRef(new Compartment()).current;
 
   // Formatter initialization is a side effect, isolated in useEffect
   useEffect(() => {
@@ -205,12 +208,8 @@ export const useMarkdownEditor = () => {
           }),
 
           EditorView.lineWrapping,
-          syntaxHighlighting(epheHighlightStyle, { fallback: true }),
-
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {
-              // TODO: Use debounced update for content state to prevent cursor jumps
-              // but still maintain content synchronization
               const updatedContent = update.state.doc.toString();
               window.requestAnimationFrame(() => {
                 setContent(updatedContent);
@@ -218,7 +217,8 @@ export const useMarkdownEditor = () => {
             }
           }),
 
-          EditorView.theme(theme),
+          themeCompartment.of(EditorView.theme(theme)),
+          highlightCompartment.of(syntaxHighlighting(epheHighlightStyle, { fallback: true })),
           placeholder(getRandomQuote()),
 
           keymap.of([
@@ -240,6 +240,19 @@ export const useMarkdownEditor = () => {
       viewCurrent.focus(); // store focus
     }
   }, [view, container, content, isDarkMode, setContent, getHighlightStyle, formatDocument]);
+
+  // Update theme when dark mode changes
+  useEffect(() => {
+    if (view) {
+      const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode);
+      view.dispatch({
+        effects: [
+          themeCompartment.reconfigure(EditorView.theme(theme)),
+          highlightCompartment.reconfigure(syntaxHighlighting(epheHighlightStyle, { fallback: true })),
+        ]
+      });
+    }
+  }, [isDarkMode, view, getHighlightStyle]);
 
   return {
     editor,

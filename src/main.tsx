@@ -4,12 +4,10 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { LandingPage } from "./page/landing-page";
-// import { EditorPage } from "./page/editor-page";
 import { CodeMirrorEditorPage } from "./page/codemirror-editor-page";
 import { HistoryPage } from "./page/history-page";
 import { ToastContainer } from "./utils/components/toast";
 import { NotFound } from "./page/404-page";
-// import { EditorPage } from "./page/editor-page";
 
 const root = document.getElementById("root");
 if (!root) {
@@ -28,7 +26,6 @@ ReactDOM.createRoot(root).render(
         <Route path="landing" element={<LandingPage />} />
         {/* <Route path="/" element={<EditorPage />} /> */}
         <Route path="/" element={<CodeMirrorEditorPage />} />
-        <Route path="/cm" element={<CodeMirrorEditorPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

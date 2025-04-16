@@ -7,17 +7,6 @@ import { useTabDetection } from "../features/editor/use-tab-detection";
 import { AlreadyOpenDialog } from "../utils/components/already-open-dialog";
 import { CommandMenu } from "../features/command/command-k";
 
-const usePreviewMode = () => {
-  const [previewMode, setPreviewMode] = useState(false);
-  const togglePreviewMode = () => setPreviewMode(!previewMode);
-  return { previewMode, togglePreviewMode };
-};
-
-const useCommandMenu = () => {
-  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
-  const toggleCommandMenu = () => setIsCommandMenuOpen((prev) => !prev);
-  return { isCommandMenuOpen, toggleCommandMenu };
-};
 
 export const CodeMirrorEditorPage = () => {
   const { paperModeClass } = usePaperMode();
@@ -49,9 +38,21 @@ export const CodeMirrorEditorPage = () => {
       </div>
 
       {isCommandMenuOpen && <CommandMenu open={isCommandMenuOpen} onClose={toggleCommandMenu} />}
-      <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />
+      {shouldShowAlert && <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />}
       {/* preview */}
       {/* TOC */}
     </div>
   );
+};
+
+const usePreviewMode = () => {
+  const [previewMode, setPreviewMode] = useState(false);
+  const togglePreviewMode = () => setPreviewMode(!previewMode);
+  return { previewMode, togglePreviewMode };
+};
+
+const useCommandMenu = () => {
+  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
+  const toggleCommandMenu = () => setIsCommandMenuOpen((prev) => !prev);
+  return { isCommandMenuOpen, toggleCommandMenu };
 };
