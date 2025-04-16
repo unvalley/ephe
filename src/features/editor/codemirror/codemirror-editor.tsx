@@ -18,6 +18,7 @@ import { EPHE_COLORS } from "./codemirror-theme";
 import { createChecklistPlugin, createDefaultTaskHandler } from "./tasklist";
 import { taskKeyBindings } from "./tasklist/keymap";
 import { getRandomQuote } from "../quotes";
+import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 
 const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
@@ -29,6 +30,7 @@ export const useMarkdownEditor = () => {
 
   const [content, setContent] = useAtom(editorAtom);
   const { isDarkMode } = useTheme();
+  const { isWideMode } = useEditorWidth();
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
@@ -95,7 +97,7 @@ export const useMarkdownEditor = () => {
   }, []);
 
   // Memoize highlight style for performance
-  const getHighlightStyle = useCallback((isDarkMode: boolean) => {
+  const getHighlightStyle = useCallback((isDarkMode: boolean, isWideMode: boolean) => {
     const COLORS = isDarkMode ? EPHE_COLORS.dark : EPHE_COLORS.light;
 
     const epheHighlightStyle = HighlightStyle.define([
@@ -149,7 +151,7 @@ export const useMarkdownEditor = () => {
         fontSize: "16px",
         padding: "30px 20px",
         lineHeight: "1.6",
-        maxWidth: "680px",
+        maxWidth: isWideMode ? "100%" : "680px",
         margin: "0 auto",
         caretColor: COLORS.foreground,
       },
@@ -195,7 +197,7 @@ export const useMarkdownEditor = () => {
 
   useLayoutEffect(() => {
     if (!view && container) {
-      const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode);
+      const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode, isWideMode);
       const state = EditorState.create({
         doc: content,
         extensions: [
@@ -241,12 +243,12 @@ export const useMarkdownEditor = () => {
       setView(viewCurrent);
       viewCurrent.focus(); // store focus
     }
-  }, [view, container, content, isDarkMode, setContent, getHighlightStyle, formatDocument]);
+  }, [view, container, content, isDarkMode, isWideMode, setContent, getHighlightStyle, formatDocument]);
 
   // Update theme when dark mode changes
   useEffect(() => {
     if (view) {
-      const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode);
+      const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode, isWideMode);
       view.dispatch({
         effects: [
           themeCompartment.reconfigure(EditorView.theme(theme)),
@@ -254,7 +256,7 @@ export const useMarkdownEditor = () => {
         ],
       });
     }
-  }, [isDarkMode, view, getHighlightStyle]);
+  }, [isDarkMode, isWideMode, view, getHighlightStyle]);
 
   return {
     editor,
