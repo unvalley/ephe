@@ -1,6 +1,6 @@
 import { indentMore, indentLess } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
-import { KeyBinding, EditorView, keymap } from "@codemirror/view";
+import { type KeyBinding, type EditorView, keymap } from "@codemirror/view";
 
 // チェックリスト行の開始部分を判定 (行頭空白とマーカー)
 const taskListLineStartRegex = /^(\s*)(?:[-*])\s*\[[ x]\]\s*/;
@@ -85,11 +85,10 @@ export const taskKeyBindings: readonly KeyBinding[] = [
       if (currentIndentLength === 0) {
         console.log("Root level item, fallback to indentMore");
         return indentMore(view);
-      } else {
+      }
         // 既にインデントされており、適切な兄弟が直前にない場合は、Tabキーでのインデントをブロック
         console.log("Not root, no suitable sibling above, blocking Tab indent.");
         return true;
-      }
 
       // 通常は上記で処理されるはずだが、念のためのフォールバック
       // return false; // or indentMore(view);
@@ -143,7 +142,7 @@ export const taskKeyBindings: readonly KeyBinding[] = [
         console.log("Delete pressed at the end of an empty task item line.");
 
         // 行を削除するトランザクションを作成
-        let from = line.from;
+        const from = line.from;
         let to = line.to;
 
         // 行の後ろに改行がある場合、それも削除範囲に含める

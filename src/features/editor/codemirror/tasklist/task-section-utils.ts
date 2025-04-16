@@ -1,7 +1,7 @@
 /**
  * Utility functions for detecting task sections in markdown for CodeMirror
  */
-import { EditorView } from "@codemirror/view";
+import type { EditorView } from "@codemirror/view";
 
 /**
  * Find the section heading that a task belongs to

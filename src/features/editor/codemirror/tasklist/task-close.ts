@@ -1,4 +1,4 @@
-import { EditorView, ViewPlugin, ViewUpdate, Decoration, DecorationSet } from "@codemirror/view";
+import { EditorView, ViewPlugin, type ViewUpdate, Decoration, type DecorationSet } from "@codemirror/view";
 import { StateEffect, StateField, RangeSetBuilder } from "@codemirror/state";
 import { findTaskSection } from "./task-section-utils";
 
@@ -114,10 +114,9 @@ export const taskHoverField = StateField.define<DecorationSet>({
           const builder = new RangeSetBuilder<Decoration>();
           builder.add(hoverInfo.from, hoverInfo.to, taskHoverStyle);
           return builder.finish();
-        } else {
+        }
           // Clear hover decoration
           return Decoration.none;
-        }
       }
     }
 

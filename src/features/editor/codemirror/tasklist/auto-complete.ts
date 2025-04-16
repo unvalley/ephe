@@ -1,4 +1,4 @@
-import { Extension } from "@codemirror/state";
+import type { Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
 // Auto-complete task items: converts '-[' or '- [' to '- [ ] '

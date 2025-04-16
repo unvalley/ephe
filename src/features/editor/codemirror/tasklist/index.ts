@@ -1,5 +1,5 @@
-import { Extension } from "@codemirror/state";
-import { taskDecoration, taskHoverField, taskMouseInteraction, TaskHandler } from "./task-close";
+import type { Extension } from "@codemirror/state";
+import { taskDecoration, taskHoverField, taskMouseInteraction, type TaskHandler } from "./task-close";
 import { taskKeyMap } from "./keymap";
 import { taskAutoComplete } from "./auto-complete";
 import {

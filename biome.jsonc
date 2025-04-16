@@ -20,6 +20,7 @@
       "nursery": {
         "useSortedClasses": {
           "level": "error",
+          "fix": "unsafe",
           "options": {
             "attributes": [],
             "functions": []

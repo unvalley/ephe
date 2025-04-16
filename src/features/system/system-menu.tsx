@@ -124,7 +124,7 @@ export const SystemMenu = () => {
   const { theme, setTheme } = useTheme();
   const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
   const [isVisibleToc, setIsVisibleToc] = useAtom(tocVisibilityAtom);
-  
+
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
   const { charCount } = useCharCount();
   const { todayCompletedTasks } = useTodayCompletedTasks();
@@ -133,8 +133,8 @@ export const SystemMenu = () => {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const toggleToc = useCallback(() => {
-    setIsVisibleToc((prev) => !prev)
-  }, [])
+    setIsVisibleToc((prev) => !prev);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

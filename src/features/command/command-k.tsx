@@ -10,8 +10,8 @@ import { showToast } from "../../utils/components/toast";
 // import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import type { PaperMode } from "../../utils/hooks/use-paper-mode";
 import { EyeIcon } from "../../utils/components/icons";
-import { COLOR_THEME, ColorTheme } from "../../utils/theme-initializer";
-import { EditorWidth } from "../../utils/hooks/use-editor-width";
+import { COLOR_THEME, type ColorTheme } from "../../utils/theme-initializer";
+import type { EditorWidth } from "../../utils/hooks/use-editor-width";
 
 // Icons - you might need to install react-icons package if not already installed
 function ThemeIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -352,7 +352,7 @@ export function CommandMenu({
     if (cyclePaperMode) {
       list.push({
         id: "paper-mode",
-        name: `Cycle paper mode`, // 現在の状態は Item 側で表示
+        name: "Cycle paper mode", // 現在の状態は Item 側で表示
         icon: <PaperIcon className="h-3.5 w-3.5" />,
         // shortcut: "⌘P",
         perform: cyclePaperModeCallback,
@@ -362,7 +362,7 @@ export function CommandMenu({
     if (toggleEditorWidth) {
       list.push({
         id: "editor-width",
-        name: `Toggle editor width`, // 現在の状態は Item 側で表示
+        name: "Toggle editor width", // 現在の状態は Item 側で表示
         icon: <WidthIcon className="h-3.5 w-3.5" />,
         shortcut: "⌘W",
         perform: toggleEditorWidthCallback,
@@ -372,7 +372,7 @@ export function CommandMenu({
     if (togglePreviewMode) {
       list.push({
         id: "preview-mode",
-        name: `Toggle preview mode`, // 現在の状態は Item 側で表示
+        name: "Toggle preview mode", // 現在の状態は Item 側で表示
         icon: <EyeIcon className="h-3.5 w-3.5" />,
         // shortcut: "⌘⇧P",
         perform: togglePreviewModeCallback,
@@ -463,7 +463,7 @@ export function CommandMenu({
 
       <Command
         label="Command Menu"
-        className={`fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] -translate-x-1/2 transform overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900 ${
+        className={`-translate-x-1/2 fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] transform overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900 ${
           open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
         }`}
         onKeyDown={(e) => {
@@ -473,7 +473,7 @@ export function CommandMenu({
           }
         }}
       >
-        <div className="relative border-b border-gray-200 dark:border-zinc-800">
+        <div className="relative border-gray-200 border-b dark:border-zinc-800">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -491,7 +491,7 @@ export function CommandMenu({
             value={inputValue}
             onValueChange={setInputValue}
             placeholder="Type a command or search..."
-            className="w-full border-none bg-transparent py-2.5 pl-9 pr-3 text-sm text-gray-900 outline-none placeholder:text-gray-400 focus:ring-0 dark:text-gray-100 dark:placeholder:text-gray-500" // focus:ring-0 でフォーカス時のリングを消去
+            className="w-full border-none bg-transparent py-2.5 pr-3 pl-9 text-gray-900 text-sm outline-none placeholder:text-gray-400 focus:ring-0 dark:text-gray-100 dark:placeholder:text-gray-500" // focus:ring-0 でフォーカス時のリングを消去
           />
         </div>
 
@@ -499,13 +499,13 @@ export function CommandMenu({
           ref={listRef}
           className="scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent max-h-[min(60vh,350px)] overflow-y-auto p-2" // 高さを調整
         >
-          <Command.Empty className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+          <Command.Empty className="py-6 text-center text-gray-500 text-sm dark:text-gray-400">
             No results found.
           </Command.Empty>
 
           <Command.Group
             heading="Interface Mode"
-            className="mb-1 px-1 text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400"
+            className="mb-1 px-1 font-medium text-gray-500 text-xs tracking-wider dark:text-gray-400"
           >
             {commandsList
               .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width", "preview-mode"].includes(cmd.id))
@@ -515,11 +515,11 @@ export function CommandMenu({
                   // value に name と keywords を含めて検索対象にする
                   value={`${command.name} ${command.keywords || ""}`}
                   onSelect={command.perform}
-                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-gray-900 transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:hover:bg-zinc-800 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400"
+                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 >
                   <div className="flex items-center gap-2">
                     {/* アイコン表示エリア */}
-                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-hover:bg-zinc-600 dark:group-aria-selected:bg-primary-600/20">
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                       {command.icon}
                     </div>
                     {/* コマンド名と状態表示 */}
@@ -527,20 +527,20 @@ export function CommandMenu({
                       {" "}
                       {command.name}
                       {command.id === "paper-mode" && paperMode && (
-                        <span className="ml-1.5 text-xs text-gray-500 dark:text-gray-400">({paperMode})</span>
+                        <span className="ml-1.5 text-gray-500 text-xs dark:text-gray-400">({paperMode})</span>
                       )}
                       {command.id === "editor-width" && editorWidth && (
-                        <span className="ml-1.5 text-xs text-gray-500 dark:text-gray-400">({editorWidth})</span>
+                        <span className="ml-1.5 text-gray-500 text-xs dark:text-gray-400">({editorWidth})</span>
                       )}
                       {command.id === "preview-mode" && (
-                        <span className="ml-1.5 text-xs text-gray-500 dark:text-gray-400">
+                        <span className="ml-1.5 text-gray-500 text-xs dark:text-gray-400">
                           ({previewMode ? "on" : "off"})
                         </span>
                       )}
                     </span>
                   </div>
                   {command.shortcut && (
-                    <kbd className="hidden flex-shrink-0 select-none rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-xs font-medium text-gray-500 group-hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400 sm:inline-block">
+                    <kbd className="hidden flex-shrink-0 select-none rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-medium text-gray-500 text-xs group-hover:border-gray-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400">
                       {command.shortcut}
                     </kbd>
                   )}
@@ -550,7 +550,7 @@ export function CommandMenu({
 
           <Command.Group
             heading="Operations (WIP)"
-            className="mb-1 px-1 text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400"
+            className="mb-1 px-1 font-medium text-gray-500 text-xs tracking-wider dark:text-gray-400"
           >
             {commandsList
               .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues"].includes(cmd.id))
@@ -559,16 +559,16 @@ export function CommandMenu({
                   key={command.id}
                   value={`${command.name} ${command.keywords || ""}`}
                   onSelect={command.perform}
-                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-gray-900 transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:hover:bg-zinc-800 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400"
+                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-hover:bg-zinc-600 dark:group-aria-selected:bg-primary-600/20">
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                       {command.icon}
                     </div>
                     <span className="flex-grow truncate">{command.name}</span>
                   </div>
                   {command.shortcut && (
-                    <kbd className="hidden flex-shrink-0 select-none rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-xs font-medium text-gray-500 group-hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400 sm:inline-block">
+                    <kbd className="hidden flex-shrink-0 select-none rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-medium text-gray-500 text-xs group-hover:border-gray-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400">
                       {command.shortcut}
                     </kbd>
                   )}
@@ -578,7 +578,7 @@ export function CommandMenu({
 
           <Command.Group
             heading="Navigation"
-            className="mb-1 px-1 text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400"
+            className="mb-1 px-1 font-medium text-gray-500 text-xs tracking-wider dark:text-gray-400"
           >
             {commandsList
               .filter((cmd) => ["github-repo", "history"].includes(cmd.id))
@@ -587,16 +587,16 @@ export function CommandMenu({
                   key={command.id}
                   value={`${command.name} ${command.keywords || ""}`}
                   onSelect={command.perform}
-                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-gray-900 transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:hover:bg-zinc-800 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400"
+                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-hover:bg-zinc-600 dark:group-aria-selected:bg-primary-600/20">
+                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                       {command.icon}
                     </div>
                     <span className="flex-grow truncate">{command.name}</span>
                   </div>
                   {command.shortcut && (
-                    <kbd className="hidden flex-shrink-0 select-none rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-xs font-medium text-gray-500 group-hover:border-gray-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400 sm:inline-block">
+                    <kbd className="hidden flex-shrink-0 select-none rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-medium text-gray-500 text-xs group-hover:border-gray-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400">
                       {command.shortcut}
                     </kbd>
                   )}
@@ -605,7 +605,7 @@ export function CommandMenu({
           </Command.Group>
         </Command.List>
 
-        <div className="flex items-center justify-between border-t border-gray-200 px-3 py-2 text-xs text-gray-500 dark:border-zinc-800 dark:text-gray-400">
+        <div className="flex items-center justify-between border-gray-200 border-t px-3 py-2 text-gray-500 text-xs dark:border-zinc-800 dark:text-gray-400">
           <div className="flex items-center gap-1">
             <kbd className="rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-medium text-gray-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400">
               ⌘
