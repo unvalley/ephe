@@ -343,7 +343,7 @@ export function CommandMenu({
         id: "theme-toggle",
         name: `Switch to ${getNextThemeText()} mode`,
         icon: <ThemeIcon className="h-3.5 w-3.5" />,
-        shortcut: "⌘T", // Mac以外も考慮するなら修飾キーの表示を工夫する必要あり
+        // shortcut: "⌘T", // Mac以外も考慮するなら修飾キーの表示を工夫する必要あり
         perform: cycleThemeCallback,
         keywords: "theme toggle switch mode light dark system color appearance",
       },
@@ -354,7 +354,7 @@ export function CommandMenu({
         id: "paper-mode",
         name: `Cycle paper mode`, // 現在の状態は Item 側で表示
         icon: <PaperIcon className="h-3.5 w-3.5" />,
-        shortcut: "⌘P",
+        // shortcut: "⌘P",
         perform: cyclePaperModeCallback,
         keywords: "paper mode cycle switch document style layout background",
       });
@@ -374,7 +374,7 @@ export function CommandMenu({
         id: "preview-mode",
         name: `Toggle preview mode`, // 現在の状態は Item 側で表示
         icon: <EyeIcon className="h-3.5 w-3.5" />,
-        shortcut: "⌘⇧P",
+        // shortcut: "⌘⇧P",
         perform: togglePreviewModeCallback,
         keywords: "preview markdown toggle on off view show hide live render",
       });
@@ -384,7 +384,7 @@ export function CommandMenu({
         id: "export-markdown",
         name: "Export markdown",
         icon: <ExportIcon className="h-3.5 w-3.5" />,
-        shortcut: "⌘S",
+        // shortcut: "⌘S",
         perform: handleExportMarkdownCallback,
         keywords: "export markdown save download file md text document",
       });
@@ -415,7 +415,6 @@ export function CommandMenu({
         id: "github-repo",
         name: "Go to Ephe GitHub Repo",
         icon: <LinkIcon className="h-3.5 w-3.5" />,
-        shortcut: "⌘R", // ブラウザのリロードと競合する可能性あり
         perform: goToGitHubRepo,
         keywords: "github ephe repository project code source link open website source-code",
       },
@@ -423,7 +422,6 @@ export function CommandMenu({
         id: "history",
         name: "Go to History",
         icon: <HistoryIcon className="h-3.5 w-3.5" />,
-        shortcut: "⌘H", // ブラウザの履歴と競合する可能性あり
         perform: goToHistory,
         keywords: "history document version past previous changes log revisions browse",
       },
@@ -507,7 +505,7 @@ export function CommandMenu({
 
           <Command.Group
             heading="Interface Mode"
-            className="mb-1 px-1 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+            className="mb-1 px-1 text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400"
           >
             {commandsList
               .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width", "preview-mode"].includes(cmd.id))
@@ -551,8 +549,8 @@ export function CommandMenu({
           </Command.Group>
 
           <Command.Group
-            heading="Operations"
-            className="mb-1 px-1 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+            heading="Operations (WIP)"
+            className="mb-1 px-1 text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400"
           >
             {commandsList
               .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues"].includes(cmd.id))
@@ -580,7 +578,7 @@ export function CommandMenu({
 
           <Command.Group
             heading="Navigation"
-            className="mb-1 px-1 text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400"
+            className="mb-1 px-1 text-xs font-medium tracking-wider text-gray-500 dark:text-gray-400"
           >
             {commandsList
               .filter((cmd) => ["github-repo", "history"].includes(cmd.id))
@@ -615,7 +613,7 @@ export function CommandMenu({
             <kbd className="rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-medium text-gray-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400">
               K
             </kbd>
-            <span className="ml-1">to open</span>
+            <span className="ml-1">to close</span>
           </div>
           <div>
             <span>Ephe</span> 

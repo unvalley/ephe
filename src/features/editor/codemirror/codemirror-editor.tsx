@@ -147,7 +147,7 @@ export const useMarkdownEditor = () => {
       ".cm-content": {
         fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace",
         fontSize: "16px",
-        padding: "10px 20px",
+        padding: "30px 20px",
         lineHeight: "1.6",
         maxWidth: "680px",
         margin: "0 auto",
