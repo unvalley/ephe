@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { EditorState, Extension } from "@codemirror/state";
+import { EditorState } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
-import { defaultKeymap, history } from "@codemirror/commands";
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { useTheme } from "../../../utils/hooks/use-theme";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
@@ -15,46 +15,11 @@ import { useAtom } from "jotai";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import { showToast } from "../../../utils/components/toast";
 import { EPHE_COLORS } from "./codemirror-utils";
+import { taskListExtensions } from "./tasklist";
+import { checklistIndentKeymap } from "./tasklist/indent";
+import { checklistPlugin } from "./tasklist/close-task";
 
-// Auto-complete checklist items: converts '-[' or '- [' to '- [ ] '
-const checklistAutoComplete: Extension = EditorView.inputHandler.of((view, from, to, text) => {
-  // Only handle single character inputs (when user types '[' after '-' or '- ')
-  if (text !== "[") return false;
-  const doc = view.state.doc;
-
-  // Safety check: ensure we're within document boundaries
-  if (from < 0 || from > doc.length) return false;
-
-  const line = doc.lineAt(from);
-  const linePrefix = doc.sliceString(line.from, from);
-
-  // Check for patterns that should trigger auto-completion
-  const hasDashSpace = linePrefix.endsWith("- ");
-  const hasDash = linePrefix.endsWith("-") && !hasDashSpace;
-
-  if (hasDash || hasDashSpace) {
-    const insertFrom = hasDash
-      ? from - 1 // replace from the '-'
-      : from - 2; // replace from the '- '
-
-    // Safety checks to ensure valid range
-    if (insertFrom < 0 || insertFrom > doc.length) return false;
-    // Calculate the "to" position safely, capped to document length
-    const insertTo = Math.min(from + 1, doc.length);
-    // Replace the matched pattern with a properly formatted checklist item
-    view.dispatch({
-      changes: {
-        from: insertFrom,
-        to: insertTo, // safely capped to document length
-        insert: "- [ ] ",
-      },
-      selection: { anchor: insertFrom + 6 }, // Place cursor after "- [ ] "
-    });
-    return true;
-  }
-
-  return false;
-});
+const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
 export const useMarkdownEditor = () => {
   const editor = useRef<HTMLDivElement | null>(null);
@@ -232,18 +197,22 @@ export const useMarkdownEditor = () => {
       const state = EditorState.create({
         doc: content,
         extensions: [
-          basicSetup,
+          keymap.of(defaultKeymap),
           history(),
+          keymap.of(historyKeymap),
+
           markdown({
             base: markdownLanguage,
             codeLanguages: languages,
             addKeymap: true,
           }),
+
           EditorView.lineWrapping,
           syntaxHighlighting(epheHighlightStyle, { fallback: true }),
+
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {
-              // Use debounced update for content state to prevent cursor jumps
+              // TODO: Use debounced update for content state to prevent cursor jumps
               // but still maintain content synchronization
               const updatedContent = update.state.doc.toString();
               window.requestAnimationFrame(() => {
@@ -251,8 +220,9 @@ export const useMarkdownEditor = () => {
               });
             }
           }),
+
           EditorView.theme(theme),
-          keymap.of(defaultKeymap),
+
           keymap.of([
             {
               key: "Mod-s",
@@ -262,8 +232,10 @@ export const useMarkdownEditor = () => {
               },
               preventDefault: true,
             },
+            ...checklistIndentKeymap,
           ]),
-          checklistAutoComplete,
+          taskListExtensions,
+          checklistPlugin,
         ],
       });
       const viewCurrent = new EditorView({ state, parent: container });
@@ -277,8 +249,6 @@ export const useMarkdownEditor = () => {
     formatDocument: view ? () => formatDocument(view) : undefined,
   };
 };
-
-const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
 export const CodeMirrorEditor = () => {
   const { editor } = useMarkdownEditor();

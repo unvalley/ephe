@@ -17,12 +17,12 @@ export const NewMonacoEditor = () => {
 
   const handlePlaceholder = (updatedText: string) => {
     if (placeholder === "" || !editorRef.current) return;
-    
+
     // Create placeholder widget if it doesn't exist
     if (placeholderRef.current === null) {
       placeholderRef.current = new PlaceholderWidget(editorRef.current, placeholder);
     }
-    
+
     // Show placeholder only if editor is empty
     if (updatedText.length > 0) {
       editorRef.current.removeContentWidget(placeholderRef.current);
@@ -35,16 +35,16 @@ export const NewMonacoEditor = () => {
   useEffect(() => {
     // 既にエディタが作成されている場合は何もしない
     if (editorRef.current) return;
-    
+
     if (editorContainerRef.current) {
       // Set up themes
       monaco.editor.defineTheme(EPHE_LIGHT_THEME.name, EPHE_LIGHT_THEME.theme);
       monaco.editor.defineTheme(EPHE_DARK_THEME.name, EPHE_DARK_THEME.theme);
-      
+
       // Set active theme
       const themeName = isDarkMode ? EPHE_DARK_THEME.name : EPHE_LIGHT_THEME.name;
       monaco.editor.setTheme(themeName);
-      
+
       // Create editor (once)
       editorRef.current = monaco.editor.create(editorContainerRef.current, {
         ...editorOptions,
@@ -54,14 +54,14 @@ export const NewMonacoEditor = () => {
       // Initialize markdown extension
       const mdExt = new MonacoMarkdownExtension();
       mdExt.activate(editorRef.current);
-      
+
       // Set up content change handler for placeholder management
       editorRef.current.onDidChangeModelContent(() => {
         if (editorRef.current) {
           handlePlaceholder(editorRef.current.getValue());
         }
       });
-      
+
       // Show placeholder immediately on mount if editor is empty
       handlePlaceholder(editorRef.current.getValue());
       setIsEditorMounted(true);
@@ -93,7 +93,5 @@ export const NewMonacoEditor = () => {
     }
   }, [isDarkMode, isEditorMounted]);
 
-  return (
-    <div ref={editorContainerRef} className="h-full" />
-  );
+  return <div ref={editorContainerRef} className="h-full" />;
 };

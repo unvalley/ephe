@@ -145,3 +145,11 @@ span.task-checkbox {
   background-size: 16px 16px;
   background-color: #0d1117;
 }
+
+
+.cm-checklist-hover {
+    cursor: pointer;
+    /* オプション: ホバーを視覚的に分かりやすくする背景色 */
+    background-color: rgba(128, 128, 128, 0.1);
+    background-color: #eee;
+  }

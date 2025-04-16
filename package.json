@@ -33,6 +33,7 @@
     "@textlint/markdown-to-ast": "^14.5.0",
     "boring-avatars": "^1.11.2",
     "cmdk": "^1.1.1",
+    "codemirror": "^6.0.1",
     "jotai": "^2.12.2",
     "monaco-editor": "^0.52.2",
     "react": "^19.0.0",
@@ -54,6 +55,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/browser": "^3.1.1",
     "autoprefixer": "^10.4.14",
     "playwright": "^1.51.1",
     "postcss": "^8.4.31",
@@ -63,6 +65,7 @@
     "vite": "^6",
     "vite-plugin-top-level-await": "^1.5.0",
     "vite-plugin-wasm": "^3.4.1",
-    "vitest": "latest"
+    "vitest": "latest",
+    "vitest-browser-react": "^0.1.1"
   }
 }
