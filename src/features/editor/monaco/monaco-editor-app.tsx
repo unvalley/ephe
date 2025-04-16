@@ -319,7 +319,9 @@ export const EditorApp = () => {
     markdownExtension.activate(monaco.editor);
 
     // Event handlers
-    monaco.editor.onKeyDown((event) => handleKeyDown(event, monaco.editor, monaco.editor.getModel(), monaco.editor.getPosition()));
+    monaco.editor.onKeyDown((event) =>
+      handleKeyDown(event, monaco.editor, monaco.editor.getModel(), monaco.editor.getPosition()),
+    );
     monaco.editor.onMouseDown((event) => handleTaskCheckboxToggle(event, monaco.editor, monaco.editor.getModel()));
 
     setupEditorDecorations(monaco.editor);
@@ -338,11 +340,11 @@ export const EditorApp = () => {
       }
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     // Cleanup on unmount
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       if (editorRef.current) {
         editorRef.current.dispose();
         editorRef.current = null;

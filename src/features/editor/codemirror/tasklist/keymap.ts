@@ -1,0 +1,314 @@
+import { indentMore, indentLess } from "@codemirror/commands";
+import { indentUnit } from "@codemirror/language";
+import { KeyBinding, EditorView, keymap } from "@codemirror/view";
+
+// チェックリスト行の開始部分を判定 (行頭空白とマーカー)
+const checklistLineStartRegex = /^(\s*)(?:[-*])\s*\[[ x]\]\s*/;
+const EMPTY_CHECKLIST_LINE_REGEX = /^(\s*[-*]\s+\[[ xX]\])\s*$/;
+
+const INDENT_SPACE = "  ";
+
+// 行頭の空白を取得する正規表現
+const leadingWhitespaceRegex = /^(\s*)/;
+
+// --- Helper Function to get Indent Level ---
+// (インデント単位を考慮したレベル計算が必要ならより複雑化)
+// ここでは単純に空白の文字数とする
+function getIndentLength(lineText: string): number {
+    const match = lineText.match(leadingWhitespaceRegex);
+    return match ? match[1].length : 0;
+  }
+
+
+export const checkboxKeyBindings: readonly KeyBinding[] = [
+//   {
+//     key: "Tab",
+//     run: (view: EditorView): boolean => {
+//       const { state } = view;
+//       if (state.readOnly || state.selection.ranges.length > 1) return false;
+//       const { head, empty } = state.selection.main;
+
+//       if (!empty) {
+//         return indentMore(view);
+//       }
+
+//       const line = state.doc.lineAt(head);
+//       // 行がチェックリスト項目で、かつカーソルが行頭からチェックボックスの直後までにある場合
+//       // (より単純に、チェックリスト行であればどこでもインデントを許可しても良いかもしれない)
+//       const match = line.text.match(checklistLineStartRegex);
+//       if (match && head <= line.from + match[0].length) {
+//         // 行頭にインデント単位を挿入
+//         view.dispatch({
+//           changes: { from: line.from, insert: INDENT_SPACE },
+//           userEvent: "input.indent",
+//         });
+//         return true;
+//       }
+//       return indentMore(view);
+//     },
+//   },
+//   {
+//     key: "Tab",
+//     run: (view: EditorView): boolean => {
+//       const { state } = view;
+//       if (state.readOnly || state.selection.ranges.length > 1) return false;
+
+//       // 選択範囲がある場合はデフォルトの indentMore
+//       if (!state.selection.main.empty) {
+//         return indentMore(view);
+//       }
+
+//       const { head } = state.selection.main;
+//       const currentLine = state.doc.lineAt(head);
+//       const currentLineText = currentLine.text;
+//       const currentIndentLength = getIndentLength(currentLineText);
+//       const indentUnitStr = state.facet(indentUnit); // インデント単位を取得 ("  " など)
+//       const indentUnitLength = indentUnitStr.length;
+
+//       // 現在の行がチェックリストアイテムか確認
+//       const isChecklistLine = checklistLineStartRegex.test(currentLineText);
+
+//       if (isChecklistLine) {
+//         // チェックリスト行の場合、親を探してインデントレベルを比較
+//         let parentIndentLength = -1;
+//         let foundParent = false;
+
+//         // 現在行の前の行から遡って親を探す
+//         for (let i = currentLine.number - 1; i >= 1; i--) {
+//           const prevLine = state.doc.line(i);
+//           const prevLineText = prevLine.text;
+//           if (checklistLineStartRegex.test(prevLineText)) {
+//             // 前の行もチェックリストアイテムだった
+//             const prevIndentLength = getIndentLength(prevLineText);
+//             if (prevIndentLength < currentIndentLength) {
+//               // インデントが浅い最初のチェックリスト行を親候補とする
+//               parentIndentLength = prevIndentLength;
+//               foundParent = true;
+//               break; // 直近の親が見つかった
+//             } else if (prevIndentLength === currentIndentLength) {
+//               // 同じレベルの兄弟は探し続ける
+//               continue;
+//             } else {
+//                // 自分よりインデントが深い行は親ではない
+//                continue;
+//             }
+//           } else if (prevLineText.trim() !== "") {
+//             // チェックリスト以外の行が見つかったら探索終了 (リストが途切れた)
+//             break;
+//           }
+//           // 空行はスキップ
+//         }
+
+//         console.log(`Current Indent: ${currentIndentLength}, Parent Indent: ${parentIndentLength}, Unit Length: ${indentUnitLength}`); // デバッグ用
+
+//         if (foundParent) {
+//           // 親が見つかった場合
+//           if (currentIndentLength >= parentIndentLength + indentUnitLength) {
+//             // 既に親から1階層以上ネストしている場合、何もしない
+//              console.log("Already nested >= 1 level from parent. No indent."); // デバッグ用
+//             return true; // デフォルト動作も抑制
+//           } else if (currentIndentLength === parentIndentLength) {
+//              // 親と同じレベルの場合、インデントを実行
+//              console.log("Indenting one level from parent."); // デバッグ用
+//             view.dispatch({
+//               changes: { from: currentLine.from, insert: indentUnitStr },
+//               userEvent: "input.indent",
+//             });
+//             return true;
+//           } else {
+//              // 親より浅いことは通常ないはずだが、念のためデフォルト動作も抑制
+//              console.log("Current indent is less than parent? Should not happen normally."); // デバッグ用
+//              return true;
+//           }
+//         } else {
+//           // 親が見つからなかった場合 (ルートレベル or リストが途切れている)
+//           if (currentIndentLength === 0) {
+//             // ルートレベルならインデント実行
+//             console.log("Indenting from root level."); // デバッグ用
+//             view.dispatch({
+//               changes: { from: currentLine.from, insert: indentUnitStr },
+//               userEvent: "input.indent",
+//             });
+//             return true;
+//           } else {
+//             // 親がなく、既にインデントされている場合は何もしない
+//             console.log("No parent found and already indented. No indent."); // デバッグ用
+//             return true; // デフォルト動作も抑制
+//           }
+//         }
+//       } else {
+//         // チェックリスト行でない場合は、通常の indentMore を実行
+//         return indentMore(view);
+//       }
+//     },
+//   },
+  { // Prec が不要な場合
+    key: "Tab",
+    run: (view: EditorView): boolean => {
+      const { state, dispatch } = view;
+      if (state.readOnly || state.selection.ranges.length > 1) return false;
+  
+      // 選択範囲がある場合はデフォルトの indentMore (またはカスタムロジック)
+      if (!state.selection.main.empty) {
+        return indentMore(view);
+      }
+  
+      const { head } = state.selection.main;
+      const currentLine = state.doc.lineAt(head);
+      const currentLineText = currentLine.text;
+  
+      // 現在の行がチェックリストアイテムでなければ、デフォルトの indentMore を実行
+      if (!checklistLineStartRegex.test(currentLineText)) {
+        return indentMore(view);
+      }
+  
+      const currentIndentLength = getIndentLength(currentLineText);
+      const indentUnitStr = state.facet(indentUnit);
+      const indentUnitLength = indentUnitStr.length;
+  
+      // インデント単位が無効な場合は何もしない（またはエラーログ）
+      if (indentUnitLength <= 0) {
+          console.warn("Invalid indent unit length:", indentUnitLength);
+          return false; // デフォルト動作に任せるか、trueでブロックするか
+      }
+  
+      // 現在の行が最初の行でなければ、直前の行を確認
+      if (currentLine.number > 1) {
+        const prevLine = state.doc.line(currentLine.number - 1);
+        const prevLineText = prevLine.text;
+  
+        // 直前の行もチェックリストアイテムか確認
+        if (checklistLineStartRegex.test(prevLineText)) {
+          const prevIndentLength = getIndentLength(prevLineText);
+  
+          // ★★★ 修正点: 直前の行が同じインデントレベルの場合のみインデントを実行 ★★★
+          if (currentIndentLength === prevIndentLength) {
+            console.log(`Indenting sibling: Current ${currentIndentLength}, Prev ${prevIndentLength}`);
+            dispatch({
+              changes: { from: currentLine.from, insert: indentUnitStr },
+              userEvent: "input.indent.checklist", // より具体的なイベント名
+            });
+            return true; // インデント処理を実行したので true を返す
+          }
+  
+          // (オプション) もし現在の行が既に直前の行より深い場合、Tabでのインデントはブロック
+          if (currentIndentLength > prevIndentLength) {
+               console.log(`Already nested: Current ${currentIndentLength}, Prev ${prevIndentLength}`);
+               return true; // これ以上Tabでインデントさせない
+          }
+  
+          // (オプション) もし現在の行が直前の行より浅い場合 (通常は考えにくいが)、デフォルト動作に任せるかブロック
+          // console.log(`Less indented than previous: Current ${currentIndentLength}, Prev ${prevIndentLength}`);
+          // return false; or return true;
+        }
+      }
+  
+      // ここに到達する場合:
+      // 1. 現在の行が最初の行 (currentLine.number === 1)
+      // 2. 直前の行がチェックリストアイテムではない
+      // 3. 直前の行がチェックリストアイテムだが、インデントレベルが異なる (currentIndentLength !== prevIndentLength)
+  
+      // ルートレベル (インデント0) のアイテムなら、デフォルトの indentMore を試みる
+      if (currentIndentLength === 0) {
+           console.log("Root level item, fallback to indentMore");
+           return indentMore(view);
+      } else {
+           // 既にインデントされており、適切な兄弟が直前にない場合は、Tabキーでのインデントをブロック
+           console.log("Not root, no suitable sibling above, blocking Tab indent.");
+           return true;
+      }
+  
+      // 通常は上記で処理されるはずだが、念のためのフォールバック
+      // return false; // or indentMore(view);
+    }
+},
+  {
+    key: "Shift-Tab",
+    run: (view: EditorView): boolean => {
+      const { state } = view;
+      if (state.readOnly) return false;
+      const { head, empty } = state.selection.main;
+      // 範囲選択、または単一カーソルで行頭にインデント単位がある場合
+      const line = state.doc.lineAt(head);
+      if (empty && line.text.startsWith(INDENT_SPACE)) {
+        view.dispatch({
+          changes: { from: line.from, to: line.from + INDENT_SPACE.length, insert: "" },
+          userEvent: "delete.dedent",
+        });
+        return true;
+      }
+      return indentLess(view);
+    },
+  },
+  {
+    key: "Delete",
+    run: (view: EditorView): boolean => {
+      console.log("Custom Delete handler invoked");
+      const { state } = view;
+      const { selection } = state;
+
+      // 選択範囲がある場合やカーソルが複数ある場合はデフォルト動作
+      if (!selection.main.empty || selection.ranges.length > 1) {
+        return false;
+      }
+
+      const pos = selection.main.head;
+      const line = state.doc.lineAt(pos);
+
+      // カーソルが行末にない場合はデフォルト動作
+      // (行の途中でDeleteを押した場合は、通常通り文字を削除させたい)
+      if (pos !== line.to) {
+        return false;
+      }
+
+      // 行の内容全体が空のチェックリストパターンにマッチするか確認
+      const match = line.text.match(EMPTY_CHECKLIST_LINE_REGEX);
+
+      if (match) {
+        // マッチした場合: 行全体が `- [ ]` (または - [x] など) と空白のみ
+        console.log("Delete pressed at the end of an empty checklist item line.");
+
+        // 行を削除するトランザクションを作成
+        let from = line.from;
+        let to = line.to;
+
+        // 行の後ろに改行がある場合、それも削除範囲に含める
+        // (次の行が意図せずインデントされるのを防ぐため)
+        // ただし、ドキュメントの最後の行の場合は改行は削除しない
+        if (line.to < state.doc.length) {
+          to += 1; // 改行文字分
+        } else {
+          // 最後の行で、かつ最初の行でもない場合、
+          // 前の行の末尾の改行を削除しないように調整が必要な場合がある
+          // ここでは単純に、最後の行なら改行は消さない、としておく
+          if (line.from > 0) {
+            // fromを調整して前の改行を消さないようにする？ いや、行全体を消すのが直感的か。
+            // 一旦、最後の行は改行を消さない、で進める
+          }
+        }
+        // 最初の行の場合、改行を削除すると次の行がくっついてしまうので削除しない
+        if (line.from === 0 && line.to < state.doc.length) {
+          to = line.to;
+        }
+
+        // 最終的な削除範囲
+        const changes = { from: from, to: to };
+        // カーソルは削除開始位置に置く
+        const selectionAfter = { anchor: from };
+
+        view.dispatch({
+          changes: changes,
+          selection: selectionAfter,
+          userEvent: "delete.checklist", // ユーザーイベント名を指定
+        });
+
+        return true; // デフォルトの Delete 動作を抑制
+      }
+
+      // パターンにマッチしない場合は、デフォルトの Delete 動作を実行
+      return false;
+    },
+  },
+];
+
+export const checkboxKeyMap = keymap.of(checkboxKeyBindings);

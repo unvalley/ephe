@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { EditorState } from "@codemirror/state";
-import { EditorView, keymap } from "@codemirror/view";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { EditorState, Prec } from "@codemirror/state";
+import { EditorView, keymap, placeholder } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { useTheme } from "../../../utils/hooks/use-theme";
@@ -15,9 +15,9 @@ import { useAtom } from "jotai";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import { showToast } from "../../../utils/components/toast";
 import { EPHE_COLORS } from "./codemirror-utils";
-import { taskListExtensions } from "./tasklist";
-import { checklistIndentKeymap } from "./tasklist/indent";
-import { checklistPlugin } from "./tasklist/close-task";
+import { checklistPlugin } from "./tasklist";
+import { checkboxKeyBindings } from "./tasklist/keymap";
+import { getRandomQuote } from "../quotes";
 
 const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
@@ -148,6 +148,7 @@ export const useMarkdownEditor = () => {
         lineHeight: "1.6",
         maxWidth: "680px",
         margin: "0 auto",
+        caretColor: COLORS.foreground,
       },
       ".cm-cursor": {
         borderLeftColor: COLORS.foreground,
@@ -187,7 +188,7 @@ export const useMarkdownEditor = () => {
     if (editor.current) setContainer(editor.current);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!view && container) {
       const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode);
       const state = EditorState.create({
@@ -218,6 +219,7 @@ export const useMarkdownEditor = () => {
           }),
 
           EditorView.theme(theme),
+          placeholder(getRandomQuote()),
 
           keymap.of([
             {
@@ -228,14 +230,14 @@ export const useMarkdownEditor = () => {
               },
               preventDefault: true,
             },
-            ...checklistIndentKeymap,
+            ...checkboxKeyBindings,
           ]),
-          taskListExtensions,
-          checklistPlugin,
+          Prec.high(checklistPlugin),
         ],
       });
       const viewCurrent = new EditorView({ state, parent: container });
       setView(viewCurrent);
+      viewCurrent.focus(); // store focus
     }
   }, [view, container, content, isDarkMode, setContent, getHighlightStyle, formatDocument]);
 

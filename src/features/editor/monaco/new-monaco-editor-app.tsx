@@ -47,38 +47,41 @@ export const NewMonacoEditor = (_props: MonacoEditorProps) => {
     };
   }, []);
 
-  const handlePlaceholder = useCallback((updatedText: string) => {
-    if (placeholder === "" || !editorRef.current) return;
-    // Create placeholder widget if it doesn't exist
-    if (placeholderRef.current === null) {
-      placeholderRef.current = new PlaceholderWidget(editorRef.current, placeholder);
-    }
-    // Show placeholder only if editor is empty
-    if (updatedText.length > 0) {
-      editorRef.current.removeContentWidget(placeholderRef.current);
-    } else {
-      editorRef.current.addContentWidget(placeholderRef.current);
-    }
-  }, [placeholder]);
+  const handlePlaceholder = useCallback(
+    (updatedText: string) => {
+      if (placeholder === "" || !editorRef.current) return;
+      // Create placeholder widget if it doesn't exist
+      if (placeholderRef.current === null) {
+        placeholderRef.current = new PlaceholderWidget(editorRef.current, placeholder);
+      }
+      // Show placeholder only if editor is empty
+      if (updatedText.length > 0) {
+        editorRef.current.removeContentWidget(placeholderRef.current);
+      } else {
+        editorRef.current.addContentWidget(placeholderRef.current);
+      }
+    },
+    [placeholder],
+  );
 
   // Save editor content and optionally format it
   const saveEditorContent = useCallback(async () => {
     if (!editorRef.current) return;
-    
+
     let content = editorRef.current.getValue();
-    
+
     // Format content if formatter is available
     if (formatterRef.current) {
       try {
         // Save current cursor position and selection before formatting
         const selection = editorRef.current.getSelection();
         const scrollTop = editorRef.current.getScrollTop();
-        
+
         const formatted = await formatterRef.current.formatMarkdown(content);
         if (formatted !== content) {
           editorRef.current.setValue(formatted);
           content = formatted;
-          
+
           // Restore cursor position and selection after formatting
           if (selection) {
             editorRef.current.setSelection(selection);
@@ -89,7 +92,7 @@ export const NewMonacoEditor = (_props: MonacoEditorProps) => {
         showToast("Failed to format content", "error");
       }
     }
-    
+
     // Save content to state and create snapshot
     setEditorContent(content);
     saveSnapshot({
@@ -98,7 +101,7 @@ export const NewMonacoEditor = (_props: MonacoEditorProps) => {
       title: "Manual Save",
       description: "",
     });
-    
+
     showToast("Content saved", "success");
   }, [setEditorContent]);
 
@@ -133,7 +136,7 @@ export const NewMonacoEditor = (_props: MonacoEditorProps) => {
           handlePlaceholder(editorRef.current.getValue());
         }
       });
-      
+
       // Add command for Cmd+S / Ctrl+S to save content
       editorRef.current.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, async () => {
         await saveEditorContent();
@@ -143,7 +146,7 @@ export const NewMonacoEditor = (_props: MonacoEditorProps) => {
       handlePlaceholder(editorRef.current.getValue());
       setIsEditorMounted(true);
 
-      editorRef.current.focus()
+      editorRef.current.focus();
     }
 
     // Cleanup on component unmount only
@@ -163,7 +166,7 @@ export const NewMonacoEditor = (_props: MonacoEditorProps) => {
   }, [
     // Show placeholder immediately on mount if editor is empty
     handlePlaceholder,
-    saveEditorContent
+    saveEditorContent,
   ]);
 
   // Add global keyboard shortcut for saving
