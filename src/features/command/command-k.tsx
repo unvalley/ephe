@@ -134,7 +134,7 @@ type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;
   onOpen?: () => void;
-  editorContent: string;
+  editorContent?: string;
   editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
   markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
   paperMode?: PaperMode;
@@ -149,7 +149,7 @@ export const CommandMenu = ({
   open,
   onClose,
   onOpen,
-  editorContent,
+  editorContent = "",
   editorRef,
   markdownFormatterRef,
   paperMode = "normal",
@@ -224,6 +224,12 @@ export const CommandMenu = ({
 
   // Function to export markdown content
   const handleExportMarkdown = () => {
+    if (!editorContent) {
+      showToast("No content to export", "error");
+      onClose?.();
+      return;
+    }
+
     const blob = new Blob([editorContent], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -244,7 +250,8 @@ export const CommandMenu = ({
   // Function to format document using dprint
   const handleFormatDocument = async () => {
     if (!editorRef?.current || !markdownFormatterRef?.current) {
-      console.error("Editor or markdown formatter not available");
+      showToast("Editor or markdown formatter not available", "error");
+      onClose?.();
       return;
     }
 
@@ -279,6 +286,7 @@ export const CommandMenu = ({
   const handleInsertGitHubIssues = async () => {
     if (!editorRef?.current) {
       showToast("Editor not available", "error");
+      onClose?.();
       return;
     }
 
@@ -287,6 +295,7 @@ export const CommandMenu = ({
 
       // If user cancels the prompt or enters empty string, abort
       if (!github_user_id) {
+        onClose?.();
         return;
       }
 
@@ -434,38 +443,44 @@ export const CommandMenu = ({
           </Command.Group>
 
           <Command.Group heading="Operations" className="mb-1 px-1 text-mono-400 text-xs dark:text-mono-200">
-            <Command.Item
-              className="group mt-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-              onSelect={handleExportMarkdown}
-              value="export markdown save download"
-            >
-              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                <ExportIcon className="h-3.5 w-3.5" />
-              </div>
-              <span>Export markdown</span>
-            </Command.Item>
+            {editorContent && (
+              <Command.Item
+                className="group mt-1 flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                onSelect={handleExportMarkdown}
+                value="export markdown save download"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                  <ExportIcon className="h-3.5 w-3.5" />
+                </div>
+                <span>Export markdown</span>
+              </Command.Item>
+            )}
 
-            <Command.Item
-              className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-              onSelect={handleFormatDocument}
-              value="format document prettify"
-            >
-              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                <FormatIcon className="h-3.5 w-3.5" />
-              </div>
-              <span>Format document</span>
-            </Command.Item>
+            {editorRef?.current && markdownFormatterRef?.current && (
+              <Command.Item
+                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                onSelect={handleFormatDocument}
+                value="format document prettify"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                  <FormatIcon className="h-3.5 w-3.5" />
+                </div>
+                <span>Format document</span>
+              </Command.Item>
+            )}
 
-            <Command.Item
-              className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-              onSelect={handleInsertGitHubIssues}
-              value="github issues insert fetch public repos"
-            >
-              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                <GitHubIcon className="h-3.5 w-3.5" />
-              </div>
-              <span>Insert GitHub Issues (Public Repos)</span>
-            </Command.Item>
+            {editorRef?.current && (
+              <Command.Item
+                className="group flex cursor-pointer items-center gap-2 rounded-md px-2 py-2.5 text-gray-900 text-sm transition-colors hover:bg-gray-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-gray-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                onSelect={handleInsertGitHubIssues}
+                value="github issues insert fetch public repos"
+              >
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-gray-100/80 text-gray-900 transition-colors group-hover:bg-gray-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-gray-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                  <GitHubIcon className="h-3.5 w-3.5" />
+                </div>
+                <span>Insert GitHub Issues (Public Repos)</span>
+              </Command.Item>
+            )}
           </Command.Group>
 
           <Command.Group heading="Move" className="mb-1 px-1 text-mono-400 text-xs dark:text-mono-200">
