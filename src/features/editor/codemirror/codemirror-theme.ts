@@ -9,7 +9,7 @@ export const EPHE_COLORS = {
     type: "#090909",
     function: "#666666",
     variable: "#444444",
-    constant: "#FF3C00",
+    constant: "#CC2F00",
     operator: "#FF3C00",
     heading: "#FF3C00",
     emphasis: "#FF3C00",

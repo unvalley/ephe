@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useMemo } from "react";
 import { EditorState, Prec, Compartment } from "@codemirror/state";
 import { EditorView, keymap, placeholder } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
@@ -14,9 +14,9 @@ import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { useAtom } from "jotai";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import { showToast } from "../../../utils/components/toast";
-import { EPHE_COLORS } from "./codemirror-utils";
-import { checklistPlugin } from "./tasklist";
-import { checkboxKeyBindings } from "./tasklist/keymap";
+import { EPHE_COLORS } from "./codemirror-theme";
+import { createChecklistPlugin, createDefaultTaskHandler } from "./tasklist";
+import { taskKeyBindings } from "./tasklist/keymap";
 import { getRandomQuote } from "../quotes";
 
 const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
@@ -191,6 +191,8 @@ export const useMarkdownEditor = () => {
     if (editor.current) setContainer(editor.current);
   }, []);
 
+  const taskHandler = useMemo(() => createDefaultTaskHandler(), []);
+
   useLayoutEffect(() => {
     if (!view && container) {
       const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode);
@@ -230,9 +232,9 @@ export const useMarkdownEditor = () => {
               },
               preventDefault: true,
             },
-            ...checkboxKeyBindings,
+            ...taskKeyBindings,
           ]),
-          Prec.high(checklistPlugin),
+          Prec.high(createChecklistPlugin(taskHandler)),
         ],
       });
       const viewCurrent = new EditorView({ state, parent: container });
@@ -249,7 +251,7 @@ export const useMarkdownEditor = () => {
         effects: [
           themeCompartment.reconfigure(EditorView.theme(theme)),
           highlightCompartment.reconfigure(syntaxHighlighting(epheHighlightStyle, { fallback: true })),
-        ]
+        ],
       });
     }
   }, [isDarkMode, view, getHighlightStyle]);
@@ -263,5 +265,6 @@ export const useMarkdownEditor = () => {
 
 export const CodeMirrorEditor = () => {
   const { editor } = useMarkdownEditor();
+
   return <div ref={editor} className="mx-auto h-full w-full" />;
 };

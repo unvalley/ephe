@@ -1,28 +1,17 @@
 import "../globals.css";
-// import { EditorApp } from "../features/editor/monaco/monaco-editor-app";
 import { usePaperMode } from "../utils/hooks/use-paper-mode";
+import { Footer } from "../utils/components/footer";
+import { useEffect, useState } from "react";
 import { useTabDetection } from "../features/editor/use-tab-detection";
 import { AlreadyOpenDialog } from "../utils/components/already-open-dialog";
-import { Footer } from "../utils/components/footer";
-import { useEffect, useState, useCallback } from "react";
-import { NewMonacoEditor } from "../features/editor/monaco/new-monaco-editor-app";
 import { CommandMenu } from "../features/command/command-k";
+import { CodeMirrorEditor } from "../features/editor/codemirror/codemirror-editor";
 
-const usePreviewMode = () => {
-  const [previewMode, setPreviewMode] = useState(false);
-  const togglePreviewMode = () => setPreviewMode(!previewMode);
-  return { previewMode, togglePreviewMode };
-};
-
-export const EditorPage = () => {
+export const CodeMirrorEditorPage = () => {
   const { paperModeClass } = usePaperMode();
-  const { shouldShowAlert, dismissAlert } = useTabDetection();
   const { previewMode, togglePreviewMode } = usePreviewMode();
-  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
-
-  const toggleCommandMenu = useCallback(() => {
-    setIsCommandMenuOpen((prev) => !prev);
-  }, []);
+  const { shouldShowAlert, dismissAlert } = useTabDetection();
+  const { isCommandMenuOpen, toggleCommandMenu } = useCommandMenu();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -40,15 +29,34 @@ export const EditorPage = () => {
   return (
     <div className={`flex h-screen flex-col antialiased ${paperModeClass} overflow-hidden`}>
       <div className="flex flex-1 flex-col overflow-hidden">
-        <NewMonacoEditor commandMenuOpen={isCommandMenuOpen} setCommandMenuOpen={toggleCommandMenu} />
+        <CodeMirrorEditor />
       </div>
 
       <div className="w-full">
         <Footer previewMode={previewMode} togglePreview={togglePreviewMode} />
       </div>
 
+      {/* preview */}
       {isCommandMenuOpen && <CommandMenu open={isCommandMenuOpen} onClose={toggleCommandMenu} />}
-      <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />
+      {shouldShowAlert && <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />}
+
+      {/* <TableOfContents 
+      content={"## test"} 
+      onItemClick={() => {}} 
+      isVisible={true} 
+      /> */}
     </div>
   );
+};
+
+const usePreviewMode = () => {
+  const [previewMode, setPreviewMode] = useState(false);
+  const togglePreviewMode = () => setPreviewMode(!previewMode);
+  return { previewMode, togglePreviewMode };
+};
+
+const useCommandMenu = () => {
+  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
+  const toggleCommandMenu = () => setIsCommandMenuOpen((prev) => !prev);
+  return { isCommandMenuOpen, toggleCommandMenu };
 };

@@ -3,7 +3,7 @@ import { indentUnit } from "@codemirror/language";
 import { KeyBinding, EditorView, keymap } from "@codemirror/view";
 
 // チェックリスト行の開始部分を判定 (行頭空白とマーカー)
-const checklistLineStartRegex = /^(\s*)(?:[-*])\s*\[[ x]\]\s*/;
+const taskListLineStartRegex = /^(\s*)(?:[-*])\s*\[[ x]\]\s*/;
 const EMPTY_CHECKLIST_LINE_REGEX = /^(\s*[-*]\s+\[[ xX]\])\s*$/;
 
 const INDENT_SPACE = "  ";
@@ -11,17 +11,14 @@ const INDENT_SPACE = "  ";
 // 行頭の空白を取得する正規表現
 const leadingWhitespaceRegex = /^(\s*)/;
 
-// --- Helper Function to get Indent Level ---
-// (インデント単位を考慮したレベル計算が必要ならより複雑化)
-// ここでは単純に空白の文字数とする
-function getIndentLength(lineText: string): number {
-    const match = lineText.match(leadingWhitespaceRegex);
-    return match ? match[1].length : 0;
-  }
+// Calculate just number of spaces
+const getIndentLength = (lineText: string): number => {
+  const match = lineText.match(leadingWhitespaceRegex);
+  return match ? match[1].length : 0;
+};
 
-
-export const checkboxKeyBindings: readonly KeyBinding[] = [
-  { 
+export const taskKeyBindings: readonly KeyBinding[] = [
+  {
     key: "Tab",
     run: (view: EditorView): boolean => {
       const { state, dispatch } = view;
@@ -29,75 +26,75 @@ export const checkboxKeyBindings: readonly KeyBinding[] = [
       if (!state.selection.main.empty) {
         return indentMore(view);
       }
-  
+
       const { head } = state.selection.main;
       const currentLine = state.doc.lineAt(head);
       const currentLineText = currentLine.text;
-  
-      if (!checklistLineStartRegex.test(currentLineText)) {
+
+      if (!taskListLineStartRegex.test(currentLineText)) {
         return indentMore(view);
       }
-  
+
       const currentIndentLength = getIndentLength(currentLineText);
       const indentUnitStr = state.facet(indentUnit);
       const indentUnitLength = indentUnitStr.length;
-  
+
       // インデント単位が無効な場合は何もしない（またはエラーログ）
       if (indentUnitLength <= 0) {
-          console.warn("Invalid indent unit length:", indentUnitLength);
-          return false; // デフォルト動作に任せるか、trueでブロックするか
+        console.warn("Invalid indent unit length:", indentUnitLength);
+        return false; // デフォルト動作に任せるか、trueでブロックするか
       }
-  
+
       // 現在の行が最初の行でなければ、直前の行を確認
       if (currentLine.number > 1) {
         const prevLine = state.doc.line(currentLine.number - 1);
         const prevLineText = prevLine.text;
-  
+
         // 直前の行もチェックリストアイテムか確認
-        if (checklistLineStartRegex.test(prevLineText)) {
+        if (taskListLineStartRegex.test(prevLineText)) {
           const prevIndentLength = getIndentLength(prevLineText);
-  
+
           // ★★★ 修正点: 直前の行が同じインデントレベルの場合のみインデントを実行 ★★★
           if (currentIndentLength === prevIndentLength) {
             console.log(`Indenting sibling: Current ${currentIndentLength}, Prev ${prevIndentLength}`);
             dispatch({
               changes: { from: currentLine.from, insert: indentUnitStr },
-              userEvent: "input.indent.checklist", // より具体的なイベント名
+              userEvent: "input.indent.task", // より具体的なイベント名
             });
             return true; // インデント処理を実行したので true を返す
           }
-  
+
           // (オプション) もし現在の行が既に直前の行より深い場合、Tabでのインデントはブロック
           if (currentIndentLength > prevIndentLength) {
-               console.log(`Already nested: Current ${currentIndentLength}, Prev ${prevIndentLength}`);
-               return true; // これ以上Tabでインデントさせない
+            console.log(`Already nested: Current ${currentIndentLength}, Prev ${prevIndentLength}`);
+            return true; // これ以上Tabでインデントさせない
           }
-  
+
           // (オプション) もし現在の行が直前の行より浅い場合 (通常は考えにくいが)、デフォルト動作に任せるかブロック
           // console.log(`Less indented than previous: Current ${currentIndentLength}, Prev ${prevIndentLength}`);
           // return false; or return true;
         }
       }
-  
+
       // ここに到達する場合:
       // 1. 現在の行が最初の行 (currentLine.number === 1)
       // 2. 直前の行がチェックリストアイテムではない
       // 3. 直前の行がチェックリストアイテムだが、インデントレベルが異なる (currentIndentLength !== prevIndentLength)
-  
+
       // ルートレベル (インデント0) のアイテムなら、デフォルトの indentMore を試みる
       if (currentIndentLength === 0) {
-           console.log("Root level item, fallback to indentMore");
-           return indentMore(view);
+        console.log("Root level item, fallback to indentMore");
+        return indentMore(view);
       } else {
-           // 既にインデントされており、適切な兄弟が直前にない場合は、Tabキーでのインデントをブロック
-           console.log("Not root, no suitable sibling above, blocking Tab indent.");
-           return true;
+        // 既にインデントされており、適切な兄弟が直前にない場合は、Tabキーでのインデントをブロック
+        console.log("Not root, no suitable sibling above, blocking Tab indent.");
+        return true;
       }
-  
+
       // 通常は上記で処理されるはずだが、念のためのフォールバック
       // return false; // or indentMore(view);
-    }
-},
+    },
+  },
   {
     key: "Shift-Tab",
     run: (view: EditorView): boolean => {
@@ -143,7 +140,7 @@ export const checkboxKeyBindings: readonly KeyBinding[] = [
 
       if (match) {
         // マッチした場合: 行全体が `- [ ]` (または - [x] など) と空白のみ
-        console.log("Delete pressed at the end of an empty checklist item line.");
+        console.log("Delete pressed at the end of an empty task item line.");
 
         // 行を削除するトランザクションを作成
         let from = line.from;
@@ -176,7 +173,7 @@ export const checkboxKeyBindings: readonly KeyBinding[] = [
         view.dispatch({
           changes: changes,
           selection: selectionAfter,
-          userEvent: "delete.checklist", // ユーザーイベント名を指定
+          userEvent: "delete.task", // ユーザーイベント名を指定
         });
 
         return true; // デフォルトの Delete 動作を抑制
@@ -188,4 +185,4 @@ export const checkboxKeyBindings: readonly KeyBinding[] = [
   },
 ];
 
-export const checkboxKeyMap = keymap.of(checkboxKeyBindings);
+export const taskKeyMap = keymap.of(taskKeyBindings);

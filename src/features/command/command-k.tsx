@@ -11,7 +11,7 @@ import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import type { PaperMode } from "../../utils/hooks/use-paper-mode";
 import { EyeIcon } from "../../utils/components/icons";
 import { COLOR_THEME, ColorTheme } from "../../utils/theme-initializer";
-import { EditorWidth } from "src/utils/hooks/use-editor-width";
+import { EditorWidth } from "../../utils/hooks/use-editor-width";
 
 // Icons - you might need to install react-icons package if not already installed
 function ThemeIcon(props: React.SVGProps<SVGSVGElement>) {

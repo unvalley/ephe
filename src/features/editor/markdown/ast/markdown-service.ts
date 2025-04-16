@@ -73,7 +73,7 @@ export class MarkdownAstService {
     if (node.type === "ListItem") {
       const listItemNode = node as TxtListItemNode;
 
-      // count only if the checked attribute is true or false (undefined or null means no checkbox)
+      // count only if the checked attribute is true or false (undefined or null means no task)
       if (listItemNode.checked === true) {
         taskCount.closed++;
       } else if (listItemNode.checked === false) {

@@ -1,8 +1,8 @@
 import { Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
-// Auto-complete checklist items: converts '-[' or '- [' to '- [ ] '
-export const checkboxAutoComplete: Extension = EditorView.inputHandler.of((view, from, to, text) => {
+// Auto-complete task items: converts '-[' or '- [' to '- [ ] '
+export const taskAutoComplete: Extension = EditorView.inputHandler.of((view, from, to, text) => {
   // Handle only the insertion of '['
   if (text !== "[") return false;
 
@@ -31,14 +31,14 @@ export const checkboxAutoComplete: Extension = EditorView.inputHandler.of((view,
     // Basic safety check: ensure insertFrom is not before the line start
     if (insertFrom < line.from) return false;
 
-    // Dispatch the transaction to replace the trigger pattern with the checklist item
+    // Dispatch the transaction to replace the trigger pattern with the task item
     view.dispatch({
       changes: {
         from: insertFrom,
         to: from,
         insert: "- [ ] ",
       },
-      // Place the cursor after the inserted checklist item "- [ ] "
+      // Place the cursor after the inserted task item "- [ ] "
       selection: { anchor: insertFrom + 6 },
     });
     // Indicate that the input event was handled
