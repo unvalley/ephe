@@ -10,7 +10,7 @@
 }
 
 html {
-  font-family: monospace;
+  /* font-family: "Inter"; */
 }
 
 /* Dark mode transitions */
@@ -24,8 +24,8 @@ html.dark {
   --focus-border-dark: #00000000;
 }
 
-/* Make the checkbox part clickable */
-span.task-checkbox {
+/* Make the task part clickable */
+span.task-task {
   cursor: pointer;
   user-select: none;
   display: inline-block;
@@ -144,4 +144,14 @@ span.task-checkbox {
   background-image: radial-gradient(rgba(80, 80, 80, 0.5) 1px, transparent 1px);
   background-size: 16px 16px;
   background-color: #0d1117;
+}
+
+.cm-task-hover {
+  cursor: pointer;
+  background-color: rgba(128, 128, 128, 0.1);
+}
+
+/* Dark mode hover style */
+.dark .cm-task-hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }

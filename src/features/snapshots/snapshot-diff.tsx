@@ -84,7 +84,7 @@ export const SnapshotDiff = ({ isOpen, onClose }: SnapshotDiffProps) => {
             <div className="grid grid-cols-2 gap-0 divide-x divide-gray-200 dark:divide-gray-700">
               <div className="p-4">
                 <h4 className="mb-2 font-medium text-red-600 text-sm dark:text-red-400">Deletions</h4>
-                <div className="max-h-60 overflow-auto rounded-md bg-red-50 p-3 font-mono text-sm dark:bg-red-900/20">
+                <div className="max-h-60 overflow-auto rounded-md bg-red-50 p-3 text-sm dark:bg-red-900/20">
                   {diffResult.deletions.length > 0 ? (
                     diffResult.deletions.map((line, index) => (
                       <div key={index} className="text-red-700 dark:text-red-400">
@@ -99,7 +99,7 @@ export const SnapshotDiff = ({ isOpen, onClose }: SnapshotDiffProps) => {
 
               <div className="p-4">
                 <h4 className="mb-2 font-medium text-green-600 text-sm dark:text-green-400">Additions</h4>
-                <div className="max-h-60 overflow-auto rounded-md bg-green-50 p-3 font-mono text-sm dark:bg-green-900/20">
+                <div className="max-h-60 overflow-auto rounded-md bg-green-50 p-3 text-sm dark:bg-green-900/20">
                   {diffResult.additions.length > 0 ? (
                     diffResult.additions.map((line, index) => (
                       <div key={index} className="text-green-700 dark:text-green-400">

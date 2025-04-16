@@ -2,7 +2,7 @@ import Avatar from "boring-avatars";
 
 export const LandingPage = () => {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-graph-paper px-4 py-6 font-mono antialiased">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-graph-paper px-4 py-6 antialiased">
       <div className="w-full max-w-3xl space-y-8 sm:space-y-12">
         <div className="space-y-3 sm:space-y-4">
           <h1 className="flex items-center font-normal text-2xl sm:text-3xl">

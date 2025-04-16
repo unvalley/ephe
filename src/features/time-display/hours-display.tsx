@@ -81,7 +81,7 @@ export const HoursDisplay = () => {
           onMouseLeave={() => setShowTooltip(false)}
         >
           <div className="mb-2 text-center text-mono-500 text-sm dark:text-mono-400">
-            {hoursRemaining > 0 ? `${hoursRemaining}h ${minutesRemaining}m left` : "Almost end of day"}
+            {hoursRemaining > 0 ? `${hoursRemaining}h ${minutesRemaining}m left` : "End of day"}
           </div>
           <div
             className="mx-auto grid"

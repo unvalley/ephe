@@ -4,14 +4,16 @@ import { useTheme } from "../../utils/hooks/use-theme";
 import { MoonIcon, SunIcon, TableOfContentsIcon, WidthIcon, SuccessIcon } from "../../utils/components/icons";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
-import { useToc } from "../../utils/hooks/use-toc";
 import { useCharCount } from "../../utils/hooks/use-char-count";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { getTasksByDate } from "../tasks/task-storage";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Link } from "react-router-dom";
 import { getSnapshots } from "../snapshots/snapshot-storage";
 import { COLOR_THEME } from "../../utils/theme-initializer";
+import { useAtom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
+import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 
 export const TASK_CHANNEL_NAME = "ephe:task-updates";
 
@@ -116,16 +118,23 @@ const useSnapshotCount = () => {
   return { snapshotCount };
 };
 
+const tocVisibilityAtom = atomWithStorage<boolean>(LOCAL_STORAGE_KEYS.TOC_MODE, false);
+
 export const SystemMenu = () => {
   const { theme, setTheme } = useTheme();
   const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
-  const { isVisibleToc, toggleToc } = useToc();
+  const [isVisibleToc, setIsVisibleToc] = useAtom(tocVisibilityAtom);
+  
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
   const { charCount } = useCharCount();
   const { todayCompletedTasks } = useTodayCompletedTasks();
   const { snapshotCount } = useSnapshotCount();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const toggleToc = useCallback(() => {
+    setIsVisibleToc((prev) => !prev)
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -213,8 +222,8 @@ export const SystemMenu = () => {
                       >
                         <title>Snapshots Icon</title>
                         <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                           d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
                         />
                       </svg>

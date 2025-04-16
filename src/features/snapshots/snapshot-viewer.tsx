@@ -1,13 +1,18 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import type { Snapshot } from "./snapshot-types";
-import { Editor } from "@monaco-editor/react";
 import { useTheme } from "../../utils/hooks/use-theme";
 import { deleteSnapshot } from "./snapshot-storage";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { useNavigate } from "react-router-dom";
-import type * as monaco from "monaco-editor";
 import { showToast } from "../../utils/components/toast";
 import { Loading } from "../../utils/components/loading";
+import { EditorState, Compartment } from "@codemirror/state";
+import { EditorView } from "@codemirror/view";
+import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { languages } from "@codemirror/language-data";
+import { syntaxHighlighting, HighlightStyle } from "@codemirror/language";
+import { tags } from "@lezer/highlight";
+import { EPHE_COLORS } from "../editor/codemirror/codemirror-theme";
 
 type SnapshotViewerProps = {
   isOpen: boolean;
@@ -20,7 +25,87 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
   const isDarkMode = theme === "dark";
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const editorRef = useRef<EditorView | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Setup theme compartments for dynamic changes
+  const themeCompartment = useMemo(() => new Compartment(), []);
+  const highlightCompartment = useMemo(() => new Compartment(), []);
+
+  // Memoize highlight style for performance
+  const getHighlightStyle = useMemo(() => {
+    const COLORS = isDarkMode ? EPHE_COLORS.dark : EPHE_COLORS.light;
+
+    const epheHighlightStyle = HighlightStyle.define([
+      { tag: tags.comment, color: COLORS.comment, fontStyle: "italic" },
+      { tag: tags.keyword, color: COLORS.keyword },
+      { tag: tags.string, color: COLORS.string },
+      { tag: tags.number, color: COLORS.number },
+      { tag: tags.typeName, color: COLORS.type },
+      { tag: tags.function(tags.variableName), color: COLORS.function },
+      { tag: tags.definition(tags.variableName), color: COLORS.variable },
+      { tag: tags.variableName, color: COLORS.variable },
+      { tag: tags.constant(tags.variableName), color: COLORS.constant },
+      { tag: tags.operator, color: COLORS.operator },
+
+      // Markdown Style
+      { tag: tags.heading, color: COLORS.heading },
+      { tag: tags.heading1, color: COLORS.heading, fontSize: "1.2em" },
+      { tag: tags.heading2, color: COLORS.heading, fontSize: "1.2em" },
+      { tag: tags.heading3, color: COLORS.heading, fontSize: "1.1em" },
+      { tag: tags.emphasis, color: COLORS.emphasis, fontStyle: "italic" },
+      { tag: tags.strong, color: COLORS.emphasis },
+      { tag: tags.link, color: COLORS.string, textDecoration: "underline" },
+      { tag: tags.url, color: COLORS.string, textDecoration: "underline" },
+      { tag: tags.monospace, color: COLORS.constant, fontFamily: "monospace" },
+    ]);
+
+    const theme = {
+      "&": {
+        height: "100%",
+        width: "100%",
+        background: COLORS.background,
+        color: COLORS.foreground,
+      },
+      ".cm-content": {
+        fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace",
+        fontSize: "14px",
+        padding: "16px",
+        lineHeight: "1.6",
+        maxWidth: "100%",
+        margin: "0 auto",
+        caretColor: COLORS.foreground,
+      },
+      ".cm-cursor": {
+        borderLeftColor: COLORS.foreground,
+        borderLeftWidth: "2px",
+      },
+      "&.cm-editor": {
+        outline: "none",
+        border: "none",
+        background: "transparent",
+      },
+      "&.cm-focused": {
+        outline: "none",
+      },
+      ".cm-scroller": {
+        fontFamily: "monospace",
+        background: "transparent",
+      },
+      ".cm-gutters": {
+        background: "transparent",
+        border: "none",
+      },
+      ".cm-activeLineGutter": {
+        background: "transparent",
+      },
+      ".cm-line": {
+        padding: "0 4px 0 0",
+      },
+    };
+
+    return { epheHighlightStyle, theme };
+  }, [isDarkMode]);
 
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
@@ -34,12 +119,69 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen || !snapshot) return null;
+  // Create or update editor when snapshot changes
+  useEffect(() => {
+    if (isOpen && snapshot && containerRef.current) {
+      // Clean up previous editor if it exists
+      if (editorRef.current) {
+        editorRef.current.destroy();
+        editorRef.current = null;
+      }
 
-  const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
-    setIsLoading(false);
-    editorRef.current = editor;
-  };
+      // Get highlight styles
+      const { epheHighlightStyle, theme } = getHighlightStyle;
+
+      // Create editor state
+      const state = EditorState.create({
+        doc: snapshot.content,
+        extensions: [
+          EditorView.editable.of(false), // Read-only
+          EditorView.lineWrapping,
+          
+          markdown({
+            base: markdownLanguage,
+            codeLanguages: languages,
+          }),
+          
+          themeCompartment.of(EditorView.theme(theme)),
+          highlightCompartment.of(syntaxHighlighting(epheHighlightStyle, { fallback: true })),
+        ],
+      });
+
+      // Create editor view
+      const view = new EditorView({
+        state,
+        parent: containerRef.current
+      });
+
+      // Store the view reference
+      editorRef.current = view;
+      setIsLoading(false);
+    }
+
+    return () => {
+      // Cleanup on unmount
+      if (editorRef.current) {
+        editorRef.current.destroy();
+        editorRef.current = null;
+      }
+    };
+  }, [isOpen, snapshot, getHighlightStyle, themeCompartment, highlightCompartment]);
+
+  // Update theme when dark mode changes
+  useEffect(() => {
+    if (editorRef.current) {
+      const { epheHighlightStyle, theme } = getHighlightStyle;
+      editorRef.current.dispatch({
+        effects: [
+          themeCompartment.reconfigure(EditorView.theme(theme)),
+          highlightCompartment.reconfigure(syntaxHighlighting(epheHighlightStyle, { fallback: true })),
+        ]
+      });
+    }
+  }, [isDarkMode, getHighlightStyle, themeCompartment, highlightCompartment]);
+
+  if (!isOpen || !snapshot) return null;
 
   const formattedDate = new Date(snapshot.timestamp).toLocaleString();
 
@@ -116,33 +258,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
 
         <div className="flex-1 overflow-hidden">
           {isLoading && <Loading className="flex h-full w-full items-center justify-center" />}
-
-          <Editor
-            height="100%"
-            defaultLanguage="markdown"
-            value={snapshot.content}
-            options={{
-              readOnly: true,
-              minimap: { enabled: false },
-              scrollBeyondLastLine: false,
-              wordWrap: "on",
-              lineNumbers: "off",
-              folding: true,
-              lineDecorationsWidth: 0,
-              glyphMargin: false,
-              renderLineHighlight: "none",
-              hideCursorInOverviewRuler: true,
-              overviewRulerBorder: false,
-              overviewRulerLanes: 0,
-              contextmenu: false,
-              fontFamily: "monospace",
-              fontSize: 14,
-              lineHeight: 1.6,
-              padding: { top: 16, bottom: 16 },
-            }}
-            onMount={handleEditorDidMount}
-            theme={isDarkMode ? "ephe-dark" : "ephe-light"}
-          />
+          <div ref={containerRef} className="h-full w-full" />
         </div>
 
         <div className="flex justify-between border-gray-200 border-t p-4 dark:border-gray-700">
