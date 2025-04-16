@@ -137,12 +137,12 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
         extensions: [
           EditorView.editable.of(false), // Read-only
           EditorView.lineWrapping,
-          
+
           markdown({
             base: markdownLanguage,
             codeLanguages: languages,
           }),
-          
+
           themeCompartment.of(EditorView.theme(theme)),
           highlightCompartment.of(syntaxHighlighting(epheHighlightStyle, { fallback: true })),
         ],
@@ -151,7 +151,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
       // Create editor view
       const view = new EditorView({
         state,
-        parent: containerRef.current
+        parent: containerRef.current,
       });
 
       // Store the view reference
@@ -176,7 +176,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
         effects: [
           themeCompartment.reconfigure(EditorView.theme(theme)),
           highlightCompartment.reconfigure(syntaxHighlighting(epheHighlightStyle, { fallback: true })),
-        ]
+        ],
       });
     }
   }, [isDarkMode, getHighlightStyle, themeCompartment, highlightCompartment]);

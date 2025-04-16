@@ -14,7 +14,6 @@ type UseTableOfContentsProps = {
 
 const HEADING_REGEX = /^(#{1,6})\s+(.+)$/;
 
-
 export const useTableOfContentsCodeMirror = ({ editorView, content }: UseTableOfContentsProps) => {
   const [tocItems, setTocItems] = useState<TocItem[]>([]);
 
@@ -23,7 +22,7 @@ export const useTableOfContentsCodeMirror = ({ editorView, content }: UseTableOf
     if (!text) return [];
     const lines = text.split("\n");
     const items: TocItem[] = [];
-    let currentPos = 0; 
+    let currentPos = 0;
 
     for (const lineText of lines) {
       const match = HEADING_REGEX.exec(lineText);
@@ -31,13 +30,13 @@ export const useTableOfContentsCodeMirror = ({ editorView, content }: UseTableOf
         items.push({
           level: match[1].length,
           text: match[2].trim(),
-          from: currentPos, 
+          from: currentPos,
         });
       }
       currentPos += lineText.length + 1;
     }
     return items;
-  }, []); 
+  }, []);
 
   // 2. コンテンツ変更時に目次アイテムを再生成するEffect (変更なし)
   useEffect(() => {
@@ -65,9 +64,8 @@ export const useTableOfContentsCodeMirror = ({ editorView, content }: UseTableOf
     [editorView],
   );
 
-
   return {
     tocItems,
-    focusOnSection, 
+    focusOnSection,
   };
 };

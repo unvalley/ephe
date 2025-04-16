@@ -142,7 +142,7 @@ export type CommandMenuProps = {
   onClose?: () => void;
   onOpen?: () => void; // 現在未使用のため、不要なら削除検討
   editorContent?: string;
-//   editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
+  //   editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
   markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
   paperMode?: PaperMode;
   cyclePaperMode?: () => PaperMode;
@@ -256,76 +256,76 @@ export function CommandMenu({
     }
   }, [editorContent, handleClose]);
 
-//   const handleFormatDocumentCallback = useCallback(async () => {
-//     if (!editorRef?.current || !markdownFormatterRef?.current) {
-//       showToast("Editor or markdown formatter not available", "error");
-//       handleClose();
-//       return;
-//     }
-//     try {
-//       const editor = editorRef.current;
-//       const selection = editor.getSelection();
-//       const scrollTop = editor.getScrollTop();
-//       const content = editor.getValue();
-//       const formattedContent = await markdownFormatterRef.current.formatMarkdown(content); // formatMarkdownはPromiseを返すと仮定
+  //   const handleFormatDocumentCallback = useCallback(async () => {
+  //     if (!editorRef?.current || !markdownFormatterRef?.current) {
+  //       showToast("Editor or markdown formatter not available", "error");
+  //       handleClose();
+  //       return;
+  //     }
+  //     try {
+  //       const editor = editorRef.current;
+  //       const selection = editor.getSelection();
+  //       const scrollTop = editor.getScrollTop();
+  //       const content = editor.getValue();
+  //       const formattedContent = await markdownFormatterRef.current.formatMarkdown(content); // formatMarkdownはPromiseを返すと仮定
 
-//       editor.setValue(formattedContent);
+  //       editor.setValue(formattedContent);
 
-//       // カーソル位置とスクロール位置を復元
-//       if (selection) {
-//         editor.setSelection(selection);
-//       }
-//       // setValue後のレンダリングを待ってからスクロール位置を復元
-//       setTimeout(() => editor.setScrollTop(scrollTop), 0);
+  //       // カーソル位置とスクロール位置を復元
+  //       if (selection) {
+  //         editor.setSelection(selection);
+  //       }
+  //       // setValue後のレンダリングを待ってからスクロール位置を復元
+  //       setTimeout(() => editor.setScrollTop(scrollTop), 0);
 
-//       showToast("Document formatted successfully", "default");
-//     } catch (error) {
-//       const message = error instanceof Error ? error.message : "unknown";
-//       showToast(`Error formatting document: ${message}`, "error");
-//       console.error("Formatting error:", error);
-//     } finally {
-//       handleClose();
-//     }
-//   }, [markdownFormatterRef, handleClose]);
+  //       showToast("Document formatted successfully", "default");
+  //     } catch (error) {
+  //       const message = error instanceof Error ? error.message : "unknown";
+  //       showToast(`Error formatting document: ${message}`, "error");
+  //       console.error("Formatting error:", error);
+  //     } finally {
+  //       handleClose();
+  //     }
+  //   }, [markdownFormatterRef, handleClose]);
 
-//   const handleInsertGitHubIssuesCallback = useCallback(async () => {
-//     if (!editorRef?.current) {
-//       showToast("Editor not available", "error");
-//       handleClose();
-//       return;
-//     }
-//     try {
-//       const github_user_id = prompt("Enter GitHub User ID:");
-//       if (!github_user_id) {
-//         handleClose(); // キャンセルまたは空入力時は閉じる
-//         return;
-//       }
-//       const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id); // fetchGitHubIssuesTaskListはPromiseを返すと仮定
-//       const editor = editorRef.current;
-//       const selection = editor.getSelection();
-//       const position = editor.getPosition();
+  //   const handleInsertGitHubIssuesCallback = useCallback(async () => {
+  //     if (!editorRef?.current) {
+  //       showToast("Editor not available", "error");
+  //       handleClose();
+  //       return;
+  //     }
+  //     try {
+  //       const github_user_id = prompt("Enter GitHub User ID:");
+  //       if (!github_user_id) {
+  //         handleClose(); // キャンセルまたは空入力時は閉じる
+  //         return;
+  //       }
+  //       const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id); // fetchGitHubIssuesTaskListはPromiseを返すと仮定
+  //       const editor = editorRef.current;
+  //       const selection = editor.getSelection();
+  //       const position = editor.getPosition();
 
-//       let range: monaco.IRange;
-//       if (selection && !selection.isEmpty()) {
-//         range = selection;
-//       } else if (position) {
-//         // 選択範囲がない場合は現在のカーソル位置に挿入
-//         range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
-//       } else {
-//         // カーソル位置もない場合（エディタが空など）は先頭に挿入
-//         range = new monaco.Range(1, 1, 1, 1);
-//       }
+  //       let range: monaco.IRange;
+  //       if (selection && !selection.isEmpty()) {
+  //         range = selection;
+  //       } else if (position) {
+  //         // 選択範囲がない場合は現在のカーソル位置に挿入
+  //         range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
+  //       } else {
+  //         // カーソル位置もない場合（エディタが空など）は先頭に挿入
+  //         range = new monaco.Range(1, 1, 1, 1);
+  //       }
 
-//       editor.executeEdits("insert-github-issues", [{ range, text: issuesTaskList, forceMoveMarkers: true }]);
+  //       editor.executeEdits("insert-github-issues", [{ range, text: issuesTaskList, forceMoveMarkers: true }]);
 
-//       showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
-//     } catch (error) {
-//       console.error("Error inserting GitHub issues:", error);
-//       showToast("Failed to insert GitHub issues", "error");
-//     } finally {
-//       handleClose();
-//     }
-//   }, [editorRef, handleClose]);
+  //       showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
+  //     } catch (error) {
+  //       console.error("Error inserting GitHub issues:", error);
+  //       showToast("Failed to insert GitHub issues", "error");
+  //     } finally {
+  //       handleClose();
+  //     }
+  //   }, [editorRef, handleClose]);
 
   const goToGitHubRepo = useCallback(() => {
     window.open("https://github.com/unvalley/ephe", "_blank");
@@ -455,7 +455,7 @@ export function CommandMenu({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            handleClose(); 
+            handleClose();
           }}
           aria-hidden="true"
         />
@@ -616,7 +616,7 @@ export function CommandMenu({
             <span className="ml-1">to close</span>
           </div>
           <div>
-            <span>Ephe</span> 
+            <span>Ephe</span>
           </div>
         </div>
       </Command>
