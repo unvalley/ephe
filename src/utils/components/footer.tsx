@@ -1,4 +1,4 @@
-import { ButtonProps, Button } from "@headlessui/react";
+import { type ButtonProps, Button } from "@headlessui/react";
 import { memo } from "react";
 
 type FooterProps = {

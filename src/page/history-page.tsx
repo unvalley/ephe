@@ -12,7 +12,7 @@ import { EPHE_VERSION, LOCAL_STORAGE_KEYS } from "../utils/constants";
 import { usePaperMode } from "../utils/hooks/use-paper-mode";
 import { SystemMenu } from "../features/system/system-menu";
 import { HoursDisplay } from "../features/time-display/hours-display";
-import { Snapshot, snapshotStorage } from "../features/snapshots/snapshot-storage";
+import { type Snapshot, snapshotStorage } from "../features/snapshots/snapshot-storage";
 
 type DateFilter = {
   year?: number;

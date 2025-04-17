@@ -14,6 +14,7 @@ import { atomWithStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
+import { useHistorySidebar } from "../history/history-sidebar-context";
 
 const useTodayCompletedTasks = () => {
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);
@@ -111,7 +112,7 @@ export const SystemMenu = () => {
 
           {(open || isOpen) && (
             <MenuItems
-              className="absolute bottom-full left-0 z-10 mb-2 w-56 overflow-hidden rounded-md shadow-md focus:outline-none dark:bg-mono-700"
+              className="absolute bottom-full left-0 z-10 mb-2 w-56 overflow-hidden rounded-md bg-white shadow-md focus:outline-none dark:bg-mono-700"
               portal={false}
               static
             >

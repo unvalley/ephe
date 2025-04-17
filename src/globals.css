@@ -140,3 +140,14 @@ span.task-task {
 .dark .cm-task-hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
+
+/* History sidebar styles */
+.history-sidebar {
+  width: 300px;
+  border-left: 1px solid rgb(229, 231, 235);
+  overflow: hidden;
+}
+
+.dark .history-sidebar {
+  border-color: rgb(55, 65, 81);
+}
