@@ -59,9 +59,6 @@ importers:
       '@textlint/markdown-to-ast':
         specifier: ^14.5.0
         version: 14.5.0
-      boring-avatars:
-        specifier: ^1.11.2
-        version: 1.11.2
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -1391,9 +1388,6 @@ packages:
 
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
-
-  boring-avatars@1.11.2:
-    resolution: {integrity: sha512-3+wkwPeObwS4R37FGXMYViqc4iTrIRj5yzfX9Qy4mnpZ26sX41dGMhsAgmKks1r/uufY1pl4vpgzMWHYfJRb2A==}
 
   browserslist@4.24.4:
     resolution: {integrity: sha512-KDi1Ny1gSePi1vm0q4oxSF8b4DR44GF4BbmS2YdhPLOEqd8pDviZOGH/GsmRwoWJ2+5Lr085X7naowMwKHDG1A==}
@@ -3905,8 +3899,6 @@ snapshots:
   bail@1.0.5: {}
 
   bail@2.0.2: {}
-
-  boring-avatars@1.11.2: {}
 
   browserslist@4.24.4:
     dependencies:

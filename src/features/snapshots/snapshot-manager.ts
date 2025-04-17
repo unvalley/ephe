@@ -2,7 +2,7 @@
  * Snapshot management utilities
  */
 
-import { saveSnapshot, getSnapshots, getSnapshotById, deleteSnapshot } from "./snapshot-storage";
+import { snapshotStorage } from "./snapshot-storage";
 
 /**
  * Create an automatic snapshot of the current editor content
@@ -17,7 +17,7 @@ export const createAutoSnapshot = ({
   description?: string;
 }): void => {
   // Limit the number of snapshots (keep only the latest 10)
-  const snapshots = getSnapshots();
+  const snapshots = snapshotStorage.getAll();
 
   // If there are more than 10, delete the oldest ones
   if (snapshots.length >= 10) {
@@ -31,11 +31,11 @@ export const createAutoSnapshot = ({
 
     // Delete the oldest snapshots
     for (const snapshot of toDelete) {
-      deleteSnapshot(snapshot.id);
+      snapshotStorage.deleteById(snapshot.id);
     }
   }
 
-  saveSnapshot({
+  snapshotStorage.save({
     content,
     title,
     description,
@@ -50,8 +50,8 @@ export const compareSnapshots = (
   snapshotId1: string,
   snapshotId2: string,
 ): { additions: string[]; deletions: string[] } | null => {
-  const snapshot1 = getSnapshotById(snapshotId1);
-  const snapshot2 = getSnapshotById(snapshotId2);
+  const snapshot1 = snapshotStorage.getById(snapshotId1);
+  const snapshot2 = snapshotStorage.getById(snapshotId2);
 
   if (!snapshot1 || !snapshot2) return null;
 

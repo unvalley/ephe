@@ -8,3 +8,5 @@ export const LOCAL_STORAGE_KEYS = {
   PREVIEW_MODE: "ephe:preview-mode",
   TOC_MODE: "ephe:toc-mode",
 } as const;
+
+export const EPHE_VERSION = "0.0.1";

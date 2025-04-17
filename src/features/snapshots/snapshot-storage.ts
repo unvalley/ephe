@@ -8,7 +8,6 @@ import {
   groupItemsByDate,
   defaultStorageProvider,
 } from "../../utils/storage";
-import type { Snapshot } from "./snapshot-types";
 
 interface SnapshotStorage {
   getAll: () => Snapshot[];
@@ -49,46 +48,13 @@ const createSnapshotStorage = (storage: StorageProvider = createBrowserLocalStor
   };
 };
 
-const snapshotStorage = createSnapshotStorage(defaultStorageProvider);
+export const snapshotStorage = createSnapshotStorage(defaultStorageProvider);
 
-/**
- * Save a snapshot to storage
- */
-export const saveSnapshot = (snapshot: Omit<Snapshot, "id" | "timestamp">): void => {
-  snapshotStorage.save(snapshot);
-};
-
-/**
- * Get all snapshots from storage
- */
-export const getSnapshots = (): Snapshot[] => {
-  return snapshotStorage.getAll();
-};
-
-/**
- * Get snapshots grouped by date (YYYY-MM-DD)
- */
-export const getSnapshotsByDate = (filter?: DateFilter): Record<string, Snapshot[]> => {
-  return snapshotStorage.getByDate(filter);
-};
-
-/**
- * Get a specific snapshot by ID
- */
-export const getSnapshotById = (id: string): Snapshot | null => {
-  return snapshotStorage.getById(id);
-};
-
-/**
- * Delete a snapshot by ID
- */
-export const deleteSnapshot = (id: string): void => {
-  snapshotStorage.deleteById(id);
-};
-
-/**
- * Delete all snapshots
- */
-export const deleteAllSnapshots = (): void => {
-  snapshotStorage.deleteAll();
+export type Snapshot = {
+  id: string;
+  timestamp: string;
+  content: string;
+  title: string;
+  description: string;
+  charCount: number;
 };

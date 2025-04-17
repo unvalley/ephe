@@ -8,25 +8,12 @@ import { useCharCount } from "../../utils/hooks/use-char-count";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Link } from "react-router-dom";
-import { getSnapshots } from "../snapshots/snapshot-storage";
 import { COLOR_THEME } from "../../utils/theme-initializer";
 import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
-import { getTasksByDate } from "../editor/tasks/task-storage";
-
-export const TASK_CHANNEL_NAME = "ephe:task-updates";
-
-export const notifyTaskUpdate = () => {
-  window.dispatchEvent(new CustomEvent("task-updated"));
-  try {
-    const taskChannel = new BroadcastChannel(TASK_CHANNEL_NAME);
-    taskChannel.postMessage({ type: "task-updated" });
-    taskChannel.close();
-  } catch (e) {
-    console.warn("BroadcastChannel not supported in this browser");
-  }
-};
+import { taskStorage } from "../editor/tasks/task-storage";
+import { snapshotStorage } from "../snapshots/snapshot-storage";
 
 const useTodayCompletedTasks = () => {
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);
@@ -34,7 +21,7 @@ const useTodayCompletedTasks = () => {
   useEffect(() => {
     const loadTodayTasks = () => {
       const today = new Date();
-      const tasksByDate = getTasksByDate({
+      const tasksByDate = taskStorage.getByDate({
         year: today.getFullYear(),
         month: today.getMonth() + 1, // getMonth is 0-indexed
         day: today.getDate(),
@@ -50,43 +37,6 @@ const useTodayCompletedTasks = () => {
     };
 
     loadTodayTasks();
-
-    const handleTaskUpdated = () => {
-      loadTodayTasks();
-    };
-
-    let taskChannel: BroadcastChannel | null = null;
-
-    try {
-      taskChannel = new BroadcastChannel(TASK_CHANNEL_NAME);
-      taskChannel.onmessage = () => {
-        loadTodayTasks();
-      };
-    } catch (e) {
-      console.warn("BroadcastChannel not supported, falling back to storage events");
-
-      const handleStorageChange = (e: StorageEvent) => {
-        if (e.key?.includes("completed-tasks")) {
-          loadTodayTasks();
-        }
-      };
-      window.addEventListener("storage", handleStorageChange);
-    }
-
-    window.addEventListener("task-updated", handleTaskUpdated);
-    return () => {
-      window.removeEventListener("task-updated", handleTaskUpdated);
-
-      if (taskChannel) {
-        taskChannel.close();
-      } else {
-        window.removeEventListener("storage", (e: StorageEvent) => {
-          if (e.key?.includes("completed-tasks")) {
-            loadTodayTasks();
-          }
-        });
-      }
-    };
   }, []);
 
   return { todayCompletedTasks };
@@ -97,7 +47,7 @@ const useSnapshotCount = () => {
 
   useEffect(() => {
     const loadSnapshots = () => {
-      const snapshots = getSnapshots();
+      const snapshots = snapshotStorage.getAll();
       setSnapshotCount(snapshots.length);
     };
 
@@ -134,7 +84,7 @@ export const SystemMenu = () => {
 
   const toggleToc = useCallback(() => {
     setIsVisibleToc((prev) => !prev);
-  }, []);
+  }, [setIsVisibleToc]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -153,7 +103,7 @@ export const SystemMenu = () => {
       {({ open }) => (
         <>
           <MenuButton
-            className="flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            className="rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
             onClick={() => setIsOpen(!isOpen)}
           >
             System
@@ -161,7 +111,7 @@ export const SystemMenu = () => {
 
           {(open || isOpen) && (
             <MenuItems
-              className="absolute bottom-full left-0 z-10 mb-2 w-56 overflow-hidden rounded-md bg-mono-50 shadow-lg focus:outline-none dark:bg-mono-700"
+              className="absolute bottom-full left-0 z-10 mb-2 w-56 overflow-hidden rounded-md shadow-md focus:outline-none dark:bg-mono-700"
               portal={false}
               static
             >

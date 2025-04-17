@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { compareSnapshots } from "./snapshot-manager";
-import type { Snapshot } from "./snapshot-types";
-import { getSnapshots } from "./snapshot-storage";
+import { type Snapshot, snapshotStorage } from "./snapshot-storage";
 
 type SnapshotDiffProps = {
   isOpen: boolean;
@@ -16,7 +15,7 @@ export const SnapshotDiff = ({ isOpen, onClose }: SnapshotDiffProps) => {
 
   useEffect(() => {
     if (isOpen) {
-      setSnapshots(getSnapshots());
+      setSnapshots(snapshotStorage.getAll());
     }
   }, [isOpen]);
 
@@ -36,7 +35,7 @@ export const SnapshotDiff = ({ isOpen, onClose }: SnapshotDiffProps) => {
 
         <div className="mb-4 grid grid-cols-2 gap-4">
           <div>
-            <label className="mb-1 block font-medium text-gray-700 text-sm dark:text-gray-300">First Snapshot</label>
+            <span className="mb-1 block font-medium text-gray-700 text-sm dark:text-gray-300">First Snapshot</span>
             <select
               value={selectedSnapshot1}
               onChange={(e) => setSelectedSnapshot1(e.target.value)}
@@ -52,7 +51,7 @@ export const SnapshotDiff = ({ isOpen, onClose }: SnapshotDiffProps) => {
           </div>
 
           <div>
-            <label className="mb-1 block font-medium text-gray-700 text-sm dark:text-gray-300">Second Snapshot</label>
+            <span className="mb-1 block font-medium text-gray-700 text-sm dark:text-gray-300">Second Snapshot</span>
             <select
               value={selectedSnapshot2}
               onChange={(e) => setSelectedSnapshot2(e.target.value)}
@@ -87,6 +86,7 @@ export const SnapshotDiff = ({ isOpen, onClose }: SnapshotDiffProps) => {
                 <div className="max-h-60 overflow-auto rounded-md bg-red-50 p-3 text-sm dark:bg-red-900/20">
                   {diffResult.deletions.length > 0 ? (
                     diffResult.deletions.map((line, index) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
                       <div key={index} className="text-red-700 dark:text-red-400">
                         - {line}
                       </div>
@@ -102,6 +102,7 @@ export const SnapshotDiff = ({ isOpen, onClose }: SnapshotDiffProps) => {
                 <div className="max-h-60 overflow-auto rounded-md bg-green-50 p-3 text-sm dark:bg-green-900/20">
                   {diffResult.additions.length > 0 ? (
                     diffResult.additions.map((line, index) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
                       <div key={index} className="text-green-700 dark:text-green-400">
                         + {line}
                       </div>

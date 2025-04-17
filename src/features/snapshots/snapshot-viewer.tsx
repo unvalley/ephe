@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import type { Snapshot } from "./snapshot-types";
 import { useTheme } from "../../utils/hooks/use-theme";
-import { deleteSnapshot } from "./snapshot-storage";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { useNavigate } from "react-router-dom";
 import { showToast } from "../../utils/components/toast";
@@ -13,6 +11,7 @@ import { languages } from "@codemirror/language-data";
 import { syntaxHighlighting, HighlightStyle } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
 import { EPHE_COLORS } from "../editor/codemirror/codemirror-theme";
+import { type Snapshot, snapshotStorage } from "./snapshot-storage";
 
 type SnapshotViewerProps = {
   isOpen: boolean;
@@ -179,7 +178,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
         ],
       });
     }
-  }, [isDarkMode, getHighlightStyle, themeCompartment, highlightCompartment]);
+  }, [getHighlightStyle, themeCompartment, highlightCompartment]);
 
   if (!isOpen || !snapshot) return null;
 
@@ -217,7 +216,7 @@ export const SnapshotViewer = ({ isOpen, onClose, snapshot }: SnapshotViewerProp
 
   const handleDelete = () => {
     if (!snapshot) return;
-    deleteSnapshot(snapshot.id);
+    snapshotStorage.deleteById(snapshot.id);
     onClose();
   };
 

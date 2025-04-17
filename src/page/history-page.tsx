@@ -1,22 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getSnapshotsByDate, deleteAllSnapshots, deleteSnapshot } from "../features/snapshots/snapshot-storage";
-import type { Snapshot } from "../features/snapshots/snapshot-types";
-import {
-  getTasksByDate,
-  deleteCompletedTask,
-  purgeCompletedTasks,
-  type CompletedTask,
-} from "../features/editor/tasks/task-storage";
-import { Footer } from "../utils/components/footer";
+import { type CompletedTask, taskStorage } from "../features/editor/tasks/task-storage";
+import { Footer, FooterButton } from "../utils/components/footer";
 import { SnapshotDiff } from "../features/snapshots/snapshot-diff";
 import { SnapshotViewer } from "../features/snapshots/snapshot-viewer";
 import { useNavigate } from "react-router-dom";
 import { showToast } from "../utils/components/toast";
 import { Loading } from "../utils/components/loading";
-import { LOCAL_STORAGE_KEYS } from "../utils/constants";
+import { EPHE_VERSION, LOCAL_STORAGE_KEYS } from "../utils/constants";
 import { usePaperMode } from "../utils/hooks/use-paper-mode";
+import { SystemMenu } from "../features/system/system-menu";
+import { HoursDisplay } from "../features/time-display/hours-display";
+import { Snapshot, snapshotStorage } from "../features/snapshots/snapshot-storage";
 
 type DateFilter = {
   year?: number;
@@ -99,9 +95,9 @@ export const HistoryPage = () => {
 
   const handleDeleteItem = (itemId: string, itemType: HistoryItemType) => {
     if (itemType === "snapshot") {
-      deleteSnapshot(itemId);
+      snapshotStorage.deleteById(itemId);
     } else {
-      deleteCompletedTask(itemId);
+      taskStorage.deleteById(itemId);
     }
     // Refresh history with current filter
     setHistoryByDate(getHistoryItemsByDate(filter));
@@ -138,12 +134,12 @@ export const HistoryPage = () => {
   // Purge history
   const handlePurgeHistory = () => {
     if (purgeType === "all") {
-      deleteAllSnapshots();
-      purgeCompletedTasks();
+      snapshotStorage.deleteAll();
+      taskStorage.deleteAll();
     } else if (purgeType === "snapshot") {
-      deleteAllSnapshots();
-    } else {
-      purgeCompletedTasks();
+      snapshotStorage.deleteAll();
+    } else if (purgeType === "task") {
+      taskStorage.deleteAll();
     }
     setHistoryByDate(getHistoryItemsByDate(filter));
     setShowPurgeConfirm(false);
@@ -151,8 +147,8 @@ export const HistoryPage = () => {
 
   // Get combined history items by date
   const getHistoryItemsByDate = (filter?: DateFilter): Record<string, HistoryItem[]> => {
-    const snapshotsByDate = getSnapshotsByDate(filter);
-    const tasksByDate = getTasksByDate(filter);
+    const snapshotsByDate = snapshotStorage.getByDate(filter);
+    const tasksByDate = taskStorage.getByDate(filter);
 
     const combinedHistory: Record<string, HistoryItem[]> = {};
 
@@ -562,9 +558,20 @@ export const HistoryPage = () => {
         </div>
       )}
 
-      <SnapshotDiff isOpen={diffDialogOpen} onClose={() => setDiffDialogOpen(false)} />
-      <SnapshotViewer isOpen={viewerOpen} onClose={() => setViewerOpen(false)} snapshot={selectedSnapshot} />
-      <Footer />
+      {diffDialogOpen && <SnapshotDiff isOpen={diffDialogOpen} onClose={() => setDiffDialogOpen(false)} />}
+      {viewerOpen && (
+        <SnapshotViewer isOpen={viewerOpen} onClose={() => setViewerOpen(false)} snapshot={selectedSnapshot} />
+      )}
+
+      <Footer
+        leftContent={<SystemMenu />}
+        rightContent={
+          <>
+            <HoursDisplay />
+            <FooterButton>Ephe v{EPHE_VERSION}</FooterButton>
+          </>
+        }
+      />
     </div>
   );
 };

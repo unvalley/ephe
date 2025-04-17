@@ -2,9 +2,9 @@ import type { Extension } from "@codemirror/state";
 import { taskDecoration, taskHoverField, taskMouseInteraction, type TaskHandler } from "./task-close";
 import { taskKeyMap } from "./keymap";
 import { taskAutoComplete } from "./auto-complete";
-import { deleteCompletedTaskByIdentifier, generateTaskIdentifier, saveCompletedTask } from "../../tasks/task-storage";
+import { generateTaskIdentifier, type TaskStorage } from "../../tasks/task-storage";
 
-export const createDefaultTaskHandler = (): TaskHandler => ({
+export const createDefaultTaskHandler = (taskStorage: TaskStorage): TaskHandler => ({
   onTaskClosed: (taskContent: string, originalLine: string, section?: string) => {
     const taskIdentifier = generateTaskIdentifier(taskContent);
     const timestamp = new Date().toISOString();
@@ -18,11 +18,11 @@ export const createDefaultTaskHandler = (): TaskHandler => ({
       completedAt: timestamp,
     });
 
-    saveCompletedTask(task);
+    taskStorage.save(task);
   },
   onTaskOpen: (taskContent: string) => {
     const taskIdentifier = generateTaskIdentifier(taskContent);
-    deleteCompletedTaskByIdentifier(taskIdentifier);
+    taskStorage.deleteByIdentifier(taskIdentifier);
   },
 });
 

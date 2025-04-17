@@ -586,7 +586,7 @@ export function CommandMenu({
               ⌘
             </kbd>
             <kbd className="rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 font-medium text-gray-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-gray-400">
-              K
+              k
             </kbd>
             <span className="ml-1">to close</span>
           </div>

@@ -19,6 +19,7 @@ import { createChecklistPlugin, createDefaultTaskHandler } from "./tasklist";
 import { taskKeyBindings } from "./tasklist/keymap";
 import { getRandomQuote } from "../quotes";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
+import { taskStorage } from "../tasks/task-storage";
 
 const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
@@ -193,7 +194,7 @@ export const useMarkdownEditor = () => {
     if (editor.current) setContainer(editor.current);
   }, []);
 
-  const taskHandler = useMemo(() => createDefaultTaskHandler(), []);
+  const taskHandler = useMemo(() => createDefaultTaskHandler(taskStorage), []);
 
   useLayoutEffect(() => {
     if (!view && container) {
@@ -243,7 +244,19 @@ export const useMarkdownEditor = () => {
       setView(viewCurrent);
       viewCurrent.focus(); // store focus
     }
-  }, [view, container, content, isDarkMode, isWideMode, setContent, getHighlightStyle, formatDocument]);
+  }, [
+    view,
+    container,
+    content,
+    isDarkMode,
+    isWideMode,
+    setContent,
+    getHighlightStyle,
+    formatDocument,
+    highlightCompartment.of,
+    taskHandler,
+    themeCompartment.of,
+  ]);
 
   // Update theme when dark mode changes
   useEffect(() => {
@@ -256,7 +269,7 @@ export const useMarkdownEditor = () => {
         ],
       });
     }
-  }, [isDarkMode, isWideMode, view, getHighlightStyle]);
+  }, [isDarkMode, isWideMode, view, getHighlightStyle, highlightCompartment.reconfigure, themeCompartment.reconfigure]);
 
   return {
     editor,
