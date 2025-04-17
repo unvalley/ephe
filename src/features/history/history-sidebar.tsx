@@ -17,7 +17,7 @@ const TrashIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     aria-hidden="true"
-    className="h-4 w-4 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+    className="h-4 w-4"
     fill="none"
     stroke="currentColor"
     strokeWidth={1.5}
@@ -32,31 +32,11 @@ const TrashIcon = () => (
   </svg>
 );
 
-// Component for the restore icon
-const RestoreIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true"
-    className="h-4 w-4 text-green-500 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={1.5}
-    viewBox="0 0 24 24"
-  >
-    <title>Restore</title>
-    <path
-      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
 // Component for the document icon
 const DocumentIcon = () => (
   <svg
     aria-hidden="true"
-    className="h-4 w-4 flex-shrink-0 text-blue-500 dark:text-blue-400"
+    className="h-4 w-4 flex-shrink-0"
     fill="none"
     stroke="currentColor"
     strokeLinecap="round"
@@ -85,16 +65,8 @@ const CheckIcon = () => (
 
 export const HistorySidebar = () => {
   const [activeTab, setActiveTab] = useState<HistoryTabType>("snapshot");
-  const {
-    snapshots,
-    tasks,
-    groupedSnapshots,
-    groupedTasks,
-    isLoading,
-    handleRestoreSnapshot,
-    handleDeleteSnapshot,
-    handleDeleteTask,
-  } = useHistoryData();
+  const { snapshots, tasks, groupedSnapshots, groupedTasks, isLoading, handleDeleteSnapshot, handleDeleteTask } =
+    useHistoryData();
 
   // Format date to display
   const formatDate = (dateString: string): string => {
@@ -134,15 +106,6 @@ export const HistorySidebar = () => {
           </div>
         </div>
         <div className="ml-2 flex flex-shrink-0 gap-2">
-          <button
-            onClick={() => handleRestoreSnapshot(snapshot)}
-            aria-label="Restore snapshot"
-            className="flex items-center justify-center"
-            title="Restore"
-            type="button"
-          >
-            <RestoreIcon />
-          </button>
           <button
             onClick={() => handleDeleteSnapshot(snapshot.id)}
             aria-label="Delete snapshot"

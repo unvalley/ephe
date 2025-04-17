@@ -14,7 +14,6 @@ import { atomWithStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
-import { useHistorySidebar } from "../history/history-sidebar-context";
 
 const useTodayCompletedTasks = () => {
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);

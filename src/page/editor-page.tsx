@@ -11,14 +11,13 @@ import { HoursDisplay } from "../features/time-display/hours-display";
 import { Link } from "react-router-dom";
 import { EPHE_VERSION } from "../utils/constants";
 import { HistorySidebar } from "../features/history/history-sidebar";
-import { useHistorySidebar } from "../features/history/history-sidebar-context";
+import { useHistorySidebar } from "../features/history/use-history-sidebar";
 import { HistoryIcon } from "../utils/components/icons";
 
 const HistoryFooterButton = ({ onClick, isActive }: { onClick: () => void; isActive: boolean }) => (
   <FooterButton onClick={onClick}>
     <div aria-label={isActive ? "Hide history sidebar" : "Show history sidebar"} className="flex items-center">
       <HistoryIcon />
-      <span className="mr-1 ml-1">{isActive ? "Hide History" : "History"}</span>
     </div>
   </FooterButton>
 );
@@ -66,7 +65,7 @@ export const CodeMirrorEditorPage = () => {
           leftContent={<SystemMenu />}
           rightContent={
             <>
-              {/* <HistoryFooterButton onClick={toggleHistorySidebar} isActive={isHistorySidebarVisible} /> */}
+              <HistoryFooterButton onClick={toggleHistorySidebar} isActive={isHistorySidebarVisible} />
               <HoursDisplay />
               <FooterButton>
                 <Link to="/landing">Ephe v{EPHE_VERSION}</Link>
