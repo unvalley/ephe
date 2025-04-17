@@ -10,4 +10,4 @@ export const LOCAL_STORAGE_KEYS = {
   HISTORY_SIDEBAR_VISIBLE: "ephe:history-sidebar-visible",
 } as const;
 
-export const EPHE_VERSION = "0.1.0";
+export const EPHE_VERSION = "0.0.1";
