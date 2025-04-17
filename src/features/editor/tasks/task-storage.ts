@@ -3,11 +3,11 @@ import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import {
   createBrowserLocalStorage,
   createStorage,
-  DateFilter,
+  type DateFilter,
   defaultStorageProvider,
   filterItemsByDate,
   groupItemsByDate,
-  StorageProvider,
+  type StorageProvider,
 } from "../../../utils/storage";
 
 interface TaskStorage {

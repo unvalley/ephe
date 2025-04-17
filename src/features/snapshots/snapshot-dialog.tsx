@@ -18,9 +18,7 @@ export const SnapshotDialog = ({ isOpen, onClose, editorContent }: SnapshotDialo
         onClose();
       }
     };
-
     window.addEventListener("keydown", handleEscKey);
-
     return () => {
       window.removeEventListener("keydown", handleEscKey);
     };

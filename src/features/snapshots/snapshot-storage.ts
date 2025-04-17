@@ -1,9 +1,9 @@
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import {
-  StorageProvider,
+  type StorageProvider,
   createBrowserLocalStorage,
   createStorage,
-  DateFilter,
+  type DateFilter,
   filterItemsByDate,
   groupItemsByDate,
   defaultStorageProvider,
