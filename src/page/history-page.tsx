@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getSnapshotsByDate, purgeAllSnapshots, deleteSnapshot } from "../features/snapshots/snapshot-storage";
+import { getSnapshotsByDate, deleteAllSnapshots, deleteSnapshot } from "../features/snapshots/snapshot-storage";
 import type { Snapshot } from "../features/snapshots/snapshot-types";
 import {
   getTasksByDate,
   deleteCompletedTask,
   purgeCompletedTasks,
   type CompletedTask,
-} from "../features/tasks/task-storage";
+} from "../features/editor/tasks/task-storage";
 import { Footer } from "../utils/components/footer";
 import { SnapshotDiff } from "../features/snapshots/snapshot-diff";
 import { SnapshotViewer } from "../features/snapshots/snapshot-viewer";
@@ -138,10 +138,10 @@ export const HistoryPage = () => {
   // Purge history
   const handlePurgeHistory = () => {
     if (purgeType === "all") {
-      purgeAllSnapshots();
+      deleteAllSnapshots();
       purgeCompletedTasks();
     } else if (purgeType === "snapshot") {
-      purgeAllSnapshots();
+      deleteAllSnapshots();
     } else {
       purgeCompletedTasks();
     }

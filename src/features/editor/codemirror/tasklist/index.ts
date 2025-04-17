@@ -6,7 +6,7 @@ import {
   deleteCompletedTaskByIdentifier,
   generateTaskIdentifier,
   saveCompletedTask,
-} from "../../../../features/tasks/task-storage";
+} from "../../tasks/task-storage";
 
 export const createDefaultTaskHandler = (): TaskHandler => ({
   onTaskClosed: (taskContent: string, originalLine: string, section?: string) => {

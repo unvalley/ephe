@@ -6,7 +6,6 @@ import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getTasksByDate } from "../tasks/task-storage";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Link } from "react-router-dom";
 import { getSnapshots } from "../snapshots/snapshot-storage";
@@ -14,6 +13,7 @@ import { COLOR_THEME } from "../../utils/theme-initializer";
 import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
+import { getTasksByDate } from "../editor/tasks/task-storage";
 
 export const TASK_CHANNEL_NAME = "ephe:task-updates";
 
