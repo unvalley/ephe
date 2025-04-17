@@ -22,26 +22,29 @@ export interface Storage<T> {
 // Create browser local storage provider
 export const createBrowserLocalStorage = (): StorageProvider => ({
   getItem: (key: string): string | null => localStorage.getItem(key),
-  setItem: (key: string, value: string): void => localStorage.setItem(key, value)
+  setItem: (key: string, value: string): void => localStorage.setItem(key, value),
 });
 
 // Pure utility functions for date handling
-export const formatDateKey = (date: Date): string => 
+export const formatDateKey = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
 export const filterItemsByDate = <T extends { timestamp?: string; completedAt?: string }>(
   items: T[],
-  filter?: DateFilter
+  filter?: DateFilter,
 ): T[] => {
   if (!filter) return items;
 
   return items.filter((item) => {
-    const dateStr = "timestamp" in item && item.timestamp 
-      ? item.timestamp 
-      : ("completedAt" in item && item.completedAt ? item.completedAt : "");
-    
+    const dateStr =
+      "timestamp" in item && item.timestamp
+        ? item.timestamp
+        : "completedAt" in item && item.completedAt
+          ? item.completedAt
+          : "";
+
     if (!dateStr) return false;
-    
+
     const date = new Date(dateStr);
     const itemYear = date.getFullYear();
     const itemMonth = date.getMonth() + 1; // JavaScript months are 0-indexed
@@ -57,17 +60,20 @@ export const filterItemsByDate = <T extends { timestamp?: string; completedAt?: 
 };
 
 export const groupItemsByDate = <T extends { timestamp?: string; completedAt?: string }>(
-  items: T[]
+  items: T[],
 ): Record<string, T[]> => {
   const itemsByDate: Record<string, T[]> = {};
 
   for (const item of items) {
-    const dateStr = "timestamp" in item && item.timestamp 
-      ? item.timestamp 
-      : ("completedAt" in item && item.completedAt ? item.completedAt : "");
-    
+    const dateStr =
+      "timestamp" in item && item.timestamp
+        ? item.timestamp
+        : "completedAt" in item && item.completedAt
+          ? item.completedAt
+          : "";
+
     if (!dateStr) continue;
-    
+
     const date = new Date(dateStr);
     const localDateStr = formatDateKey(date);
 
@@ -81,10 +87,7 @@ export const groupItemsByDate = <T extends { timestamp?: string; completedAt?: s
 };
 
 // Generic storage factory function
-export const createStorage = <T extends { id: string }>(
-  storage: StorageProvider,
-  storageKey: string
-): Storage<T> => {
+export const createStorage = <T extends { id: string }>(storage: StorageProvider, storageKey: string): Storage<T> => {
   const getAll = (): T[] => {
     try {
       const itemsJson = storage.getItem(storageKey);
@@ -103,10 +106,7 @@ export const createStorage = <T extends { id: string }>(
   const save = (item: T): void => {
     try {
       const existingItems = getAll();
-      storage.setItem(
-        storageKey,
-        JSON.stringify([item, ...existingItems])
-      );
+      storage.setItem(storageKey, JSON.stringify([item, ...existingItems]));
     } catch (error) {
       console.error(`Error saving item to ${storageKey}:`, error);
     }
@@ -135,7 +135,7 @@ export const createStorage = <T extends { id: string }>(
     getById,
     save,
     deleteById: deleteById,
-    deleteAll: deleteAll
+    deleteAll: deleteAll,
   };
 };
 

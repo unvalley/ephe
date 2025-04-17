@@ -1,7 +1,14 @@
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
-import { StorageProvider, createBrowserLocalStorage, createStorage, DateFilter, filterItemsByDate, groupItemsByDate, defaultStorageProvider } from "../../utils/storage";
+import {
+  StorageProvider,
+  createBrowserLocalStorage,
+  createStorage,
+  DateFilter,
+  filterItemsByDate,
+  groupItemsByDate,
+  defaultStorageProvider,
+} from "../../utils/storage";
 import type { Snapshot } from "./snapshot-types";
-
 
 interface SnapshotStorage {
   getAll: () => Snapshot[];
@@ -10,16 +17,11 @@ interface SnapshotStorage {
   deleteById: (id: string) => void;
   deleteAll: () => void;
   getByDate: (filter?: DateFilter) => Record<string, Snapshot[]>;
-} 
+}
 
 // Snapshot Storage factory function
-const createSnapshotStorage = (
-  storage: StorageProvider = createBrowserLocalStorage()
-): SnapshotStorage => {
-  const baseStorage = createStorage<Snapshot>(
-    storage,
-    LOCAL_STORAGE_KEYS.SNAPSHOTS
-  );
+const createSnapshotStorage = (storage: StorageProvider = createBrowserLocalStorage()): SnapshotStorage => {
+  const baseStorage = createStorage<Snapshot>(storage, LOCAL_STORAGE_KEYS.SNAPSHOTS);
 
   const save = (snapshot: Omit<Snapshot, "id" | "timestamp">): void => {
     const now = new Date();

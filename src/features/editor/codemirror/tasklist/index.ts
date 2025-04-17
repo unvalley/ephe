@@ -2,11 +2,7 @@ import type { Extension } from "@codemirror/state";
 import { taskDecoration, taskHoverField, taskMouseInteraction, type TaskHandler } from "./task-close";
 import { taskKeyMap } from "./keymap";
 import { taskAutoComplete } from "./auto-complete";
-import {
-  deleteCompletedTaskByIdentifier,
-  generateTaskIdentifier,
-  saveCompletedTask,
-} from "../../tasks/task-storage";
+import { deleteCompletedTaskByIdentifier, generateTaskIdentifier, saveCompletedTask } from "../../tasks/task-storage";
 
 export const createDefaultTaskHandler = (): TaskHandler => ({
   onTaskClosed: (taskContent: string, originalLine: string, section?: string) => {

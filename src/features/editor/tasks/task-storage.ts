@@ -1,6 +1,14 @@
 import { notifyTaskUpdate } from "../../../features/system/system-menu";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
-import { createBrowserLocalStorage, createStorage, DateFilter, defaultStorageProvider, filterItemsByDate, groupItemsByDate, StorageProvider } from "../../../utils/storage";
+import {
+  createBrowserLocalStorage,
+  createStorage,
+  DateFilter,
+  defaultStorageProvider,
+  filterItemsByDate,
+  groupItemsByDate,
+  StorageProvider,
+} from "../../../utils/storage";
 
 interface TaskStorage {
   getAll: () => CompletedTask[];
@@ -15,26 +23,21 @@ interface TaskStorage {
  * Generate a unique identifier for a task based on its content
  */
 export const generateTaskIdentifier = (taskContent: string): string => {
-    // Simple hash function
-    let hash = 0;
-    for (let i = 0; i < taskContent.length; i++) {
-      const char = taskContent.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return `task-${Math.abs(hash)}`;
-  }; 
+  // Simple hash function
+  let hash = 0;
+  for (let i = 0; i < taskContent.length; i++) {
+    const char = taskContent.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return `task-${Math.abs(hash)}`;
+};
 
 // Task Storage factory function
-const createTaskStorage = (
-  storage: StorageProvider = createBrowserLocalStorage()
-): TaskStorage => {
-  const baseStorage = createStorage<CompletedTask>(
-    storage,
-    LOCAL_STORAGE_KEYS.COMPLETED_TASKS
-  );
+const createTaskStorage = (storage: StorageProvider = createBrowserLocalStorage()): TaskStorage => {
+  const baseStorage = createStorage<CompletedTask>(storage, LOCAL_STORAGE_KEYS.COMPLETED_TASKS);
 
-  // Task specific operations 
+  // Task specific operations
   const save = (task: CompletedTask): void => {
     baseStorage.save(task);
     notifyTaskUpdate();
@@ -73,7 +76,7 @@ const createTaskStorage = (
     deleteById: deleteItem,
     deleteByIdentifier,
     deleteAll: purgeAll,
-    getByDate
+    getByDate,
   };
 };
 
