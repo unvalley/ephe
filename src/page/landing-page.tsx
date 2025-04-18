@@ -9,8 +9,9 @@ export const LandingPage = () => {
             <li>A paper to dump and capture the thoughts.</li>
             <li>
               <a href="https://github.com/unvalley/ephe" className="text-blue-400 hover:underline">
-                OSS, and free.
+                OSS
               </a>
+              , and free.
             </li>
           </ol>
 
