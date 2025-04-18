@@ -2,22 +2,20 @@ export const LandingPage = () => {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-graph-paper px-4 py-20 antialiased">
       <div className="w-full max-w-lg space-y-12 sm:space-y-12">
-        <div className="space-y-2 sm:space-y-2k">
-          <h1 className="flex items-center text-2xl sm:text-2xl">
-            Start your day with Ephe, the paper.
-            <br />
-          </h1>
-          <p className="">
-            Ephe is{" "}
-            <a href="https://github.com/unvalley/ephe" className="text-blue-400 hover:underline">
-              OSS
-            </a>
-            , An ephemeral Markdown Paper.
-            <br />
-            No install, No sign up, No ads.
-            <br />
-            Text is in your browser, nothing is sent to servers.
-          </p>
+        <div className="space-y-2 sm:space-y-2">
+          <p className="">Ephe is :</p>
+          <ol className="list-inside list-decimal">
+            <li>A markdown paper to stay focused.</li>
+            <li>A paper to dump and capture the thoughts.</li>
+            <li>
+              <a href="https://github.com/unvalley/ephe" className="text-blue-400 hover:underline">
+                OSS, and free.
+              </a>
+            </li>
+          </ol>
+
+          <p>No installs. No sign-up. No noise.</p>
+          <p>You get one page, write what matters today.</p>
         </div>
 
         {/* <div>
@@ -25,18 +23,18 @@ export const LandingPage = () => {
         </div> */}
 
         <div className="space-y-2 sm:space-y-2">
-          <h2 className="font-normal text-xl">Why Ephe?</h2>
+          <h2 className="font-normal">Why :</h2>
           <ul className="space-y-2">
             <li>- Most note and todo apps are overloaded.</li>
-            <li>- Ephe gives you just one page to stay focused. </li>
-            <li>- Quickly capture thoughts, lists, and ideas—then move on.</li>
+            <li>- I believe, just one writable page is enough for organizging.</li>
           </ul>
+          <p>Quickly capture thoughts, lists, and ideas—then move on.</p>
         </div>
 
         <div className="my-10 flex justify-center">
           <a
             href="/"
-            className="rounded-md border border-neutral-400 px-3 py-2 text-neutral-400 transition-colors duration-300 hover:text-neutral-900 dark:border-netural-600 dark:text-neutral-400 dark:hover:border-neutral-100 dark:hover:text-neutral-100"
+            className="rounded-md border border-neutral-400 px-3 py-1 text-neutral-400 transition-colors duration-300 hover:text-neutral-900 dark:border-netural-600 dark:text-neutral-400 dark:hover:border-neutral-100 dark:hover:text-neutral-100"
           >
             Try it out
           </a>
