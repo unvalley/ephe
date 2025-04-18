@@ -1,55 +1,59 @@
 export const LandingPage = () => {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-graph-paper px-4 py-6 antialiased">
-      <div className="w-full max-w-3xl space-y-8 sm:space-y-12">
-        <div className="space-y-3 sm:space-y-4">
-          <h1 className="flex items-center font-normal text-2xl sm:text-3xl">
-            Ephe
-            <span className="hidden sm:inline">&nbsp;-&nbsp;An ephemeral markdown paper</span>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-graph-paper px-4 py-20 antialiased">
+      <div className="w-full max-w-lg space-y-12 sm:space-y-12">
+        <div className="space-y-2 sm:space-y-2k">
+          <h1 className="flex items-center text-2xl sm:text-2xl">
+            Start your day with Ephe, the paper.
+            <br />
           </h1>
-
-          <p className="text-sm sm:text-base">You can write ephemeral notes on this app.</p>
-
-          <p className="text-sm sm:text-base">
-            Ephe stores your notes on browser's local storage, nothing is sent to a server. No tracking, no ads, no
-            login.
+          <p className="">
+            Ephe is{" "}
+            <a href="https://github.com/unvalley/ephe" className="text-blue-400 hover:underline">
+              OSS
+            </a>
+            , An ephemeral Markdown Paper.
+            <br />
+            No install, No sign up, No ads.
+            <br />
+            Text is in your browser, nothing is sent to servers.
           </p>
         </div>
 
-        <div className="space-y-3 sm:space-y-4">
-          <h2 className="font-normal text-xl sm:text-2xl">Why Ephe?</h2>
+        {/* <div>
+          <img src="./ephe-demo.jpeg" alt="Ephe Screenshot" className="mx-auto w-full max-w-lg rounded-lg shadow-md" />
+        </div> */}
 
-          <ul className="space-y-2 text-sm sm:text-base">
-            <li>- Traditional to-do apps can be time-consuming and quickly overwhelming.</li>
-            <li>- A single page is all you need to organize your day.</li>
-            <li>- Focus on easily capturing your todos, thoughts, and ideas.</li>
+        <div className="space-y-2 sm:space-y-2">
+          <h2 className="font-normal text-xl">Why Ephe?</h2>
+          <ul className="space-y-2">
+            <li>- Most note and todo apps are overloaded.</li>
+            <li>- Ephe gives you just one page to stay focused. </li>
+            <li>- Quickly capture thoughts, lists, and ideas—then move on.</li>
           </ul>
         </div>
 
-        <div className="">
-          <p>
-            You can see the source code on{" "}
-            <a href="https://github.com/unvalley/ephe" className="text-blue-400 hover:underline">
-              GitHub
-            </a>
-          </p>
-        </div>
-
-        <div className="my-20 flex justify-center gap-2">
+        <div className="my-10 flex justify-center">
           <a
             href="/"
-            className="rounded-md border border-primary-400 px-4 py-2 text-primary-500 transition-colors hover:bg-primary-50 dark:hover:bg-primary-500 dark:hover:text-white"
+            className="rounded-md border border-neutral-400 px-3 py-2 text-neutral-400 transition-colors duration-300 hover:text-neutral-900 dark:border-netural-600 dark:text-neutral-400 dark:hover:border-neutral-100 dark:hover:text-neutral-100"
           >
-            Try Ephe
+            Try it out
           </a>
         </div>
       </div>
 
       <footer className="text-center text-gray-600 text-sm sm:text-base dark:text-gray-400">
         This project is built by{" "}
-        <a href="https://github.com/unvalley" className="text-blue-400 hover:underline">
+        <a href="https://x.com/unvalley_" className="text-blue-400 hover:underline">
           unvalley
         </a>
+        <p>
+          Source Code on{" "}
+          <a href="https://github.com/unvalley/ephe" className="text-blue-400 hover:underline">
+            GitHub
+          </a>
+        </p>
       </footer>
     </div>
   );
