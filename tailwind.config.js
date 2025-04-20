@@ -6,17 +6,17 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#FF3C00",
-          50: "#FFECE6",
-          100: "#FFD6CC",
-          200: "#FFAD99",
-          300: "#FF8A65",
-          400: "#FF6E40",
-          500: "#FF3C00",
-          600: "#E83600",
-          700: "#CC2F00",
-          800: "#A62600",
-          900: "#7F1E00",
+          DEFAULT: "#333333",
+          50: "#FFFFFF",
+          100: "#F5F5F5",
+          200: "#E0E0E0",
+          300: "#CCCCCC",
+          400: "#999999",
+          500: "#666666",
+          600: "#333333",
+          700: "#1F1F1F",
+          800: "#111111",
+          900: "#000000",
         },
         mono: {
           DEFAULT: "#090909",
@@ -82,20 +82,20 @@ module.exports = {
       }),
       button: {
         primary: {
-          backgroundColor: "#FF3C00",
+          backgroundColor: "#333333",
           textColor: "#FFFFFF",
-          hoverBackgroundColor: "#E83600",
+          hoverBackgroundColor: "#111111",
         },
         secondary: {
-          backgroundColor: "#FF6E40",
+          backgroundColor: "#666666",
           textColor: "#FFFFFF",
-          hoverBackgroundColor: "#FF8A65",
+          hoverBackgroundColor: "#999999",
         },
         tertiary: {
           backgroundColor: "#FFFFFF",
-          textColor: "#FF3C00",
-          borderColor: "#FF3C00",
-          hoverBackgroundColor: "#FFECE6",
+          textColor: "#333333",
+          borderColor: "#333333",
+          hoverBackgroundColor: "#F5F5F5",
         },
       },
     },
@@ -121,20 +121,20 @@ module.exports = {
     ({ addComponents, theme }) => {
       const buttons = {
         ".btn-primary": {
-          backgroundColor: theme("colors.primary.500"),
+          backgroundColor: theme("colors.primary.600"),
           color: theme("colors.neutral.50"),
           "&:hover": {
-            backgroundColor: theme("colors.primary.600"),
+            backgroundColor: theme("colors.primary.700"),
           },
           "&:focus": {
             boxShadow: `0 0 0 3px ${theme("colors.primary.100")}`,
           },
         },
         ".btn-secondary": {
-          backgroundColor: theme("colors.primary.400"),
+          backgroundColor: theme("colors.primary.500"),
           color: theme("colors.neutral.50"),
           "&:hover": {
-            backgroundColor: theme("colors.primary.300"),
+            backgroundColor: theme("colors.primary.400"),
           },
           "&:focus": {
             boxShadow: `0 0 0 3px ${theme("colors.primary.100")}`,
@@ -142,9 +142,9 @@ module.exports = {
         },
         ".btn-outline": {
           backgroundColor: "transparent",
-          color: theme("colors.primary.500"),
+          color: theme("colors.primary.600"),
           borderWidth: "1px",
-          borderColor: theme("colors.primary.500"),
+          borderColor: theme("colors.primary.600"),
           "&:hover": {
             backgroundColor: theme("colors.primary.50"),
           },

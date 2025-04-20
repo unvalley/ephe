@@ -84,4 +84,3 @@ export type CompletedTask = {
   taskIdentifier: string; // Unique identifier for the task
   section: string | undefined; // Section name the task belongs to
 };
-

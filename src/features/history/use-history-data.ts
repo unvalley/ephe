@@ -30,33 +30,31 @@ const getDateString = (date: Date): string => {
 };
 
 // Function to group items by date
-const groupItemsByDate = <T extends { timestamp?: string; completedAt?: string }>(
-  items: T[]
-): DateGroupedItems<T> => {
+const groupItemsByDate = <T extends { timestamp?: string; completedAt?: string }>(items: T[]): DateGroupedItems<T> => {
   const now = new Date();
   const today = getDateString(now);
-  
+
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = getDateString(yesterday);
-  
+
   const result: DateGroupedItems<T> = {
     today: [],
     yesterday: [],
     older: [],
   };
-  
+
   // Temporary storage for older dates
   const olderDates: Record<string, T[]> = {};
-  
+
   items.forEach((item) => {
     // Get the date string from item (handle both snapshot and task)
-    const dateStr = item.timestamp 
-      ? getDateString(new Date(item.timestamp)) 
-      : item.completedAt 
+    const dateStr = item.timestamp
+      ? getDateString(new Date(item.timestamp))
+      : item.completedAt
         ? getDateString(new Date(item.completedAt))
         : "";
-    
+
     if (dateStr === today) {
       result.today.push(item);
     } else if (dateStr === yesterdayStr) {
@@ -69,12 +67,12 @@ const groupItemsByDate = <T extends { timestamp?: string; completedAt?: string }
       olderDates[dateStr].push(item);
     }
   });
-  
+
   // Convert older dates to array and sort by date (newest first)
   result.older = Object.entries(olderDates)
     .map(([date, items]) => ({ date, items }))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  
+
   return result;
 };
 
@@ -147,9 +145,13 @@ export const useHistoryData = (): HistoryData => {
   const handleRestoreSnapshot = useCallback((snapshot: Snapshot) => {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, snapshot.content);
+      // Dispatch a custom event instead of reloading
+      window.dispatchEvent(
+        new CustomEvent("ephe:content-restored", {
+          detail: { content: snapshot.content },
+        }),
+      );
       showToast("Snapshot restored to editor", "success");
-      // Force reload to update editor content
-      window.location.reload();
     } catch (error) {
       console.error("Error restoring snapshot:", error);
       showToast("Failed to restore snapshot", "error");
@@ -157,34 +159,40 @@ export const useHistoryData = (): HistoryData => {
   }, []);
 
   // Handle delete snapshot
-  const handleDeleteSnapshot = useCallback((id: string) => {
-    try {
-      snapshotStorage.deleteById(id);
-      // Update state immediately
-      const updatedSnapshots = snapshots.filter(snapshot => snapshot.id !== id);
-      setSnapshots(updatedSnapshots);
-      setGroupedSnapshots(groupItemsByDate(updatedSnapshots));
-      showToast("Snapshot deleted", "success");
-    } catch (error) {
-      console.error("Error deleting snapshot:", error);
-      showToast("Failed to delete snapshot", "error");
-    }
-  }, [snapshots]);
+  const handleDeleteSnapshot = useCallback(
+    (id: string) => {
+      try {
+        snapshotStorage.deleteById(id);
+        // Update state immediately
+        const updatedSnapshots = snapshots.filter((snapshot) => snapshot.id !== id);
+        setSnapshots(updatedSnapshots);
+        setGroupedSnapshots(groupItemsByDate(updatedSnapshots));
+        showToast("Snapshot deleted", "success");
+      } catch (error) {
+        console.error("Error deleting snapshot:", error);
+        showToast("Failed to delete snapshot", "error");
+      }
+    },
+    [snapshots],
+  );
 
   // Handle delete task
-  const handleDeleteTask = useCallback((id: string) => {
-    try {
-      taskStorage.deleteById(id);
-      // Update state immediately
-      const updatedTasks = tasks.filter(task => task.id !== id);
-      setTasks(updatedTasks);
-      setGroupedTasks(groupItemsByDate(updatedTasks));
-      showToast("Task deleted", "success");
-    } catch (error) {
-      console.error("Error deleting task:", error);
-      showToast("Failed to delete task", "error");
-    }
-  }, [tasks]);
+  const handleDeleteTask = useCallback(
+    (id: string) => {
+      try {
+        taskStorage.deleteById(id);
+        // Update state immediately
+        const updatedTasks = tasks.filter((task) => task.id !== id);
+        setTasks(updatedTasks);
+        setGroupedTasks(groupItemsByDate(updatedTasks));
+        showToast("Task deleted", "success");
+      } catch (error) {
+        console.error("Error deleting task:", error);
+        showToast("Failed to delete task", "error");
+      }
+    },
+    [tasks],
+  );
 
   return {
     snapshots,
@@ -197,4 +205,4 @@ export const useHistoryData = (): HistoryData => {
     handleDeleteTask,
     refresh: loadData,
   };
-}; 
+};

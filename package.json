@@ -12,7 +12,8 @@
     "test": "vitest",
     "copy-wasm": "node --experimental-strip-types src/scripts/copy-wasm.ts",
     "e2e": "playwright test",
-    "e2e:ui": "playwright test --ui"
+    "e2e:ui": "playwright test --ui",
+    "skip-errors": "biome format --skip-errors --write ."
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.6",

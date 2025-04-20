@@ -10,13 +10,12 @@ import { SystemMenu } from "../features/system/system-menu";
 import { HoursDisplay } from "../features/time-display/hours-display";
 import { Link } from "react-router-dom";
 import { EPHE_VERSION } from "../utils/constants";
-import { HistorySidebar } from "../features/history/history-sidebar";
-import { useHistorySidebar } from "../features/history/use-history-sidebar";
+import { HistoryModal } from "../features/history/history-modal";
 import { HistoryIcon } from "../utils/components/icons";
 
-const HistoryFooterButton = ({ onClick, isActive }: { onClick: () => void; isActive: boolean }) => (
+const TaskSnapshotButton = ({ onClick }: { onClick: () => void }) => (
   <FooterButton onClick={onClick}>
-    <div aria-label={isActive ? "Hide history sidebar" : "Show history sidebar"} className="flex items-center">
+    <div aria-label="Open tasks and snapshots" className="flex items-center">
       <HistoryIcon />
     </div>
   </FooterButton>
@@ -26,11 +25,15 @@ export const CodeMirrorEditorPage = () => {
   const { paperModeClass } = usePaperMode();
   const { shouldShowAlert, dismissAlert } = useTabDetection();
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
-  const { isVisible: isHistorySidebarVisible, toggleHistorySidebar } = useHistorySidebar();
+  const [isTaskSnapshotModalOpen, setIsTaskSnapshotModalOpen] = useState(false);
 
   // Use useCallback to memoize the function reference
   const toggleCommandMenu = useCallback(() => {
     setIsCommandMenuOpen((prev) => !prev);
+  }, []);
+
+  const openTaskSnapshotModal = useCallback(() => {
+    setIsTaskSnapshotModalOpen(true);
   }, []);
 
   useEffect(() => {
@@ -52,12 +55,6 @@ export const CodeMirrorEditorPage = () => {
         <div className="z-0 flex-1">
           <CodeMirrorEditor />
         </div>
-
-        {isHistorySidebarVisible && (
-          <aside className="history-sidebar fixed top-0 right-0 bottom-0 z-10 h-[calc(100vh-36px)] border-gray-200 border-l dark:border-gray-700">
-            <HistorySidebar />
-          </aside>
-        )}
       </div>
 
       <div className="w-full">
@@ -65,7 +62,7 @@ export const CodeMirrorEditorPage = () => {
           leftContent={<SystemMenu />}
           rightContent={
             <>
-              <HistoryFooterButton onClick={toggleHistorySidebar} isActive={isHistorySidebarVisible} />
+              <TaskSnapshotButton onClick={openTaskSnapshotModal} />
               <HoursDisplay />
               <FooterButton>
                 <Link to="/landing">Ephe v{EPHE_VERSION}</Link>
@@ -77,6 +74,7 @@ export const CodeMirrorEditorPage = () => {
 
       {isCommandMenuOpen && <CommandMenu open={isCommandMenuOpen} onClose={toggleCommandMenu} />}
       {shouldShowAlert && <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />}
+      <HistoryModal isOpen={isTaskSnapshotModalOpen} onClose={() => setIsTaskSnapshotModalOpen(false)} />
     </div>
   );
 };

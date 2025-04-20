@@ -36,6 +36,26 @@ export const useMarkdownEditor = () => {
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
 
+  // Listen for content restore events
+  useEffect(() => {
+    const handleContentRestored = (event: CustomEvent<{ content: string }>) => {
+      if (view && event.detail.content) {
+        // Update the editor content
+        view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: event.detail.content },
+        });
+        // Also update the atom value to keep them in sync
+        setContent(event.detail.content);
+      }
+    };
+    // Add event listener with type assertion
+    window.addEventListener("ephe:content-restored", handleContentRestored as EventListener);
+    return () => {
+      // Remove event listener on cleanup
+      window.removeEventListener("ephe:content-restored", handleContentRestored as EventListener);
+    };
+  }, [view, setContent]);
+
   // Formatter initialization is a side effect, isolated in useEffect
   useEffect(() => {
     let mounted = true;
