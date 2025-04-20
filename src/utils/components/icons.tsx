@@ -219,3 +219,44 @@ export const HistoryIcon = () => {
     </svg>
   );
 };
+
+// 時計アイコン - エフェメラルモード用
+export const ClockIcon = (props: React.SVGProps<SVGSVGElement>) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-mono-500 dark:text-mono-300"
+      {...props}
+    >
+      <title>Ephemeral Mode</title>
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+};
+
+export const EphemeralIcon = (props: React.SVGProps<SVGSVGElement>) => {
+  return (
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+      <title>Ephemeral</title>
+      <path
+        d="M7.5 0.875C3.83152 0.875 0.875 3.83152 0.875 7.5C0.875 11.1685 3.83152 14.125 7.5 14.125C11.1685 14.125 14.125 11.1685 14.125 7.5C14.125 3.83152 11.1685 0.875 7.5 0.875ZM7.5 1.825C10.6421 1.825 13.175 4.35786 13.175 7.5C13.175 10.6421 10.6421 13.175 7.5 13.175C4.35786 13.175 1.825 10.6421 1.825 7.5C1.825 4.35786 4.35786 1.825 7.5 1.825Z"
+        fill="currentColor"
+        fillRule="evenodd"
+        clipRule="evenodd"
+      />
+      <path
+        d="M4 5.5C4 4.67157 4.67157 4 5.5 4C6.32843 4 7 4.67157 7 5.5V7.5C7 8.32843 6.32843 9 5.5 9C4.67157 9 4 8.32843 4 7.5V5.5ZM8 5.5C8 4.67157 8.67157 4 9.5 4C10.3284 4 11 4.67157 11 5.5V7.5C11 8.32843 10.3284 9 9.5 9C8.67157 9 8 8.32843 8 7.5V5.5Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+};

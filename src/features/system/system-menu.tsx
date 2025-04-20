@@ -1,19 +1,17 @@
 "use client";
 
 import { useTheme } from "../../utils/hooks/use-theme";
-import { MoonIcon, SunIcon, TableOfContentsIcon, WidthIcon, SuccessIcon } from "../../utils/components/icons";
+import { MoonIcon, SunIcon, WidthIcon, SuccessIcon, ClockIcon } from "../../utils/components/icons";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME } from "../../utils/theme-initializer";
-import { useAtom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
-import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
 import { HistoryModal } from "../history/history-modal";
+import { useEphemeralMode } from "../../utils/hooks/use-ephemeral-mode";
 
 const useTodayCompletedTasks = () => {
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);
@@ -68,12 +66,13 @@ const useSnapshotCount = () => {
   return { snapshotCount };
 };
 
-const tocVisibilityAtom = atomWithStorage<boolean>(LOCAL_STORAGE_KEYS.TOC_MODE, false);
+// const tocVisibilityAtom = atomWithStorage<boolean>(LOCAL_STORAGE_KEYS.TOC_MODE, false);
 
 export const SystemMenu = () => {
   const { theme, setTheme } = useTheme();
   const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
-  const [isVisibleToc, setIsVisibleToc] = useAtom(tocVisibilityAtom);
+  //   const [isVisibleToc, setIsVisibleToc] = useAtom(tocVisibilityAtom);
+  const { ephemeralMode, toggleEphemeralMode } = useEphemeralMode();
 
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
   const { charCount } = useCharCount();
@@ -84,9 +83,9 @@ export const SystemMenu = () => {
   const [modalTabIndex, setModalTabIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const toggleToc = useCallback(() => {
-    setIsVisibleToc((prev) => !prev);
-  }, [setIsVisibleToc]);
+  //   const toggleToc = useCallback(() => {
+  //     setIsVisibleToc((prev) => !prev);
+  //   }, [setIsVisibleToc]);
 
   const openTaskSnapshotModal = useCallback((tabIndex: number) => {
     setModalTabIndex(tabIndex);
@@ -179,9 +178,10 @@ export const SystemMenu = () => {
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
+                          width="16"
                           fill="none"
                           viewBox="0 0 24 24"
-                          stroke-width="1.5"
+                          strokeWidth="01"
                           stroke="currentColor"
                           className="size-6"
                         >
@@ -246,7 +246,7 @@ export const SystemMenu = () => {
                     </button>
                   </MenuItem>
 
-                  <MenuItem as="div">
+                  {/* <MenuItem as="div">
                     <button
                       type="button"
                       onClick={toggleToc}
@@ -256,6 +256,19 @@ export const SystemMenu = () => {
                         <TableOfContentsIcon />
                       </span>
                       <span>{isVisibleToc ? "Hide ToC" : "Show ToC"}</span>
+                    </button>
+                  </MenuItem> */}
+
+                  <MenuItem as="div">
+                    <button
+                      type="button"
+                      onClick={toggleEphemeralMode}
+                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+                    >
+                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                        <ClockIcon />
+                      </span>
+                      <span>{ephemeralMode ? "Ephemeral Mode is ON" : "Ephemeral Mode is OFF"}</span>
                     </button>
                   </MenuItem>
                 </div>
