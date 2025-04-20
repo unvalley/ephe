@@ -16,6 +16,7 @@ import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-f
 import { showToast } from "../../../utils/components/toast";
 import { EPHE_COLORS } from "./codemirror-theme";
 import { createChecklistPlugin, createDefaultTaskHandler } from "./tasklist";
+import { registerTaskHandler } from "./tasklist/task-close";
 import { taskKeyBindings } from "./tasklist/keymap";
 import { getRandomQuote } from "../quotes";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
@@ -215,6 +216,16 @@ export const useMarkdownEditor = () => {
   }, []);
 
   const taskHandler = useMemo(() => createDefaultTaskHandler(taskStorage), []);
+
+  // Register the task handler for global access
+  useEffect(() => {
+    registerTaskHandler(taskHandler);
+    return () => {
+      // This is technically not needed since we're registering undefined on unmount,
+      // but it's good practice to clean up
+      registerTaskHandler(undefined);
+    };
+  }, [taskHandler]);
 
   useLayoutEffect(() => {
     if (!view && container) {

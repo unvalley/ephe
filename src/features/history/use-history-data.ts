@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { type Snapshot, snapshotStorage } from "../snapshots/snapshot-storage";
 import { type CompletedTask, taskStorage } from "../editor/tasks/task-storage";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
@@ -24,9 +24,29 @@ export type HistoryData = {
   refresh: () => void;
 };
 
-// Helper to get date string for grouping
+// Cache for date strings to avoid recreating them repeatedly
+const dateStringCache = new Map<string, string>();
+
+// Helper to get date string for grouping with caching
 const getDateString = (date: Date): string => {
-  return date.toISOString().split("T")[0]; // YYYY-MM-DD
+  const time = date.getTime();
+  const cacheKey = `date_${time}`;
+
+  if (dateStringCache.has(cacheKey)) {
+    return dateStringCache.get(cacheKey)!;
+  }
+
+  const dateStr = date.toISOString().split("T")[0]; // YYYY-MM-DD
+  dateStringCache.set(cacheKey, dateStr);
+
+  // Cleanup cache if it gets too large
+  if (dateStringCache.size > 100) {
+    // Get the oldest keys and remove them
+    const keys = Array.from(dateStringCache.keys()).slice(0, 50);
+    keys.forEach((key) => dateStringCache.delete(key));
+  }
+
+  return dateStr;
 };
 
 // Function to group items by date
@@ -76,52 +96,84 @@ const groupItemsByDate = <T extends { timestamp?: string; completedAt?: string }
   return result;
 };
 
+// Performance optimization: Cache previous values to avoid unnecessary recalculations
+let cachedSnapshots: Snapshot[] | null = null;
+let cachedTasks: CompletedTask[] | null = null;
+
 export const useHistoryData = (): HistoryData => {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [tasks, setTasks] = useState<CompletedTask[]>([]);
-  const [groupedSnapshots, setGroupedSnapshots] = useState<DateGroupedItems<Snapshot>>({
-    today: [],
-    yesterday: [],
-    older: [],
-  });
-  const [groupedTasks, setGroupedTasks] = useState<DateGroupedItems<CompletedTask>>({
-    today: [],
-    yesterday: [],
-    older: [],
-  });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load data from storage
+  // Memoize grouped data to avoid recalculation on every render
+  const groupedSnapshots = useMemo(() => groupItemsByDate(snapshots), [snapshots]);
+
+  const groupedTasks = useMemo(() => groupItemsByDate(tasks), [tasks]);
+
+  // Load data from storage with optimizations
   const loadData = useCallback(() => {
     setIsLoading(true);
+    let loadingComplete = false;
 
-    // Get all snapshots with proper error handling
-    try {
-      const allSnapshots = snapshotStorage
-        .getAll()
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      setSnapshots(allSnapshots);
-      setGroupedSnapshots(groupItemsByDate(allSnapshots));
-    } catch (snapshotError) {
-      console.error("Error loading snapshots:", snapshotError);
-      setSnapshots([]);
-      setGroupedSnapshots({ today: [], yesterday: [], older: [] });
-    }
+    // Create a timeout to ensure we don't show loading state for too long
+    const loadingTimeout = setTimeout(() => {
+      if (!loadingComplete) {
+        setIsLoading(false);
+      }
+    }, 500);
 
-    // Get all tasks with proper error handling
-    try {
-      const allTasks = taskStorage
-        .getAll()
-        .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
-      setTasks(allTasks);
-      setGroupedTasks(groupItemsByDate(allTasks));
-    } catch (taskError) {
-      console.error("Error loading tasks:", taskError);
-      setTasks([]);
-      setGroupedTasks({ today: [], yesterday: [], older: [] });
-    }
+    // Performance optimization: Use promise.all to load data in parallel
+    Promise.all([
+      // Load snapshots with caching
+      new Promise<void>((resolve) => {
+        try {
+          // Use cached snapshots if available to avoid unnecessary reads
+          if (cachedSnapshots) {
+            setSnapshots(cachedSnapshots);
+            resolve();
+            return;
+          }
 
-    setIsLoading(false);
+          const allSnapshots = snapshotStorage
+            .getAll()
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+          cachedSnapshots = allSnapshots;
+          setSnapshots(allSnapshots);
+        } catch (snapshotError) {
+          console.error("Error loading snapshots:", snapshotError);
+          setSnapshots([]);
+        }
+        resolve();
+      }),
+
+      // Load tasks with caching
+      new Promise<void>((resolve) => {
+        try {
+          // Use cached tasks if available to avoid unnecessary reads
+          if (cachedTasks) {
+            setTasks(cachedTasks);
+            resolve();
+            return;
+          }
+
+          const allTasks = taskStorage
+            .getAll()
+            .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+
+          cachedTasks = allTasks;
+          setTasks(allTasks);
+        } catch (taskError) {
+          console.error("Error loading tasks:", taskError);
+          setTasks([]);
+        }
+        resolve();
+      }),
+    ]).then(() => {
+      loadingComplete = true;
+      clearTimeout(loadingTimeout);
+      setIsLoading(false);
+    });
   }, []);
 
   // Initialize data
@@ -131,6 +183,13 @@ export const useHistoryData = (): HistoryData => {
     // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key?.includes("snapshot") || e.key?.includes("task")) {
+        // Invalidate cache when storage changes
+        if (e.key?.includes("snapshot")) {
+          cachedSnapshots = null;
+        }
+        if (e.key?.includes("task")) {
+          cachedTasks = null;
+        }
         loadData();
       }
     };
@@ -163,10 +222,10 @@ export const useHistoryData = (): HistoryData => {
     (id: string) => {
       try {
         snapshotStorage.deleteById(id);
-        // Update state immediately
+        // Update state immediately and invalidate cache
+        cachedSnapshots = null;
         const updatedSnapshots = snapshots.filter((snapshot) => snapshot.id !== id);
         setSnapshots(updatedSnapshots);
-        setGroupedSnapshots(groupItemsByDate(updatedSnapshots));
         showToast("Snapshot deleted", "success");
       } catch (error) {
         console.error("Error deleting snapshot:", error);
@@ -181,10 +240,10 @@ export const useHistoryData = (): HistoryData => {
     (id: string) => {
       try {
         taskStorage.deleteById(id);
-        // Update state immediately
+        // Update state immediately and invalidate cache
+        cachedTasks = null;
         const updatedTasks = tasks.filter((task) => task.id !== id);
         setTasks(updatedTasks);
-        setGroupedTasks(groupItemsByDate(updatedTasks));
         showToast("Task deleted", "success");
       } catch (error) {
         console.error("Error deleting task:", error);
@@ -193,6 +252,13 @@ export const useHistoryData = (): HistoryData => {
     },
     [tasks],
   );
+
+  // Explicitly invalidate cache when refresh is called
+  const refreshData = useCallback(() => {
+    cachedSnapshots = null;
+    cachedTasks = null;
+    loadData();
+  }, [loadData]);
 
   return {
     snapshots,
@@ -203,6 +269,6 @@ export const useHistoryData = (): HistoryData => {
     handleRestoreSnapshot,
     handleDeleteSnapshot,
     handleDeleteTask,
-    refresh: loadData,
+    refresh: refreshData,
   };
 };
