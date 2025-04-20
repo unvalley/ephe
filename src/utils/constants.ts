@@ -7,8 +7,6 @@ export const LOCAL_STORAGE_KEYS = {
   PAPER_MODE: "ephe:paper-mode",
   PREVIEW_MODE: "ephe:preview-mode",
   TOC_MODE: "ephe:toc-mode",
-  EPHEMERAL_MODE: "ephe:ephemeral-mode",
-  LAST_EPHEMERAL_CLEAR: "ephe:last-ephemeral-clear",
 } as const;
 
 export const EPHE_VERSION = "0.0.1";

@@ -8,10 +8,6 @@ import { HistoryPage } from "./page/history-page";
 import { ToastContainer } from "./utils/components/toast";
 import { NotFound } from "./page/404-page";
 import { CodeMirrorEditorPage } from "./page/editor-page";
-import { registerEphemeralServiceWorker } from "./utils/service-worker-registration";
-
-// Register the ephemeral service worker
-registerEphemeralServiceWorker();
 
 const root = document.getElementById("root");
 if (!root) {
