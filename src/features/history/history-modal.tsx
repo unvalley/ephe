@@ -1,4 +1,4 @@
-import { Fragment, useState, useEffect } from "react";
+import { Fragment, useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogPanel,
@@ -12,6 +12,7 @@ import {
 } from "@headlessui/react";
 import { useHistoryData } from "./use-history-data";
 import { type Snapshot } from "../snapshots/snapshot-storage";
+import { TASK_TOGGLE_EVENT } from "../editor/codemirror/tasklist/task-close";
 
 export type HistoryModalProps = {
   isOpen: boolean;
@@ -22,20 +23,46 @@ export type HistoryModalProps = {
 export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryModalProps) => {
   const [selectedTabIndex, setSelectedTabIndex] = useState(initialTabIndex);
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
-  const { snapshots, tasks, isLoading, handleRestoreSnapshot, handleDeleteSnapshot } = useHistoryData();
+  const { snapshots, tasks, isLoading, handleRestoreSnapshot, handleDeleteSnapshot, refresh } = useHistoryData();
 
   // Update selected tab when initialTabIndex changes
   useEffect(() => {
     setSelectedTabIndex(initialTabIndex);
   }, [initialTabIndex]);
 
-  // Load data when modal opens
-  if (isOpen && snapshots.length > 0 && !selectedSnapshot) {
-    setSelectedSnapshot(snapshots[0]);
-  }
+  // Performance optimization: Debounce the refresh on task changes
+  // This is especially important if multiple tasks are completed in rapid succession
+  const handleTaskChange = useCallback(() => {
+    // Only refresh if the modal is open to avoid unnecessary processing
+    if (isOpen) {
+      refresh();
+    }
+  }, [isOpen, refresh]);
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
+  // Setup event listener for task changes
+  useEffect(() => {
+    window.addEventListener(TASK_TOGGLE_EVENT, handleTaskChange);
+    return () => {
+      window.removeEventListener(TASK_TOGGLE_EVENT, handleTaskChange);
+    };
+  }, [handleTaskChange]);
+
+  // Performance optimization: Only load data when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      refresh();
+    }
+  }, [isOpen, refresh]);
+
+  // Initialize selected snapshot when data is loaded
+  useEffect(() => {
+    if (isOpen && snapshots.length > 0 && !selectedSnapshot) {
+      setSelectedSnapshot(snapshots[0]);
+    }
+  }, [isOpen, snapshots, selectedSnapshot]);
+
+  // Format date for display - Memoize this if it's called frequently
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
@@ -44,30 +71,33 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
       hour: "2-digit",
       minute: "2-digit",
     }).format(date);
-  };
+  }, []);
 
   // Handle snapshot click
-  const handleSnapshotClick = (snapshot: Snapshot) => {
+  const handleSnapshotClick = useCallback((snapshot: Snapshot) => {
     setSelectedSnapshot(snapshot);
-  };
+  }, []);
 
   // Handle keydown for accessibility
-  const handleKeyDown = (e: React.KeyboardEvent, snapshot: Snapshot) => {
-    if (e.key === "Enter" || e.key === " ") {
-      handleSnapshotClick(snapshot);
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent, snapshot: Snapshot) => {
+      if (e.key === "Enter" || e.key === " ") {
+        handleSnapshotClick(snapshot);
+      }
+    },
+    [handleSnapshotClick],
+  );
 
   // Handle restore snapshot
-  const handleRestore = () => {
+  const handleRestore = useCallback(() => {
     if (selectedSnapshot) {
       handleRestoreSnapshot(selectedSnapshot);
       onClose();
     }
-  };
+  }, [selectedSnapshot, handleRestoreSnapshot, onClose]);
 
   // Handle delete snapshot
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     if (selectedSnapshot && confirm("Are you sure you want to delete this snapshot?")) {
       handleDeleteSnapshot(selectedSnapshot.id);
 
@@ -80,7 +110,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
         setSelectedSnapshot(null);
       }
     }
-  };
+  }, [selectedSnapshot, snapshots, handleDeleteSnapshot]);
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
