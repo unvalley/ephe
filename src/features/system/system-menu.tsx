@@ -1,7 +1,6 @@
 "use client";
 
 import { useTheme } from "../../utils/hooks/use-theme";
-import { MoonIcon, SunIcon, TableOfContentsIcon, WidthIcon, SuccessIcon } from "../../utils/components/icons";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
@@ -14,6 +13,16 @@ import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
 import { HistoryModal } from "../history/history-modal";
+import {
+  Bars3CenterLeftIcon,
+  CheckCircleIcon,
+  DocumentIcon,
+  HashtagIcon,
+  ViewColumnsIcon,
+  SunIcon,
+  MoonIcon,
+  ComputerDesktopIcon,
+} from "@heroicons/react/24/outline";
 
 const useTodayCompletedTasks = () => {
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);
@@ -130,13 +139,7 @@ export const SystemMenu = () => {
                   <MenuItem disabled>
                     <div className="flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30">
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <title>Characters Icon</title>
-                          <path d="M4 5H20V7H4V5Z" fill="currentColor" />
-                          <path d="M4 9H20V11H4V9Z" fill="currentColor" />
-                          <path d="M4 13H14V15H4V13Z" fill="currentColor" />
-                          <path d="M4 17H11V19H4V17Z" fill="currentColor" />
-                        </svg>
+                        <HashtagIcon className="size-4 stroke-1" />
                       </span>
                       <span>{charCount > 0 ? `${charCount.toLocaleString()} chars` : "No content"}</span>
                     </div>
@@ -150,21 +153,12 @@ export const SystemMenu = () => {
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         {todayCompletedTasks > 0 ? (
-                          <SuccessIcon />
+                          <CheckCircleIcon className="size-4 stroke-2 text-green-600" />
                         ) : (
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <title>Checkmark Icon</title>
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="currentColor" />
-                          </svg>
+                          <CheckCircleIcon className="size-4 stroke-2" />
                         )}
                       </span>
-                      <span className={todayCompletedTasks > 0 ? "text-green-700 dark:text-green-400" : ""}>
+                      <span className={todayCompletedTasks > 0 ? "text-green-600 dark:text-green-400" : ""}>
                         {todayCompletedTasks > 0 ? `${todayCompletedTasks} closed today` : "No closed today"}
                       </span>
                     </button>
@@ -177,21 +171,7 @@ export const SystemMenu = () => {
                       onClick={() => openTaskSnapshotModal(1)}
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke-width="1.5"
-                          stroke="currentColor"
-                          className="size-6"
-                        >
-                          <title>Snapshots Icon</title>
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
-                          />
-                        </svg>
+                        <DocumentIcon className="size-4 stroke-1" />
                       </span>
                       <span>{snapshotCount > 0 ? `${snapshotCount} snapshots` : "No snapshots"}</span>
                     </button>
@@ -217,23 +197,11 @@ export const SystemMenu = () => {
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         {theme === COLOR_THEME.LIGHT ? (
-                          <SunIcon />
+                          <SunIcon className="size-4 stroke-1" />
                         ) : theme === COLOR_THEME.DARK ? (
-                          <MoonIcon />
+                          <MoonIcon className="size-4 stroke-1" />
                         ) : (
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <title>System Theme Icon</title>
-                            <path
-                              d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2V4a8 8 0 1 0 0 16z"
-                              fill="currentColor"
-                            />
-                          </svg>
+                          <ComputerDesktopIcon className="size-4 stroke-1" />
                         )}
                       </span>
                       <span>
@@ -253,7 +221,7 @@ export const SystemMenu = () => {
                       className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <TableOfContentsIcon />
+                        <Bars3CenterLeftIcon className="storke-1 size-4" />
                       </span>
                       <span>{isVisibleToc ? "Hide ToC" : "Show ToC"}</span>
                     </button>
@@ -280,20 +248,20 @@ export const SystemMenu = () => {
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         {paperMode === "normal" ? (
-                          <span className="h-4 w-4 border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-700" />
+                          <span className="h-4 w-4 border border-gray-500 bg-white dark:border-gray-600 dark:bg-gray-700" />
                         ) : paperMode === "graph" ? (
-                          <span className="grid h-4 w-4 grid-cols-3 border border-gray-300 opacity-70 dark:border-gray-600">
+                          <span className="grid h-4 w-4 grid-cols-3 border border-gray-500 opacity-70 dark:border-gray-600">
                             <span
-                              className="col-span-3 border-gray-400 border-b dark:border-gray-500"
+                              className="col-span-3 border-gray-500 border-b dark:border-gray-500"
                               style={{ height: "33%" }}
                             />
                             <span
-                              className="col-span-3 border-gray-400 border-b dark:border-gray-500"
+                              className="col-span-3 border-gray-500 border-b dark:border-gray-500"
                               style={{ height: "66%" }}
                             />
                           </span>
                         ) : (
-                          <span className="flex h-4 w-4 items-center justify-center border border-gray-300 dark:border-gray-600">
+                          <span className="flex h-4 w-4 items-center justify-center border border-gray-500 dark:border-gray-600">
                             <span className="h-1 w-1 rounded-full bg-gray-400 dark:bg-gray-500" />
                           </span>
                         )}
@@ -316,7 +284,7 @@ export const SystemMenu = () => {
                       className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <WidthIcon />
+                        <ViewColumnsIcon className="size-4 stroke-1" />
                       </span>
                       <span className="capitalize">{editorWidth}</span>
                     </button>
