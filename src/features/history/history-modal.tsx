@@ -11,7 +11,7 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 import { useHistoryData } from "./use-history-data";
-import { type Snapshot } from "../snapshots/snapshot-storage";
+import type { Snapshot } from "../snapshots/snapshot-storage";
 import { TASK_TOGGLE_EVENT } from "../editor/codemirror/tasklist/task-close";
 
 export type HistoryModalProps = {

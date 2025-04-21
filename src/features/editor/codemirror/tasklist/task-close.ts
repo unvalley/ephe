@@ -72,7 +72,7 @@ export const taskDecoration = ViewPlugin.fromClass(
     taskes: TaskInfo[] = [];
     decorations: DecorationSet;
     prevTaskStates: Map<string, boolean> = new Map(); // Track previous task states by key
-    pendingChanges: boolean = false;
+    pendingChanges = false;
     changeTimer: number | null = null;
 
     constructor(view: EditorView) {
