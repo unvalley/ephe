@@ -129,7 +129,7 @@ export const SystemMenu = () => {
 
             {(open || isOpen) && (
               <MenuItems
-                className="absolute bottom-full left-0 z-10 mb-2 w-56 overflow-hidden rounded-md bg-white shadow-md focus:outline-none dark:bg-mono-700"
+                className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white shadow-md focus:outline-none dark:bg-mono-700"
                 portal={false}
                 static
               >
@@ -226,11 +226,7 @@ export const SystemMenu = () => {
                       <span>{isVisibleToc ? "Hide ToC" : "Show ToC"}</span>
                     </button>
                   </MenuItem>
-                </div>
 
-                {/* Paper Mode Section */}
-                <div className="py-1">
-                  <div className="px-3 py-2 text-mono-400 text-xs dark:text-mono-300">Paper Mode</div>
                   <MenuItem as="div">
                     <button
                       type="button"
@@ -266,14 +262,9 @@ export const SystemMenu = () => {
                           </span>
                         )}
                       </span>
-                      <span className="capitalize">{paperMode}</span>
+                      <span className="capitalize">{paperMode} paper</span>
                     </button>
                   </MenuItem>
-                </div>
-
-                {/* Editor Width Section */}
-                <div className="py-1">
-                  <div className="px-3 py-2 text-mono-400 text-xs dark:text-mono-300">Editor Width</div>
                   <MenuItem as="div">
                     <button
                       type="button"
@@ -286,7 +277,7 @@ export const SystemMenu = () => {
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         <ViewColumnsIcon className="size-4 stroke-1" />
                       </span>
-                      <span className="capitalize">{editorWidth}</span>
+                      <span className="capitalize">{editorWidth} Width</span>
                     </button>
                   </MenuItem>
                 </div>
