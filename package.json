@@ -61,5 +61,8 @@
     "vite-plugin-wasm": "^3.4.1",
     "vitest": "latest",
     "vitest-browser-react": "^0.1.1"
+  },
+  "overrides": {
+    "vite": "npm:rolldown-vite@latest"
   }
 }
