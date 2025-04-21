@@ -10,30 +10,15 @@ import { SystemMenu } from "../features/system/system-menu";
 import { HoursDisplay } from "../features/time-display/hours-display";
 import { Link } from "react-router-dom";
 import { EPHE_VERSION } from "../utils/constants";
-import { HistoryModal } from "../features/history/history-modal";
-import { HistoryIcon } from "../utils/components/icons";
-
-const TaskSnapshotButton = ({ onClick }: { onClick: () => void }) => (
-  <FooterButton onClick={onClick}>
-    <div aria-label="Open tasks and snapshots" className="flex items-center">
-      <HistoryIcon />
-    </div>
-  </FooterButton>
-);
 
 export const CodeMirrorEditorPage = () => {
   const { paperModeClass } = usePaperMode();
   const { shouldShowAlert, dismissAlert } = useTabDetection();
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
-  const [isTaskSnapshotModalOpen, setIsTaskSnapshotModalOpen] = useState(false);
 
   // Use useCallback to memoize the function reference
   const toggleCommandMenu = useCallback(() => {
     setIsCommandMenuOpen((prev) => !prev);
-  }, []);
-
-  const openTaskSnapshotModal = useCallback(() => {
-    setIsTaskSnapshotModalOpen(true);
   }, []);
 
   useEffect(() => {
@@ -62,7 +47,6 @@ export const CodeMirrorEditorPage = () => {
           leftContent={<SystemMenu />}
           rightContent={
             <>
-              <TaskSnapshotButton onClick={openTaskSnapshotModal} />
               <HoursDisplay />
               <FooterButton>
                 <Link to="/landing">Ephe v{EPHE_VERSION}</Link>
@@ -74,7 +58,6 @@ export const CodeMirrorEditorPage = () => {
 
       {isCommandMenuOpen && <CommandMenu open={isCommandMenuOpen} onClose={toggleCommandMenu} />}
       {shouldShowAlert && <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />}
-      <HistoryModal isOpen={isTaskSnapshotModalOpen} onClose={() => setIsTaskSnapshotModalOpen(false)} />
     </div>
   );
 };
