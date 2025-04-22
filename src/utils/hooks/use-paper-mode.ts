@@ -4,11 +4,11 @@ import { useAtom } from "jotai";
 
 export type PaperMode = "normal" | "graph" | "dots";
 
-export const PAPER_MODE_CLASSES: Record<PaperMode, string> = {
+export const PAPER_MODE_CLASSES = {
   normal: "",
   graph: "bg-graph-paper",
   dots: "bg-dots-paper",
-};
+} as const;
 
 const paperModeAtom = atomWithStorage<PaperMode>(LOCAL_STORAGE_KEYS.PAPER_MODE, "normal");
 
@@ -16,7 +16,7 @@ export const usePaperMode = () => {
   const [paperMode, setPaperMode] = useAtom(paperModeAtom);
 
   const cycleMode = () => {
-    const modes: PaperMode[] = ["normal", "graph", "dots"];
+    const modes = ["normal", "graph", "dots"] as const;
     const currentIndex = modes.indexOf(paperMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     setPaperMode(modes[nextIndex]);
