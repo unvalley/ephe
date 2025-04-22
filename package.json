@@ -10,7 +10,7 @@
     "lint": "biome lint .",
     "format": "biome format --write .",
     "copy:wasm": "node --experimental-strip-types src/scripts/copy-wasm.ts",
-    "test": "pnpm test:unit && pnpm test:e2e",
+    "test": "pnpm test:unit",
     "test:unit": "vitest src",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
