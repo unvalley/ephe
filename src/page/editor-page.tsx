@@ -10,7 +10,6 @@ import { SystemMenu } from "../features/system/system-menu";
 import { HoursDisplay } from "../features/time-display/hours-display";
 import { Link } from "react-router-dom";
 import { EPHE_VERSION } from "../utils/constants";
-import { TableOfContents } from "../features/editor/table-of-contents";
 
 const useCommandK = () => {
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
@@ -45,13 +44,6 @@ export const EditorPage = () => {
       <div className="relative flex flex-1 overflow-hidden">
         <div className="z-0 flex-1">
           <CodeMirrorEditor />
-          <TableOfContents
-            content={"## aaaaaaaaaaaa"}
-            onItemClick={(line: number): void => {
-              throw new Error("Function not implemented.");
-            }}
-            isVisible={true}
-          />
         </div>
       </div>
 
