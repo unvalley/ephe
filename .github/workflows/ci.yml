@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 22
+  PNPM_VERSION: 10.x
+  CACHE_KEY_PREFIX: v1
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.pnpm-cache.outputs.cache-hit }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Cache pnpm dependencies
+        id: pnpm-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/node_modules
+            ~/.cache/Cypress
+            ~/.cache/ms-playwright
+          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        if: steps.pnpm-cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+  lint:
+    name: Lint
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Restore pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/node_modules
+            ~/.cache/Cypress
+            ~/.cache/ms-playwright
+          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Run Biome lint
+        run: pnpm lint
+
+  test:
+    name: Test
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Restore pnpm dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/node_modules
+            ~/.cache/Cypress
+            ~/.cache/ms-playwright
+          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Restore Vitest cache
+        uses: actions/cache@v4
+        with:
+          path: .vitest-cache
+          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vitest-${{ hashFiles('**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vitest-
+
+      - name: Run Vitest
+        run: pnpm test run --reporter=default --pool=forks --threads --maxWorkers=$(nproc)
+
+  summary:
+    name: CI Summary
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check status
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+      - name: Success
+        if: contains(needs.*.result, 'failure') != true && contains(needs.*.result, 'cancelled') != true
+        run: echo "All jobs completed successfully!" 
