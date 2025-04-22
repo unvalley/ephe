@@ -39,8 +39,6 @@ jobs:
         with:
           path: |
             **/node_modules
-            ~/.cache/Cypress
-            ~/.cache/ms-playwright
           key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-pnpm-
@@ -71,8 +69,6 @@ jobs:
         with:
           path: |
             **/node_modules
-            ~/.cache/Cypress
-            ~/.cache/ms-playwright
           key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Run Biome lint
@@ -100,8 +96,6 @@ jobs:
         with:
           path: |
             **/node_modules
-            ~/.cache/Cypress
-            ~/.cache/ms-playwright
           key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Restore Vitest cache
