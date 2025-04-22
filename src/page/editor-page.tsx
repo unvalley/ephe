@@ -10,13 +10,11 @@ import { SystemMenu } from "../features/system/system-menu";
 import { HoursDisplay } from "../features/time-display/hours-display";
 import { Link } from "react-router-dom";
 import { EPHE_VERSION } from "../utils/constants";
+import { TableOfContents } from "../features/editor/table-of-contents";
 
-export const CodeMirrorEditorPage = () => {
-  const { paperModeClass } = usePaperMode();
-  const { shouldShowAlert, dismissAlert } = useTabDetection();
+const useCommandK = () => {
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
 
-  // Use useCallback to memoize the function reference
   const toggleCommandMenu = useCallback(() => {
     setIsCommandMenuOpen((prev) => !prev);
   }, []);
@@ -34,27 +32,40 @@ export const CodeMirrorEditorPage = () => {
     };
   }, [toggleCommandMenu]);
 
+  return { isCommandMenuOpen, toggleCommandMenu };
+};
+
+export const EditorPage = () => {
+  const { paperModeClass } = usePaperMode();
+  const { shouldShowAlert, dismissAlert } = useTabDetection();
+  const { isCommandMenuOpen, toggleCommandMenu } = useCommandK();
+
   return (
     <div className={`flex h-screen flex-col overflow-hidden antialiased ${paperModeClass}`}>
       <div className="relative flex flex-1 overflow-hidden">
         <div className="z-0 flex-1">
           <CodeMirrorEditor />
+          <TableOfContents
+            content={"## aaaaaaaaaaaa"}
+            onItemClick={(line: number): void => {
+              throw new Error("Function not implemented.");
+            }}
+            isVisible={true}
+          />
         </div>
       </div>
 
-      <div className="w-full">
-        <Footer
-          leftContent={<SystemMenu />}
-          rightContent={
-            <>
-              <HoursDisplay />
-              <FooterButton>
-                <Link to="/landing">Ephe v{EPHE_VERSION}</Link>
-              </FooterButton>
-            </>
-          }
-        />
-      </div>
+      <Footer
+        leftContent={<SystemMenu />}
+        rightContent={
+          <>
+            <HoursDisplay />
+            <FooterButton>
+              <Link to="/landing">Ephe v{EPHE_VERSION}</Link>
+            </FooterButton>
+          </>
+        }
+      />
 
       {isCommandMenuOpen && <CommandMenu open={isCommandMenuOpen} onClose={toggleCommandMenu} />}
       {shouldShowAlert && <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />}
