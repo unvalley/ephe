@@ -115,176 +115,176 @@ export const SystemMenu = () => {
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isOpen) {
+        setIsOpen(false);
+        // Remove focus from any active element to prevent focus on menu button
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, [isOpen]);
+
   return (
     <>
       <Menu as="div" className="relative" ref={menuRef}>
-        {({ open }) => (
-          <>
-            <MenuButton
-              className="rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              onClick={() => setIsOpen(!isOpen)}
+        <MenuButton
+          className="rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          System
+        </MenuButton>
+
+        <MenuItems
+          transition
+          className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white shadow-md focus:outline-none dark:bg-mono-700"
+        >
+          {/* Document Stats Section */}
+          <div className="px-3 py-2 text-mono-400 text-xs dark:text-mono-300">Document Stats</div>
+          <MenuItem disabled>
+            <div className="flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30">
+              <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                <HashtagIcon className="size-4 stroke-1" />
+              </span>
+              <span>{charCount > 0 ? `${charCount.toLocaleString()} chars` : "No content"}</span>
+            </div>
+          </MenuItem>
+          <MenuItem as="div">
+            <button
+              type="button"
+              className="flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+              onClick={() => openTaskSnapshotModal(0)}
             >
-              System
-            </MenuButton>
+              <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                {todayCompletedTasks > 0 ? (
+                  <CheckCircleIcon className="size-4 stroke-2 text-green-600" />
+                ) : (
+                  <CheckCircleIcon className="size-4 stroke-2" />
+                )}
+              </span>
+              <span className={todayCompletedTasks > 0 ? "text-green-600 dark:text-green-400" : ""}>
+                {todayCompletedTasks > 0 ? `${todayCompletedTasks} closed today` : "No closed today"}
+              </span>
+            </button>
+          </MenuItem>
+          <MenuItem as="div">
+            <button
+              type="button"
+              className="flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+              onClick={() => openTaskSnapshotModal(1)}
+            >
+              <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                <DocumentIcon className="size-4 stroke-1" />
+              </span>
+              <span>{snapshotCount > 0 ? `${snapshotCount} snapshots` : "No snapshots"}</span>
+            </button>
+          </MenuItem>
 
-            {(open || isOpen) && (
-              <MenuItems
-                className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white shadow-md focus:outline-none dark:bg-mono-700"
-                portal={false}
-                static
-              >
-                {/* Document Stats Section */}
-                <div className="py-1">
-                  <div className="px-3 py-2 text-mono-400 text-xs dark:text-mono-300">Document Stats</div>
-                  <MenuItem disabled>
-                    <div className="flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30">
-                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <HashtagIcon className="size-4 stroke-1" />
-                      </span>
-                      <span>{charCount > 0 ? `${charCount.toLocaleString()} chars` : "No content"}</span>
-                    </div>
-                  </MenuItem>
+          <div className="px-3 py-2 text-mono-400 text-xs dark:text-mono-300">Appearence</div>
+          <MenuItem as="div">
+            <button
+              type="button"
+              onClick={() => {
+                // Cycle through theme modes
+                if (theme === COLOR_THEME.LIGHT) {
+                  setTheme(COLOR_THEME.DARK);
+                } else if (theme === COLOR_THEME.DARK) {
+                  setTheme(COLOR_THEME.SYSTEM);
+                } else {
+                  setTheme(COLOR_THEME.LIGHT);
+                }
+              }}
+              className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+            >
+              <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                {theme === COLOR_THEME.LIGHT ? (
+                  <SunIcon className="size-4 stroke-1" />
+                ) : theme === COLOR_THEME.DARK ? (
+                  <MoonIcon className="size-4 stroke-1" />
+                ) : (
+                  <ComputerDesktopIcon className="size-4 stroke-1" />
+                )}
+              </span>
+              <span>
+                {theme === COLOR_THEME.LIGHT ? "Light mode" : theme === COLOR_THEME.DARK ? "Dark mode" : "System mode"}
+              </span>
+            </button>
+          </MenuItem>
 
-                  <MenuItem as="div">
-                    <button
-                      type="button"
-                      className="flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
-                      onClick={() => openTaskSnapshotModal(0)}
-                    >
-                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        {todayCompletedTasks > 0 ? (
-                          <CheckCircleIcon className="size-4 stroke-2 text-green-600" />
-                        ) : (
-                          <CheckCircleIcon className="size-4 stroke-2" />
-                        )}
-                      </span>
-                      <span className={todayCompletedTasks > 0 ? "text-green-600 dark:text-green-400" : ""}>
-                        {todayCompletedTasks > 0 ? `${todayCompletedTasks} closed today` : "No closed today"}
-                      </span>
-                    </button>
-                  </MenuItem>
+          <MenuItem as="div">
+            <button
+              type="button"
+              onClick={toggleToc}
+              className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+            >
+              <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                <Bars3CenterLeftIcon className="storke-1 size-4" />
+              </span>
+              <span>{isVisibleToc ? "Hide ToC" : "Show ToC"}</span>
+            </button>
+          </MenuItem>
 
-                  <MenuItem as="div">
-                    <button
-                      type="button"
-                      className="flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
-                      onClick={() => openTaskSnapshotModal(1)}
-                    >
-                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <DocumentIcon className="size-4 stroke-1" />
-                      </span>
-                      <span>{snapshotCount > 0 ? `${snapshotCount} snapshots` : "No snapshots"}</span>
-                    </button>
-                  </MenuItem>
-                </div>
-
-                <div className="py-1">
-                  <div className="px-3 py-2 text-mono-400 text-xs dark:text-mono-300">Appearence</div>
-                  <MenuItem as="div">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // Cycle through theme modes
-                        if (theme === COLOR_THEME.LIGHT) {
-                          setTheme(COLOR_THEME.DARK);
-                        } else if (theme === COLOR_THEME.DARK) {
-                          setTheme(COLOR_THEME.SYSTEM);
-                        } else {
-                          setTheme(COLOR_THEME.LIGHT);
-                        }
-                      }}
-                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
-                    >
-                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        {theme === COLOR_THEME.LIGHT ? (
-                          <SunIcon className="size-4 stroke-1" />
-                        ) : theme === COLOR_THEME.DARK ? (
-                          <MoonIcon className="size-4 stroke-1" />
-                        ) : (
-                          <ComputerDesktopIcon className="size-4 stroke-1" />
-                        )}
-                      </span>
-                      <span>
-                        {theme === COLOR_THEME.LIGHT
-                          ? "Light mode"
-                          : theme === COLOR_THEME.DARK
-                            ? "Dark mode"
-                            : "System mode"}
-                      </span>
-                    </button>
-                  </MenuItem>
-
-                  <MenuItem as="div">
-                    <button
-                      type="button"
-                      onClick={toggleToc}
-                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
-                    >
-                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <Bars3CenterLeftIcon className="storke-1 size-4" />
-                      </span>
-                      <span>{isVisibleToc ? "Hide ToC" : "Show ToC"}</span>
-                    </button>
-                  </MenuItem>
-
-                  <MenuItem as="div">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // Cycle through paper modes
-                        if (paperMode === "normal") {
-                          toggleGraphMode();
-                        } else if (paperMode === "graph") {
-                          toggleDotsMode();
-                        } else {
-                          toggleNormalMode();
-                        }
-                      }}
-                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
-                    >
-                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        {paperMode === "normal" ? (
-                          <span className="h-4 w-4 border border-gray-500 bg-white dark:border-gray-600 dark:bg-gray-700" />
-                        ) : paperMode === "graph" ? (
-                          <span className="grid h-4 w-4 grid-cols-3 border border-gray-500 opacity-70 dark:border-gray-600">
-                            <span
-                              className="col-span-3 border-gray-500 border-b dark:border-gray-500"
-                              style={{ height: "33%" }}
-                            />
-                            <span
-                              className="col-span-3 border-gray-500 border-b dark:border-gray-500"
-                              style={{ height: "66%" }}
-                            />
-                          </span>
-                        ) : (
-                          <span className="flex h-4 w-4 items-center justify-center border border-gray-500 dark:border-gray-600">
-                            <span className="h-1 w-1 rounded-full bg-gray-400 dark:bg-gray-500" />
-                          </span>
-                        )}
-                      </span>
-                      <span className="capitalize">{paperMode} paper</span>
-                    </button>
-                  </MenuItem>
-                  <MenuItem as="div">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // Toggle editor width
-                        editorWidth === "normal" ? setWideWidth() : setNormalWidth();
-                      }}
-                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
-                    >
-                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <ViewColumnsIcon className="size-4 stroke-1" />
-                      </span>
-                      <span className="capitalize">{editorWidth} Width</span>
-                    </button>
-                  </MenuItem>
-                </div>
-              </MenuItems>
-            )}
-          </>
-        )}
+          <MenuItem as="div">
+            <button
+              type="button"
+              onClick={() => {
+                // Cycle through paper modes
+                if (paperMode === "normal") {
+                  toggleGraphMode();
+                } else if (paperMode === "graph") {
+                  toggleDotsMode();
+                } else {
+                  toggleNormalMode();
+                }
+              }}
+              className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+            >
+              <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                {paperMode === "normal" ? (
+                  <span className="h-4 w-4 border border-gray-500 bg-white dark:border-gray-600 dark:bg-gray-700" />
+                ) : paperMode === "graph" ? (
+                  <span className="grid h-4 w-4 grid-cols-3 border border-gray-500 opacity-70 dark:border-gray-600">
+                    <span
+                      className="col-span-3 border-gray-500 border-b dark:border-gray-500"
+                      style={{ height: "33%" }}
+                    />
+                    <span
+                      className="col-span-3 border-gray-500 border-b dark:border-gray-500"
+                      style={{ height: "66%" }}
+                    />
+                  </span>
+                ) : (
+                  <span className="flex h-4 w-4 items-center justify-center border border-gray-500 dark:border-gray-600">
+                    <span className="h-1 w-1 rounded-full bg-gray-400 dark:bg-gray-500" />
+                  </span>
+                )}
+              </span>
+              <span className="capitalize">{paperMode} paper</span>
+            </button>
+          </MenuItem>
+          <MenuItem as="div">
+            <button
+              type="button"
+              onClick={() => {
+                // Toggle editor width
+                editorWidth === "normal" ? setWideWidth() : setNormalWidth();
+              }}
+              className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+            >
+              <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                <ViewColumnsIcon className="size-4 stroke-1" />
+              </span>
+              <span className="capitalize">{editorWidth} Width</span>
+            </button>
+          </MenuItem>
+        </MenuItems>
       </Menu>
 
       <HistoryModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTabIndex={modalTabIndex} />

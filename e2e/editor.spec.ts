@@ -35,4 +35,27 @@ test.describe("Editor Page", () => {
     await page.keyboard.press(`${modifier}+k`);
     await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
   });
+
+  test("interact with system menu", async ({ page }) => {
+    await page.goto("/");
+    
+    // Locate the System button in footer
+    const systemButton = page.getByRole('button', { name: /System/i }).first();
+    await expect(systemButton).toBeVisible();
+    
+    // Click the System button to open menu
+    await systemButton.click();
+    
+    // Check that menu appears
+    const menu = page.locator('div[role="menu"]');
+    await expect(menu).toBeVisible();
+    
+    // Verify some expected menu items are present
+    await expect(page.getByText(/Document Stats/i)).toBeVisible();
+    await expect(page.getByText(/Appearence/i)).toBeVisible();
+    
+    // Close menu by clicking elsewhere
+    await page.keyboard.press("Escape");
+    await expect(menu).not.toBeVisible();
+  });
 });
