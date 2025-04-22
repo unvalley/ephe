@@ -3,7 +3,6 @@
 import { Command } from "cmdk";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
-import { useNavigate } from "react-router-dom";
 import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-formatter";
 import { showToast } from "../../utils/components/toast";
 import type { PaperMode } from "../../utils/hooks/use-paper-mode";
@@ -57,7 +56,6 @@ export function CommandMenu({
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (open) {
@@ -203,11 +201,6 @@ export function CommandMenu({
     window.open("https://github.com/unvalley/ephe", "_blank");
     handleClose();
   }, [handleClose]);
-
-  const goToHistory = useCallback(() => {
-    navigate("/history");
-    handleClose();
-  }, [navigate, handleClose]);
 
   const commandsList = useMemo((): CommandItem[] => {
     const list: CommandItem[] = [

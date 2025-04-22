@@ -4,15 +4,16 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "pnpm run copy-wasm && vite",
-        "build": "pnpm run copy-wasm && tsc && vite build",
+        "dev": "pnpm run copy:wasm && vite",
+        "build": "pnpm run copy:wasm && tsc && vite build",
         "preview": "vite preview",
         "lint": "biome lint .",
         "format": "biome format --write .",
-        "test": "vitest src",
-        "copy-wasm": "node --experimental-strip-types src/scripts/copy-wasm.ts",
-        "e2e": "playwright test",
-        "e2e:ui": "playwright test --ui",
+        "copy:wasm": "node --experimental-strip-types src/scripts/copy-wasm.ts",
+        "test": "pnpm test:unit && pnpm test:e2e",
+        "test:unit": "vitest src",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
         "skip-errors": "biome format --skip-errors --write ."
     },
     "dependencies": {
