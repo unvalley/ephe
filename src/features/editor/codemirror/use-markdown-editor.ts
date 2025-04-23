@@ -115,7 +115,7 @@ export const useMarkdownEditor = () => {
         charCount: formattedText.length,
       });
 
-      showToast("Document formatted successfully", "default");
+      showToast("Format and saved snapshot", "default");
       return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown";
