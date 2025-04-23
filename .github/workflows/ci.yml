@@ -107,17 +107,4 @@ jobs:
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vitest-
 
       - name: Run Vitest
-        run: pnpm test run --reporter=default --pool=forks --threads --maxWorkers=$(nproc)
-
-  summary:
-    name: CI Summary
-    needs: [lint, test]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Check status
-        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
-        run: exit 1
-      - name: Success
-        if: contains(needs.*.result, 'failure') != true && contains(needs.*.result, 'cancelled') != true
-        run: echo "All jobs completed successfully!" 
+        run: pnpm test
