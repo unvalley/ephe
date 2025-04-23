@@ -7,14 +7,7 @@ import { useCharCount } from "../../utils/hooks/use-char-count";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME } from "../../utils/theme-initializer";
-import { useAtom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
-import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
-import { taskStorage } from "../editor/tasks/task-storage";
-import { snapshotStorage } from "../snapshots/snapshot-storage";
-import { HistoryModal } from "../history/history-modal";
 import {
-  Bars3CenterLeftIcon,
   CheckCircleIcon,
   DocumentIcon,
   HashtagIcon,
@@ -23,6 +16,9 @@ import {
   MoonIcon,
   ComputerDesktopIcon,
 } from "@heroicons/react/24/outline";
+import { taskStorage } from "../editor/tasks/task-storage";
+import { HistoryModal } from "../history/history-modal";
+import { snapshotStorage } from "../snapshots/snapshot-storage";
 
 const useTodayCompletedTasks = () => {
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);
@@ -77,12 +73,11 @@ const useSnapshotCount = () => {
   return { snapshotCount };
 };
 
-const tocVisibilityAtom = atomWithStorage<boolean>(LOCAL_STORAGE_KEYS.TOC_MODE, false);
+// const tocVisibilityAtom = atomWithStorage<boolean>(LOCAL_STORAGE_KEYS.TOC_MODE, false);
 
 export const SystemMenu = () => {
   const { theme, setTheme } = useTheme();
   const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
-  const [isVisibleToc, setIsVisibleToc] = useAtom(tocVisibilityAtom);
 
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
   const { charCount } = useCharCount();
@@ -93,9 +88,10 @@ export const SystemMenu = () => {
   const [modalTabIndex, setModalTabIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const toggleToc = useCallback(() => {
-    setIsVisibleToc((prev) => !prev);
-  }, [setIsVisibleToc]);
+  //   const [isVisibleToc, setIsVisibleToc] = useAtom(tocVisibilityAtom);
+  //   const toggleToc = useCallback(() => {
+  //     setIsVisibleToc((prev) => !prev);
+  //   }, [setIsVisibleToc]);
 
   const openTaskSnapshotModal = useCallback((tabIndex: number) => {
     setModalTabIndex(tabIndex);
@@ -211,19 +207,6 @@ export const SystemMenu = () => {
                             ? "Dark mode"
                             : "System mode"}
                       </span>
-                    </button>
-                  </MenuItem>
-
-                  <MenuItem as="div">
-                    <button
-                      type="button"
-                      onClick={toggleToc}
-                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
-                    >
-                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <Bars3CenterLeftIcon className="storke-1 size-4" />
-                      </span>
-                      <span>{isVisibleToc ? "Hide ToC" : "Show ToC"}</span>
                     </button>
                   </MenuItem>
 
