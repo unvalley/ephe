@@ -233,7 +233,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                                     </button>
                                   </div>
                                 </div>
-                                <div className="prose prose-sm dark:prose-invert max-w-none flex-1 overflow-y-auto rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-mono-600">
+                                <div className="prose prose-sm dark:prose-invert max-w-none flex-1 overflow-y-auto rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-primary-600">
                                   {selectedSnapshot.content.split("\n").map((line, i) => (
                                     <div
                                       key={`line-${selectedSnapshot.id}-${i}`}

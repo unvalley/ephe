@@ -129,13 +129,13 @@ export const SystemMenu = () => {
 
             {(open || isOpen) && (
               <MenuItems
-                className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white shadow-md focus:outline-none dark:bg-mono-700"
+                className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white shadow-md focus:outline-none dark:bg-primary-700"
                 portal={false}
                 static
               >
                 {/* Document Stats Section */}
                 <div className="py-1">
-                  <div className="px-3 py-2 text-mono-400 text-xs dark:text-mono-300">Document Stats</div>
+                  <div className="px-3 py-2 text-primary-400 text-xs dark:text-primary-300">Document Stats</div>
                   <MenuItem disabled>
                     <div className="flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30">
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
@@ -179,7 +179,7 @@ export const SystemMenu = () => {
                 </div>
 
                 <div className="py-1">
-                  <div className="px-3 py-2 text-mono-400 text-xs dark:text-mono-300">Appearence</div>
+                  <div className="px-3 py-2 text-primary-400 text-xs dark:text-primary-300">Appearence</div>
                   <MenuItem as="div">
                     <button
                       type="button"

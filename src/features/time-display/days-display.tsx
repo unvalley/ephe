@@ -66,7 +66,7 @@ export const DaysDisplay = () => {
       {showTooltip && (
         <div
           ref={tooltipRef}
-          className="absolute bottom-full mb-2 transform rounded-xl bg-mono-50 p-6 shadow-xl dark:bg-mono-700"
+          className="absolute bottom-full mb-2 transform rounded-xl bg-primary-50 p-6 shadow-xl dark:bg-primary-700"
           style={{
             maxWidth: "450px",
             maxHeight: "650px",
@@ -75,7 +75,7 @@ export const DaysDisplay = () => {
           }}
           onMouseLeave={() => setShowTooltip(false)}
         >
-          <div className="mb-2 text-center text-mono-500 text-sm dark:text-mono-400">
+          <div className="mb-2 text-center text-primary-500 text-sm dark:text-primary-400">
             {daysRemaining > 0 ? `${daysRemaining} days left` : "Last day of the month"}
           </div>
           <div
@@ -106,7 +106,7 @@ export const DaysDisplay = () => {
                 onMouseLeave={() => setHoveredDay(null)}
               >
                 <div
-                  className={`-translate-x-1/2 absolute bottom-full left-1/2 mb-1 transform whitespace-nowrap rounded bg-mono-50 text-xs transition-all duration-300 ease-out dark:bg-mono-700 ${
+                  className={`-translate-x-1/2 absolute bottom-full left-1/2 mb-1 transform whitespace-nowrap rounded bg-primary-50 text-xs transition-all duration-300 ease-out dark:bg-primary-700 ${
                     hoveredDay === formatDate(day.date)
                       ? "translate-y-0 scale-100 opacity-100"
                       : "pointer-events-none translate-y-2 scale-95 opacity-0"
