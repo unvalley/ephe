@@ -7,15 +7,7 @@ import { snapshotStorage } from "./snapshot-storage";
 /**
  * Create an automatic snapshot of the current editor content
  */
-export const createAutoSnapshot = ({
-  content,
-  title,
-  description = "",
-}: {
-  content: string;
-  title: string;
-  description?: string;
-}): void => {
+export const createAutoSnapshot = ({ content }: { content: string; title: string; description?: string }): void => {
   // Limit the number of snapshots (keep only the latest 10)
   const snapshots = snapshotStorage.getAll();
 
@@ -37,8 +29,6 @@ export const createAutoSnapshot = ({
 
   snapshotStorage.save({
     content,
-    title,
-    description,
     charCount: content.length,
   });
 };

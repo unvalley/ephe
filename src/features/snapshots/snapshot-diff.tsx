@@ -44,7 +44,7 @@ export const SnapshotDiff = ({ isOpen, onClose }: SnapshotDiffProps) => {
               <option value="">Select a snapshot</option>
               {snapshots.map((snapshot) => (
                 <option key={snapshot.id} value={snapshot.id}>
-                  {snapshot.title} ({new Date(snapshot.timestamp).toLocaleString()})
+                  ({new Date(snapshot.timestamp).toLocaleString()})
                 </option>
               ))}
             </select>
@@ -60,7 +60,7 @@ export const SnapshotDiff = ({ isOpen, onClose }: SnapshotDiffProps) => {
               <option value="">Select a snapshot</option>
               {snapshots.map((snapshot) => (
                 <option key={snapshot.id} value={snapshot.id}>
-                  {snapshot.title} ({new Date(snapshot.timestamp).toLocaleString()})
+                  ({new Date(snapshot.timestamp).toLocaleString()})
                 </option>
               ))}
             </select>

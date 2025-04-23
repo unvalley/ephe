@@ -19,6 +19,7 @@ import { taskKeyBindings } from "./tasklist/keymap";
 import { registerTaskHandler } from "./tasklist/task-close";
 import { atomWithStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
+import { snapshotStorage } from "../../snapshots/snapshot-storage";
 
 const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
@@ -73,13 +74,13 @@ export const useMarkdownEditor = () => {
     };
   }, []);
 
-  // Format document is pure except for toast/dispatch (side effects isolated)
-  const formatDocument = useCallback(async (view: EditorView) => {
+  const onSave = useCallback(async (view: EditorView) => {
     if (!formatterRef.current) {
       showToast("Formatter not initialized yet", "error");
       return false;
     }
     try {
+      // format
       const { state } = view;
       const scrollTop = view.scrollDOM.scrollTop;
       const cursorPos = state.selection.main.head;
@@ -107,6 +108,13 @@ export const useMarkdownEditor = () => {
         }
         view.scrollDOM.scrollTop = Math.min(scrollTop, view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight);
       }
+
+      // snapshot
+      snapshotStorage.save({
+        content: formattedText,
+        charCount: formattedText.length,
+      });
+
       showToast("Document formatted successfully", "default");
       return true;
     } catch (error) {
@@ -259,7 +267,7 @@ export const useMarkdownEditor = () => {
             {
               key: "Mod-s",
               run: (view) => {
-                formatDocument(view);
+                onSave(view);
                 return true;
               },
               preventDefault: true,
@@ -281,7 +289,7 @@ export const useMarkdownEditor = () => {
     isWideMode,
     setContent,
     getHighlightStyle,
-    formatDocument,
+    onSave,
     highlightCompartment.of,
     taskHandler,
     themeCompartment.of,
@@ -303,6 +311,6 @@ export const useMarkdownEditor = () => {
   return {
     editor,
     view,
-    formatDocument: view ? () => formatDocument(view) : undefined,
+    onSave: view ? () => onSave(view) : undefined,
   };
 };
