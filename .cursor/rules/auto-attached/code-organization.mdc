@@ -1,0 +1,24 @@
+---
+description: 
+globs: *.ts,*.tsx
+alwaysApply: false
+---
+# Code Organization
+
+## Feature Structure
+- Features should be organized into their own directories
+- Each feature should export a clear public API
+- Internal implementation details should be hidden
+
+## Component Structure
+- Components should follow a functional design pattern
+- Use composition over inheritance
+- Break down complex components into smaller, reusable parts
+- Co-locate related files (component, hooks, tests, types)
+
+## Best Practices
+- Follow the principle of least privilege
+- Keep components small and focused
+- Extract reusable logic into custom hooks
+- Use named exports for most modules
+- Use default exports only for CSR components

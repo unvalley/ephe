@@ -1,0 +1,21 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# State Management
+
+## Overview
+- This project uses [Jotai](mdc:https:/jotai.org) for state management
+- Atoms are the primary unit of state
+
+## Best Practices
+- Keep atoms small and focused on a single responsibility
+- Derived atoms should be used for computed state
+- Atoms should be defined in the feature directories they relate to
+- Use async atoms for side effects
+
+## State Structure
+- Editor state is managed by CodeMirror and Jotai
+- System state includes app-wide settings and configurations
+- History state tracks document changes

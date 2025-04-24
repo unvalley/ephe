@@ -1,0 +1,28 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Documentation & Comments
+
+## Code Comments
+- Comments should only be used for complex logic
+- Write comments in English
+- Focus on explaining "why", not "what" or "how"
+- Keep comments up-to-date with code changes
+
+## Function Documentation
+- Document complex functions with a brief description
+- Include parameter descriptions for non-obvious inputs
+- Document return values and side effects
+- Use JSDoc format for TypeScript functions, but don't need type params
+
+## Example
+```typescript
+/**
+ * Processes markdown content and extracts headings
+ */
+export const extractHeadings = (content: string): Heading[] => {
+  // Implementation
+}
+```

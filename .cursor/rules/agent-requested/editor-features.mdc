@@ -1,0 +1,24 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Editor Features
+
+## CodeMirror Integration
+- The editor is built on [CodeMirror v6](mdc:https:/codemirror.net/6)
+- Custom extensions are defined in [src/features/editor/codemirror/](mdc:src/features/editor/codemirror)
+- Markdown parsing uses [@textlint/markdown-to-ast](mdc:https:/github.com/textlint/textlint/tree/master/packages/@textlint/markdown-to-ast)
+
+## Key Editor Features
+- Syntax highlighting for Markdown
+- Table of Contents generation
+- Command palette integration
+- History and snapshots
+- Tab detection and management
+
+## Performance Considerations
+- Editor operations should be optimized for performance
+- Avoid unnecessary re-renders
+- Use memoization for expensive computations
+- Debounce input events when appropriate

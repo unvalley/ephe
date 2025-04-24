@@ -1,0 +1,23 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project Structure
+
+## Overview
+- The project is a React application built with TypeScript, Vite, and TailwindCSS
+- The entry point is [src/main.tsx](mdc:src/main.tsx)
+- Styles are defined in [src/globals.css](mdc:src/globals.css)
+
+## Directory Structure
+- [src/features/](mdc:src/features) - Contains feature-specific modules
+- [src/page/](mdc:src/page) - Contains page components
+- [src/utils/](mdc:src/utils) - Contains utility functions and components
+- [src/scripts/](mdc:src/scripts) - Contains build scripts and tools
+
+## Key Features
+- [src/features/editor/](mdc:src/features/editor) - Markdown editor based on CodeMirror v6
+- [src/features/system/](mdc:src/features/system) - System-level functionality
+- [src/features/command/](mdc:src/features/command) - Command handling
+- [src/features/history/](mdc:src/features/history) - Edit history functionality

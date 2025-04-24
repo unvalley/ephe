@@ -1,0 +1,19 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Naming Conventions
+
+## File Naming
+- React components: PascalCase (e.g., `TableOfContents.tsx`)
+- Hooks: camelCase with `use` prefix (e.g., `useTabDetection.ts`)
+- Utility files: kebab-case (e.g., `theme-initializer.ts`)
+- Test files: Same name as the file they test with `.test.ts` suffix
+
+## Code Naming
+- Components: PascalCase (e.g., `export const TableOfContents = () => {}`)
+- Functions: camelCase (e.g., `export const getHeadings = () => {}`)
+- Constants: UPPER_SNAKE_CASE for truly constant values
+- Types/Interfaces: PascalCase with descriptive names (e.g., `type EditorProps = {}`)
+- Atoms: camelCase with `Atom` suffix (e.g., `contentAtom`)
