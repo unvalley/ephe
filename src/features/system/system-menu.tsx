@@ -227,7 +227,7 @@ export const SystemMenu = () => {
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         {paperMode === "normal" ? (
-                          <span className="h-4 w-4 border border-gray-500 bg-white dark:border-gray-600 dark:bg-gray-700" />
+                          <span className="h-4 w-4 border border-gray-500 dark:border-gray-600" />
                         ) : paperMode === "graph" ? (
                           <span className="grid h-4 w-4 grid-cols-3 border border-gray-500 opacity-70 dark:border-gray-600">
                             <span

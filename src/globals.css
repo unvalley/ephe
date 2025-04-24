@@ -119,6 +119,16 @@ span.task-task {
   background-position: -14px 14px;
 }
 
+/* Paper Mode: Normal (Light Mode) */
+.bg-normal-paper {
+  background-color: #fff;
+}
+
+/* Paper Mode: Normal (Dark Mode) */
+.dark .bg-normal-paper {
+  background-color: #0d1117;
+}
+
 /* Paper Mode: Dots (Light Mode) */
 .bg-dots-paper {
   background-image: radial-gradient(rgba(210, 210, 210, 0.5) 1px, transparent 1px);
