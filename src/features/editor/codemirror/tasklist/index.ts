@@ -4,6 +4,8 @@ import { taskKeyMap } from "./keymap";
 import { taskAutoComplete } from "./auto-complete";
 import { generateTaskIdentifier, type TaskStorage } from "../../tasks/task-storage";
 
+// This handler uses taskStorage directly, which now updates localStorage
+// The atomWithStorage will pick up these changes via storage events 
 export const createDefaultTaskHandler = (taskStorage: TaskStorage): TaskHandler => ({
   onTaskClosed: (taskContent: string, originalLine: string, section?: string) => {
     const taskIdentifier = generateTaskIdentifier(taskContent);

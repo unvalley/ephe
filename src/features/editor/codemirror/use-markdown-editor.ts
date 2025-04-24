@@ -12,16 +12,26 @@ import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 import { useTheme } from "../../../utils/hooks/use-theme";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import { getRandomQuote } from "../quotes";
-import { taskStorage } from "../tasks/task-storage";
+import { taskStorage, tasksAtom, useTaskOperations, generateTaskIdentifier } from "../tasks/task-storage";
 import { EPHE_COLORS } from "./codemirror-theme";
 import { createDefaultTaskHandler, createChecklistPlugin } from "./tasklist";
 import { taskKeyBindings } from "./tasklist/keymap";
 import { registerTaskHandler } from "./tasklist/task-close";
-import { atomWithStorage } from "jotai/utils";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
 
-const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
+// Create a storage implementation with proper subscribe method for cross-tab sync
+const editorJSONStorage = createJSONStorage<string>(() => localStorage, {
+  // Add optional reviver/replacer if needed
+});
+
+const editorAtom = atomWithStorage<string>(
+  LOCAL_STORAGE_KEYS.EDITOR_CONTENT, 
+  "",
+  editorJSONStorage,
+  { getOnInit: true }
+);
 
 export const useMarkdownEditor = () => {
   const editor = useRef<HTMLDivElement | null>(null);
@@ -32,6 +42,7 @@ export const useMarkdownEditor = () => {
   const [content, setContent] = useAtom(editorAtom);
   const { isDarkMode } = useTheme();
   const { isWideMode } = useEditorWidth();
+  const taskOps = useTaskOperations();
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
@@ -221,7 +232,39 @@ export const useMarkdownEditor = () => {
     if (editor.current) setContainer(editor.current);
   }, []);
 
-  const taskHandler = useMemo(() => createDefaultTaskHandler(taskStorage), []);
+  // Custom task handler that uses the task operations hook to update the atom directly
+  const taskHandler = useMemo(() => {
+    return {
+      onTaskClosed: (taskContent: string, originalLine: string, section?: string) => {
+        const taskIdentifier = generateTaskIdentifier(taskContent);
+        const timestamp = new Date().toISOString();
+    
+        const task = Object.freeze({
+          id: taskIdentifier,
+          content: taskContent,
+          originalLine,
+          taskIdentifier,
+          section,
+          completedAt: timestamp,
+        });
+    
+        // Use taskOps to update the atom directly
+        taskOps.save(task);
+        
+        // Also update localStorage for other components that might use it
+        taskStorage.save(task);
+      },
+      onTaskOpen: (taskContent: string) => {
+        const taskIdentifier = generateTaskIdentifier(taskContent);
+        
+        // Use taskOps to update the atom directly
+        taskOps.deleteByIdentifier(taskIdentifier);
+        
+        // Also update localStorage
+        taskStorage.deleteByIdentifier(taskIdentifier);
+      }
+    };
+  }, [taskOps]);
 
   // Register the task handler for global access
   useEffect(() => {

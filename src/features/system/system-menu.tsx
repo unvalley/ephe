@@ -16,59 +16,39 @@ import {
   MoonIcon,
   ComputerDesktopIcon,
 } from "@heroicons/react/24/outline";
-import { taskStorage } from "../editor/tasks/task-storage";
+import { tasksAtom } from "../editor/tasks/task-storage";
 import { HistoryModal } from "../history/history-modal";
-import { snapshotStorage } from "../snapshots/snapshot-storage";
+import { snapshotsAtom } from "../snapshots/snapshot-storage";
+import { useAtom } from "jotai";
 
 const useTodayCompletedTasks = () => {
+  const [tasks] = useAtom(tasksAtom);
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);
 
   useEffect(() => {
-    const loadTodayTasks = () => {
-      const today = new Date();
-      const tasksByDate = taskStorage.getByDate({
-        year: today.getFullYear(),
-        month: today.getMonth() + 1, // getMonth is 0-indexed
-        day: today.getDate(),
-      });
+    const today = new Date();
+    const todayTasks = tasks.filter((task) => {
+      const taskDate = new Date(task.completedAt);
+      return (
+        taskDate.getFullYear() === today.getFullYear() &&
+        taskDate.getMonth() === today.getMonth() &&
+        taskDate.getDate() === today.getDate()
+      );
+    });
 
-      // Count tasks completed today
-      const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
-        2,
-        "0",
-      )}-${String(today.getDate()).padStart(2, "0")}`;
-      const todayTasks = tasksByDate[todayDateStr] || [];
-      setTodayCompletedTasks(todayTasks.length);
-    };
-
-    loadTodayTasks();
-  }, []);
+    setTodayCompletedTasks(todayTasks.length);
+  }, [tasks]);
 
   return { todayCompletedTasks };
 };
 
 const useSnapshotCount = () => {
+  const [snapshots] = useAtom(snapshotsAtom);
   const [snapshotCount, setSnapshotCount] = useState(0);
 
   useEffect(() => {
-    const loadSnapshots = () => {
-      const snapshots = snapshotStorage.getAll();
-      setSnapshotCount(snapshots.length);
-    };
-
-    loadSnapshots();
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key?.includes("snapshot")) {
-        loadSnapshots();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
+    setSnapshotCount(snapshots.length);
+  }, [snapshots]);
 
   return { snapshotCount };
 };

@@ -1,5 +1,5 @@
 import { LOCAL_STORAGE_KEYS } from "../constants";
-import { atomWithStorage } from "jotai/utils";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { useAtom } from "jotai";
 
 export type PaperMode = "normal" | "graph" | "dots";
@@ -10,7 +10,17 @@ export const PAPER_MODE_CLASSES = {
   dots: "bg-dots-paper",
 } as const;
 
-const paperModeAtom = atomWithStorage<PaperMode>(LOCAL_STORAGE_KEYS.PAPER_MODE, "normal");
+// Create a storage implementation with proper subscribe method for cross-tab sync
+const paperModeJSONStorage = createJSONStorage<PaperMode>(() => localStorage, {
+  // Add optional reviver/replacer if needed
+});
+
+const paperModeAtom = atomWithStorage<PaperMode>(
+  LOCAL_STORAGE_KEYS.PAPER_MODE, 
+  "normal",
+  paperModeJSONStorage,
+  { getOnInit: true }
+);
 
 export const usePaperMode = () => {
   const [paperMode, setPaperMode] = useAtom(paperModeAtom);

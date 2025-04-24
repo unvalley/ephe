@@ -1,12 +1,22 @@
 "use client";
 
 import { useAtom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { useEffect } from "react";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { COLOR_THEME, type ColorTheme, applyTheme } from "../theme-initializer";
 
-const themeAtom = atomWithStorage<ColorTheme>(LOCAL_STORAGE_KEYS.THEME, COLOR_THEME.SYSTEM);
+// Create a storage implementation with proper subscribe method for cross-tab sync
+const themeJSONStorage = createJSONStorage<ColorTheme>(() => localStorage, {
+  // Add optional reviver/replacer if needed
+});
+
+const themeAtom = atomWithStorage<ColorTheme>(
+  LOCAL_STORAGE_KEYS.THEME, 
+  COLOR_THEME.SYSTEM,
+  themeJSONStorage,
+  { getOnInit: true }
+);
 
 export const useTheme = () => {
   const [theme, setTheme] = useAtom(themeAtom);

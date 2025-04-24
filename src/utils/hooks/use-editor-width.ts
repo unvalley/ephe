@@ -1,6 +1,6 @@
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { useAtom } from "jotai";
-import { atomWithStorage } from "jotai/utils";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import type { ValueOf } from "../types";
 
 const EDITOR_WITH = {
@@ -10,7 +10,17 @@ const EDITOR_WITH = {
 
 export type EditorWidth = ValueOf<typeof EDITOR_WITH>;
 
-const editorWidthAtom = atomWithStorage<EditorWidth>(LOCAL_STORAGE_KEYS.EDITOR_WIDTH, "normal");
+// Create a storage implementation with proper subscribe method for cross-tab sync
+const editorWidthJSONStorage = createJSONStorage<EditorWidth>(() => localStorage, {
+  // Add optional reviver/replacer if needed
+});
+
+const editorWidthAtom = atomWithStorage<EditorWidth>(
+  LOCAL_STORAGE_KEYS.EDITOR_WIDTH, 
+  "normal",
+  editorWidthJSONStorage,
+  { getOnInit: true }
+);
 
 export const useEditorWidth = () => {
   const [editorWidth, setEditorWidth] = useAtom(editorWidthAtom);
