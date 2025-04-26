@@ -13,7 +13,6 @@ import { OnTaskClosed } from ".";
 export interface TaskHandler {
   onTaskClosed: ({ taskContent, originalLine, section }: OnTaskClosed) => void;
   onTaskOpen: (taskContent: string) => void;
-  onToggleTask?: (pos: number, isDone: boolean, view: EditorView) => void;
 }
 
 // use utils
@@ -334,7 +333,6 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
 
         event.preventDefault();
         const newChar = task.checked ? " " : "x";
-        const isDone = newChar === "x"; // Determine the new state
 
         try {
           // Apply the toggle

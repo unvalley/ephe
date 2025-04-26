@@ -53,23 +53,6 @@ export const createDefaultTaskHandler = (
     const taskIdentifier = generateTaskIdentifier(taskContent);
     taskStorage.deleteByIdentifier(taskIdentifier);
   },
-  onToggleTask: (pos: number, isDone: boolean, view: EditorView) => {
-    const autoFlushMode = getAutoFlushMode();
-
-    if (autoFlushMode === "instant" && isDone && view) {
-      try {
-        const line = view.state.doc.lineAt(pos);
-        view.dispatch({
-          changes: {
-            from: line.from,
-            to: line.to + (view.state.doc.lines > line.number ? 1 : 0),
-          },
-        });
-      } catch (e) {
-        console.error("[AutoFlush Debug] Error deleting line:", e);
-      }
-    }
-  },
 });
 
 export const createChecklistPlugin = (taskHandler: TaskHandler): Extension => {
