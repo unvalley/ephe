@@ -8,11 +8,11 @@ import {
 } from "@codemirror/view";
 import { StateEffect, StateField, RangeSetBuilder } from "@codemirror/state";
 import { findTaskSection } from "./task-section-utils";
+import { OnTaskClosed } from ".";
 
 export interface TaskHandler {
-  onTaskClosed: (taskContent: string, originalLine: string, section?: string) => void;
+  onTaskClosed: ({ taskContent, originalLine, section }: OnTaskClosed) => void;
   onTaskOpen: (taskContent: string) => void;
-  onToggleTask?: (pos: number, isDone: boolean, view: EditorView) => void;
 }
 
 // use utils
@@ -179,7 +179,7 @@ export const taskDecoration = ViewPlugin.fromClass(
               // Dispatch the appropriate event based on the task state change
               if (task.checked && handler) {
                 // If task is being checked, call the handler
-                handler.onTaskClosed(taskContent, line.text, section);
+                handler.onTaskClosed({ taskContent, originalLine: line.text, section, pos: task.from, view: update.view });
                 hasDispatchedEvent = true;
               } else if (!task.checked && handler) {
                 // If task is being unchecked, call the handler
@@ -333,7 +333,6 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
 
         event.preventDefault();
         const newChar = task.checked ? " " : "x";
-        const isDone = newChar === "x"; // Determine the new state
 
         try {
           // Apply the toggle
@@ -346,12 +345,6 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
             userEvent: "input.toggleTask",
           });
 
-          // Call the onToggleTask handler if available
-          const handler = getRegisteredTaskHandler();
-          if (handler?.onToggleTask) {
-            // Call the handler AFTER dispatching the change, passing this.view
-            handler.onToggleTask(task.from, isDone, this.view);
-          }
         } catch (e) {
           console.warn("Failed to toggle task:", e);
         }

@@ -237,13 +237,11 @@ export const useMarkdownEditor = () => {
   }, []); // Run only once on mount and cleanup on unmount
 
   useLayoutEffect(() => {
+    // Change task handler when autoFlushMode is changed
+    taskHandlerRef.current = createDefaultTaskHandler(taskStorage, autoFlushMode);
+    registerTaskHandler(taskHandlerRef.current);
+
     if (!view && container) {
-      // Initialize taskHandler only when view is created
-      if (!taskHandlerRef.current) {
-        taskHandlerRef.current = createDefaultTaskHandler(taskStorage, () => autoFlushMode);
-        // Register immediately after creation
-        registerTaskHandler(taskHandlerRef.current);
-      }
 
       const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode, isWideMode);
       const state = EditorState.create({

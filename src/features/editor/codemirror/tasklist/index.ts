@@ -6,14 +6,38 @@ import { taskAutoComplete } from "./auto-complete";
 import { generateTaskIdentifier, type TaskStorage } from "../../tasks/task-storage";
 import type { TaskAutoFlushMode } from "../../tasks/task-auto-flush";
 
+export type OnTaskClosed = {
+  taskContent: string;
+  originalLine: string;
+  section?: string;
+  pos: number; // what ?
+  view: EditorView;
+};
+
 export const createDefaultTaskHandler = (
   taskStorage: TaskStorage,
-  getAutoFlushMode: () => TaskAutoFlushMode,
+  taskAutoFlushMode: TaskAutoFlushMode,
 ): TaskHandler => ({
-  onTaskClosed: (taskContent: string, originalLine: string, section?: string) => {
+  onTaskClosed: ({ taskContent, originalLine, section, pos, view }: OnTaskClosed) => {
     const taskIdentifier = generateTaskIdentifier(taskContent);
     const timestamp = new Date().toISOString();
 
+    // Auto Flush
+    if (taskAutoFlushMode === "instant" && view) {
+      try {
+        const line = view.state.doc.lineAt(pos);
+        view.dispatch({
+          changes: {
+            from: line.from,
+            to: line.to + (view.state.doc.lines > line.number ? 1 : 0),
+          },
+        });
+      } catch (e) {
+        console.error("[AutoFlush Debug] Error deleting line:", e);
+      }
+    }
+
+    // Save
     const task = Object.freeze({
       id: taskIdentifier,
       content: taskContent,
@@ -28,23 +52,6 @@ export const createDefaultTaskHandler = (
   onTaskOpen: (taskContent: string) => {
     const taskIdentifier = generateTaskIdentifier(taskContent);
     taskStorage.deleteByIdentifier(taskIdentifier);
-  },
-  onToggleTask: (pos: number, isDone: boolean, view: EditorView) => {
-    const autoFlushMode = getAutoFlushMode();
-
-    if (autoFlushMode === "instant" && isDone && view) {
-      try {
-        const line = view.state.doc.lineAt(pos);
-        view.dispatch({
-          changes: {
-            from: line.from,
-            to: line.to + (view.state.doc.lines > line.number ? 1 : 0),
-          },
-        });
-      } catch (e) {
-        console.error("[AutoFlush Debug] Error deleting line:", e);
-      }
-    }
   },
 });
 
