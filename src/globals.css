@@ -19,12 +19,6 @@ body.dark {
   color-scheme: dark;
 }
 
-/* CSS variables for theming */
-:root {
-  --focus-border-light: #00000000;
-  --focus-border-dark: #00000000;
-}
-
 /* Make the task part clickable */
 span.task-task {
   cursor: pointer;

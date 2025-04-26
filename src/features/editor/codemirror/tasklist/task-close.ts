@@ -12,6 +12,7 @@ import { findTaskSection } from "./task-section-utils";
 export interface TaskHandler {
   onTaskClosed: (taskContent: string, originalLine: string, section?: string) => void;
   onTaskOpen: (taskContent: string) => void;
+  onToggleTask?: (pos: number, isDone: boolean, view: EditorView) => void;
 }
 
 // use utils
@@ -332,6 +333,7 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
 
         event.preventDefault();
         const newChar = task.checked ? " " : "x";
+        const isDone = newChar === "x"; // Determine the new state
 
         try {
           // Apply the toggle
@@ -343,6 +345,13 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
             },
             userEvent: "input.toggleTask",
           });
+
+          // Call the onToggleTask handler if available
+          const handler = getRegisteredTaskHandler();
+          if (handler?.onToggleTask) {
+            // Call the handler AFTER dispatching the change, passing this.view
+            handler.onToggleTask(task.from, isDone, this.view);
+          }
         } catch (e) {
           console.warn("Failed to toggle task:", e);
         }

@@ -6,7 +6,7 @@ import { Compartment, EditorState, Prec } from "@codemirror/state";
 import { EditorView, keymap, placeholder } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 import { useAtom } from "jotai";
-import { useRef, useState, useEffect, useCallback, useMemo, useLayoutEffect } from "react";
+import { useRef, useState, useEffect, useCallback, useLayoutEffect } from "react";
 import { showToast } from "../../../utils/components/toast";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 import { useTheme } from "../../../utils/hooks/use-theme";
@@ -20,6 +20,7 @@ import { registerTaskHandler } from "./tasklist/task-close";
 import { atomWithStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
+import { taskAutoFlushAtom } from "../tasks/task-auto-flush";
 
 const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
@@ -28,6 +29,7 @@ export const useMarkdownEditor = () => {
   const [container, setContainer] = useState<HTMLDivElement>();
   const [view, setView] = useState<EditorView>();
   const formatterRef = useRef<DprintMarkdownFormatter | null>(null);
+  const [autoFlushMode] = useAtom(taskAutoFlushAtom);
 
   const [content, setContent] = useAtom(editorAtom);
   const { isDarkMode } = useTheme();
@@ -35,6 +37,8 @@ export const useMarkdownEditor = () => {
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
+
+  const taskHandlerRef = useRef<ReturnType<typeof createDefaultTaskHandler> | null>(null);
 
   // Listen for content restore events
   useEffect(() => {
@@ -221,20 +225,26 @@ export const useMarkdownEditor = () => {
     if (editor.current) setContainer(editor.current);
   }, []);
 
-  const taskHandler = useMemo(() => createDefaultTaskHandler(taskStorage), []);
-
   // Register the task handler for global access
   useEffect(() => {
-    registerTaskHandler(taskHandler);
+    // Register the handler only when it's created
+    if (taskHandlerRef.current) {
+      registerTaskHandler(taskHandlerRef.current);
+    }
     return () => {
-      // This is technically not needed since we're registering undefined on unmount,
-      // but it's good practice to clean up
-      registerTaskHandler(undefined);
+      registerTaskHandler(undefined); // Clean up on unmount or when handler changes
     };
-  }, [taskHandler]);
+  }, []); // Run only once on mount and cleanup on unmount
 
   useLayoutEffect(() => {
     if (!view && container) {
+      // Initialize taskHandler only when view is created
+      if (!taskHandlerRef.current) {
+        taskHandlerRef.current = createDefaultTaskHandler(taskStorage, () => autoFlushMode);
+        // Register immediately after creation
+        registerTaskHandler(taskHandlerRef.current);
+      }
+
       const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode, isWideMode);
       const state = EditorState.create({
         doc: content,
@@ -266,15 +276,15 @@ export const useMarkdownEditor = () => {
           keymap.of([
             {
               key: "Mod-s",
-              run: (view) => {
-                onSave(view);
+              run: (targetView) => {
+                onSave(targetView);
                 return true;
               },
               preventDefault: true,
             },
             ...taskKeyBindings,
           ]),
-          Prec.high(createChecklistPlugin(taskHandler)),
+          Prec.high(createChecklistPlugin(taskHandlerRef.current)),
         ],
       });
       const viewCurrent = new EditorView({ state, parent: container });
@@ -291,8 +301,8 @@ export const useMarkdownEditor = () => {
     getHighlightStyle,
     onSave,
     highlightCompartment.of,
-    taskHandler,
     themeCompartment.of,
+    autoFlushMode,
   ]);
 
   // Update theme when dark mode changes
