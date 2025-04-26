@@ -242,7 +242,6 @@ export const useMarkdownEditor = () => {
     registerTaskHandler(taskHandlerRef.current);
 
     if (!view && container) {
-
       const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode, isWideMode);
       const state = EditorState.create({
         doc: content,
