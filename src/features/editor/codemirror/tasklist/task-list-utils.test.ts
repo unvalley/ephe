@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isTaskLine, isClosedTaskLine } from "./task-list-utils";
+import { isTaskLine, isClosedTaskLine, isOpenTaskLine } from "./task-list-utils";
 
 describe("Task List Utilities", () => {
   it("identifies task list lines correctly", () => {
@@ -16,13 +16,27 @@ describe("Task List Utilities", () => {
   });
 });
 
-describe("isCheckedTask", () => {
+describe("isClosedTaskLine", () => {
   it("identifies checked tasks correctly", () => {
     expect(isClosedTaskLine("- [x] Task")).toBe(true);
     expect(isClosedTaskLine("- [X] Task")).toBe(true);
     expect(isClosedTaskLine("  - [x] Indented task")).toBe(true);
+    expect(isClosedTaskLine("* [x] Task")).toBe(true);
+    expect(isClosedTaskLine("* [X] Task")).toBe(true);
 
     expect(isClosedTaskLine("- [ ] Unchecked task")).toBe(false);
     expect(isClosedTaskLine("Not a task")).toBe(false);
+  });
+});
+
+describe("isOpenTaskLine", () => {
+  it("identifies open tasks correctly", () => {
+    expect(isOpenTaskLine("- [ ] Task")).toBe(true);
+    expect(isOpenTaskLine("  - [ ] Indented task")).toBe(true);
+    expect(isOpenTaskLine("* [ ] Task")).toBe(true);
+
+    expect(isOpenTaskLine("- [x] Checked task")).toBe(false);
+    expect(isOpenTaskLine("- [X] Checked task")).toBe(false);
+    expect(isOpenTaskLine("Not a task")).toBe(false);
   });
 });
