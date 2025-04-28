@@ -179,7 +179,13 @@ export const taskDecoration = ViewPlugin.fromClass(
               // Dispatch the appropriate event based on the task state change
               if (task.checked && handler) {
                 // If task is being checked, call the handler
-                handler.onTaskClosed({ taskContent, originalLine: line.text, section, pos: task.from, view: update.view });
+                handler.onTaskClosed({
+                  taskContent,
+                  originalLine: line.text,
+                  section,
+                  pos: task.from,
+                  view: update.view,
+                });
                 hasDispatchedEvent = true;
               } else if (!task.checked && handler) {
                 // If task is being unchecked, call the handler
@@ -344,7 +350,6 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
             },
             userEvent: "input.toggleTask",
           });
-
         } catch (e) {
           console.warn("Failed to toggle task:", e);
         }

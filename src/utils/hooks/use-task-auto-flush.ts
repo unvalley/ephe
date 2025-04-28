@@ -4,10 +4,7 @@ import { useAtom } from "jotai";
 
 export type TaskAutoFlushMode = "off" | "instant";
 
-export const taskAutoFlushAtom = atomWithStorage<TaskAutoFlushMode>(
-  LOCAL_STORAGE_KEYS.TASK_AUTO_FLUSH_MODE,
-  "off",
-);
+export const taskAutoFlushAtom = atomWithStorage<TaskAutoFlushMode>(LOCAL_STORAGE_KEYS.TASK_AUTO_FLUSH_MODE, "off");
 
 export const useTaskAutoFlush = () => {
   const [taskAutoFlushMode, setTaskAutoFlushMode] = useAtom(taskAutoFlushAtom);

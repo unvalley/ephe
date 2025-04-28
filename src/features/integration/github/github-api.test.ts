@@ -65,10 +65,9 @@ describe("GitHub API", () => {
       },
     ];
     const taskList = generateIssuesTaskList(issues);
-    const expectedOutput = [
-      "- [ ] github.com/owner/repo/issues/1",
-      "- [ ] github.com/another/repo/issues/2",
-    ].join("\n");
+    const expectedOutput = ["- [ ] github.com/owner/repo/issues/1", "- [ ] github.com/another/repo/issues/2"].join(
+      "\n",
+    );
     expect(taskList).toBe(expectedOutput);
   });
 });

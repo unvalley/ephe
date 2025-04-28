@@ -1,24 +1,16 @@
-/**
- * Utility functions for detecting task sections in markdown for CodeMirror
- */
-import type { EditorView } from "@codemirror/view";
+import { EditorView } from "@codemirror/view";
+
+const MARKDOWN_HEADING = /^#{1,6}\s+\S/;
 
 /**
- * Find the section heading that a task belongs to
+ * Return the nearest markdown heading above `lineNumber`.
+ * `undefined` if none exists.
  */
 export const findTaskSection = (view: EditorView, lineNumber: number): string | undefined => {
   const { doc } = view.state;
 
-  // Start from the task line and go upwards
   for (let i = lineNumber; i >= 1; i--) {
-    const line = doc.line(i);
-    const lineText = line.text;
-
-    // Check if line is a markdown heading (starts with # and has text)
-    if (/^#{1,6}\s+\S/.test(lineText)) {
-      return lineText.trim();
-    }
+    const text = doc.line(i).text.trim();
+    if (MARKDOWN_HEADING.test(text)) return text;
   }
-
-  return undefined;
 };

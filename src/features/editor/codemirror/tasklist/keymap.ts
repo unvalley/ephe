@@ -1,10 +1,7 @@
 import { indentMore, indentLess } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
 import { type KeyBinding, type EditorView, keymap } from "@codemirror/view";
-
-// チェックリスト行の開始部分を判定 (行頭空白とマーカー)
-const taskListLineStartRegex = /^(\s*)(?:[-*])\s*\[[ x]\]\s*/;
-const EMPTY_CHECKLIST_LINE_REGEX = /^(\s*[-*]\s+\[[ xX]\])\s*$/;
+import { isTaskLine, isTaskLineEndsWithSpace } from "./task-list-utils";
 
 const INDENT_SPACE = "  ";
 
@@ -31,7 +28,7 @@ export const taskKeyBindings: readonly KeyBinding[] = [
       const currentLine = state.doc.lineAt(head);
       const currentLineText = currentLine.text;
 
-      if (!taskListLineStartRegex.test(currentLineText)) {
+      if (!isTaskLine(currentLineText)) {
         return indentMore(view);
       }
 
@@ -51,7 +48,7 @@ export const taskKeyBindings: readonly KeyBinding[] = [
         const prevLineText = prevLine.text;
 
         // 直前の行もチェックリストアイテムか確認
-        if (taskListLineStartRegex.test(prevLineText)) {
+        if (isTaskLine(prevLineText)) {
           const prevIndentLength = getIndentLength(prevLineText);
 
           // ★★★ 修正点: 直前の行が同じインデントレベルの場合のみインデントを実行 ★★★
@@ -116,7 +113,6 @@ export const taskKeyBindings: readonly KeyBinding[] = [
     key: "Delete",
     mac: "Backspace",
     run: (view: EditorView): boolean => {
-      console.log("Custom Delete handler invoked");
       const { state } = view;
       const { selection } = state;
 
@@ -134,10 +130,7 @@ export const taskKeyBindings: readonly KeyBinding[] = [
         return false;
       }
 
-      // 行の内容全体が空のチェックリストパターンにマッチするか確認
-      const match = line.text.match(EMPTY_CHECKLIST_LINE_REGEX);
-
-      if (match) {
+      if (isTaskLineEndsWithSpace(line.text)) {
         // マッチした場合: 行全体が `- [ ]` (または - [x] など) と空白のみ
         console.log("Delete pressed at the end of an empty task item line.");
 
