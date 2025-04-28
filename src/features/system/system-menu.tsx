@@ -20,8 +20,7 @@ import {
 import { taskStorage } from "../editor/tasks/task-storage";
 import { HistoryModal } from "../history/history-modal";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
-import { useAtom } from "jotai";
-import { taskAutoFlushAtom } from "../editor/tasks/task-auto-flush";
+import { useTaskAutoFlush } from "../../utils/hooks/use-task-auto-flush";
 
 const useTodayCompletedTasks = () => {
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);
@@ -90,7 +89,7 @@ export const SystemMenu = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTabIndex, setModalTabIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [autoFlushMode, setAutoFlushMode] = useAtom(taskAutoFlushAtom);
+  const { taskAutoFlushMode, setTaskAutoFlushMode } = useTaskAutoFlush();
 
   //   const [isVisibleToc, setIsVisibleToc] = useAtom(tocVisibilityAtom);
   //   const toggleToc = useCallback(() => {
@@ -270,14 +269,14 @@ export const SystemMenu = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        setAutoFlushMode((prevMode) => (prevMode === "off" ? "instant" : "off"));
+                        setTaskAutoFlushMode((prevMode) => (prevMode === "off" ? "instant" : "off"));
                       }}
                       className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         <BoltIcon className={`size-4 stroke-1`} />
                       </span>
-                      <span className={"capitalize"}>Task Flush: {autoFlushMode}</span>
+                      <span className={"capitalize"}>Task Flush: {taskAutoFlushMode}</span>
                     </button>
                   </MenuItem>
                 </div>

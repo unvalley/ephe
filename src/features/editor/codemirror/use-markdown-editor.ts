@@ -20,7 +20,7 @@ import { registerTaskHandler } from "./tasklist/task-close";
 import { atomWithStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
-import { taskAutoFlushAtom } from "../tasks/task-auto-flush";
+import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 
 const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
@@ -29,7 +29,7 @@ export const useMarkdownEditor = () => {
   const [container, setContainer] = useState<HTMLDivElement>();
   const [view, setView] = useState<EditorView>();
   const formatterRef = useRef<DprintMarkdownFormatter | null>(null);
-  const [autoFlushMode] = useAtom(taskAutoFlushAtom);
+  const { taskAutoFlushMode } = useTaskAutoFlush();
 
   const [content, setContent] = useAtom(editorAtom);
   const { isDarkMode } = useTheme();
@@ -238,7 +238,7 @@ export const useMarkdownEditor = () => {
 
   useLayoutEffect(() => {
     // Change task handler when autoFlushMode is changed
-    taskHandlerRef.current = createDefaultTaskHandler(taskStorage, autoFlushMode);
+    taskHandlerRef.current = createDefaultTaskHandler(taskStorage, taskAutoFlushMode);
     registerTaskHandler(taskHandlerRef.current);
 
     if (!view && container) {
@@ -299,7 +299,7 @@ export const useMarkdownEditor = () => {
     onSave,
     highlightCompartment.of,
     themeCompartment.of,
-    autoFlushMode,
+    taskAutoFlushMode,
   ]);
 
   // Update theme when dark mode changes
