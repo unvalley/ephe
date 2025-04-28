@@ -1,38 +1,15 @@
 import "../globals.css";
 import { usePaperMode } from "../utils/hooks/use-paper-mode";
 import { Footer, FooterButton } from "../utils/components/footer";
-import { useEffect, useCallback, useState } from "react";
 import { useTabDetection } from "../features/editor/use-tab-detection";
 import { AlreadyOpenDialog } from "../utils/components/already-open-dialog";
-import { CommandMenu } from "../features/command/command-k";
+import { CommandMenu } from "../features/menu/command-menu";
 import { CodeMirrorEditor } from "../features/editor/codemirror/codemirror-editor";
-import { SystemMenu } from "../features/system/system-menu";
+import { SystemMenu } from "../features/menu/system-menu";
 import { HoursDisplay } from "../features/time-display/hours-display";
 import { Link } from "react-router-dom";
 import { EPHE_VERSION } from "../utils/constants";
-
-const useCommandK = () => {
-  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
-
-  const toggleCommandMenu = useCallback(() => {
-    setIsCommandMenuOpen((prev) => !prev);
-  }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "k" && (event.ctrlKey || event.metaKey)) {
-        event.preventDefault();
-        toggleCommandMenu();
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [toggleCommandMenu]);
-
-  return { isCommandMenuOpen, toggleCommandMenu };
-};
+import { useCommandK } from "../utils/hooks/use-command-k";
 
 export const EditorPage = () => {
   const { paperModeClass } = usePaperMode();
