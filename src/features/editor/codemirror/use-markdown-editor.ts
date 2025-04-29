@@ -1,10 +1,8 @@
 import { defaultKeymap, historyKeymap, history } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
 import { EditorView, keymap, placeholder } from "@codemirror/view";
-import { tags } from "@lezer/highlight";
 import { useAtom } from "jotai";
 import { useRef, useState, useEffect, useCallback, useLayoutEffect } from "react";
 import { showToast } from "../../../utils/components/toast";
@@ -13,7 +11,6 @@ import { useTheme } from "../../../utils/hooks/use-theme";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
-import { EPHE_COLORS } from "./codemirror-theme";
 import { createDefaultTaskHandler, createChecklistPlugin } from "./tasklist";
 import { taskKeyBindings } from "./tasklist/keymap";
 import { registerTaskHandler } from "./tasklist/task-close";
@@ -21,6 +18,7 @@ import { atomWithStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
+import { useEditorTheme } from "./use-editor-theme";
 
 const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
@@ -34,6 +32,7 @@ export const useMarkdownEditor = () => {
   const [content, setContent] = useAtom(editorAtom);
   const { isDarkMode } = useTheme();
   const { isWideMode } = useEditorWidth();
+  const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode);
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
@@ -128,99 +127,6 @@ export const useMarkdownEditor = () => {
     }
   }, []);
 
-  // Memoize highlight style for performance
-  const getHighlightStyle = useCallback((isDarkMode: boolean, isWideMode: boolean) => {
-    const COLORS = isDarkMode ? EPHE_COLORS.dark : EPHE_COLORS.light;
-
-    const epheHighlightStyle = HighlightStyle.define([
-      { tag: tags.comment, color: COLORS.comment, fontStyle: "italic" },
-      { tag: tags.keyword, color: COLORS.keyword },
-      { tag: tags.string, color: COLORS.string },
-      { tag: tags.number, color: COLORS.number },
-      { tag: tags.typeName, color: COLORS.type },
-      { tag: tags.function(tags.variableName), color: COLORS.function },
-      { tag: tags.definition(tags.variableName), color: COLORS.variable },
-      { tag: tags.variableName, color: COLORS.variable },
-      {
-        tag: tags.constant(tags.variableName),
-        color: COLORS.constant,
-      },
-      { tag: tags.operator, color: COLORS.operator },
-
-      // Markdown Style
-      { tag: tags.heading, color: COLORS.heading },
-      {
-        tag: tags.heading1,
-        color: COLORS.heading,
-        fontSize: "1.2em", // prevent size changing between `#` and `##`
-      },
-      {
-        tag: tags.heading2,
-        color: COLORS.heading,
-        fontSize: "1.2em",
-      },
-      {
-        tag: tags.heading3,
-        color: COLORS.heading,
-        fontSize: "1.1em",
-      },
-      { tag: tags.emphasis, color: COLORS.emphasis, fontStyle: "italic" },
-      { tag: tags.strong, color: COLORS.emphasis },
-      { tag: tags.link, color: COLORS.string, textDecoration: "underline" },
-      { tag: tags.url, color: COLORS.string, textDecoration: "underline" },
-      { tag: tags.monospace, color: COLORS.constant, fontFamily: "monospace" },
-    ]);
-
-    const theme = {
-      "&": {
-        height: "100%",
-        width: "100%",
-        background: COLORS.background,
-        color: COLORS.foreground,
-      },
-      ".cm-content": {
-        fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace",
-        fontSize: "16px",
-        padding: "60px 20px",
-        lineHeight: "1.6",
-        maxWidth: isWideMode ? "100%" : "680px",
-        margin: "0 auto",
-        caretColor: COLORS.foreground,
-      },
-      ".cm-cursor": {
-        borderLeftColor: COLORS.foreground,
-        borderLeftWidth: "2px",
-      },
-      "&.cm-editor": {
-        outline: "none",
-        border: "none",
-        background: "transparent",
-      },
-      "&.cm-focused": {
-        outline: "none",
-      },
-      ".cm-scroller": {
-        fontFamily: "monospace",
-        background: "transparent",
-      },
-      ".cm-gutters": {
-        background: "transparent",
-        border: "none",
-      },
-      ".cm-activeLineGutter": {
-        background: "transparent",
-      },
-      ".cm-line": {
-        padding: "0 4px 0 0",
-      },
-    };
-
-    return {
-      epheHighlightStyle,
-      theme,
-    };
-  }, []);
-
   useEffect(() => {
     if (editor.current) setContainer(editor.current);
   }, []);
@@ -242,7 +148,6 @@ export const useMarkdownEditor = () => {
     registerTaskHandler(taskHandlerRef.current);
 
     if (!view && container) {
-      const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode, isWideMode);
       const state = EditorState.create({
         doc: content,
         extensions: [
@@ -266,8 +171,8 @@ export const useMarkdownEditor = () => {
             }
           }),
 
-          themeCompartment.of(EditorView.theme(theme)),
-          highlightCompartment.of(syntaxHighlighting(epheHighlightStyle, { fallback: true })),
+          themeCompartment.of(editorTheme),
+          highlightCompartment.of(editorHighlightStyle),
           placeholder(getRandomQuote()),
 
           keymap.of([
@@ -292,28 +197,26 @@ export const useMarkdownEditor = () => {
     view,
     container,
     content,
-    isDarkMode,
-    isWideMode,
     setContent,
-    getHighlightStyle,
     onSave,
     highlightCompartment.of,
     themeCompartment.of,
     taskAutoFlushMode,
+    editorTheme,
+    editorHighlightStyle,
   ]);
 
   // Update theme when dark mode changes
   useEffect(() => {
     if (view) {
-      const { epheHighlightStyle, theme } = getHighlightStyle(isDarkMode, isWideMode);
       view.dispatch({
         effects: [
-          themeCompartment.reconfigure(EditorView.theme(theme)),
-          highlightCompartment.reconfigure(syntaxHighlighting(epheHighlightStyle, { fallback: true })),
+          themeCompartment.reconfigure(editorTheme),
+          highlightCompartment.reconfigure(editorHighlightStyle),
         ],
       });
     }
-  }, [isDarkMode, isWideMode, view, getHighlightStyle, highlightCompartment.reconfigure, themeCompartment.reconfigure]);
+  }, [view, highlightCompartment.reconfigure, themeCompartment.reconfigure, editorTheme, editorHighlightStyle]);
 
   return {
     editor,
