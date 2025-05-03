@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { type Snapshot, snapshotStorage } from "../snapshots/snapshot-storage";
 import { type CompletedTask, taskStorage } from "../editor/tasks/task-storage";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
@@ -96,19 +96,13 @@ const groupItemsByDate = <T extends { timestamp?: string; completedAt?: string }
   return result;
 };
 
-// Performance optimization: Cache previous values to avoid unnecessary recalculations
-let cachedSnapshots: Snapshot[] | null = null;
-let cachedTasks: CompletedTask[] | null = null;
-
 export const useHistoryData = (): HistoryData => {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [tasks, setTasks] = useState<CompletedTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Memoize grouped data to avoid recalculation on every render
-  const groupedSnapshots = useMemo(() => groupItemsByDate(snapshots), [snapshots]);
-
-  const groupedTasks = useMemo(() => groupItemsByDate(tasks), [tasks]);
+  const groupedSnapshots = groupItemsByDate(snapshots);
+  const groupedTasks = groupItemsByDate(tasks);
 
   // Load data from storage with optimizations
   const loadData = useCallback(() => {
@@ -127,18 +121,9 @@ export const useHistoryData = (): HistoryData => {
       // Load snapshots with caching
       new Promise<void>((resolve) => {
         try {
-          // Use cached snapshots if available to avoid unnecessary reads
-          if (cachedSnapshots) {
-            setSnapshots(cachedSnapshots);
-            resolve();
-            return;
-          }
-
           const allSnapshots = snapshotStorage
             .getAll()
             .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-          cachedSnapshots = allSnapshots;
           setSnapshots(allSnapshots);
         } catch (snapshotError) {
           console.error("Error loading snapshots:", snapshotError);
@@ -150,18 +135,9 @@ export const useHistoryData = (): HistoryData => {
       // Load tasks with caching
       new Promise<void>((resolve) => {
         try {
-          // Use cached tasks if available to avoid unnecessary reads
-          if (cachedTasks) {
-            setTasks(cachedTasks);
-            resolve();
-            return;
-          }
-
           const allTasks = taskStorage
             .getAll()
             .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
-
-          cachedTasks = allTasks;
           setTasks(allTasks);
         } catch (taskError) {
           console.error("Error loading tasks:", taskError);
@@ -183,13 +159,6 @@ export const useHistoryData = (): HistoryData => {
     // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key?.includes("snapshot") || e.key?.includes("task")) {
-        // Invalidate cache when storage changes
-        if (e.key?.includes("snapshot")) {
-          cachedSnapshots = null;
-        }
-        if (e.key?.includes("task")) {
-          cachedTasks = null;
-        }
         loadData();
       }
     };
@@ -222,8 +191,6 @@ export const useHistoryData = (): HistoryData => {
     (id: string) => {
       try {
         snapshotStorage.deleteById(id);
-        // Update state immediately and invalidate cache
-        cachedSnapshots = null;
         const updatedSnapshots = snapshots.filter((snapshot) => snapshot.id !== id);
         setSnapshots(updatedSnapshots);
         showToast("Snapshot deleted", "success");
@@ -240,8 +207,6 @@ export const useHistoryData = (): HistoryData => {
     (id: string) => {
       try {
         taskStorage.deleteById(id);
-        // Update state immediately and invalidate cache
-        cachedTasks = null;
         const updatedTasks = tasks.filter((task) => task.id !== id);
         setTasks(updatedTasks);
         showToast("Task deleted", "success");
@@ -253,13 +218,6 @@ export const useHistoryData = (): HistoryData => {
     [tasks],
   );
 
-  // Explicitly invalidate cache when refresh is called
-  const refreshData = useCallback(() => {
-    cachedSnapshots = null;
-    cachedTasks = null;
-    loadData();
-  }, [loadData]);
-
   return {
     snapshots,
     tasks,
@@ -269,6 +227,6 @@ export const useHistoryData = (): HistoryData => {
     handleRestoreSnapshot,
     handleDeleteSnapshot,
     handleDeleteTask,
-    refresh: refreshData,
+    refresh: loadData,
   };
 };

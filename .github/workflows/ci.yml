@@ -72,7 +72,10 @@ jobs:
           key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Run Biome lint
-        run: pnpm lint
+        run: pnpm lint:biome
+
+      - name: Run ESLint lint
+        run: pnpm lint:eslint
 
   test:
     name: Test
