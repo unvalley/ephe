@@ -1,8 +1,6 @@
 import "../globals.css";
 import { usePaperMode } from "../utils/hooks/use-paper-mode";
 import { Footer, FooterButton } from "../utils/components/footer";
-import { useTabDetection } from "../features/editor/use-tab-detection";
-import { AlreadyOpenDialog } from "../utils/components/already-open-dialog";
 import { CommandMenu } from "../features/menu/command-menu";
 import { CodeMirrorEditor } from "../features/editor/codemirror/codemirror-editor";
 import { SystemMenu } from "../features/menu/system-menu";
@@ -13,7 +11,6 @@ import { useCommandK } from "../utils/hooks/use-command-k";
 
 export const EditorPage = () => {
   const { paperModeClass } = usePaperMode();
-  const { shouldShowAlert, dismissAlert } = useTabDetection();
   const { isCommandMenuOpen, toggleCommandMenu } = useCommandK();
 
   return (
@@ -37,7 +34,6 @@ export const EditorPage = () => {
       />
 
       {isCommandMenuOpen && <CommandMenu open={isCommandMenuOpen} onClose={toggleCommandMenu} />}
-      {shouldShowAlert && <AlreadyOpenDialog shouldShowAlert={shouldShowAlert} onContinue={dismissAlert} />}
     </div>
   );
 };

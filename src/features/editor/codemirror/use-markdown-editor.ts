@@ -14,13 +14,40 @@ import { taskStorage } from "../tasks/task-storage";
 import { createDefaultTaskHandler, createChecklistPlugin } from "./tasklist";
 import { taskKeyBindings } from "./tasklist/keymap";
 import { registerTaskHandler } from "./tasklist/task-close";
-import { atomWithStorage } from "jotai/utils";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useEditorTheme } from "./use-editor-theme";
 
-const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
+const storage = createJSONStorage<string>(() => localStorage);
+
+const crossTabStorage = {
+  ...storage,
+  subscribe: (key: string, callback: (value: string) => void, initialValue: string): (() => void) => {
+    if (typeof window === "undefined" || typeof window.addEventListener !== "function") {
+      return () => {};
+    }
+    const handler = (e: StorageEvent) => {
+      if (e.storageArea === localStorage && e.key === key) {
+        try {
+          const newValue = e.newValue ? JSON.parse(e.newValue) : initialValue;
+          callback(newValue);
+        } catch {
+          callback(initialValue);
+        }
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  },
+};
+
+const editorAtom = atomWithStorage<string>(
+  LOCAL_STORAGE_KEYS.EDITOR_CONTENT,
+  "",
+  crossTabStorage
+);
 
 export const useMarkdownEditor = () => {
   const editor = useRef<HTMLDivElement | null>(null);
@@ -36,7 +63,6 @@ export const useMarkdownEditor = () => {
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
-
   const taskHandlerRef = useRef<ReturnType<typeof createDefaultTaskHandler> | null>(null);
 
   // Listen for content restore events
@@ -58,6 +84,18 @@ export const useMarkdownEditor = () => {
       window.removeEventListener("ephe:content-restored", handleContentRestored as EventListener);
     };
   }, [view, setContent]);
+
+  // Listen for external content updates (from other tabs)
+  // Cross-tab sync
+  // - text edit emits storage event
+  // - subscribe updates the editor content
+  useEffect(() => {
+    if (view && content !== view.state.doc.toString()) {
+      view.dispatch({
+        changes: { from: 0, to: view.state.doc.length, insert: content },
+      });
+    }
+  }, [view, content]);
 
   // Formatter initialization is a side effect, isolated in useEffect
   useEffect(() => {
