@@ -18,7 +18,6 @@ export const useCommandK = () => {
       return () => {
         document.removeEventListener("keydown", handleKeyDown);
       };
-    // biome-ignore lint/correctness/useExhaustiveDependencies: react-compiler
     }, [toggleCommandMenu]);
   
     return { isCommandMenuOpen, toggleCommandMenu };
