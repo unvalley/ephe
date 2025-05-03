@@ -265,6 +265,10 @@ export const SystemMenu = () => {
                       <span className="capitalize">{editorWidth} Width</span>
                     </button>
                   </MenuItem>
+                </div>
+
+                <div className="py-1">
+                  <div className="px-3 py-2 text-primary-400 text-xs dark:text-primary-300">Task</div>
                   <MenuItem as="div">
                     <button
                       type="button"
