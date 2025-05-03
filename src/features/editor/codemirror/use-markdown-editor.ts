@@ -4,7 +4,7 @@ import { languages } from "@codemirror/language-data";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
 import { EditorView, keymap, placeholder } from "@codemirror/view";
 import { useAtom } from "jotai";
-import { useRef, useState, useEffect, useCallback, useLayoutEffect } from "react";
+import { useRef, useState, useEffect, useLayoutEffect } from "react";
 import { showToast } from "../../../utils/components/toast";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 import { useTheme } from "../../../utils/hooks/use-theme";
@@ -77,7 +77,7 @@ export const useMarkdownEditor = () => {
     };
   }, []);
 
-  const onSave = useCallback(async (view: EditorView) => {
+  const onSave = async (view: EditorView) => {
     if (!formatterRef.current) {
       showToast("Formatter not initialized yet", "error");
       return false;
@@ -125,7 +125,7 @@ export const useMarkdownEditor = () => {
       showToast(`Error formatting document: ${message}`, "error");
       return false;
     }
-  }, []);
+  };
 
   useEffect(() => {
     if (editor.current) setContainer(editor.current);

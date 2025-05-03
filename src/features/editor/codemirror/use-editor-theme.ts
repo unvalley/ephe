@@ -1,14 +1,13 @@
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { EditorView } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
-import { useCallback } from "react";
 import { EPHE_COLORS } from "./codemirror-theme";
 
 /**
  * Manages the CodeMirror theme and highlight style based on dark mode and editor width.
  */
 export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean) => {
-  const getHighlightStyle = useCallback(() => {
+  const getHighlightStyle = () => {
     const COLORS = isDarkMode ? EPHE_COLORS.dark : EPHE_COLORS.light;
 
     const epheHighlightStyle = HighlightStyle.define([
@@ -98,7 +97,7 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean) => {
       editorTheme: EditorView.theme(theme),
       editorHighlightStyle: syntaxHighlighting(epheHighlightStyle, { fallback: true }),
     };
-  }, [isDarkMode, isWideMode]);
+  };
 
   return getHighlightStyle();
 }; 

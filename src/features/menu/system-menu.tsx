@@ -4,7 +4,7 @@ import { useTheme } from "../../utils/hooks/use-theme";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME } from "../../utils/theme-initializer";
 import {
@@ -96,11 +96,11 @@ export const SystemMenu = () => {
   //     setIsVisibleToc((prev) => !prev);
   //   }, [setIsVisibleToc]);
 
-  const openTaskSnapshotModal = useCallback((tabIndex: number) => {
+  const openTaskSnapshotModal = (tabIndex: number) => {
     setModalTabIndex(tabIndex);
     setIsModalOpen(true);
     setIsOpen(false);
-  }, []);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

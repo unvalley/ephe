@@ -1,11 +1,11 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 export const useCommandK = () => {
     const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
   
-    const toggleCommandMenu = useCallback(() => {
+    const toggleCommandMenu = () => {
       setIsCommandMenuOpen((prev) => !prev);
-    }, []);
+    };
   
     useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
@@ -18,6 +18,7 @@ export const useCommandK = () => {
       return () => {
         document.removeEventListener("keydown", handleKeyDown);
       };
+    // biome-ignore lint/correctness/useExhaustiveDependencies: react-compiler
     }, [toggleCommandMenu]);
   
     return { isCommandMenuOpen, toggleCommandMenu };

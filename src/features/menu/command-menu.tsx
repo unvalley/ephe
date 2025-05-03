@@ -1,7 +1,7 @@
 "use client";
 
 import { Command } from "cmdk";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
 import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-formatter";
 import { showToast } from "../../utils/components/toast";
@@ -67,11 +67,7 @@ export function CommandMenu({
     }
   }, [open]);
 
-  const handleClose = useCallback(() => {
-    onClose();
-  }, [onClose]);
-
-  const cycleThemeCallback = useCallback(() => {
+  const cycleThemeCallback = () => {
     let nextTheme: ColorTheme;
     if (theme === COLOR_THEME.LIGHT) {
       nextTheme = COLOR_THEME.DARK;
@@ -81,29 +77,29 @@ export function CommandMenu({
       nextTheme = COLOR_THEME.LIGHT;
     }
     setTheme(nextTheme);
-    handleClose();
-  }, [theme, setTheme, handleClose]);
+    onClose();
+  };
 
-  const getNextThemeText = useCallback(() => {
+  const getNextThemeText = () => {
     if (theme === COLOR_THEME.LIGHT) return "dark";
     if (theme === COLOR_THEME.DARK) return "system";
     return "light";
-  }, [theme]);
+  };
 
-  const cyclePaperModeCallback = useCallback(() => {
+  const cyclePaperModeCallback = () => {
     cyclePaperMode?.();
-    handleClose();
-  }, [cyclePaperMode, handleClose]);
+    onClose();
+  };
 
-  const toggleEditorWidthCallback = useCallback(() => {
+  const toggleEditorWidthCallback = () => {
     toggleEditorWidth?.();
-    handleClose();
-  }, [toggleEditorWidth, handleClose]);
+    onClose();
+  };
 
-  const handleExportMarkdownCallback = useCallback(() => {
+  const handleExportMarkdownCallback = () => {
     if (!editorContent) {
       showToast("No content to export", "error");
-      handleClose();
+      onClose();
       return;
     }
     try {
@@ -122,9 +118,9 @@ export function CommandMenu({
       console.error("Export failed:", error);
       showToast("Failed to export markdown", "error");
     } finally {
-      handleClose(); // 成功・失敗に関わらず閉じる
+      onClose();
     }
-  }, [editorContent, handleClose]);
+  };
 
   //   const handleFormatDocumentCallback = useCallback(async () => {
   //     if (!editorRef?.current || !markdownFormatterRef?.current) {
@@ -197,12 +193,12 @@ export function CommandMenu({
   //     }
   //   }, [editorRef, handleClose]);
 
-  const goToGitHubRepo = useCallback(() => {
+  const goToGitHubRepo = () => {
     window.open("https://github.com/unvalley/ephe", "_blank");
-    handleClose();
-  }, [handleClose]);
+    onClose();
+  };
 
-  const commandsList = useMemo((): CommandItem[] => {
+  const commandsList = (): CommandItem[] => {
     const list: CommandItem[] = [
       {
         id: "theme-toggle",
@@ -279,20 +275,7 @@ export function CommandMenu({
     });
 
     return list;
-  }, [
-    getNextThemeText,
-    cycleThemeCallback,
-    cyclePaperMode,
-    cyclePaperModeCallback,
-    toggleEditorWidth,
-    toggleEditorWidthCallback,
-    editorContent,
-    handleExportMarkdownCallback,
-    // handleFormatDocumentCallback,
-    goToGitHubRepo,
-    nextTheme,
-    // paperMode, editorWidth, // これらの値がリスト項目名自体に含まれる場合は依存配列に追加。今回はItem側で表示するため不要
-  ]);
+  };
 
   return (
     <>
@@ -302,12 +285,12 @@ export function CommandMenu({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            handleClose();
+            onClose();
           }}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
               e.preventDefault();
-              handleClose();
+              onClose();
             }
           }}
           aria-hidden="true"
@@ -323,7 +306,7 @@ export function CommandMenu({
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             e.preventDefault();
-            handleClose();
+            onClose();
           }
         }}
       >
@@ -352,7 +335,7 @@ export function CommandMenu({
             heading="Interface Mode"
             className="mb-1 px-1 font-medium text-gray-500 text-xs tracking-wider dark:text-gray-400"
           >
-            {commandsList
+            {commandsList()
               .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width"].includes(cmd.id))
               .map((command) => (
                 <Command.Item
@@ -392,7 +375,7 @@ export function CommandMenu({
             heading="Operations (WIP)"
             className="mb-1 px-1 font-medium text-gray-500 text-xs tracking-wider dark:text-gray-400"
           >
-            {commandsList
+            {commandsList()
               .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues"].includes(cmd.id))
               .map((command) => (
                 <Command.Item
@@ -420,7 +403,7 @@ export function CommandMenu({
             heading="Navigation"
             className="mb-1 px-1 font-medium text-gray-500 text-xs tracking-wider dark:text-gray-400"
           >
-            {commandsList
+            {commandsList()
               .filter((cmd) => ["github-repo", "history"].includes(cmd.id))
               .map((command) => (
                 <Command.Item

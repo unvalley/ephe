@@ -9,6 +9,12 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "correctness": {
+        "useExhaustiveDependencies": {
+          "options": {},
+          "level": "off"
+        }
+      },
       "suspicious": {
         "noDoubleEquals": {
           "level": "error",
