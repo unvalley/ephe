@@ -1,12 +1,11 @@
 import { type ButtonProps, Button } from "@headlessui/react";
-import { memo } from "react";
 
 type FooterProps = {
   leftContent: React.ReactNode;
   rightContent: React.ReactNode;
 };
 
-const _Footer = ({ leftContent, rightContent }: FooterProps) => {
+export const Footer = ({ leftContent, rightContent }: FooterProps) => {
   return (
     <footer className="fixed inset-x-0 bottom-0 bg-transparent">
       <div className="mx-auto flex items-center justify-between px-2 py-1 text-sm">
@@ -17,7 +16,6 @@ const _Footer = ({ leftContent, rightContent }: FooterProps) => {
   );
 };
 
-export const Footer = memo(_Footer);
 
 export const FooterButton = ({ children, ...props }: ButtonProps) => {
   return (
