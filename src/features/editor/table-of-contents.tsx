@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
 
 type TocItem = {
@@ -64,18 +64,7 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
     }
   }, [content, parseTocItems]);
 
-  const handleItemClick = useCallback(
-    (line: number) => {
-      onItemClick(line);
-    },
-    [onItemClick],
-  );
-
-  const shouldRender = useMemo(() => {
-    // Check if parent component wants to show TOC (isVisibleToc from parent)
-    return isVisible && tocItems.length > 0 && !!content;
-  }, [isVisible, tocItems.length, content]);
-
+  const shouldRender = isVisible && tocItems.length > 0 && !!content;
   if (!shouldRender) {
     return null;
   }
@@ -91,7 +80,7 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
               paddingLeft: `${(item.level - 1) * 0.75 + 0.5}rem`,
               lineHeight: 1.3,
             }}
-            onClick={() => handleItemClick(item.line)}
+            onClick={() => onItemClick(item.line)}
             onKeyDown={() => {}}
           >
             {item.text}
