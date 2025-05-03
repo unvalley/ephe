@@ -5,16 +5,14 @@ import topLevelAwait from "vite-plugin-top-level-await";
 import tailwindcss from "@tailwindcss/vite";
 import { visualizer } from "rollup-plugin-visualizer";
 
-const ReactCompilerConfig = {}
+const ReactCompilerConfig = {};
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react({
       babel: {
-        plugins: [
-          ["babel-plugin-react-compiler", ReactCompilerConfig],
-        ],
+        plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
       },
     }),
     wasm(),

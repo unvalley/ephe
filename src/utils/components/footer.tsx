@@ -16,7 +16,6 @@ export const Footer = ({ leftContent, rightContent }: FooterProps) => {
   );
 };
 
-
 export const FooterButton = ({ children, ...props }: ButtonProps) => {
   return (
     <Button

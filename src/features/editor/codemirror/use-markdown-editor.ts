@@ -43,11 +43,7 @@ const crossTabStorage = {
   },
 };
 
-const editorAtom = atomWithStorage<string>(
-  LOCAL_STORAGE_KEYS.EDITOR_CONTENT,
-  "",
-  crossTabStorage
-);
+const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "", crossTabStorage);
 
 export const useMarkdownEditor = () => {
   const editor = useRef<HTMLDivElement | null>(null);
@@ -248,10 +244,7 @@ export const useMarkdownEditor = () => {
   useEffect(() => {
     if (view) {
       view.dispatch({
-        effects: [
-          themeCompartment.reconfigure(editorTheme),
-          highlightCompartment.reconfigure(editorHighlightStyle),
-        ],
+        effects: [themeCompartment.reconfigure(editorTheme), highlightCompartment.reconfigure(editorHighlightStyle)],
       });
     }
   }, [view, highlightCompartment.reconfigure, themeCompartment.reconfigure, editorTheme, editorHighlightStyle]);

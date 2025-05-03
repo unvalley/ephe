@@ -100,4 +100,4 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean) => {
   };
 
   return getHighlightStyle();
-}; 
+};

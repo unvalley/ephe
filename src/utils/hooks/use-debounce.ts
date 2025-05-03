@@ -16,13 +16,13 @@ export const useDebounce = <T>(value: T, delay: number): T => {
   }, [value, delay]);
 
   return debouncedValue;
-}
+};
 
 // biome-ignore lint/suspicious/noExplicitAny: accept any function
 export const useDebouncedCallback = <T extends (...args: any[]) => any>(
   fn: T,
   delay: number,
-): (...args: Parameters<T>) => void => {
+): ((...args: Parameters<T>) => void) => {
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   // Return a memoized version of the callback that only changes if fn or delay change
@@ -39,4 +39,4 @@ export const useDebouncedCallback = <T extends (...args: any[]) => any>(
 
     setTimeoutId(id);
   };
-}
+};
