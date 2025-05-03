@@ -11,7 +11,6 @@ const themeAtom = atomWithStorage<ColorTheme>(LOCAL_STORAGE_KEYS.THEME, COLOR_TH
 export const useTheme = () => {
   const [theme, setTheme] = useAtom(themeAtom);
 
-  // Apply theme changes when theme state changes
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);
