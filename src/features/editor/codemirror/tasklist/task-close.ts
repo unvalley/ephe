@@ -276,7 +276,7 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
         const taskStartPos = matchIndex + prefixLength;
         const from = line.from + taskStartPos;
         const contentPos = from + 1;
-        const to = from + 3; // next of ']' 
+        const to = from + 3; // next of ']'
 
         if (pos >= from && pos < to) {
           const checkChar = match[2];
