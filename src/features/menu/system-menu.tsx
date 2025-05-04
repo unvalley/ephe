@@ -22,9 +22,9 @@ import { HistoryModal } from "../history/history-modal";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
 import { useTaskAutoFlush } from "../../utils/hooks/use-task-auto-flush";
 
-const useTodayCompletedTasks = () => {
+// Today completed tasks count
+const useTodayCompletedTasks = (menuOpen: boolean) => {
   const [todayCompletedTasks, setTodayCompletedTasks] = useState(0);
-
   useEffect(() => {
     const loadTodayTasks = () => {
       const today = new Date();
@@ -33,7 +33,6 @@ const useTodayCompletedTasks = () => {
         month: today.getMonth() + 1, // getMonth is 0-indexed
         day: today.getDate(),
       });
-
       // Count tasks completed today
       const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
         2,
@@ -42,77 +41,63 @@ const useTodayCompletedTasks = () => {
       const todayTasks = tasksByDate[todayDateStr] || [];
       setTodayCompletedTasks(todayTasks.length);
     };
-
     loadTodayTasks();
-  }, []);
-
+  }, [menuOpen]);
   return { todayCompletedTasks };
 };
 
-const useSnapshotCount = () => {
+// All snapshots count
+const useSnapshotCount = (menuOpen: boolean) => {
   const [snapshotCount, setSnapshotCount] = useState(0);
-
   useEffect(() => {
     const loadSnapshots = () => {
       const snapshots = snapshotStorage.getAll();
       setSnapshotCount(snapshots.length);
     };
-
     loadSnapshots();
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key?.includes("snapshot")) {
-        loadSnapshots();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
-
+  }, [menuOpen]);
   return { snapshotCount };
 };
 
 // const tocVisibilityAtom = atomWithStorage<boolean>(LOCAL_STORAGE_KEYS.TOC_MODE, false);
 
+const useHistoryModal = () => {
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [modalTabIndex, setModalTabIndex] = useState(0);
+  return { historyModalOpen, modalTabIndex, setHistoryModalOpen, setModalTabIndex };
+};
+
 export const SystemMenu = () => {
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { historyModalOpen, modalTabIndex, setHistoryModalOpen, setModalTabIndex } = useHistoryModal();
+
   const { theme, setTheme } = useTheme();
-  const { paperMode, toggleGraphMode, toggleDotsMode, toggleNormalMode } = usePaperMode();
+  const { paperMode, cyclePaperMode } = usePaperMode();
 
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
   const { charCount } = useCharCount();
-  const { todayCompletedTasks } = useTodayCompletedTasks();
-  const { snapshotCount } = useSnapshotCount();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalTabIndex, setModalTabIndex] = useState(0);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const { todayCompletedTasks } = useTodayCompletedTasks(menuOpen);
+  const { snapshotCount } = useSnapshotCount(menuOpen);
   const { taskAutoFlushMode, setTaskAutoFlushMode } = useTaskAutoFlush();
-
-  //   const [isVisibleToc, setIsVisibleToc] = useAtom(tocVisibilityAtom);
-  //   const toggleToc = useCallback(() => {
-  //     setIsVisibleToc((prev) => !prev);
-  //   }, [setIsVisibleToc]);
 
   const openTaskSnapshotModal = (tabIndex: number) => {
     setModalTabIndex(tabIndex);
-    setIsModalOpen(true);
-    setIsOpen(false);
+    setHistoryModalOpen(true);
+    setMenuOpen(false);
   };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node) && isOpen) {
-        setIsOpen(false);
+      if (menuRef.current && !menuRef.current.contains(event.target as Node) && menuOpen) {
+        setMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen]);
+  }, [menuOpen]);
 
   return (
     <>
@@ -121,12 +106,12 @@ export const SystemMenu = () => {
           <>
             <MenuButton
               className="rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              onClick={() => setIsOpen(!isOpen)}
+              onClick={() => setMenuOpen(!menuOpen)}
             >
               System
             </MenuButton>
 
-            {(open || isOpen) && (
+            {(open || menuOpen) && (
               <MenuItems
                 className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white shadow-md focus:outline-none dark:bg-primary-700"
                 portal={false}
@@ -203,29 +188,14 @@ export const SystemMenu = () => {
                           <ComputerDesktopIcon className="size-4 stroke-1" />
                         )}
                       </span>
-                      <span>
-                        {theme === COLOR_THEME.LIGHT
-                          ? "Light mode"
-                          : theme === COLOR_THEME.DARK
-                            ? "Dark mode"
-                            : "System mode"}
-                      </span>
+                      <span className="capitalize">{theme} Mode</span>
                     </button>
                   </MenuItem>
 
                   <MenuItem as="div">
                     <button
                       type="button"
-                      onClick={() => {
-                        // Cycle through paper modes
-                        if (paperMode === "normal") {
-                          toggleGraphMode();
-                        } else if (paperMode === "graph") {
-                          toggleDotsMode();
-                        } else {
-                          toggleNormalMode();
-                        }
-                      }}
+                      onClick={cyclePaperMode}
                       className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
@@ -248,7 +218,7 @@ export const SystemMenu = () => {
                           </span>
                         )}
                       </span>
-                      <span className="capitalize">{paperMode} paper</span>
+                      <span className="capitalize">{paperMode} Paper</span>
                     </button>
                   </MenuItem>
                   <MenuItem as="div">
@@ -290,7 +260,11 @@ export const SystemMenu = () => {
         )}
       </Menu>
 
-      <HistoryModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} initialTabIndex={modalTabIndex} />
+      <HistoryModal
+        isOpen={historyModalOpen}
+        onClose={() => setHistoryModalOpen(false)}
+        initialTabIndex={modalTabIndex}
+      />
     </>
   );
 };

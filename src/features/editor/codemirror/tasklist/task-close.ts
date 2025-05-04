@@ -19,30 +19,28 @@ export interface TaskHandler {
 const taskItemRegex = /^(\s*[-*]\s+)\[([\ xX])\]/;
 
 type TaskInfo = {
-  from: number; // タスク全体の開始位置 ('[')
-  to: number; // タスク全体の終了位置 (']'の次)
-  contentPos: number; // タスク内容の位置 ('['の次)
-  checked: boolean; // チェック状態
+  from: number; // start position of the task (')
+  to: number; // end position of the task (']' next)
+  contentPos: number; // position of the task content ('[' next)
+  checked: boolean; // task state
   line: number; // Line number containing the task
   key: string; // Unique identifier for the task
 };
 
-// ホバー中のタスクを追跡するための Effect
+// Effect to track the task being hovered over
 const hoverTask = StateEffect.define<TaskInfo | null>();
 
-// すべてのタスクに適用するポインタスタイルのデコレーション
+// Decoration for the pointer style applied to all tasks
 const taskBaseStyle = Decoration.mark({
   class: "cursor-pointer",
   inclusive: false,
 });
 
-// ホバー時にだけ適用する追加のハイライトデコレーション
+// Decoration for the additional highlight when hovering over a task
 const taskHoverStyle = Decoration.mark({
   class: "cm-task-hover",
   inclusive: false,
 });
-
-export const TASK_TOGGLE_EVENT = "ephe:task-change";
 
 interface TaskPluginValue extends PluginValue {
   taskHandler?: TaskHandler;
@@ -86,27 +84,27 @@ export const taskDecoration = ViewPlugin.fromClass(
       }
     }
 
-    // ドキュメント内のすべてのタスクを検出する
+    // Detect all tasks in the document
     findAllTaskes(view: EditorView): TaskInfo[] {
       const result: TaskInfo[] = [];
       const { state } = view;
       const { doc } = state;
 
-      // 各行に対してタスクを検索 - only process visible lines for performance
+      // Process visible lines only for performance
       for (let i = 1; i <= doc.lines; i++) {
         const line = doc.line(i);
         const match = line.text.match(taskItemRegex);
 
         if (match) {
-          // タスクのパターン全体を検索して正確な位置を特定
+          // Search for the entire task pattern to determine the exact position
           const matchIndex = match.index || 0;
           const prefixLength = match[1].length;
 
-          // '[' の位置を計算
+          // Calculate the position of '['
           const taskStartPos = matchIndex + prefixLength;
           const from = line.from + taskStartPos;
-          const contentPos = from + 1; // '[' の次、つまり内容の位置
-          const to = from + 3; // '[' + 内容 + ']' = 3文字分
+          const contentPos = from + 1; // next of '['
+          const to = from + 3; // '[' + content + ']' = 3 chars
 
           const checkChar = match[2];
           const taskContent = line.text.substring(matchIndex + prefixLength + 3).trim();
@@ -124,7 +122,7 @@ export const taskDecoration = ViewPlugin.fromClass(
       return result;
     }
 
-    // すべてのタスクにベースとなるカーソルポインタ装飾を作成
+    // Create base decorations for all tasks
     createBaseDecorations(taskes: TaskInfo[]): DecorationSet {
       const builder = new RangeSetBuilder<Decoration>();
       for (const { from, to } of taskes) {
@@ -159,8 +157,6 @@ export const taskDecoration = ViewPlugin.fromClass(
 
       // Process changed tasks
       if (changedTasks.length > 0) {
-        let hasDispatchedEvent = false;
-
         for (const task of changedTasks) {
           try {
             const line = update.view.state.doc.line(task.line);
@@ -186,26 +182,19 @@ export const taskDecoration = ViewPlugin.fromClass(
                   pos: task.from,
                   view: update.view,
                 });
-                hasDispatchedEvent = true;
               } else if (!task.checked && handler) {
                 // If task is being unchecked, call the handler
                 handler.onTaskOpen(taskContent);
-                hasDispatchedEvent = true;
               }
             }
           } catch (e) {
             console.warn("Error processing task change:", e);
           }
         }
-
-        // Only dispatch one event no matter how many tasks changed
-        if (hasDispatchedEvent) {
-          window.dispatchEvent(new CustomEvent(TASK_TOGGLE_EVENT));
-        }
       }
     }
 
-    // ドキュメントが変更されたときにタスクを再検出
+    // Detect tasks when the document changes
     update(update: ViewUpdate) {
       if (update.docChanged) {
         // Performance optimization: only re-detect tasks if the document has changed
@@ -278,33 +267,29 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
       }
 
       getTaskAt(pos: number): TaskInfo | null {
-        try {
-          const line = this.view.state.doc.lineAt(pos);
-          const match = line.text.match(taskItemRegex);
-          if (!match) return null;
+        const line = this.view.state.doc.lineAt(pos);
+        const match = line.text.match(taskItemRegex);
+        if (!match) return null;
 
-          const matchIndex = match.index || 0;
-          const prefixLength = match[1].length;
-          const taskStartPos = matchIndex + prefixLength;
-          const from = line.from + taskStartPos;
-          const contentPos = from + 1;
-          const to = from + 3; // ']' の次の位置
+        const matchIndex = match.index || 0;
+        const prefixLength = match[1].length;
+        const taskStartPos = matchIndex + prefixLength;
+        const from = line.from + taskStartPos;
+        const contentPos = from + 1;
+        const to = from + 3; // next of ']' 
 
-          if (pos >= from && pos < to) {
-            const checkChar = match[2];
-            const taskContent = line.text.substring(matchIndex + prefixLength + 3).trim();
+        if (pos >= from && pos < to) {
+          const checkChar = match[2];
+          const taskContent = line.text.substring(matchIndex + prefixLength + 3).trim();
 
-            return {
-              from,
-              to,
-              contentPos,
-              checked: checkChar === "x" || checkChar === "X",
-              line: line.number,
-              key: getTaskKey(line.number, taskContent),
-            };
-          }
-        } catch (e) {
-          // エラー処理
+          return {
+            from,
+            to,
+            contentPos,
+            checked: checkChar === "x" || checkChar === "X",
+            line: line.number,
+            key: getTaskKey(line.number, taskContent),
+          };
         }
         return null;
       }
@@ -332,7 +317,7 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
         if (event.button !== 0) return;
 
         const pos = this.view.posAtCoords({ x: event.clientX, y: event.clientY });
-        if (pos === null) return;
+        if (pos == null) return;
 
         const task = this.getTaskAt(pos);
         if (!task) return;
@@ -340,19 +325,14 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
         event.preventDefault();
         const newChar = task.checked ? " " : "x";
 
-        try {
-          // Apply the toggle
-          this.view.dispatch({
-            changes: {
-              from: task.contentPos,
-              to: task.contentPos + 1, // 中身の1文字だけを対象
-              insert: newChar,
-            },
-            userEvent: "input.toggleTask",
-          });
-        } catch (e) {
-          console.warn("Failed to toggle task:", e);
-        }
+        this.view.dispatch({
+          changes: {
+            from: task.contentPos,
+            to: task.contentPos + 1,
+            insert: newChar,
+          },
+          userEvent: "input.toggleTask",
+        });
       }
     },
   );

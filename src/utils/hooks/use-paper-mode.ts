@@ -15,7 +15,7 @@ const paperModeAtom = atomWithStorage<PaperMode>(LOCAL_STORAGE_KEYS.PAPER_MODE, 
 export const usePaperMode = () => {
   const [paperMode, setPaperMode] = useAtom(paperModeAtom);
 
-  const cycleMode = () => {
+  const cyclePaperMode = () => {
     const modes = ["normal", "graph", "dots"] as const;
     const currentIndex = modes.indexOf(paperMode);
     const nextIndex = (currentIndex + 1) % modes.length;
@@ -38,7 +38,7 @@ export const usePaperMode = () => {
   return {
     paperMode,
     paperModeClass: PAPER_MODE_CLASSES[paperMode],
-    cycleMode,
+    cyclePaperMode,
     toggleNormalMode,
     toggleGraphMode,
     toggleDotsMode,
