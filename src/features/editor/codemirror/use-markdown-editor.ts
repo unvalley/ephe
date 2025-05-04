@@ -17,9 +17,9 @@ import { registerTaskHandler } from "./tasklist/task-close";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
-import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useEditorTheme } from "./use-editor-theme";
 import { useCharCount } from "../../../utils/hooks/use-char-count";
+import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 
 const storage = createJSONStorage<string>(() => localStorage);
 
@@ -46,14 +46,41 @@ const crossTabStorage = {
 
 const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "", crossTabStorage);
 
+const useMarkdownFormatter = () => {
+    const ref = useRef<DprintMarkdownFormatter | null>(null);
+    useEffect(() => {
+      let alive = true;
+      (async () => {
+        const fmt = await DprintMarkdownFormatter.getInstance();
+        if (alive) {
+            ref.current = fmt;
+        }
+      })();
+      return () => { alive = false; ref.current = null; };
+    }, []); 
+    return ref; 
+};
+
+const useTaskHandler = () => {
+    const { taskAutoFlushMode } = useTaskAutoFlush();
+    const handlerRef = useRef(createDefaultTaskHandler(taskStorage, taskAutoFlushMode));
+    useEffect(() => {
+      handlerRef.current = createDefaultTaskHandler(taskStorage, taskAutoFlushMode);
+      registerTaskHandler(handlerRef.current);
+      return () => registerTaskHandler(undefined);
+    }, [taskAutoFlushMode]);
+    return handlerRef;
+};
+
 export const useMarkdownEditor = () => {
   const editor = useRef<HTMLDivElement | null>(null);
   const [container, setContainer] = useState<HTMLDivElement>();
   const [view, setView] = useState<EditorView>();
-  const formatterRef = useRef<DprintMarkdownFormatter | null>(null);
-  const { taskAutoFlushMode } = useTaskAutoFlush();
-
   const [content, setContent] = useAtom(editorAtom);
+
+  const formatterRef = useMarkdownFormatter();
+  const taskHandlerRef = useTaskHandler();
+
   const { isDarkMode } = useTheme();
   const { isWideMode } = useEditorWidth();
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode);
@@ -61,7 +88,6 @@ export const useMarkdownEditor = () => {
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
-  const taskHandlerRef = useRef<ReturnType<typeof createDefaultTaskHandler> | null>(null);
 
   // Listen for content restore events
   useEffect(() => {
@@ -94,24 +120,6 @@ export const useMarkdownEditor = () => {
     }
     setCharCount(content.length);
   }, [view, content]);
-
-  // Formatter initialization is a side effect, isolated in useEffect
-  useEffect(() => {
-    let mounted = true;
-    const initFormatter = async () => {
-      try {
-        const formatter = await DprintMarkdownFormatter.getInstance();
-        if (mounted) formatterRef.current = formatter;
-      } catch (error) {
-        console.error("Failed to initialize markdown formatter:", error);
-      }
-    };
-    initFormatter();
-    return () => {
-      mounted = false;
-      formatterRef.current = null;
-    };
-  }, []);
 
   const onSave = async (view: EditorView) => {
     if (!formatterRef.current) {
@@ -167,22 +175,7 @@ export const useMarkdownEditor = () => {
     if (editor.current) setContainer(editor.current);
   }, []);
 
-  // Register the task handler for global access
-  useEffect(() => {
-    // Register the handler only when it's created
-    if (taskHandlerRef.current) {
-      registerTaskHandler(taskHandlerRef.current);
-    }
-    return () => {
-      registerTaskHandler(undefined); // Clean up on unmount or when handler changes
-    };
-  }, []); // Run only once on mount and cleanup on unmount
-
   useLayoutEffect(() => {
-    // Change task handler when autoFlushMode is changed
-    taskHandlerRef.current = createDefaultTaskHandler(taskStorage, taskAutoFlushMode);
-    registerTaskHandler(taskHandlerRef.current);
-
     if (!view && container) {
       const state = EditorState.create({
         doc: content,
@@ -237,7 +230,6 @@ export const useMarkdownEditor = () => {
     onSave,
     highlightCompartment.of,
     themeCompartment.of,
-    taskAutoFlushMode,
     editorTheme,
     editorHighlightStyle,
   ]);
