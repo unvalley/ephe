@@ -132,7 +132,7 @@ export const SystemMenu = () => {
                   <MenuItem as="div">
                     <button
                       type="button"
-                      className="flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+                      className="flex w-full items-center px-4 py-2.5 text-sm hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                       onClick={() => openTaskSnapshotModal(0)}
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
@@ -151,7 +151,7 @@ export const SystemMenu = () => {
                   <MenuItem as="div">
                     <button
                       type="button"
-                      className="flex w-full items-center px-4 py-2.5 text-sm hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+                      className="flex w-full items-center px-4 py-2.5 text-sm hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                       onClick={() => openTaskSnapshotModal(1)}
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
@@ -177,7 +177,7 @@ export const SystemMenu = () => {
                           setTheme(COLOR_THEME.LIGHT);
                         }
                       }}
-                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         {theme === COLOR_THEME.LIGHT ? (
@@ -196,25 +196,25 @@ export const SystemMenu = () => {
                     <button
                       type="button"
                       onClick={cyclePaperMode}
-                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         {paperMode === "normal" ? (
-                          <span className="h-4 w-4 border border-gray-500 dark:border-gray-600" />
+                          <span className="h-4 w-4 border border-neutral-500 dark:border-neutral-600" />
                         ) : paperMode === "graph" ? (
-                          <span className="grid h-4 w-4 grid-cols-3 border border-gray-500 opacity-70 dark:border-gray-600">
+                          <span className="grid h-4 w-4 grid-cols-3 border border-neutral-500 opacity-70 dark:border-neutral-600">
                             <span
-                              className="col-span-3 border-gray-500 border-b dark:border-gray-500"
+                              className="col-span-3 border-neutral-500 border-b dark:border-neutral-500"
                               style={{ height: "33%" }}
                             />
                             <span
-                              className="col-span-3 border-gray-500 border-b dark:border-gray-500"
+                              className="col-span-3 border-neutral-500 border-b dark:border-neutral-500"
                               style={{ height: "66%" }}
                             />
                           </span>
                         ) : (
-                          <span className="flex h-4 w-4 items-center justify-center border border-gray-500 dark:border-gray-600">
-                            <span className="h-1 w-1 rounded-full bg-gray-400 dark:bg-gray-500" />
+                          <span className="flex h-4 w-4 items-center justify-center border border-neutral-500 dark:border-neutral-600">
+                            <span className="h-1 w-1 rounded-full bg-neutral-400 dark:bg-neutral-500" />
                           </span>
                         )}
                       </span>
@@ -227,7 +227,7 @@ export const SystemMenu = () => {
                       onClick={() => {
                         editorWidth === "normal" ? setWideWidth() : setNormalWidth();
                       }}
-                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         <ViewColumnsIcon className="size-4 stroke-1" />
@@ -245,7 +245,7 @@ export const SystemMenu = () => {
                       onClick={() => {
                         setTaskAutoFlushMode((prevMode) => (prevMode === "off" ? "instant" : "off"));
                       }}
-                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-gray-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-gray-700/70"
+                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         <BoltIcon className={`size-4 stroke-1`} />

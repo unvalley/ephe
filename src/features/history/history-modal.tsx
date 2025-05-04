@@ -119,7 +119,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                       >
                         Tasks
                       </Tab>
-                      <div className="flex items-center text-gray-400 dark:text-gray-500">/</div>
+                      <div className="flex items-center text-neutral-400 dark:text-neutral-500">/</div>
                       <Tab
                         className={({ selected }) =>
                           `rounded-md px-2 py-1 transition-colors ${selected ? "" : "text-neutral-300 dark:text-neutral-500"}`
@@ -133,17 +133,19 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                         <div className="h-[60vh] overflow-y-auto">
                           {isLoading ? (
                             <div className="flex h-full items-center justify-center">
-                              <div className="py-10 text-center text-gray-500 dark:text-gray-400">Loading tasks...</div>
+                              <div className="py-10 text-center text-neutral-500 dark:text-neutral-400">
+                                Loading tasks...
+                              </div>
                             </div>
                           ) : tasks.length > 0 ? (
-                            <div className="divide-y divide-gray-200 dark:divide-gray-600">
+                            <div className="divide-y divide-neutral-200 dark:divide-neutral-600">
                               {tasks.map((task) => (
                                 <div key={task.id} className="flex items-center justify-between py-3">
                                   <div className="flex items-center">
-                                    <span className="mr-2 text-gray-800 dark:text-gray-400">[x]</span>
-                                    <span className="text-gray-800 dark:text-gray-400">{task.content}</span>
+                                    <span className="mr-2 text-neutral-800 dark:text-neutral-400">[x]</span>
+                                    <span className="text-neutral-800 dark:text-neutral-400">{task.content}</span>
                                   </div>
-                                  <span className="text-gray-500 text-sm dark:text-gray-400">
+                                  <span className="text-neutral-500 text-sm dark:text-neutral-400">
                                     Closed at {formatDate(task.completedAt)}
                                   </span>
                                 </div>
@@ -151,7 +153,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                             </div>
                           ) : (
                             <div className="flex h-full items-center justify-center">
-                              <div className="py-10 text-center text-gray-500 dark:text-gray-400">
+                              <div className="py-10 text-center text-neutral-500 dark:text-neutral-400">
                                 No tasks found.
                                 <p>You can open tasks by `- [ ]`, and can close them by `- [x]`.</p>
                               </div>
@@ -161,14 +163,14 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                       </TabPanel>
                       <TabPanel className="p-3">
                         <div className="flex h-[60vh]">
-                          <div className="flex-1 overflow-y-auto border-gray-200 border-r pr-4 dark:border-gray-600">
+                          <div className="flex-1 overflow-y-auto border-neutral-200 border-r pr-4 dark:border-neutral-600">
                             {snapshots.length === 0 ? (
                               <div className="flex h-full items-center justify-center">
-                                <div className="text-center text-gray-500 dark:text-gray-400">
+                                <div className="text-center text-neutral-500 dark:text-neutral-400">
                                   No snapshots found.
                                   <br />
                                   You can save a snapshot by{" "}
-                                  <kbd className="rounded-md border border-gray-200 bg-gray-100 px-1 py-0.5 font-medium text-gray-800 text-xs dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200">
+                                  <kbd className="rounded-md border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-medium text-neutral-800 text-xs dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-200">
                                     Cmd + s
                                   </kbd>{" "}
                                   on the editor.
@@ -176,7 +178,9 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                               </div>
                             ) : isLoading ? (
                               <div className="flex h-full items-center justify-center">
-                                <div className="text-center text-gray-500 dark:text-gray-400">Loading snapshots...</div>
+                                <div className="text-center text-neutral-500 dark:text-neutral-400">
+                                  Loading snapshots...
+                                </div>
                               </div>
                             ) : selectedSnapshot ? (
                               <div className="flex h-full flex-col">
@@ -199,7 +203,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                                     </button>
                                   </div>
                                 </div>
-                                <div className="prose prose-sm dark:prose-invert max-w-none flex-1 overflow-y-auto rounded border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-primary-600">
+                                <div className="prose prose-sm dark:prose-invert max-w-none flex-1 overflow-y-auto rounded border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-600 dark:bg-primary-600">
                                   {selectedSnapshot.content.split("\n").map((line, i) => (
                                     <div
                                       key={`line-${selectedSnapshot.id}-${i}`}
@@ -212,23 +216,27 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                               </div>
                             ) : (
                               <div className="flex h-full items-center justify-center">
-                                <div className="text-center text-gray-500 dark:text-gray-400">No snapshot selected</div>
+                                <div className="text-center text-neutral-500 dark:text-neutral-400">
+                                  No snapshot selected
+                                </div>
                               </div>
                             )}
                           </div>
                           {snapshots.length > 0 && (
                             <div className="w-1/4 overflow-y-auto pl-4">
                               {isLoading ? (
-                                <div className="py-10 text-center text-gray-500 dark:text-gray-400">Loading...</div>
+                                <div className="py-10 text-center text-neutral-500 dark:text-neutral-400">
+                                  Loading...
+                                </div>
                               ) : (
-                                <div className="divide-y divide-gray-200 dark:divide-gray-600">
+                                <div className="divide-y divide-neutral-200 dark:divide-neutral-600">
                                   {snapshots.map((snapshot) => (
                                     <button
                                       key={snapshot.id}
                                       className={`w-full cursor-pointer px-2 py-3 text-left transition-colors ${
                                         selectedSnapshot?.id === snapshot.id
                                           ? "bg-primary-100 dark:bg-primary-900/20"
-                                          : "hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                                          : "hover:bg-neutral-50 dark:hover:bg-neutral-700/30"
                                       }`}
                                       onClick={() => handleSnapshotClick(snapshot)}
                                       onKeyDown={(e) => handleKeyDown(e, snapshot)}

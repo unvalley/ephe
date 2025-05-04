@@ -75,7 +75,7 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
         {tocItems.map((item) => (
           <li
             key={item.line}
-            className={`cursor-pointer whitespace-normal break-words rounded px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 ${isDarkMode ? "text-gray-400 hover:text-gray-200" : "text-gray-500 hover:text-gray-800"}`}
+            className={`cursor-pointer whitespace-normal break-words rounded px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 ${isDarkMode ? "text-neutral-400 hover:text-neutral-200" : "text-neutral-500 hover:text-neutral-800"}`}
             style={{
               paddingLeft: `${(item.level - 1) * 0.75 + 0.5}rem`,
               lineHeight: 1.3,

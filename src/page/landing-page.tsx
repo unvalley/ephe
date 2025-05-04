@@ -42,7 +42,7 @@ export const LandingPage = () => {
         </div>
       </div>
 
-      <footer className="text-center text-gray-600 text-sm sm:text-base dark:text-gray-400">
+      <footer className="text-center text-neutral-600 text-sm sm:text-base dark:text-neutral-400">
         This project is built by{" "}
         <a href="https://x.com/unvalley_" className="text-blue-400 hover:underline">
           unvalley
