@@ -142,8 +142,13 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                               {tasks.map((task) => (
                                 <div key={task.id} className="flex items-center justify-between py-3">
                                   <div className="flex items-center">
-                                    <span className="mr-2 text-neutral-800 dark:text-neutral-400">[x]</span>
-                                    <span className="text-neutral-800 dark:text-neutral-400">{task.content}</span>
+                                    <span className="mr-2 text-neutral-500 dark:text-neutral-400">[x]</span>
+                                    <span className="mr-1">{task.content}</span>
+                                    {task.section && (
+                                      <span className="text-neutral-500 text-sm dark:text-neutral-400">
+                                        {task.section}
+                                      </span>
+                                    )}
                                   </div>
                                   <span className="text-neutral-500 text-sm dark:text-neutral-400">
                                     Closed at {formatDate(task.completedAt)}
@@ -190,7 +195,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                                     <button
                                       type="button"
                                       onClick={handleRestore}
-                                      className="rounded bg-primary-100 px-3 py-1.5 text-primary-700 text-sm hover:bg-primary-200 dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50"
+                                      className="rounded border border-transparent bg-neutral-100 px-4 py-2 text-sm transition-colors hover:bg-neutral-200 focus-visible:ring-offset-2 dark:bg-neutral-700/50 dark:hover:bg-neutral-600"
                                     >
                                       Restore
                                     </button>
@@ -235,7 +240,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                                       key={snapshot.id}
                                       className={`w-full cursor-pointer px-2 py-3 text-left transition-colors ${
                                         selectedSnapshot?.id === snapshot.id
-                                          ? "bg-primary-100 dark:bg-primary-900/20"
+                                          ? "bg-neutral-100 dark:bg-neutral-700"
                                           : "hover:bg-neutral-50 dark:hover:bg-neutral-700/30"
                                       }`}
                                       onClick={() => handleSnapshotClick(snapshot)}
@@ -261,7 +266,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                 <div className="mt-6 flex justify-end">
                   <button
                     type="button"
-                    className="rounded border border-transparent bg-primary-100 px-4 py-2 text-primary-900 text-sm hover:bg-primary-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50"
+                    className="rounded border border-transparent bg-neutral-100 px-4 py-2 text-sm transition-colors hover:bg-neutral-200 focus-visible:ring-offset-2 dark:bg-neutral-700 dark:hover:bg-neutral-600"
                     onClick={onClose}
                   >
                     Close
