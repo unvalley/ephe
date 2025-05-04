@@ -17,9 +17,10 @@ Traditional to-do apps can be time-consuming and quickly overwhelming. A single 
 
 ## Fun features
 
-- Dark mode.
+https://github.com/user-attachments/assets/9967182a-0858-499b-bbaf-11157bbba2bc
+
 - `-[` or `- [` automatically completes to `- [ ] `.
-- Table of Contents.
+- Dark mode.
 - Format on save (using [dprint](https://github.com/dprint/dprint)).
 - Record history (tasks and snapshots).
 - Command + k menu.
