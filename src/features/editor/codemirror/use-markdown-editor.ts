@@ -19,6 +19,7 @@ import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useEditorTheme } from "./use-editor-theme";
+import { useCharCount } from "../../../utils/hooks/use-char-count";
 
 const storage = createJSONStorage<string>(() => localStorage);
 
@@ -56,6 +57,7 @@ export const useMarkdownEditor = () => {
   const { isDarkMode } = useTheme();
   const { isWideMode } = useEditorWidth();
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode);
+  const { setCharCount } = useCharCount();
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
@@ -81,8 +83,7 @@ export const useMarkdownEditor = () => {
     };
   }, [view, setContent]);
 
-  // Listen for external content updates (from other tabs)
-  // Cross-tab sync
+  // Listen for external content updates
   // - text edit emits storage event
   // - subscribe updates the editor content
   useEffect(() => {
@@ -91,6 +92,7 @@ export const useMarkdownEditor = () => {
         changes: { from: 0, to: view.state.doc.length, insert: content },
       });
     }
+    setCharCount(content.length);
   }, [view, content]);
 
   // Formatter initialization is a side effect, isolated in useEffect
