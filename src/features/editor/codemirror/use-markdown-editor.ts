@@ -20,6 +20,7 @@ import { snapshotStorage } from "../../snapshots/snapshot-storage";
 import { useEditorTheme } from "./use-editor-theme";
 import { useCharCount } from "../../../utils/hooks/use-char-count";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
+import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 
 const storage = createJSONStorage<string>(() => localStorage);
 
@@ -85,6 +86,7 @@ export const useMarkdownEditor = () => {
   const { isWideMode } = useEditorWidth();
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode);
   const { setCharCount } = useCharCount();
+  const { isMobile } = useMobileDetector();
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
@@ -202,7 +204,8 @@ export const useMarkdownEditor = () => {
 
           themeCompartment.of(editorTheme),
           highlightCompartment.of(editorHighlightStyle),
-          placeholder(getRandomQuote()),
+          // Only show placeholder on non-mobile devices
+          ...(isMobile ? [] : [placeholder(getRandomQuote())]),
 
           keymap.of([
             {
@@ -232,6 +235,7 @@ export const useMarkdownEditor = () => {
     themeCompartment.of,
     editorTheme,
     editorHighlightStyle,
+    isMobile,
   ]);
 
   // Update theme when dark mode changes
