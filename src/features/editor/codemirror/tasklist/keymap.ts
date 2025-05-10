@@ -47,29 +47,21 @@ export const taskKeyBindings: readonly KeyBinding[] = [
         const prevLine = state.doc.line(currentLine.number - 1);
         const prevLineText = prevLine.text;
 
-        // 直前の行もチェックリストアイテムか確認
         if (isTaskLine(prevLineText)) {
           const prevIndentLength = getIndentLength(prevLineText);
-
-          // ★★★ 修正点: 直前の行が同じインデントレベルの場合のみインデントを実行 ★★★
           if (currentIndentLength === prevIndentLength) {
             console.log(`Indenting sibling: Current ${currentIndentLength}, Prev ${prevIndentLength}`);
             dispatch({
               changes: { from: currentLine.from, insert: indentUnitStr },
-              userEvent: "input.indent.task", // より具体的なイベント名
+              userEvent: "input.indent.task",
             });
-            return true; // インデント処理を実行したので true を返す
+            return true;
           }
 
-          // (オプション) もし現在の行が既に直前の行より深い場合、Tabでのインデントはブロック
           if (currentIndentLength > prevIndentLength) {
             console.log(`Already nested: Current ${currentIndentLength}, Prev ${prevIndentLength}`);
-            return true; // これ以上Tabでインデントさせない
+            return true;
           }
-
-          // (オプション) もし現在の行が直前の行より浅い場合 (通常は考えにくいが)、デフォルト動作に任せるかブロック
-          // console.log(`Less indented than previous: Current ${currentIndentLength}, Prev ${prevIndentLength}`);
-          // return false; or return true;
         }
       }
 

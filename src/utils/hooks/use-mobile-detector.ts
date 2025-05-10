@@ -18,4 +18,4 @@ export const useMobileDetector = () => {
   }, []);
 
   return { isMobile };
-}; 
+};

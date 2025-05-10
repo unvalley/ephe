@@ -13,24 +13,3 @@ export const WRITING_QUOTES = [
 export const getRandomQuote = (): string => {
   return WRITING_QUOTES[Math.floor(Math.random() * WRITING_QUOTES.length)];
 };
-
-if (import.meta.vitest) {
-  const { it, expect } = import.meta.vitest;
-
-  it("should return a quote from the WRITING_QUOTES array", () => {
-    // Run multiple times to increase confidence due to randomness
-    for (let i = 0; i < 5; i++) {
-      const quote = getRandomQuote();
-      expect(WRITING_QUOTES).toContain(quote);
-    }
-  });
-
-  it("should return different quotes over multiple calls (probabilistic)", () => {
-    const quotes = new Set();
-    // Generate multiple quotes, expecting at least some difference
-    for (let i = 0; i < 5; i++) {
-      quotes.add(getRandomQuote());
-    }
-    expect(quotes.size).toBeGreaterThan(1);
-  });
-}

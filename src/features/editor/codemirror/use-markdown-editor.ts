@@ -48,29 +48,32 @@ const crossTabStorage = {
 const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "", crossTabStorage);
 
 const useMarkdownFormatter = () => {
-    const ref = useRef<DprintMarkdownFormatter | null>(null);
-    useEffect(() => {
-      let alive = true;
-      (async () => {
-        const fmt = await DprintMarkdownFormatter.getInstance();
-        if (alive) {
-            ref.current = fmt;
-        }
-      })();
-      return () => { alive = false; ref.current = null; };
-    }, []); 
-    return ref; 
+  const ref = useRef<DprintMarkdownFormatter | null>(null);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const fmt = await DprintMarkdownFormatter.getInstance();
+      if (alive) {
+        ref.current = fmt;
+      }
+    })();
+    return () => {
+      alive = false;
+      ref.current = null;
+    };
+  }, []);
+  return ref;
 };
 
 const useTaskHandler = () => {
-    const { taskAutoFlushMode } = useTaskAutoFlush();
-    const handlerRef = useRef(createDefaultTaskHandler(taskStorage, taskAutoFlushMode));
-    useEffect(() => {
-      handlerRef.current = createDefaultTaskHandler(taskStorage, taskAutoFlushMode);
-      registerTaskHandler(handlerRef.current);
-      return () => registerTaskHandler(undefined);
-    }, [taskAutoFlushMode]);
-    return handlerRef;
+  const { taskAutoFlushMode } = useTaskAutoFlush();
+  const handlerRef = useRef(createDefaultTaskHandler(taskStorage, taskAutoFlushMode));
+  useEffect(() => {
+    handlerRef.current = createDefaultTaskHandler(taskStorage, taskAutoFlushMode);
+    registerTaskHandler(handlerRef.current);
+    return () => registerTaskHandler(undefined);
+  }, [taskAutoFlushMode]);
+  return handlerRef;
 };
 
 export const useMarkdownEditor = () => {

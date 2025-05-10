@@ -1,7 +1,6 @@
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { EditorView } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
-import { EPHE_COLORS } from "./codemirror-theme";
 
 /**
  * Manages the CodeMirror theme and highlight style based on dark mode and editor width.
@@ -101,3 +100,36 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean) => {
 
   return getHighlightStyle();
 };
+
+export const EPHE_COLORS = {
+  light: {
+    background: "#FFFFFF",
+    foreground: "#111111",
+    comment: "#9E9E9E",
+    keyword: "#111111",
+    string: "#616161",
+    number: "#555555",
+    type: "#333333",
+    function: "#555555",
+    variable: "#666666",
+    constant: "#555555",
+    operator: "#757575",
+    heading: "#000000",
+    emphasis: "#000000",
+  },
+  dark: {
+    background: "#121212",
+    foreground: "#F5F5F5",
+    comment: "#757575",
+    keyword: "#F5F5F5",
+    string: "#AAAAAA",
+    number: "#BDBDBD",
+    type: "#E0E0E0",
+    function: "#C0C0C0",
+    variable: "#D0D0D0",
+    constant: "#E0E0E0",
+    operator: "#999999",
+    heading: "#FFFFFF",
+    emphasis: "#FFFFFF",
+  },
+} as const;

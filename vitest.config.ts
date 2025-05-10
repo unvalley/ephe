@@ -9,5 +9,10 @@ export default defineConfig({
     coverage: {
       provider: "v8",
     },
+    browser: {
+      provider: "playwright",
+      enabled: true,
+      instances: [{ browser: "chromium" }],
+    },
   },
 });
