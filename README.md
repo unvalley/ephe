@@ -11,13 +11,11 @@
 
 ## What is Ephe
 
-Ephe is an ephemeral markdown paper to organize your daily todos and ideas. 
+Ephe is an ephemeral markdown paper to organize your daily todos and ideas.
 
 Traditional to-do apps can be time-consuming and quickly overwhelming. A single page is all you need to organize your day.
 
 ## Fun features
-
-https://github.com/user-attachments/assets/9967182a-0858-499b-bbaf-11157bbba2bc
 
 - `-[` or `- [` automatically completes to `- [ ] `.
 - Dark mode.
@@ -25,3 +23,5 @@ https://github.com/user-attachments/assets/9967182a-0858-499b-bbaf-11157bbba2bc
 - Record history (tasks and snapshots).
 - Command + k menu.
 - Customizable Editor Appearance (Paper, Width).
+
+https://github.com/user-attachments/assets/9967182a-0858-499b-bbaf-11157bbba2bc
