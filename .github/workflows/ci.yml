@@ -108,6 +108,9 @@ jobs:
           key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vitest-${{ hashFiles('**/*.ts', '**/*.tsx') }}
           restore-keys: |
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vitest-
+    
+      - name: Install Playwright Browsers
+        run: npx playwright install chromium
 
       - name: Run Vitest
         run: pnpm test
