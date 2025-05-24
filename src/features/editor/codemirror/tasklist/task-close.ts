@@ -8,7 +8,7 @@ import {
 } from "@codemirror/view";
 import { StateEffect, StateField, RangeSetBuilder } from "@codemirror/state";
 import { findTaskSection } from "./task-section-utils";
-import { OnTaskClosed } from ".";
+import type { OnTaskClosed } from ".";
 
 export interface TaskHandler {
   onTaskClosed: ({ taskContent, originalLine, section }: OnTaskClosed) => void;
@@ -16,7 +16,7 @@ export interface TaskHandler {
 }
 
 // use utils
-const taskItemRegex = /^(\s*[-*]\s+)\[([\ xX])\]/;
+const taskItemRegex = /^(\s*[-*]\s+)\[([ xX])\]/;
 
 type TaskInfo = {
   from: number; // start position of the task (')

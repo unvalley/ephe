@@ -1,4 +1,4 @@
-import { EditorView } from "@codemirror/view";
+import type { EditorView } from "@codemirror/view";
 
 const MARKDOWN_HEADING = /^#{1,6}\s+\S/;
 

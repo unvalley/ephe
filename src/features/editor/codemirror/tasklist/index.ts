@@ -4,7 +4,7 @@ import { taskDecoration, taskHoverField, taskMouseInteraction, type TaskHandler 
 import { taskKeyMap } from "./keymap";
 import { taskAutoComplete } from "./auto-complete";
 import { generateTaskIdentifier, type TaskStorage } from "../../tasks/task-storage";
-import { type TaskAutoFlushMode } from "../../../../utils/hooks/use-task-auto-flush";
+import type { TaskAutoFlushMode } from "../../../../utils/hooks/use-task-auto-flush";
 
 export type OnTaskClosed = {
   taskContent: string;
