@@ -7,6 +7,7 @@
     "dev": "pnpm run copy:wasm && vite",
     "build": "pnpm run copy:wasm && tsc && vite build",
     "preview": "vite preview",
+    "lint": "pnpm lint:biome && pnpm lint:eslint",
     "lint:biome": "biome lint",
     "lint:biome:write": "biome lint --write",
     "lint:eslint": "eslint --ext .ts,.tsx src",
