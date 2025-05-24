@@ -12,7 +12,7 @@ export type DateGroupedItems<T> = {
 };
 
 // History data type
-export type HistoryData = {
+type HistoryData = {
   snapshots: Snapshot[];
   tasks: CompletedTask[];
   groupedSnapshots: DateGroupedItems<Snapshot>;

@@ -4,7 +4,7 @@ import { useAtom } from "jotai";
 
 export type PaperMode = "normal" | "graph" | "dots";
 
-export const PAPER_MODE_CLASSES = {
+const PAPER_MODE_CLASSES = {
   normal: "bg-normal-paper",
   graph: "bg-graph-paper",
   dots: "bg-dots-paper",

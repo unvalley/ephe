@@ -19,7 +19,7 @@ import {
   ViewColumnsIcon,
 } from "@heroicons/react/24/outline";
 
-export type CommandMenuProps = {
+type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;
   editorContent?: string;

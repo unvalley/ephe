@@ -11,7 +11,7 @@ export type DateFilter = {
 };
 
 // Base Storage interface using function properties
-export interface Storage<T> {
+type Storage<T> = {
   getAll: () => T[];
   getById: (id: string) => T | null;
   save: (item: T) => void;

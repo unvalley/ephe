@@ -13,7 +13,7 @@ import {
 import { useHistoryData } from "./use-history-data";
 import type { Snapshot } from "../snapshots/snapshot-storage";
 
-export type HistoryModalProps = {
+type HistoryModalProps = {
   isOpen: boolean;
   onClose: () => void;
   initialTabIndex?: number;

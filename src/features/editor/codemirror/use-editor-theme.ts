@@ -101,7 +101,7 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean) => {
   return getHighlightStyle();
 };
 
-export const EPHE_COLORS = {
+const EPHE_COLORS = {
   light: {
     background: "#FFFFFF",
     foreground: "#111111",

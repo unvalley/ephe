@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@codemirror/autocomplete':
-        specifier: ^6.18.6
-        version: 6.18.6
       '@codemirror/commands':
         specifier: ^6.8.1
         version: 6.8.1
@@ -23,9 +20,6 @@ importers:
       '@codemirror/language-data':
         specifier: ^6.5.1
         version: 6.5.1
-      '@codemirror/search':
-        specifier: ^6.5.10
-        version: 6.5.10
       '@codemirror/state':
         specifier: ^6.5.2
         version: 6.5.2
@@ -78,9 +72,6 @@ importers:
       '@biomejs/biome':
         specifier: 2.0.0-beta.2
         version: 2.0.0-beta.2
-      '@eslint/js':
-        specifier: ^9.26.0
-        version: 9.26.0
       '@playwright/test':
         specifier: ^1.51.1
         version: 1.51.1
@@ -156,9 +147,6 @@ importers:
       vitest:
         specifier: ^3.1.4
         version: 3.1.4(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(@vitest/browser@3.1.4)(@vitest/ui@3.0.8)(jiti@2.4.2)(lightningcss@1.29.2)(msw@2.7.4(@types/node@22.14.0)(typescript@5.8.2))
-      vitest-browser-react:
-        specifier: ^0.1.1
-        version: 0.1.1(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(@vitest/browser@3.1.4)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(vitest@3.1.4)
 
 packages:
 
@@ -2920,22 +2908,6 @@ packages:
       tsx:
         optional: true
       yaml:
-        optional: true
-
-  vitest-browser-react@0.1.1:
-    resolution: {integrity: sha512-n9l+sIAexKqqfBuEkjVGdfZ4xAn1Gn/+wc4Mo8KsUSUOVoM9evSY0rVXdMIzCQqloT/zvmFGAtziFINkqu+t7g==}
-    engines: {node: ^18.0.0 || >=20.0.0}
-    peerDependencies:
-      '@types/react': '>18.0.0'
-      '@types/react-dom': '>18.0.0'
-      '@vitest/browser': '>=2.1.0'
-      react: '>18.0.0'
-      react-dom: '>18.0.0'
-      vitest: '>=2.1.0'
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      '@types/react-dom':
         optional: true
 
   vitest@3.1.4:
@@ -5928,16 +5900,6 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.4.2
       lightningcss: 1.29.2
-
-  vitest-browser-react@0.1.1(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(@vitest/browser@3.1.4)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(vitest@3.1.4):
-    dependencies:
-      '@vitest/browser': 3.1.4(msw@2.7.4(@types/node@22.14.0)(typescript@5.8.2))(playwright@1.52.0)(vite@6.2.2(@types/node@22.14.0)(jiti@2.4.2)(lightningcss@1.29.2))(vitest@3.1.4)
-      react: 19.0.0
-      react-dom: 19.0.0(react@19.0.0)
-      vitest: 3.1.4(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(@vitest/browser@3.1.4)(@vitest/ui@3.0.8)(jiti@2.4.2)(lightningcss@1.29.2)(msw@2.7.4(@types/node@22.14.0)(typescript@5.8.2))
-    optionalDependencies:
-      '@types/react': 19.0.10
-      '@types/react-dom': 19.0.4(@types/react@19.0.10)
 
   vitest@3.1.4(@edge-runtime/vm@3.2.0)(@types/debug@4.1.12)(@types/node@22.14.0)(@vitest/browser@3.1.4)(@vitest/ui@3.0.8)(jiti@2.4.2)(lightningcss@1.29.2)(msw@2.7.4(@types/node@22.14.0)(typescript@5.8.2)):
     dependencies:

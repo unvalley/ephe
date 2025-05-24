@@ -19,15 +19,14 @@
     "test:unit:ui": "vitest src --ui",
     "test:unit:coverage": "vitest src --coverage",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "knip": "pnpm dlx knip"
   },
   "dependencies": {
-    "@codemirror/autocomplete": "^6.18.6",
     "@codemirror/commands": "^6.8.1",
     "@codemirror/lang-markdown": "^6.3.2",
     "@codemirror/language": "^6.11.0",
     "@codemirror/language-data": "^6.5.1",
-    "@codemirror/search": "^6.5.10",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.36.5",
     "@dprint/formatter": "^0.4.1",
@@ -47,7 +46,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.0-beta.2",
-    "@eslint/js": "^9.26.0",
     "@playwright/test": "^1.51.1",
     "@tailwindcss/postcss": "^4.0.14",
     "@tailwindcss/vite": "^4.0.14",
@@ -72,8 +70,7 @@
     "vite": "^6",
     "vite-plugin-top-level-await": "^1.5.0",
     "vite-plugin-wasm": "^3.4.1",
-    "vitest": "^3.1.4",
-    "vitest-browser-react": "^0.1.1"
+    "vitest": "^3.1.4"
   },
   "overrides": {
     "vite": "npm:rolldown-vite@latest"
