@@ -1,36 +1,38 @@
 "use client";
 
 import { Command } from "cmdk";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
-import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-formatter";
 import { showToast } from "../../utils/components/toast";
 import type { PaperMode } from "../../utils/hooks/use-paper-mode";
 import { COLOR_THEME, type ColorTheme } from "../../utils/theme-initializer";
 import type { EditorWidth } from "../../utils/hooks/use-editor-width";
+import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import {
   ComputerDesktopIcon,
   DocumentIcon,
   LinkIcon,
   MagnifyingGlassIcon,
   MoonIcon,
-  NewspaperIcon,
   SunIcon,
   ViewColumnsIcon,
+  WrenchScrewdriverIcon,
+  CodeBracketIcon,
 } from "@heroicons/react/24/outline";
+import { PaperModeIcon } from "./paper-icon";
 
 type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;
-  editorContent?: string;
-  //   editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
-  markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
-  paperMode?: PaperMode;
-  cyclePaperMode?: () => PaperMode;
+  paperMode: PaperMode;
+  cyclePaperMode: () => PaperMode;
   editorWidth?: EditorWidth;
   toggleEditorWidth?: () => void;
   previewMode?: boolean;
   togglePreviewMode?: () => void;
+  content: string;
+  formatDocument: () => Promise<boolean>;
+  insertText: (text: string) => boolean;
 };
 
 type CommandItem = {
@@ -45,12 +47,13 @@ type CommandItem = {
 export function CommandMenu({
   open,
   onClose = () => {},
-  editorContent = "",
-  //   markdownFormatterRef,
   paperMode,
   cyclePaperMode,
   editorWidth,
   toggleEditorWidth,
+  content,
+  formatDocument,
+  insertText,
 }: CommandMenuProps) {
   const { theme, setTheme, nextTheme } = useTheme();
   const [inputValue, setInputValue] = useState("");
@@ -97,13 +100,13 @@ export function CommandMenu({
   };
 
   const handleExportMarkdownCallback = () => {
-    if (!editorContent) {
+    if (!content) {
       showToast("No content to export", "error");
       onClose();
       return;
     }
     try {
-      const blob = new Blob([editorContent], { type: "text/markdown" });
+      const blob = new Blob([content], { type: "text/markdown" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       const date = new Date().toISOString().split("T")[0];
@@ -122,76 +125,36 @@ export function CommandMenu({
     }
   };
 
-  //   const handleFormatDocumentCallback = useCallback(async () => {
-  //     if (!editorRef?.current || !markdownFormatterRef?.current) {
-  //       showToast("Editor or markdown formatter not available", "error");
-  //       handleClose();
-  //       return;
-  //     }
-  //     try {
-  //       const editor = editorRef.current;
-  //       const selection = editor.getSelection();
-  //       const scrollTop = editor.getScrollTop();
-  //       const content = editor.getValue();
-  //       const formattedContent = await markdownFormatterRef.current.formatMarkdown(content); // formatMarkdownはPromiseを返すと仮定
+  const handleFormatDocumentCallback = useCallback(async () => {
+    await formatDocument();
+    onClose();
+  }, [formatDocument, onClose]);
 
-  //       editor.setValue(formattedContent);
+  const handleInsertGitHubIssuesCallback = useCallback(async () => {
+    if (!insertText) {
+      showToast("Editor not available", "error");
+      onClose();
+      return;
+    }
+    try {
+      const github_user_id = prompt("Enter GitHub User ID:");
+      if (!github_user_id) {
+        onClose();
+        return;
+      }
+      const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id);
 
-  //       // カーソル位置とスクロール位置を復元
-  //       if (selection) {
-  //         editor.setSelection(selection);
-  //       }
-  //       // setValue後のレンダリングを待ってからスクロール位置を復元
-  //       setTimeout(() => editor.setScrollTop(scrollTop), 0);
-
-  //       showToast("Document formatted successfully", "default");
-  //     } catch (error) {
-  //       const message = error instanceof Error ? error.message : "unknown";
-  //       showToast(`Error formatting document: ${message}`, "error");
-  //       console.error("Formatting error:", error);
-  //     } finally {
-  //       handleClose();
-  //     }
-  //   }, [markdownFormatterRef, handleClose]);
-
-  //   const handleInsertGitHubIssuesCallback = useCallback(async () => {
-  //     if (!editorRef?.current) {
-  //       showToast("Editor not available", "error");
-  //       handleClose();
-  //       return;
-  //     }
-  //     try {
-  //       const github_user_id = prompt("Enter GitHub User ID:");
-  //       if (!github_user_id) {
-  //         handleClose(); // キャンセルまたは空入力時は閉じる
-  //         return;
-  //       }
-  //       const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id); // fetchGitHubIssuesTaskListはPromiseを返すと仮定
-  //       const editor = editorRef.current;
-  //       const selection = editor.getSelection();
-  //       const position = editor.getPosition();
-
-  //       let range: monaco.IRange;
-  //       if (selection && !selection.isEmpty()) {
-  //         range = selection;
-  //       } else if (position) {
-  //         // 選択範囲がない場合は現在のカーソル位置に挿入
-  //         range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
-  //       } else {
-  //         // カーソル位置もない場合（エディタが空など）は先頭に挿入
-  //         range = new monaco.Range(1, 1, 1, 1);
-  //       }
-
-  //       editor.executeEdits("insert-github-issues", [{ range, text: issuesTaskList, forceMoveMarkers: true }]);
-
-  //       showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
-  //     } catch (error) {
-  //       console.error("Error inserting GitHub issues:", error);
-  //       showToast("Failed to insert GitHub issues", "error");
-  //     } finally {
-  //       handleClose();
-  //     }
-  //   }, [editorRef, handleClose]);
+      const success = insertText(issuesTaskList);
+      if (success) {
+        showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
+      }
+    } catch (error) {
+      console.error("Error inserting GitHub issues:", error);
+      showToast("Failed to insert GitHub issues", "error");
+    } finally {
+      onClose();
+    }
+  }, [insertText, onClose]);
 
   const goToGitHubRepo = () => {
     window.open("https://github.com/unvalley/ephe", "_blank");
@@ -217,15 +180,14 @@ export function CommandMenu({
       },
     ];
 
-    if (cyclePaperMode) {
-      list.push({
-        id: "paper-mode",
-        name: "Cycle paper mode",
-        icon: <NewspaperIcon className="size-4 stroke-1" />,
-        perform: cyclePaperModeCallback,
-        keywords: "paper mode cycle switch document style layout background",
-      });
-    }
+    list.push({
+      id: "paper-mode",
+      name: "Cycle paper mode",
+      icon: <PaperModeIcon paperMode={paperMode} />,
+      perform: cyclePaperModeCallback,
+      keywords: "paper mode cycle switch document style layout background",
+    });
+
     if (toggleEditorWidth) {
       list.push({
         id: "editor-width",
@@ -235,7 +197,7 @@ export function CommandMenu({
         keywords: "editor width toggle resize narrow wide full layout column",
       });
     }
-    if (editorContent) {
+    if (content) {
       list.push({
         id: "export-markdown",
         name: "Export markdown",
@@ -245,27 +207,24 @@ export function CommandMenu({
         keywords: "export markdown save download file md text document",
       });
     }
-    // if (editorRef?.current && markdownFormatterRef?.current) {
-    //   list.push({
-    //     id: "format-document",
-    //     name: "Format document",
-    //     icon: <FormatIcon className="h-3.5 w-3.5" />,
-    //     shortcut: "⌘F", // ブラウザの検索と競合する可能性あり
-    //     perform: handleFormatDocumentCallback,
-    //     keywords: "format document prettify code style arrange beautify markdown lint tidy",
-    //   });
+    // if (view) {
+    list.push({
+      id: "format-document",
+      name: "Format document",
+      icon: <WrenchScrewdriverIcon className="size-4 stroke-1" />,
+      perform: handleFormatDocumentCallback,
+      keywords: "format document prettify code style arrange beautify markdown lint tidy",
+    });
     // }
-    // if (editorRef?.current) {
-    //   // エディタが存在する場合のみ表示
-    //   list.push({
-    //     id: "insert-github-issues",
-    //     name: "Insert GitHub Issues (Public Repos)",
-    //     icon: <GitHubIcon className="h-3.5 w-3.5" />,
-    //     shortcut: "⌘G", // ショートカットは要検討
-    //     perform: handleInsertGitHubIssuesCallback,
-    //     keywords: "github issues insert fetch task todo list import integrate",
-    //   });
-    // }
+    if (content) {
+      list.push({
+        id: "insert-github-issues",
+        name: "Insert GitHub Issues (Public Repos)",
+        icon: <CodeBracketIcon className="size-4 stroke-1" />,
+        perform: handleInsertGitHubIssuesCallback,
+        keywords: "github issues insert fetch task todo list import integrate",
+      });
+    }
     list.push({
       id: "github-repo",
       name: "Go to Ephe GitHub Repo",
