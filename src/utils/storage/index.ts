@@ -17,7 +17,7 @@ type Storage<T> = {
   save: (item: T) => void;
   deleteById: (id: string) => void;
   deleteAll: () => void;
-}
+};
 
 // Create browser local storage provider
 export const createBrowserLocalStorage = (): StorageProvider => ({
