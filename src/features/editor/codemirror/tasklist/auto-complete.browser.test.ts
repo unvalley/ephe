@@ -20,7 +20,7 @@ const triggerInput = (view: EditorView, text: string) => {
 
   // Try each handler until one handles the input
   for (const handler of handlers) {
-    if (handler(view, pos, pos, text)) {
+    if (handler(view, pos, pos, text, () => view.state.update({ changes: { from: pos, to: pos, insert: text } }))) {
       return; // Handler processed the input
     }
   }
