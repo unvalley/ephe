@@ -17,7 +17,7 @@ Traditional to-do apps can be time-consuming and quickly overwhelming. A single 
 
 ## Fun features
 
-- `-[` or `- [` automatically completes to `- [ ] `.
+- `-[ ` or `- [ ` automatically completes to `- [ ] `.
 - Dark mode.
 - Format on save (using [dprint](https://github.com/dprint/dprint)).
 - Record history (tasks and snapshots).
