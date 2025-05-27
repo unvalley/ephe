@@ -48,7 +48,6 @@ export function CommandMenu({
   onClose = () => {},
   paperMode,
   cyclePaperMode,
-  editorWidth,
   toggleEditorWidth,
   content,
   formatDocument,
