@@ -41,7 +41,6 @@ type CommandItem = {
   icon?: React.ReactNode;
   shortcut?: string;
   perform: () => void;
-  keywords?: string;
 };
 
 export function CommandMenu({
@@ -162,7 +161,7 @@ export function CommandMenu({
   };
 
   const commandsList = (): CommandItem[] => {
-    const list: CommandItem[] = [
+    return [
       {
         id: "theme-toggle",
         name: `Switch to ${getNextThemeText()} mode`,
@@ -174,66 +173,54 @@ export function CommandMenu({
           ) : (
             <ComputerDesktopIcon className="size-4 stroke-1" />
           ),
-        // shortcut: "⌘T", // Mac以外も考慮するなら修飾キーの表示を工夫する必要あり
         perform: cycleThemeCallback,
-        keywords: "theme toggle switch mode light dark system color appearance",
+      },
+      {
+        id: "paper-mode",
+        name: "Cycle paper mode",
+        icon: <PaperModeIcon paperMode={paperMode} />,
+        perform: cyclePaperModeCallback,
+      },
+      ...(toggleEditorWidth
+        ? [
+            {
+              id: "editor-width",
+              name: "Toggle editor width",
+              icon: <ViewColumnsIcon className="size-4 stroke-1" />,
+              perform: toggleEditorWidthCallback,
+            },
+          ]
+        : []),
+      {
+        id: "export-document",
+        name: "Export document",
+        icon: <DocumentIcon className="size-4 stroke-1" />,
+        perform: handleExportMarkdownCallback,
+      },
+      {
+        id: "format-document",
+        name: "Format document",
+        icon: <WrenchScrewdriverIcon className="size-4 stroke-1" />,
+        shortcut: "⌘+s",
+        perform: handleFormatDocumentCallback,
+      },
+      ...(content
+        ? [
+            {
+              id: "insert-github-issues",
+              name: "Insert GitHub Issues (Public Repos)",
+              icon: <CodeBracketIcon className="size-4 stroke-1" />,
+              perform: handleInsertGitHubIssuesCallback,
+            },
+          ]
+        : []),
+      {
+        id: "github-repo",
+        name: "Go to Ephe GitHub Repo",
+        icon: <LinkIcon className="size-4 stroke-1" />,
+        perform: goToGitHubRepo,
       },
     ];
-
-    list.push({
-      id: "paper-mode",
-      name: "Cycle paper mode",
-      icon: <PaperModeIcon paperMode={paperMode} />,
-      perform: cyclePaperModeCallback,
-      keywords: "paper mode cycle switch document style layout background",
-    });
-
-    if (toggleEditorWidth) {
-      list.push({
-        id: "editor-width",
-        name: "Toggle editor width",
-        icon: <ViewColumnsIcon className="size-4 stroke-1" />,
-        perform: toggleEditorWidthCallback,
-        keywords: "editor width toggle resize narrow wide full layout column",
-      });
-    }
-    if (content) {
-      list.push({
-        id: "export-markdown",
-        name: "Export markdown",
-        icon: <DocumentIcon className="size-4 stroke-1" />,
-        // shortcut: "⌘S",
-        perform: handleExportMarkdownCallback,
-        keywords: "export markdown save download file md text document",
-      });
-    }
-    // if (view) {
-    list.push({
-      id: "format-document",
-      name: "Format document",
-      icon: <WrenchScrewdriverIcon className="size-4 stroke-1" />,
-      perform: handleFormatDocumentCallback,
-      keywords: "format document prettify code style arrange beautify markdown lint tidy",
-    });
-    // }
-    if (content) {
-      list.push({
-        id: "insert-github-issues",
-        name: "Insert GitHub Issues (Public Repos)",
-        icon: <CodeBracketIcon className="size-4 stroke-1" />,
-        perform: handleInsertGitHubIssuesCallback,
-        keywords: "github issues insert fetch task todo list import integrate",
-      });
-    }
-    list.push({
-      id: "github-repo",
-      name: "Go to Ephe GitHub Repo",
-      icon: <LinkIcon className="size-4 stroke-1" />,
-      perform: goToGitHubRepo,
-      keywords: "github ephe repository project code source link open website source-code",
-    });
-
-    return list;
   };
 
   return (
@@ -299,27 +286,15 @@ export function CommandMenu({
               .map((command) => (
                 <Command.Item
                   key={command.id}
-                  // value に name と keywords を含めて検索対象にする
-                  value={`${command.name} ${command.keywords || ""}`}
+                  value={command.name}
                   onSelect={command.perform}
                   className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 >
                   <div className="flex items-center gap-2">
-                    {/* アイコン表示エリア */}
                     <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                       {command.icon}
                     </div>
-                    {/* コマンド名と状態表示 */}
-                    <span className="flex-grow truncate">
-                      {" "}
-                      {command.name}
-                      {command.id === "paper-mode" && paperMode && (
-                        <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({paperMode})</span>
-                      )}
-                      {command.id === "editor-width" && editorWidth && (
-                        <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({editorWidth})</span>
-                      )}
-                    </span>
+                    <span className="flex-grow truncate"> {command.name}</span>
                   </div>
                   {command.shortcut && (
                     <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
@@ -331,15 +306,15 @@ export function CommandMenu({
           </Command.Group>
 
           <Command.Group
-            heading="Operations (WIP)"
+            heading="Operations"
             className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
           >
             {commandsList()
-              .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues"].includes(cmd.id))
+              .filter((cmd) => ["export-document", "format-document", "insert-github-issues"].includes(cmd.id))
               .map((command) => (
                 <Command.Item
                   key={command.id}
-                  value={`${command.name} ${command.keywords || ""}`}
+                  value={command.name}
                   onSelect={command.perform}
                   className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 >
@@ -367,7 +342,7 @@ export function CommandMenu({
               .map((command) => (
                 <Command.Item
                   key={command.id}
-                  value={`${command.name} ${command.keywords || ""}`}
+                  value={command.name}
                   onSelect={command.perform}
                   className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 >
