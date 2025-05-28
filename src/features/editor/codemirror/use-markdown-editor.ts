@@ -252,60 +252,9 @@ export const useMarkdownEditor = () => {
     }
   }, [view, highlightCompartment.reconfigure, themeCompartment.reconfigure, editorTheme, editorHighlightStyle]);
 
-  const formatDocument = async () => {
-    console.log(`view: ${view}, formatterRef.current: ${formatterRef.current}`);
-    if (!view || !formatterRef.current) {
-      showToast("Editor or markdown formatter not available", "error");
-      return false;
-    }
-    try {
-      const content = view.state.doc.toString();
-      const formattedContent = await formatterRef.current.formatMarkdown(content);
-
-      if (formattedContent !== content) {
-        view.dispatch({
-          changes: { from: 0, to: view.state.doc.length, insert: formattedContent },
-        });
-        showToast("Document formatted successfully", "default");
-      } else {
-        showToast("Document is already formatted", "default");
-      }
-      return true;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "unknown";
-      showToast(`Error formatting document: ${message}`, "error");
-      console.error("Formatting error:", error);
-      return false;
-    }
-  };
-
-  const insertText = (text: string) => {
-    if (!view) {
-      showToast("Editor not available", "error");
-      return false;
-    }
-    try {
-      const { state } = view;
-      const pos = state.selection.main.head;
-      view.dispatch({
-        changes: { from: pos, insert: text },
-        selection: { anchor: pos + text.length },
-      });
-      return true;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "unknown";
-      showToast(`Error inserting text: ${message}`, "error");
-      return false;
-    }
-  };
-
   return {
     editor,
     view,
-    content,
     onSave: view ? () => onSave(view) : undefined,
-    formatDocument,
-    insertText,
-    formatterRef,
   };
 };

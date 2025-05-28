@@ -1,38 +1,36 @@
 "use client";
 
 import { Command } from "cmdk";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
+import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-formatter";
 import { showToast } from "../../utils/components/toast";
 import type { PaperMode } from "../../utils/hooks/use-paper-mode";
 import { COLOR_THEME, type ColorTheme } from "../../utils/theme-initializer";
 import type { EditorWidth } from "../../utils/hooks/use-editor-width";
-import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import {
   ComputerDesktopIcon,
   DocumentIcon,
   LinkIcon,
   MagnifyingGlassIcon,
   MoonIcon,
+  NewspaperIcon,
   SunIcon,
   ViewColumnsIcon,
-  WrenchScrewdriverIcon,
-  CodeBracketIcon,
 } from "@heroicons/react/24/outline";
-import { PaperModeIcon } from "./paper-icon";
 
 type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;
-  paperMode: PaperMode;
-  cyclePaperMode: () => PaperMode;
+  editorContent?: string;
+  //   editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
+  markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
+  paperMode?: PaperMode;
+  cyclePaperMode?: () => PaperMode;
   editorWidth?: EditorWidth;
   toggleEditorWidth?: () => void;
   previewMode?: boolean;
   togglePreviewMode?: () => void;
-  content: string;
-  formatDocument: () => Promise<boolean>;
-  insertText: (text: string) => boolean;
 };
 
 type CommandItem = {
@@ -41,17 +39,18 @@ type CommandItem = {
   icon?: React.ReactNode;
   shortcut?: string;
   perform: () => void;
+  keywords?: string;
 };
 
 export function CommandMenu({
   open,
   onClose = () => {},
+  editorContent = "",
+  //   markdownFormatterRef,
   paperMode,
   cyclePaperMode,
+  editorWidth,
   toggleEditorWidth,
-  content,
-  formatDocument,
-  insertText,
 }: CommandMenuProps) {
   const { theme, setTheme, nextTheme } = useTheme();
   const [inputValue, setInputValue] = useState("");
@@ -98,13 +97,13 @@ export function CommandMenu({
   };
 
   const handleExportMarkdownCallback = () => {
-    if (!content) {
+    if (!editorContent) {
       showToast("No content to export", "error");
       onClose();
       return;
     }
     try {
-      const blob = new Blob([content], { type: "text/markdown" });
+      const blob = new Blob([editorContent], { type: "text/markdown" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       const date = new Date().toISOString().split("T")[0];
@@ -123,36 +122,76 @@ export function CommandMenu({
     }
   };
 
-  const handleFormatDocumentCallback = useCallback(async () => {
-    await formatDocument();
-    onClose();
-  }, [formatDocument, onClose]);
+  //   const handleFormatDocumentCallback = useCallback(async () => {
+  //     if (!editorRef?.current || !markdownFormatterRef?.current) {
+  //       showToast("Editor or markdown formatter not available", "error");
+  //       handleClose();
+  //       return;
+  //     }
+  //     try {
+  //       const editor = editorRef.current;
+  //       const selection = editor.getSelection();
+  //       const scrollTop = editor.getScrollTop();
+  //       const content = editor.getValue();
+  //       const formattedContent = await markdownFormatterRef.current.formatMarkdown(content); // formatMarkdownはPromiseを返すと仮定
 
-  const handleInsertGitHubIssuesCallback = useCallback(async () => {
-    if (!insertText) {
-      showToast("Editor not available", "error");
-      onClose();
-      return;
-    }
-    try {
-      const github_user_id = prompt("Enter GitHub User ID:");
-      if (!github_user_id) {
-        onClose();
-        return;
-      }
-      const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id);
+  //       editor.setValue(formattedContent);
 
-      const success = insertText(issuesTaskList);
-      if (success) {
-        showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
-      }
-    } catch (error) {
-      console.error("Error inserting GitHub issues:", error);
-      showToast("Failed to insert GitHub issues", "error");
-    } finally {
-      onClose();
-    }
-  }, [insertText, onClose]);
+  //       // カーソル位置とスクロール位置を復元
+  //       if (selection) {
+  //         editor.setSelection(selection);
+  //       }
+  //       // setValue後のレンダリングを待ってからスクロール位置を復元
+  //       setTimeout(() => editor.setScrollTop(scrollTop), 0);
+
+  //       showToast("Document formatted successfully", "default");
+  //     } catch (error) {
+  //       const message = error instanceof Error ? error.message : "unknown";
+  //       showToast(`Error formatting document: ${message}`, "error");
+  //       console.error("Formatting error:", error);
+  //     } finally {
+  //       handleClose();
+  //     }
+  //   }, [markdownFormatterRef, handleClose]);
+
+  //   const handleInsertGitHubIssuesCallback = useCallback(async () => {
+  //     if (!editorRef?.current) {
+  //       showToast("Editor not available", "error");
+  //       handleClose();
+  //       return;
+  //     }
+  //     try {
+  //       const github_user_id = prompt("Enter GitHub User ID:");
+  //       if (!github_user_id) {
+  //         handleClose(); // キャンセルまたは空入力時は閉じる
+  //         return;
+  //       }
+  //       const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id); // fetchGitHubIssuesTaskListはPromiseを返すと仮定
+  //       const editor = editorRef.current;
+  //       const selection = editor.getSelection();
+  //       const position = editor.getPosition();
+
+  //       let range: monaco.IRange;
+  //       if (selection && !selection.isEmpty()) {
+  //         range = selection;
+  //       } else if (position) {
+  //         // 選択範囲がない場合は現在のカーソル位置に挿入
+  //         range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
+  //       } else {
+  //         // カーソル位置もない場合（エディタが空など）は先頭に挿入
+  //         range = new monaco.Range(1, 1, 1, 1);
+  //       }
+
+  //       editor.executeEdits("insert-github-issues", [{ range, text: issuesTaskList, forceMoveMarkers: true }]);
+
+  //       showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
+  //     } catch (error) {
+  //       console.error("Error inserting GitHub issues:", error);
+  //       showToast("Failed to insert GitHub issues", "error");
+  //     } finally {
+  //       handleClose();
+  //     }
+  //   }, [editorRef, handleClose]);
 
   const goToGitHubRepo = () => {
     window.open("https://github.com/unvalley/ephe", "_blank");
@@ -160,7 +199,7 @@ export function CommandMenu({
   };
 
   const commandsList = (): CommandItem[] => {
-    return [
+    const list: CommandItem[] = [
       {
         id: "theme-toggle",
         name: `Switch to ${getNextThemeText()} mode`,
@@ -172,54 +211,70 @@ export function CommandMenu({
           ) : (
             <ComputerDesktopIcon className="size-4 stroke-1" />
           ),
+        // shortcut: "⌘T", // Mac以外も考慮するなら修飾キーの表示を工夫する必要あり
         perform: cycleThemeCallback,
-      },
-      {
-        id: "paper-mode",
-        name: "Cycle paper mode",
-        icon: <PaperModeIcon paperMode={paperMode} />,
-        perform: cyclePaperModeCallback,
-      },
-      ...(toggleEditorWidth
-        ? [
-            {
-              id: "editor-width",
-              name: "Toggle editor width",
-              icon: <ViewColumnsIcon className="size-4 stroke-1" />,
-              perform: toggleEditorWidthCallback,
-            },
-          ]
-        : []),
-      {
-        id: "export-document",
-        name: "Export document",
-        icon: <DocumentIcon className="size-4 stroke-1" />,
-        perform: handleExportMarkdownCallback,
-      },
-      {
-        id: "format-document",
-        name: "Format document",
-        icon: <WrenchScrewdriverIcon className="size-4 stroke-1" />,
-        shortcut: "⌘+s",
-        perform: handleFormatDocumentCallback,
-      },
-      ...(content
-        ? [
-            {
-              id: "insert-github-issues",
-              name: "Insert GitHub Issues (Public Repos)",
-              icon: <CodeBracketIcon className="size-4 stroke-1" />,
-              perform: handleInsertGitHubIssuesCallback,
-            },
-          ]
-        : []),
-      {
-        id: "github-repo",
-        name: "Go to Ephe GitHub Repo",
-        icon: <LinkIcon className="size-4 stroke-1" />,
-        perform: goToGitHubRepo,
+        keywords: "theme toggle switch mode light dark system color appearance",
       },
     ];
+
+    if (cyclePaperMode) {
+      list.push({
+        id: "paper-mode",
+        name: "Cycle paper mode",
+        icon: <NewspaperIcon className="size-4 stroke-1" />,
+        perform: cyclePaperModeCallback,
+        keywords: "paper mode cycle switch document style layout background",
+      });
+    }
+    if (toggleEditorWidth) {
+      list.push({
+        id: "editor-width",
+        name: "Toggle editor width",
+        icon: <ViewColumnsIcon className="size-4 stroke-1" />,
+        perform: toggleEditorWidthCallback,
+        keywords: "editor width toggle resize narrow wide full layout column",
+      });
+    }
+    if (editorContent) {
+      list.push({
+        id: "export-markdown",
+        name: "Export markdown",
+        icon: <DocumentIcon className="size-4 stroke-1" />,
+        // shortcut: "⌘S",
+        perform: handleExportMarkdownCallback,
+        keywords: "export markdown save download file md text document",
+      });
+    }
+    // if (editorRef?.current && markdownFormatterRef?.current) {
+    //   list.push({
+    //     id: "format-document",
+    //     name: "Format document",
+    //     icon: <FormatIcon className="h-3.5 w-3.5" />,
+    //     shortcut: "⌘F", // ブラウザの検索と競合する可能性あり
+    //     perform: handleFormatDocumentCallback,
+    //     keywords: "format document prettify code style arrange beautify markdown lint tidy",
+    //   });
+    // }
+    // if (editorRef?.current) {
+    //   // エディタが存在する場合のみ表示
+    //   list.push({
+    //     id: "insert-github-issues",
+    //     name: "Insert GitHub Issues (Public Repos)",
+    //     icon: <GitHubIcon className="h-3.5 w-3.5" />,
+    //     shortcut: "⌘G", // ショートカットは要検討
+    //     perform: handleInsertGitHubIssuesCallback,
+    //     keywords: "github issues insert fetch task todo list import integrate",
+    //   });
+    // }
+    list.push({
+      id: "github-repo",
+      name: "Go to Ephe GitHub Repo",
+      icon: <LinkIcon className="size-4 stroke-1" />,
+      perform: goToGitHubRepo,
+      keywords: "github ephe repository project code source link open website source-code",
+    });
+
+    return list;
   };
 
   return (
@@ -285,15 +340,27 @@ export function CommandMenu({
               .map((command) => (
                 <Command.Item
                   key={command.id}
-                  value={command.name}
+                  // value に name と keywords を含めて検索対象にする
+                  value={`${command.name} ${command.keywords || ""}`}
                   onSelect={command.perform}
                   className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 >
                   <div className="flex items-center gap-2">
+                    {/* アイコン表示エリア */}
                     <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                       {command.icon}
                     </div>
-                    <span className="flex-grow truncate"> {command.name}</span>
+                    {/* コマンド名と状態表示 */}
+                    <span className="flex-grow truncate">
+                      {" "}
+                      {command.name}
+                      {command.id === "paper-mode" && paperMode && (
+                        <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({paperMode})</span>
+                      )}
+                      {command.id === "editor-width" && editorWidth && (
+                        <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({editorWidth})</span>
+                      )}
+                    </span>
                   </div>
                   {command.shortcut && (
                     <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
@@ -305,15 +372,15 @@ export function CommandMenu({
           </Command.Group>
 
           <Command.Group
-            heading="Operations"
+            heading="Operations (WIP)"
             className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
           >
             {commandsList()
-              .filter((cmd) => ["export-document", "format-document", "insert-github-issues"].includes(cmd.id))
+              .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues"].includes(cmd.id))
               .map((command) => (
                 <Command.Item
                   key={command.id}
-                  value={command.name}
+                  value={`${command.name} ${command.keywords || ""}`}
                   onSelect={command.perform}
                   className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 >
@@ -341,7 +408,7 @@ export function CommandMenu({
               .map((command) => (
                 <Command.Item
                   key={command.id}
-                  value={command.name}
+                  value={`${command.name} ${command.keywords || ""}`}
                   onSelect={command.perform}
                   className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 >
