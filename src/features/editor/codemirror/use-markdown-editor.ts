@@ -11,7 +11,7 @@ import { useTheme } from "../../../utils/hooks/use-theme";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
-import { createDefaultTaskHandler, createChecklistPlugin } from "./tasklist";
+import { createDefaultTaskHandler, createChecklistPlugin, taskAgingPlugin } from "./tasklist";
 import { taskKeyBindings } from "./tasklist/keymap";
 import { registerTaskHandler } from "./tasklist/task-close";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
@@ -223,6 +223,7 @@ export const useMarkdownEditor = () => {
             ...taskKeyBindings,
           ]),
           Prec.high(createChecklistPlugin(taskHandlerRef.current)),
+          taskAgingPlugin,
           urlClickPlugin,
         ],
       });

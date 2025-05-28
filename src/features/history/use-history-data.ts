@@ -136,7 +136,7 @@ export const useHistoryData = (): HistoryData => {
       new Promise<void>((resolve) => {
         try {
           const allTasks = taskStorage
-            .getAll()
+            .getCompletedTasks()
             .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
           setTasks(allTasks);
         } catch (taskError) {
