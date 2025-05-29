@@ -2,7 +2,7 @@ import { indentMore, indentLess } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
 import { type KeyBinding, type EditorView, keymap } from "@codemirror/view";
 import { Prec } from "@codemirror/state";
-import { isTaskLine, isTaskLineEndsWithSpace } from "./task-list-utils";
+import { isTaskLine, isTaskLineEndsWithSpace, isRegularListLine, isEmptyListLine } from "./task-list-utils";
 
 const INDENT_SPACE = "  ";
 
@@ -30,29 +30,84 @@ export const taskKeyBindings: readonly KeyBinding[] = [
       const pos = selection.main.head;
       const line = state.doc.lineAt(pos);
 
-      // Process only when cursor is at the end of line and it's an empty task item
-      if (pos === line.to && isTaskLineEndsWithSpace(line.text)) {
-        // Delete the entire empty task item line
-        const from = line.from;
-        let to = line.to;
-        let newCursorPos = from;
+      // Check if cursor is at the end of line
+      if (pos === line.to) {
+        // Handle task lists
+        if (isTaskLine(line.text)) {
+          // If it's an empty task line (ends with space), delete it
+          if (isTaskLineEndsWithSpace(line.text)) {
+            const from = line.from;
+            let to = line.to;
+            let newCursorPos = from;
 
-        // Include the newline character in deletion if it exists
-        if (line.to < state.doc.length) {
-          to += 1; // Include newline character
-          // Cursor stays at the beginning of where the deleted line was
-          newCursorPos = from;
-        } else if (line.from > 0) {
-          // For the last line, if there are previous lines, don't delete the newline
-          // but place cursor at the beginning of the (now empty) last line
-          newCursorPos = from;
+            // Include the newline character in deletion if it exists
+            if (line.to < state.doc.length) {
+              to += 1; // Include newline character
+              newCursorPos = from;
+            } else if (line.from > 0) {
+              newCursorPos = from;
+            }
+
+            view.dispatch({
+              changes: { from: from, to: to },
+              selection: { anchor: newCursorPos },
+            });
+            return true;
+          }
+
+          // If it's a task line with content, create a new task item
+          const match = line.text.match(/^(\s*)([-*]) \[[ xX]\]/);
+          if (match) {
+            const indent = match[1];
+            const bullet = match[2];
+            const newTaskLine = `\n${indent}${bullet} [ ] `;
+
+            view.dispatch({
+              changes: { from: pos, insert: newTaskLine },
+              selection: { anchor: pos + newTaskLine.length },
+            });
+            return true;
+          }
         }
 
-        view.dispatch({
-          changes: { from: from, to: to },
-          selection: { anchor: newCursorPos },
-        });
-        return true;
+        // Handle regular lists (non-task lists)
+        if (isRegularListLine(line.text)) {
+          // If it's an empty list line, delete it
+          if (isEmptyListLine(line.text)) {
+            const from = line.from;
+            let to = line.to;
+            let newCursorPos = from;
+
+            // Include the newline character in deletion if it exists
+            if (line.to < state.doc.length) {
+              to += 1; // Include newline character
+              newCursorPos = from;
+            } else if (line.from > 0) {
+              newCursorPos = from;
+            }
+
+            view.dispatch({
+              changes: { from: from, to: to },
+              selection: { anchor: newCursorPos },
+            });
+            return true;
+          }
+
+          // If it's a list line with content, create a new list item
+          const match = line.text.match(/^(\s*)([-*+])\s+(.*)$/);
+          if (match && match[3].trim() !== "") {
+            // Only if there's actual content
+            const indent = match[1];
+            const bullet = match[2];
+            const newListLine = `\n${indent}${bullet} `;
+
+            view.dispatch({
+              changes: { from: pos, insert: newListLine },
+              selection: { anchor: pos + newListLine.length },
+            });
+            return true;
+          }
+        }
       }
 
       // Fall back to default behavior (Markdown list continuation, etc.)

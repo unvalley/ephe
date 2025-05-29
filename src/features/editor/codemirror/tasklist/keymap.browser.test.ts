@@ -107,32 +107,37 @@ describe("taskKeyBindings - Enter Key", () => {
   test("prevents automatic task creation when Enter pressed at end of non-empty task", () => {
     const result = testKeyBehavior("- [ ] Task content", 18, "Enter");
 
-    expect(result.handled).toBe(false);
+    expect(result.handled).toBe(true);
     expect(result.beforeText).toBe("- [ ] Task content");
-    expect(result.afterText).toBe("- [ ] Task content");
+    expect(result.afterText).toBe("- [ ] Task content\n- [ ] ");
+    expect(result.afterCursor).toBe(25); // Cursor should be at end of new task
   });
 
-  test("prevents automatic task creation with multiple tasks", () => {
+  test("creates new task item with multiple tasks", () => {
     // "- [ ] A\n\n- [ ] B" - cursor should be at position 16 (end of "B")
     const text = "- [ ] A\n\n- [ ] B";
 
     const result = testKeyBehavior(text, 16, "Enter");
 
-    expect(result.handled).toBe(false);
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("- [ ] A\n\n- [ ] B");
+    expect(result.afterText).toBe("- [ ] A\n\n- [ ] B\n- [ ] ");
   });
 
   test("works with indented task items", () => {
     const result = testKeyBehavior("  - [ ] Indented task", 21, "Enter");
 
-    expect(result.handled).toBe(false);
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("  - [ ] Indented task");
+    expect(result.afterText).toBe("  - [ ] Indented task\n  - [ ] ");
   });
 
   test("does not handle non-empty task items - allows default behavior", () => {
     const result = testKeyBehavior("- [ ] Task content", 18, "Enter");
 
-    expect(result.handled).toBe(false);
+    expect(result.handled).toBe(true);
     expect(result.beforeText).toBe("- [ ] Task content");
-    expect(result.afterText).toBe("- [ ] Task content");
+    expect(result.afterText).toBe("- [ ] Task content\n- [ ] ");
   });
 
   test("does not handle cursor not at end of line", () => {
@@ -160,23 +165,23 @@ describe("taskKeyBindings - Enter Key", () => {
     expect(result.afterCursor).toBe(0);
   });
 
-  test("does not handle non-empty task in multi-task document", () => {
+  test("creates new task item in multi-task document", () => {
     // "- [ ] A\n\n- [ ] B" - cursor should be at position 16 (end of "B")
     const text = "- [ ] A\n\n- [ ] B";
 
     const result = testKeyBehavior(text, 16, "Enter");
 
-    expect(result.handled).toBe(false);
+    expect(result.handled).toBe(true);
     expect(result.beforeText).toBe("- [ ] A\n\n- [ ] B");
-    expect(result.afterText).toBe("- [ ] A\n\n- [ ] B");
+    expect(result.afterText).toBe("- [ ] A\n\n- [ ] B\n- [ ] ");
   });
 
-  test("does not handle indented non-empty task items", () => {
+  test("creates new indented task items", () => {
     const result = testKeyBehavior("  - [ ] Indented task", 21, "Enter");
 
-    expect(result.handled).toBe(false);
+    expect(result.handled).toBe(true);
     expect(result.beforeText).toBe("  - [ ] Indented task");
-    expect(result.afterText).toBe("  - [ ] Indented task");
+    expect(result.afterText).toBe("  - [ ] Indented task\n  - [ ] ");
   });
 });
 
@@ -365,5 +370,86 @@ describe("taskKeyBindings - Integration", () => {
 
     expect(result.handled).toBe(false);
     expect(result.afterText).toBe("a");
+  });
+});
+
+describe("taskKeyBindings - Regular Lists (Enter Key)", () => {
+  test("creates new regular list item with dash", () => {
+    const result = testKeyBehavior("- List item", 11, "Enter");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("- List item");
+    expect(result.afterText).toBe("- List item\n- ");
+    expect(result.afterCursor).toBe(14);
+  });
+
+  test("creates new regular list item with asterisk", () => {
+    const result = testKeyBehavior("* List item", 11, "Enter");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("* List item");
+    expect(result.afterText).toBe("* List item\n* ");
+    expect(result.afterCursor).toBe(14);
+  });
+
+  test("creates new regular list item with plus", () => {
+    const result = testKeyBehavior("+ List item", 11, "Enter");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("+ List item");
+    expect(result.afterText).toBe("+ List item\n+ ");
+    expect(result.afterCursor).toBe(14);
+  });
+
+  test("deletes empty regular list item with dash", () => {
+    const result = testKeyBehavior("- ", 2, "Enter");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("- ");
+    expect(result.afterText).toBe("");
+    expect(result.afterCursor).toBe(0);
+  });
+
+  test("deletes empty regular list item with asterisk", () => {
+    const result = testKeyBehavior("* ", 2, "Enter");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("* ");
+    expect(result.afterText).toBe("");
+    expect(result.afterCursor).toBe(0);
+  });
+
+  test("creates indented regular list items", () => {
+    const result = testKeyBehavior("  - Indented item", 17, "Enter");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("  - Indented item");
+    expect(result.afterText).toBe("  - Indented item\n  - ");
+    expect(result.afterCursor).toBe(22);
+  });
+
+  test("handles multiple regular list items", () => {
+    const result = testKeyBehavior("- Item 1\n- Item 2", 17, "Enter");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("- Item 1\n- Item 2");
+    expect(result.afterText).toBe("- Item 1\n- Item 2\n- ");
+    expect(result.afterCursor).toBe(20);
+  });
+
+  test("does not handle cursor not at end of regular list line", () => {
+    const result = testKeyBehavior("- Item", 3, "Enter");
+
+    expect(result.handled).toBe(false);
+    expect(result.beforeText).toBe("- Item");
+    expect(result.afterText).toBe("- Item");
+  });
+
+  test("does not handle task list items (should be handled by task logic)", () => {
+    const result = testKeyBehavior("- [ ] Task", 10, "Enter");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("- [ ] Task");
+    expect(result.afterText).toBe("- [ ] Task\n- [ ] ");
   });
 });
