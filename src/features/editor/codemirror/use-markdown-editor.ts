@@ -190,6 +190,9 @@ export const useMarkdownEditor = () => {
           history(),
           keymap.of(historyKeymap),
 
+          // Task key bindings with high priority BEFORE markdown extension
+          Prec.high(createChecklistPlugin(taskHandlerRef.current)),
+
           markdown({
             base: markdownLanguage,
             codeLanguages: languages,
@@ -220,9 +223,7 @@ export const useMarkdownEditor = () => {
               },
               preventDefault: true,
             },
-            ...taskKeyBindings,
           ]),
-          Prec.high(createChecklistPlugin(taskHandlerRef.current)),
           urlClickPlugin,
         ],
       });

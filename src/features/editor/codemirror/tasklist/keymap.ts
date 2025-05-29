@@ -1,11 +1,12 @@
 import { indentMore, indentLess } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
 import { type KeyBinding, type EditorView, keymap } from "@codemirror/view";
+import { Prec } from "@codemirror/state";
 import { isTaskLine, isTaskLineEndsWithSpace } from "./task-list-utils";
 
 const INDENT_SPACE = "  ";
 
-// 行頭の空白を取得する正規表現
+// Regular expression to get leading whitespace
 const leadingWhitespaceRegex = /^(\s*)/;
 
 // Calculate just number of spaces
@@ -15,6 +16,49 @@ const getIndentLength = (lineText: string): number => {
 };
 
 export const taskKeyBindings: readonly KeyBinding[] = [
+  {
+    key: "Enter",
+    run: (view: EditorView): boolean => {
+      const { state } = view;
+      const { selection } = state;
+
+      // Handle only single cursor with no selection
+      if (!selection.main.empty || selection.ranges.length > 1) {
+        return false;
+      }
+
+      const pos = selection.main.head;
+      const line = state.doc.lineAt(pos);
+
+      // Process only when cursor is at the end of line and it's an empty task item
+      if (pos === line.to && isTaskLineEndsWithSpace(line.text)) {
+        // Delete the entire empty task item line
+        const from = line.from;
+        let to = line.to;
+        let newCursorPos = from;
+
+        // Include the newline character in deletion if it exists
+        if (line.to < state.doc.length) {
+          to += 1; // Include newline character
+          // Cursor stays at the beginning of where the deleted line was
+          newCursorPos = from;
+        } else if (line.from > 0) {
+          // For the last line, if there are previous lines, don't delete the newline
+          // but place cursor at the beginning of the (now empty) last line
+          newCursorPos = from;
+        }
+
+        view.dispatch({
+          changes: { from: from, to: to },
+          selection: { anchor: newCursorPos },
+        });
+        return true;
+      }
+
+      // Fall back to default behavior (Markdown list continuation, etc.)
+      return false;
+    },
+  },
   {
     key: "Tab",
     run: (view: EditorView): boolean => {
@@ -36,13 +80,12 @@ export const taskKeyBindings: readonly KeyBinding[] = [
       const indentUnitStr = state.facet(indentUnit);
       const indentUnitLength = indentUnitStr.length;
 
-      // インデント単位が無効な場合は何もしない（またはエラーログ）
+      // Skip if indent unit is invalid
       if (indentUnitLength <= 0) {
-        console.warn("Invalid indent unit length:", indentUnitLength);
-        return false; // デフォルト動作に任せるか、trueでブロックするか
+        return false;
       }
 
-      // 現在の行が最初の行でなければ、直前の行を確認
+      // Check previous line if current line is not the first
       if (currentLine.number > 1) {
         const prevLine = state.doc.line(currentLine.number - 1);
         const prevLineText = prevLine.text;
@@ -50,7 +93,6 @@ export const taskKeyBindings: readonly KeyBinding[] = [
         if (isTaskLine(prevLineText)) {
           const prevIndentLength = getIndentLength(prevLineText);
           if (currentIndentLength === prevIndentLength) {
-            console.log(`Indenting sibling: Current ${currentIndentLength}, Prev ${prevIndentLength}`);
             dispatch({
               changes: { from: currentLine.from, insert: indentUnitStr },
               userEvent: "input.indent.task",
@@ -59,28 +101,22 @@ export const taskKeyBindings: readonly KeyBinding[] = [
           }
 
           if (currentIndentLength > prevIndentLength) {
-            console.log(`Already nested: Current ${currentIndentLength}, Prev ${prevIndentLength}`);
             return true;
           }
         }
       }
 
-      // ここに到達する場合:
-      // 1. 現在の行が最初の行 (currentLine.number === 1)
-      // 2. 直前の行がチェックリストアイテムではない
-      // 3. 直前の行がチェックリストアイテムだが、インデントレベルが異なる (currentIndentLength !== prevIndentLength)
+      // Cases that reach here:
+      // 1. Current line is the first line (currentLine.number === 1)
+      // 2. Previous line is not a checklist item
+      // 3. Previous line is a checklist item but with different indent level
 
-      // ルートレベル (インデント0) のアイテムなら、デフォルトの indentMore を試みる
+      // For root level (indent 0) items, try default indentMore
       if (currentIndentLength === 0) {
-        console.log("Root level item, fallback to indentMore");
         return indentMore(view);
       }
-      // 既にインデントされており、適切な兄弟が直前にない場合は、Tabキーでのインデントをブロック
-      console.log("Not root, no suitable sibling above, blocking Tab indent.");
+      // Block Tab indent for already indented items without suitable sibling above
       return true;
-
-      // 通常は上記で処理されるはずだが、念のためのフォールバック
-      // return false; // or indentMore(view);
     },
   },
   {
@@ -89,7 +125,7 @@ export const taskKeyBindings: readonly KeyBinding[] = [
       const { state } = view;
       if (state.readOnly) return false;
       const { head, empty } = state.selection.main;
-      // 範囲選択、または単一カーソルで行頭にインデント単位がある場合
+      // For range selection or single cursor with indent unit at line start
       const line = state.doc.lineAt(head);
       if (empty && line.text.startsWith(INDENT_SPACE)) {
         view.dispatch({
@@ -108,7 +144,7 @@ export const taskKeyBindings: readonly KeyBinding[] = [
       const { state } = view;
       const { selection } = state;
 
-      // 選択範囲がある場合やカーソルが複数ある場合はデフォルト動作
+      // Use default behavior for selections or multiple cursors
       if (!selection.main.empty || selection.ranges.length > 1) {
         return false;
       }
@@ -116,57 +152,56 @@ export const taskKeyBindings: readonly KeyBinding[] = [
       const pos = selection.main.head;
       const line = state.doc.lineAt(pos);
 
-      // カーソルが行末にない場合はデフォルト動作
-      // (行の途中でDeleteを押した場合は、通常通り文字を削除させたい)
+      // Use default behavior if cursor is not at line end
+      // (Allow normal character deletion when Delete is pressed in the middle of line)
       if (pos !== line.to) {
         return false;
       }
 
       if (isTaskLineEndsWithSpace(line.text)) {
-        // マッチした場合: 行全体が `- [ ]` (または - [x] など) と空白のみ
-        console.log("Delete pressed at the end of an empty task item line.");
+        // Matched case: entire line is `- [ ]` (or - [x] etc.) with only whitespace
 
-        // 行を削除するトランザクションを作成
+        // Create transaction to delete the line
         const from = line.from;
         let to = line.to;
 
-        // 行の後ろに改行がある場合、それも削除範囲に含める
-        // (次の行が意図せずインデントされるのを防ぐため)
-        // ただし、ドキュメントの最後の行の場合は改行は削除しない
+        // Include newline character in deletion if it exists after the line
+        // (Prevent unintended indentation of next line)
+        // However, don't delete newline for the last line of document
         if (line.to < state.doc.length) {
-          to += 1; // 改行文字分
+          to += 1; // Include newline character
         } else {
-          // 最後の行で、かつ最初の行でもない場合、
-          // 前の行の末尾の改行を削除しないように調整が必要な場合がある
-          // ここでは単純に、最後の行なら改行は消さない、としておく
+          // For last line that's not also the first line,
+          // adjustment might be needed to avoid deleting previous line's newline
+          // For now, keep it simple: don't delete newline for last line
           if (line.from > 0) {
-            // fromを調整して前の改行を消さないようにする？ いや、行全体を消すのが直感的か。
-            // 一旦、最後の行は改行を消さない、で進める
+            // Adjust from to not delete previous newline? No, deleting entire line is intuitive.
+            // Keep it simple: don't delete newline for last line
           }
         }
-        // 最初の行の場合、改行を削除すると次の行がくっついてしまうので削除しない
+        // For first line, don't delete newline to avoid merging with next line
         if (line.from === 0 && line.to < state.doc.length) {
           to = line.to;
         }
 
-        // 最終的な削除範囲
+        // Final deletion range
         const changes = { from: from, to: to };
-        // カーソルは削除開始位置に置く
+        // Place cursor at deletion start position
         const selectionAfter = { anchor: from };
 
         view.dispatch({
           changes: changes,
           selection: selectionAfter,
-          userEvent: "delete.task", // ユーザーイベント名を指定
+          userEvent: "delete.task",
         });
 
-        return true; // デフォルトの Delete 動作を抑制
+        return true; // Suppress default Delete behavior
       }
 
-      // パターンにマッチしない場合は、デフォルトの Delete 動作を実行
+      // Use default Delete behavior if pattern doesn't match
       return false;
     },
   },
 ];
 
-export const taskKeyMap = keymap.of(taskKeyBindings);
+export const taskKeyMap = Prec.high(keymap.of(taskKeyBindings));
