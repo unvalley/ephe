@@ -12,7 +12,6 @@ import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-f
 import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
 import { createDefaultTaskHandler, createChecklistPlugin } from "./tasklist";
-import { taskKeyBindings } from "./tasklist/keymap";
 import { registerTaskHandler } from "./tasklist/task-close";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
@@ -190,6 +189,9 @@ export const useMarkdownEditor = () => {
           history(),
           keymap.of(historyKeymap),
 
+          // Task key bindings with high priority BEFORE markdown extension
+          Prec.high(createChecklistPlugin(taskHandlerRef.current)),
+
           markdown({
             base: markdownLanguage,
             codeLanguages: languages,
@@ -220,9 +222,7 @@ export const useMarkdownEditor = () => {
               },
               preventDefault: true,
             },
-            ...taskKeyBindings,
           ]),
-          Prec.high(createChecklistPlugin(taskHandlerRef.current)),
           urlClickPlugin,
         ],
       });
