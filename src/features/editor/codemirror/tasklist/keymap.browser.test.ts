@@ -453,3 +453,75 @@ describe("taskKeyBindings - Regular Lists (Enter Key)", () => {
     expect(result.afterText).toBe("- [ ] Task\n- [ ] ");
   });
 });
+
+describe("taskKeyBindings - Regular Lists (Tab Key)", () => {
+  test("indents regular list item with matching sibling above", () => {
+    const result = testKeyBehavior("- Item 1\n- Item 2", 17, "Tab");
+
+    expect(result.handled).toBe(true);
+    expect(result.afterText).toBe("- Item 1\n  - Item 2");
+  });
+
+  test("indents regular list item with asterisk bullet", () => {
+    const result = testKeyBehavior("* Item 1\n* Item 2", 17, "Tab");
+
+    expect(result.handled).toBe(true);
+    expect(result.afterText).toBe("* Item 1\n  * Item 2");
+  });
+
+  test("indents regular list item with plus bullet", () => {
+    const result = testKeyBehavior("+ Item 1\n+ Item 2", 17, "Tab");
+
+    expect(result.handled).toBe(true);
+    expect(result.afterText).toBe("+ Item 1\n  + Item 2");
+  });
+
+  test("does not indent if already nested deeper than previous regular list", () => {
+    const result = testKeyBehavior("- Item 1\n    - Item 2", 21, "Tab");
+
+    expect(result.handled).toBe(true);
+    expect(result.afterText).toBe("- Item 1\n    - Item 2");
+  });
+
+  test("blocks indent for nested regular list item without suitable sibling", () => {
+    const result = testKeyBehavior("Normal text\n  - Item", 20, "Tab");
+
+    expect(result.handled).toBe(true);
+    expect(result.afterText).toBe("Normal text\n  - Item");
+  });
+
+  test("indents root level regular list with fallback", () => {
+    const result = testKeyBehavior("- Item", 6, "Tab");
+
+    expect(result.handled).toBe(true);
+  });
+});
+
+describe("taskKeyBindings - Regular Lists (Shift-Tab Key)", () => {
+  test("dedents indented regular list item", () => {
+    const result = testKeyBehavior("  - Item", 8, "Shift-Tab");
+
+    expect(result.handled).toBe(true);
+    expect(result.afterText).toBe("- Item");
+  });
+
+  test("dedents indented regular list item with asterisk", () => {
+    const result = testKeyBehavior("  * Item", 8, "Shift-Tab");
+
+    expect(result.handled).toBe(true);
+    expect(result.afterText).toBe("* Item");
+  });
+
+  test("dedents indented regular list item with plus", () => {
+    const result = testKeyBehavior("  + Item", 8, "Shift-Tab");
+
+    expect(result.handled).toBe(true);
+    expect(result.afterText).toBe("+ Item");
+  });
+
+  test("does not dedent regular list without indent", () => {
+    const result = testKeyBehavior("- Item", 6, "Shift-Tab");
+
+    expect(result.handled).toBe(true);
+  });
+});

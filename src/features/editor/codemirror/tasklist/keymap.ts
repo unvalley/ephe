@@ -117,7 +117,7 @@ export const taskKeyBindings: readonly KeyBinding[] = [
   {
     key: "Tab",
     run: (view: EditorView): boolean => {
-      const { state, dispatch } = view;
+      const { state } = view;
       if (state.readOnly || state.selection.ranges.length > 1) return false;
       if (!state.selection.main.empty) {
         return indentMore(view);
@@ -127,7 +127,8 @@ export const taskKeyBindings: readonly KeyBinding[] = [
       const currentLine = state.doc.lineAt(head);
       const currentLineText = currentLine.text;
 
-      if (!isTaskLine(currentLineText)) {
+      // Handle both task lines and regular list lines
+      if (!isTaskLine(currentLineText) && !isRegularListLine(currentLineText)) {
         return indentMore(view);
       }
 
@@ -145,33 +146,36 @@ export const taskKeyBindings: readonly KeyBinding[] = [
         const prevLine = state.doc.line(currentLine.number - 1);
         const prevLineText = prevLine.text;
 
-        if (isTaskLine(prevLineText)) {
+        // Apply nesting logic for both task lines and regular list lines
+        const isCurrentTask = isTaskLine(currentLineText);
+        const isCurrentRegularList = isRegularListLine(currentLineText);
+        const isPrevTask = isTaskLine(prevLineText);
+        const isPrevRegularList = isRegularListLine(prevLineText);
+
+        // Allow indenting if previous line is the same type (task or regular list)
+        if ((isCurrentTask && isPrevTask) || (isCurrentRegularList && isPrevRegularList)) {
           const prevIndentLength = getIndentLength(prevLineText);
-          if (currentIndentLength === prevIndentLength) {
-            dispatch({
-              changes: { from: currentLine.from, insert: indentUnitStr },
-              userEvent: "input.indent.task",
-            });
-            return true;
+
+          // Prevent nesting more than one level deeper than the previous line
+          const maxAllowedIndent = prevIndentLength + indentUnitLength;
+          const newIndentLength = currentIndentLength + indentUnitLength;
+
+          if (newIndentLength > maxAllowedIndent) {
+            return true; // Block the tab if it would create too deep nesting
           }
 
-          if (currentIndentLength > prevIndentLength) {
-            return true;
-          }
+          // Allow indenting within the limit
+          return indentMore(view);
+        }
+
+        // If previous line is not the same type, block indenting for nested items
+        if ((isCurrentTask || isCurrentRegularList) && currentIndentLength > 0) {
+          return true; // Block indent for nested items without suitable sibling
         }
       }
 
-      // Cases that reach here:
-      // 1. Current line is the first line (currentLine.number === 1)
-      // 2. Previous line is not a checklist item
-      // 3. Previous line is a checklist item but with different indent level
-
-      // For root level (indent 0) items, try default indentMore
-      if (currentIndentLength === 0) {
-        return indentMore(view);
-      }
-      // Block Tab indent for already indented items without suitable sibling above
-      return true;
+      // Use default indentMore for all other cases
+      return indentMore(view);
     },
   },
   {
@@ -182,6 +186,17 @@ export const taskKeyBindings: readonly KeyBinding[] = [
       const { head, empty } = state.selection.main;
       // For range selection or single cursor with indent unit at line start
       const line = state.doc.lineAt(head);
+
+      // Handle both task lines and regular list lines that start with indent
+      if (empty && line.text.startsWith(INDENT_SPACE) && (isTaskLine(line.text) || isRegularListLine(line.text))) {
+        view.dispatch({
+          changes: { from: line.from, to: line.from + INDENT_SPACE.length, insert: "" },
+          userEvent: "delete.dedent",
+        });
+        return true;
+      }
+
+      // Fall back to default behavior for non-list lines or lines without indent
       if (empty && line.text.startsWith(INDENT_SPACE)) {
         view.dispatch({
           changes: { from: line.from, to: line.from + INDENT_SPACE.length, insert: "" },
