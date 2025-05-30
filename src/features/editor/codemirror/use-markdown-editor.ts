@@ -126,7 +126,7 @@ export const useMarkdownEditor = () => {
     setCharCount(content.length);
   }, [view, content]);
 
-  const onSave = async (view: EditorView) => {
+  const onFormat = async (view: EditorView) => {
     if (!formatterRef.current) {
       showToast("Formatter not initialized yet", "error");
       return false;
@@ -161,17 +161,30 @@ export const useMarkdownEditor = () => {
         view.scrollDOM.scrollTop = Math.min(scrollTop, view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight);
       }
 
-      // snapshot
-      snapshotStorage.save({
-        content: formattedText,
-        charCount: formattedText.length,
-      });
-
-      showToast("Format and saved snapshot", "default");
+      showToast("Document formatted", "default");
       return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown";
       showToast(`Error formatting document: ${message}`, "error");
+      return false;
+    }
+  };
+
+  const onSaveSnapshot = async (view: EditorView) => {
+    try {
+      const currentText = view.state.doc.toString();
+
+      // snapshot
+      snapshotStorage.save({
+        content: currentText,
+        charCount: currentText.length,
+      });
+
+      showToast("Snapshot saved", "default");
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown";
+      showToast(`Error saving snapshot: ${message}`, "error");
       return false;
     }
   };
@@ -217,7 +230,15 @@ export const useMarkdownEditor = () => {
             {
               key: "Mod-s",
               run: (targetView) => {
-                onSave(targetView);
+                onFormat(targetView);
+                return true;
+              },
+              preventDefault: true,
+            },
+            {
+              key: "Mod-Shift-s",
+              run: (targetView) => {
+                onSaveSnapshot(targetView);
                 return true;
               },
               preventDefault: true,
@@ -235,7 +256,8 @@ export const useMarkdownEditor = () => {
     container,
     content,
     setContent,
-    onSave,
+    onFormat,
+    onSaveSnapshot,
     highlightCompartment.of,
     themeCompartment.of,
     editorTheme,
@@ -255,6 +277,7 @@ export const useMarkdownEditor = () => {
   return {
     editor,
     view,
-    onSave: view ? () => onSave(view) : undefined,
+    onFormat: view ? () => onFormat(view) : undefined,
+    onSaveSnapshot: view ? () => onSaveSnapshot(view) : undefined,
   };
 };

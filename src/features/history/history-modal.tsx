@@ -176,7 +176,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                                   <br />
                                   You can save a snapshot by{" "}
                                   <kbd className="rounded-md border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-medium text-neutral-800 text-xs dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-200">
-                                    Cmd + s
+                                    Cmd + Shift + s
                                   </kbd>{" "}
                                   on the editor.
                                 </div>
