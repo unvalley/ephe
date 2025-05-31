@@ -2,7 +2,6 @@ Hi, here's your quick guide to _Ephe_.
 
 Give me just one quiet minute.
 
----
 
 Every morning, my head feels noisy.  
 Ideas, todos, worries—all tangled.  
@@ -19,7 +18,6 @@ A plan that formed as I typed.
 I write, and my mind feels lighter.  
 That’s how I start my day.
 
----
 
 How to use Ephe?
 
@@ -32,6 +30,5 @@ It stays out of your way, but helps where it counts:
 - <kbd>Cmd</kbd> + <kbd>K</kbd> → opens the quick command menu  
 - Customize appearance (Dark mode, Paper style, Width) from the bottom-left settings
 
----
 
 I hope this one page helps you start your day with focus and clarity.
