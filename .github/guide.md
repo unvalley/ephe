@@ -26,7 +26,7 @@ It stays out of your way, but helps where it counts:
 - `-[ ` or `- [ ` → auto-completes to `- [ ]` for tasks  
 - <kbd>Cmd</kbd> + <kbd>S</kbd> → formats your Markdown  
 - <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> → takes a snapshot  
-- Snapshots and task history are recorded automatically  
+- You can see snapshots and task history recorded  
 - <kbd>Cmd</kbd> + <kbd>K</kbd> → opens the quick command menu  
 - Customize appearance (Dark mode, Paper style, Width) from the bottom-left settings
 
