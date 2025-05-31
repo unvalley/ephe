@@ -1,7 +1,8 @@
 <div align="center">
     <samp>Ephe</samp>
 <a href="https://ephe.app/landing">
-  <img alt="ephe screenshot" src="https://github.com/user-attachments/assets/360797f0-1847-4fa6-935f-230bd5ff067a" style="width: 100%">
+  <img alt="ephe screenshot" src="https://github.com/user-attachments/assets/360797f0-1847-4fa6-935f-230bd5ff067a" 
+  width="400>
 </a>
 <p align="center">
 <a href="https://ephe.app/landing">Ephe</a> is an ephemeral markdown paper to organize your daily todo and thoughts.</p>
