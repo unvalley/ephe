@@ -61,7 +61,7 @@ export const useUserActivity = (options: UseUserActivityOptions = {}) => {
         window.clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [handleTypingStart, handleTypingEnd, handleScrolling]);
+  }, []);
 
   const isActive = isTyping || isScrolling;
 
