@@ -1,12 +1,13 @@
 export const LandingPage = () => {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-graph-paper px-4 py-20 antialiased">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-dots-paper px-4 py-20 antialiased">
       <div className="w-full max-w-lg space-y-12 sm:space-y-12">
         <div className="space-y-2 sm:space-y-2">
-          <p className="">Ephe is :</p>
+          <p className="">
+            <samp>Ephe</samp> is :
+          </p>
           <ol className="list-inside list-decimal">
-            <li>A markdown paper to stay focused.</li>
-            <li>A paper to dump and capture the thoughts.</li>
+            <li>A markdown paper to organize your daily todos and thoughts.</li>
             <li>
               <a
                 href="https://github.com/unvalley/ephe"
@@ -20,21 +21,32 @@ export const LandingPage = () => {
             </li>
           </ol>
 
-          <p>No installs. No sign-up. No noise.</p>
-          <p>You get one page, write what matters today.</p>
+          <p>
+            No installs. No sign-up. No noise.
+            <br />
+            You get one page, write what matters today.
+          </p>
         </div>
-
-        {/* <div>
-          <img src="./ephe-demo.jpeg" alt="Ephe Screenshot" className="mx-auto w-full max-w-lg rounded-lg shadow-md" />
-        </div> */}
 
         <div className="space-y-2 sm:space-y-2">
           <h2 className="font-normal">Why :</h2>
           <ul className="space-y-2">
             <li>- Most note and todo apps are overloaded.</li>
-            <li>- I believe, just one writable page is enough for organizging.</li>
+            <li>- I believe, just one page is enough for organizing.</li>
           </ul>
-          <p>Quickly capture thoughts, lists, and ideas—then move on.</p>
+          <br />
+          <p>
+            Quickly capture todos, thoughts. We have a{" "}
+            <a
+              href="https://github.com/unvalley/ephe/blob/main/.github/guide.md"
+              target="_blank"
+              rel="noopener"
+              className="text-blue-400 hover:underline"
+            >
+              guide
+            </a>{" "}
+            for you.
+          </p>
         </div>
 
         <div className="my-10 flex justify-center">
