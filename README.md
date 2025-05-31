@@ -1,5 +1,5 @@
 <div align="center">
-  <h1 style="border-bottom: none">
+  <h1 style="border-bottom: none;" >
       <a href="https://ephe.app">Ephe</a>
       <br />
   </h1>
@@ -11,9 +11,9 @@
 
 ## What is Ephe
 
-Ephe is an ephemeral markdown paper to organize your daily todos and ideas.
+Ephe is an _ephemeral_ markdown paper to organize your daily todo and ideas.
 
-Traditional to-do apps can be time-consuming and quickly overwhelming. A single page is all you need to organize your day.
+Traditional todo apps can be time-consuming and quickly overwhelming. A single page is all you need to organize your day.
 
 ## Fun features
 

@@ -127,7 +127,7 @@ export const useMarkdownEditor = () => {
     setCharCount(content.length);
   }, [view, content]);
 
-  const onSave = async (view: EditorView) => {
+  const onFormat = async (view: EditorView) => {
     if (!formatterRef.current) {
       showToast("Formatter not initialized yet", "error");
       return false;
@@ -162,17 +162,30 @@ export const useMarkdownEditor = () => {
         view.scrollDOM.scrollTop = Math.min(scrollTop, view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight);
       }
 
-      // snapshot
-      snapshotStorage.save({
-        content: formattedText,
-        charCount: formattedText.length,
-      });
-
-      showToast("Format and saved snapshot", "default");
+      showToast("Document formatted", "default");
       return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown";
       showToast(`Error formatting document: ${message}`, "error");
+      return false;
+    }
+  };
+
+  const onSaveSnapshot = async (view: EditorView) => {
+    try {
+      const currentText = view.state.doc.toString();
+
+      // snapshot
+      snapshotStorage.save({
+        content: currentText,
+        charCount: currentText.length,
+      });
+
+      showToast("Snapshot saved", "default");
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown";
+      showToast(`Error saving snapshot: ${message}`, "error");
       return false;
     }
   };
@@ -189,6 +202,9 @@ export const useMarkdownEditor = () => {
           keymap.of(defaultKeymap),
           history(),
           keymap.of(historyKeymap),
+
+          // Task key bindings with high priority BEFORE markdown extension
+          Prec.high(createChecklistPlugin(taskHandlerRef.current)),
 
           markdown({
             base: markdownLanguage,
@@ -215,14 +231,20 @@ export const useMarkdownEditor = () => {
             {
               key: "Mod-s",
               run: (targetView) => {
-                onSave(targetView);
+                onFormat(targetView);
                 return true;
               },
               preventDefault: true,
             },
-            ...taskKeyBindings,
+            {
+              key: "Mod-Shift-s",
+              run: (targetView) => {
+                onSaveSnapshot(targetView);
+                return true;
+              },
+              preventDefault: true,
+            },
           ]),
-          Prec.high(createChecklistPlugin(taskHandlerRef.current)),
           taskAgingPlugin,
           urlClickPlugin,
         ],
@@ -236,7 +258,8 @@ export const useMarkdownEditor = () => {
     container,
     content,
     setContent,
-    onSave,
+    onFormat,
+    onSaveSnapshot,
     highlightCompartment.of,
     themeCompartment.of,
     editorTheme,
@@ -253,60 +276,10 @@ export const useMarkdownEditor = () => {
     }
   }, [view, highlightCompartment.reconfigure, themeCompartment.reconfigure, editorTheme, editorHighlightStyle]);
 
-  const formatDocument = async () => {
-    console.log(`view: ${view}, formatterRef.current: ${formatterRef.current}`);
-    if (!view || !formatterRef.current) {
-      showToast("Editor or markdown formatter not available", "error");
-      return false;
-    }
-    try {
-      const content = view.state.doc.toString();
-      const formattedContent = await formatterRef.current.formatMarkdown(content);
-
-      if (formattedContent !== content) {
-        view.dispatch({
-          changes: { from: 0, to: view.state.doc.length, insert: formattedContent },
-        });
-        showToast("Document formatted successfully", "default");
-      } else {
-        showToast("Document is already formatted", "default");
-      }
-      return true;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "unknown";
-      showToast(`Error formatting document: ${message}`, "error");
-      console.error("Formatting error:", error);
-      return false;
-    }
-  };
-
-  const insertText = (text: string) => {
-    if (!view) {
-      showToast("Editor not available", "error");
-      return false;
-    }
-    try {
-      const { state } = view;
-      const pos = state.selection.main.head;
-      view.dispatch({
-        changes: { from: pos, insert: text },
-        selection: { anchor: pos + text.length },
-      });
-      return true;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "unknown";
-      showToast(`Error inserting text: ${message}`, "error");
-      return false;
-    }
-  };
-
   return {
     editor,
     view,
-    content,
-    onSave: view ? () => onSave(view) : undefined,
-    formatDocument,
-    insertText,
-    formatterRef,
+    onFormat: view ? () => onFormat(view) : undefined,
+    onSaveSnapshot: view ? () => onSaveSnapshot(view) : undefined,
   };
 };

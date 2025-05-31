@@ -8,7 +8,12 @@ export const LandingPage = () => {
             <li>A markdown paper to stay focused.</li>
             <li>A paper to dump and capture the thoughts.</li>
             <li>
-              <a href="https://github.com/unvalley/ephe" className="text-blue-400 hover:underline">
+              <a
+                href="https://github.com/unvalley/ephe"
+                target="_blank"
+                className="text-blue-400 hover:underline"
+                rel="noopener"
+              >
                 OSS
               </a>
               , and free.
