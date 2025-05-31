@@ -1,14 +1,21 @@
 <div align="center">
-    <samp>Ephe</samp>
-<a href="https://ephe.app/landing">
-  <img alt="ephe screenshot" src="https://github.com/user-attachments/assets/360797f0-1847-4fa6-935f-230bd5ff067a" 
-  width="400>
-</a>
-<p align="center">
-<a href="https://ephe.app/landing">Ephe</a> is an ephemeral markdown paper to organize your daily todo and thoughts.</p>
+  <p>Ephe</p>
+  <a href="https://ephe.app/landing">
+    <img
+      src="https://github.com/user-attachments/assets/360797f0-1847-4fa6-935f-230bd5ff067a"
+      alt="Ephe screenshot"
+      width="400"
+    />
+  </a>
+  <p>
+    <a href="https://ephe.app/landing">Ephe</a> is an ephemeral markdown paper  
+    to organize your daily todos and thoughts.
+  </p>
 </div>
 
-Traditional todo apps can be time-consuming and quickly overwhelming.
-A single page is all you need to organize your day.
+Traditional todo apps can be overwhelming.  
+Ephe is designed to organize your tasks with plain Markdown.
+Ephe gives you just one clean page to focus your day.  
 
-Please check out the [guide](.github/guide.md) for more details.
+
+See the <a href=".github/guide.md">guide</a> for details.
