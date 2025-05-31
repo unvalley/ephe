@@ -4,12 +4,14 @@ import { registerTaskCreation, taskAgingPlugin } from "./task-aging";
 
 describe("Task Aging", () => {
   it("should register new tasks when created", () => {
-    // Test with the new persistent key format (indentLevel:content)
-    const taskKey = "0:Test task";
-    registerTaskCreation(taskKey);
+    // Test with the new unique key format (indentLevel:content:lineNumber)
+    const taskKey = "0:Test task:1";
+    const taskContent = "Test task";
+    const indentLevel = 0;
+    registerTaskCreation(taskKey, taskContent, indentLevel);
 
     // Task should be registered (we can't directly test the Map but we can test the function doesn't throw)
-    expect(() => registerTaskCreation(taskKey)).not.toThrow();
+    expect(() => registerTaskCreation(taskKey, taskContent, indentLevel)).not.toThrow();
   });
 
   it("should create editor with task aging plugin", () => {

@@ -4,6 +4,7 @@ import { useTheme } from "../../utils/hooks/use-theme";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
+import { useTaskAging } from "../../utils/hooks/use-task-aging";
 import { useState, useEffect, useRef } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME } from "../../utils/theme-initializer";
@@ -16,6 +17,7 @@ import {
   MoonIcon,
   ComputerDesktopIcon,
   BoltIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { HistoryModal } from "../history/history-modal";
@@ -80,6 +82,7 @@ export const SystemMenu = () => {
   const { todayCompletedTasks } = useTodayCompletedTasks(menuOpen);
   const { snapshotCount } = useSnapshotCount(menuOpen);
   const { taskAutoFlushMode, setTaskAutoFlushMode } = useTaskAutoFlush();
+  const { taskAgingMode, toggleTaskAgingMode } = useTaskAging();
 
   const openTaskSnapshotModal = (tabIndex: number) => {
     setModalTabIndex(tabIndex);
@@ -251,6 +254,21 @@ export const SystemMenu = () => {
                         <BoltIcon className={`size-4 stroke-1`} />
                       </span>
                       <span className={"capitalize"}>Task Flush: {taskAutoFlushMode}</span>
+                    </button>
+                  </MenuItem>
+
+                  <MenuItem as="div">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        toggleTaskAgingMode();
+                      }}
+                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
+                    >
+                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                        <ClockIcon className={`size-4 stroke-1`} />
+                      </span>
+                      <span className={"capitalize"}>Task Aging: {taskAgingMode ? "on" : "off"}</span>
                     </button>
                   </MenuItem>
                 </div>

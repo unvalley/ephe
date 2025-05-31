@@ -8,6 +8,7 @@ import { showToast } from "../../utils/components/toast";
 import type { PaperMode } from "../../utils/hooks/use-paper-mode";
 import { COLOR_THEME, type ColorTheme } from "../../utils/theme-initializer";
 import type { EditorWidth } from "../../utils/hooks/use-editor-width";
+import { useTaskAging } from "../../utils/hooks/use-task-aging";
 import {
   ComputerDesktopIcon,
   DocumentIcon,
@@ -17,6 +18,7 @@ import {
   NewspaperIcon,
   SunIcon,
   ViewColumnsIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
 
 type CommandMenuProps = {
@@ -53,6 +55,7 @@ export function CommandMenu({
   toggleEditorWidth,
 }: CommandMenuProps) {
   const { theme, setTheme, nextTheme } = useTheme();
+  const { taskAgingMode, toggleTaskAgingMode } = useTaskAging();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -93,6 +96,12 @@ export function CommandMenu({
 
   const toggleEditorWidthCallback = () => {
     toggleEditorWidth?.();
+    onClose();
+  };
+
+  const toggleTaskAgingCallback = () => {
+    toggleTaskAgingMode();
+    showToast(`Task aging ${taskAgingMode ? "disabled" : "enabled"}`, "success");
     onClose();
   };
 
@@ -267,6 +276,13 @@ export function CommandMenu({
     //   });
     // }
     list.push({
+      id: "task-aging",
+      name: `${taskAgingMode ? "Disable" : "Enable"} task aging`,
+      icon: <ClockIcon className="size-4 stroke-1" />,
+      perform: toggleTaskAgingCallback,
+      keywords: "task aging toggle enable disable fade opacity time",
+    });
+    list.push({
       id: "github-repo",
       name: "Go to Ephe GitHub Repo",
       icon: <LinkIcon className="size-4 stroke-1" />,
@@ -336,7 +352,7 @@ export function CommandMenu({
             className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
           >
             {commandsList()
-              .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width"].includes(cmd.id))
+              .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width", "task-aging"].includes(cmd.id))
               .map((command) => (
                 <Command.Item
                   key={command.id}
@@ -359,6 +375,11 @@ export function CommandMenu({
                       )}
                       {command.id === "editor-width" && editorWidth && (
                         <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({editorWidth})</span>
+                      )}
+                      {command.id === "task-aging" && (
+                        <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                          ({taskAgingMode ? "on" : "off"})
+                        </span>
                       )}
                     </span>
                   </div>
