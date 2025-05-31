@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { type Snapshot, snapshotStorage } from "../snapshots/snapshot-storage";
 import { type CompletedTask, taskStorage } from "../editor/tasks/task-storage";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
@@ -106,7 +106,7 @@ export const useHistoryData = (): HistoryData => {
   const groupedTasks = groupItemsByDate(tasks);
 
   // Load data from storage with optimizations
-  const loadData = useCallback(() => {
+  const loadData = () => {
     setIsLoading(true);
     let loadingComplete = false;
 
@@ -151,7 +151,7 @@ export const useHistoryData = (): HistoryData => {
       clearTimeout(loadingTimeout);
       setIsLoading(false);
     });
-  }, []);
+  };
 
   // Initialize data
   useEffect(() => {
@@ -168,10 +168,10 @@ export const useHistoryData = (): HistoryData => {
     return () => {
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, [loadData]);
+  }, []);
 
   // Handle restore snapshot
-  const handleRestoreSnapshot = useCallback((snapshot: Snapshot) => {
+  const handleRestoreSnapshot = (snapshot: Snapshot) => {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, snapshot.content);
       // Dispatch a custom event instead of reloading
@@ -185,42 +185,36 @@ export const useHistoryData = (): HistoryData => {
       console.error("Error restoring snapshot:", error);
       showToast("Failed to restore snapshot", "error");
     }
-  }, []);
+  };
 
   // Handle delete snapshot
-  const handleDeleteSnapshot = useCallback(
-    (id: string) => {
-      try {
-        snapshotStorage.deleteById(id);
-        const updatedSnapshots = snapshots.filter((snapshot) => snapshot.id !== id);
-        setSnapshots(updatedSnapshots);
-        showToast("Snapshot deleted", "success");
-      } catch (error) {
-        console.error("Error deleting snapshot:", error);
-        showToast("Failed to delete snapshot", "error");
-      }
-    },
-    [snapshots],
-  );
+  const handleDeleteSnapshot = (id: string) => {
+    try {
+      snapshotStorage.deleteById(id);
+      const updatedSnapshots = snapshots.filter((snapshot) => snapshot.id !== id);
+      setSnapshots(updatedSnapshots);
+      showToast("Snapshot deleted", "success");
+    } catch (error) {
+      console.error("Error deleting snapshot:", error);
+      showToast("Failed to delete snapshot", "error");
+    }
+  };
 
   // Handle delete task
-  const handleDeleteTask = useCallback(
-    (id: string) => {
-      try {
-        taskStorage.deleteById(id);
-        const updatedTasks = tasks.filter((task) => task.id !== id);
-        setTasks(updatedTasks);
-        showToast("Task deleted", "success");
-      } catch (error) {
-        console.error("Error deleting task:", error);
-        showToast("Failed to delete task", "error");
-      }
-    },
-    [tasks],
-  );
+  const handleDeleteTask = (id: string) => {
+    try {
+      taskStorage.deleteById(id);
+      const updatedTasks = tasks.filter((task) => task.id !== id);
+      setTasks(updatedTasks);
+      showToast("Task deleted", "success");
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      showToast("Failed to delete task", "error");
+    }
+  };
 
   // Handle delete all snapshots
-  const handleDeleteAllSnapshots = useCallback(() => {
+  const handleDeleteAllSnapshots = () => {
     try {
       snapshotStorage.deleteAll();
       setSnapshots([]);
@@ -229,7 +223,7 @@ export const useHistoryData = (): HistoryData => {
       console.error("Error deleting all snapshots:", error);
       showToast("Failed to delete all snapshots", "error");
     }
-  }, []);
+  };
 
   return {
     snapshots,
