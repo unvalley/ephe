@@ -20,7 +20,6 @@ export const createDefaultTaskHandler = (
 ): TaskHandler => ({
   onTaskClosed: ({ taskContent, originalLine, section, pos, view }: OnTaskClosed) => {
     const taskIdentifier = generateTaskIdentifier(taskContent);
-    const timestamp = new Date().toISOString();
 
     // Auto Flush
     if (taskAutoFlushMode === "instant" && view) {
@@ -41,10 +40,12 @@ export const createDefaultTaskHandler = (
     const task = Object.freeze({
       id: taskIdentifier,
       content: taskContent,
+      completed: true,
+      createdAt: Date.now(),
+      completedAt: Date.now(),
       originalLine,
       taskIdentifier,
       section,
-      completedAt: timestamp,
     });
 
     taskStorage.save(task);
@@ -58,3 +59,6 @@ export const createDefaultTaskHandler = (
 export const createChecklistPlugin = (taskHandler: TaskHandler): Extension => {
   return [taskDecoration, taskHoverField, taskMouseInteraction(taskHandler), taskAutoComplete, taskKeyMap];
 };
+
+export { taskKeyBindings } from "./keymap";
+export { taskAgingPlugin } from "./task-aging";

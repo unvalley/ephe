@@ -17,7 +17,7 @@ const HEADING_REGEX = /^(#{1,6})\s+(.+)$/;
 export const useTableOfContentsCodeMirror = ({ editorView, content }: UseTableOfContentsProps) => {
   const [tocItems, setTocItems] = useState<TocItem[]>([]);
 
-  // 1. コンテンツから目次アイテムを解析する関数 (from を計算)
+  // 1. Parse table of contents items from content (calculate from position)
   const parseTocItems = useCallback((text: string): TocItem[] => {
     if (!text) return [];
     const lines = text.split("\n");
@@ -38,23 +38,23 @@ export const useTableOfContentsCodeMirror = ({ editorView, content }: UseTableOf
     return items;
   }, []);
 
-  // 2. コンテンツ変更時に目次アイテムを再生成するEffect (変更なし)
+  // 2. Effect to regenerate table of contents items when content changes
   useEffect(() => {
     const newItems = parseTocItems(content);
     setTocItems(newItems);
   }, [content, parseTocItems]);
 
-  // 3. 目次項目クリック時にエディタの該当箇所にフォーカスする関数 (CodeMirror APIを使用)
+  // 3. Function to focus on section when table of contents item is clicked (using CodeMirror API)
   const focusOnSection = useCallback(
     (from: number) => {
       if (!editorView) return;
 
       const transaction = editorView.state.update({
-        // カーソルを見出し行の先頭に移動
+        // Move cursor to the beginning of the heading line
         selection: { anchor: from },
-        // 指定した位置がビューポートの中央に来るようにスクロール
+        // Scroll so the specified position is centered in the viewport
         effects: EditorView.scrollIntoView(from, { y: "center" }),
-        // 必要であればユーザーイベントの種類を指定
+        // Specify user event type if needed
         // userEvent: "select.toc"
       });
 

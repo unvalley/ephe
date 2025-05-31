@@ -8,6 +8,8 @@ export const LOCAL_STORAGE_KEYS = {
   PREVIEW_MODE: "ephe:preview-mode",
   TOC_MODE: "ephe:toc-mode",
   TASK_AUTO_FLUSH_MODE: "ephe:task-auto-flush-mode",
+  TASK_AGING_ENABLED: "ephe:task-aging-enabled",
+  TASK_AGING_TIMES: "ephe:task-aging-times",
 } as const;
 
 export const EPHE_VERSION = "0.0.1";
