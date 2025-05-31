@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
 type UseUserActivityOptions = {
-  hideDelay?: number;
   showDelay?: number;
 };
 
