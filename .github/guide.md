@@ -23,7 +23,7 @@ How to use Ephe?
 
 It stays out of your way, but helps where it counts:
 
-- `- [` → auto-completes to `- [ ]` for tasks  
+- `-[ ` or `- [ ` → auto-completes to `- [ ]` for tasks  
 - <kbd>Cmd</kbd> + <kbd>S</kbd> → formats your Markdown  
 - <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> → takes a snapshot  
 - Snapshots and task history are recorded automatically  
