@@ -22,6 +22,7 @@ export const EditorPage = () => {
       </div>
 
       <Footer
+        autoHide={true}
         leftContent={<SystemMenu />}
         rightContent={
           <>
