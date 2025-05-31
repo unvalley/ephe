@@ -14,7 +14,7 @@
 </div>
 
 Traditional todo apps can be overwhelming.  
-Ephe is designed to organize your tasks with plain Markdown.
+Ephe is designed to organize your tasks with plain Markdown.  
 Ephe gives you just one clean page to focus your day.  
 
 
