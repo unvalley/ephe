@@ -1,4 +1,3 @@
-import { Fragment, useState, useEffect } from "react";
 import {
   Dialog,
   DialogPanel,
@@ -10,8 +9,9 @@ import {
   Transition,
   TransitionChild,
 } from "@headlessui/react";
-import { useHistoryData } from "./use-history-data";
+import { Fragment, useEffect, useState } from "react";
 import type { Snapshot } from "../snapshots/snapshot-storage";
+import { useHistoryData } from "./use-history-data";
 
 type HistoryModalProps = {
   isOpen: boolean;
@@ -30,10 +30,27 @@ const formatDate = (dateString: string) => {
   }).format(date);
 };
 
+const BUTTON_STYLES = {
+  primary:
+    "rounded border border-transparent bg-neutral-100 px-4 py-2 text-sm transition-colors hover:bg-neutral-200 focus-visible:ring-offset-2 dark:bg-neutral-700/50 dark:hover:bg-neutral-600",
+  danger:
+    "rounded bg-red-100 px-3 py-1.5 text-red-700 text-sm hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50",
+  close:
+    "rounded border border-transparent bg-neutral-100 px-4 py-2 text-sm transition-colors hover:bg-neutral-200 focus-visible:ring-offset-2 dark:bg-neutral-700 dark:hover:bg-neutral-600",
+} as const;
+
 export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryModalProps) => {
   const [selectedTabIndex, setSelectedTabIndex] = useState(initialTabIndex);
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
-  const { snapshots, tasks, isLoading, handleRestoreSnapshot, handleDeleteSnapshot, refresh } = useHistoryData();
+  const {
+    snapshots,
+    tasks,
+    isLoading,
+    handleRestoreSnapshot,
+    handleDeleteSnapshot,
+    handleDeleteAllSnapshots,
+    refresh,
+  } = useHistoryData();
 
   useEffect(() => {
     setSelectedTabIndex(initialTabIndex);
@@ -79,6 +96,16 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
       } else {
         setSelectedSnapshot(null);
       }
+    }
+  };
+
+  const handleDeleteAll = () => {
+    if (
+      snapshots.length > 0 &&
+      confirm("Are you sure you want to delete all snapshots? This action cannot be undone.")
+    ) {
+      handleDeleteAllSnapshots();
+      setSelectedSnapshot(null);
     }
   };
 
@@ -167,6 +194,14 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                         </div>
                       </TabPanel>
                       <TabPanel className="p-3">
+                        {snapshots.length > 0 && (
+                          <div className="mb-4 flex items-center justify-between">
+                            <h3 className="font-medium text-lg">Snapshots</h3>
+                            <button type="button" onClick={handleDeleteAll} className={BUTTON_STYLES.danger}>
+                              Delete All
+                            </button>
+                          </div>
+                        )}
                         <div className="flex h-[60vh]">
                           <div className="flex-1 overflow-y-auto border-neutral-200 border-r pr-4 dark:border-neutral-600">
                             {snapshots.length === 0 ? (
@@ -192,18 +227,10 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                                 <div className="mb-4 flex items-center justify-between">
                                   <h4 className="text-md">{formatDate(selectedSnapshot.timestamp)}</h4>
                                   <div className="flex space-x-2">
-                                    <button
-                                      type="button"
-                                      onClick={handleRestore}
-                                      className="rounded border border-transparent bg-neutral-100 px-4 py-2 text-sm transition-colors hover:bg-neutral-200 focus-visible:ring-offset-2 dark:bg-neutral-700/50 dark:hover:bg-neutral-600"
-                                    >
+                                    <button type="button" onClick={handleRestore} className={BUTTON_STYLES.primary}>
                                       Restore
                                     </button>
-                                    <button
-                                      type="button"
-                                      onClick={handleDelete}
-                                      className="rounded bg-red-100 px-3 py-1.5 text-red-700 text-sm hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
-                                    >
+                                    <button type="button" onClick={handleDelete} className={BUTTON_STYLES.danger}>
                                       Delete
                                     </button>
                                   </div>
@@ -264,11 +291,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                 </div>
 
                 <div className="mt-6 flex justify-end">
-                  <button
-                    type="button"
-                    className="rounded border border-transparent bg-neutral-100 px-4 py-2 text-sm transition-colors hover:bg-neutral-200 focus-visible:ring-offset-2 dark:bg-neutral-700 dark:hover:bg-neutral-600"
-                    onClick={onClose}
-                  >
+                  <button type="button" className={BUTTON_STYLES.close} onClick={onClose}>
                     Close
                   </button>
                 </div>
