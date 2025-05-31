@@ -7,6 +7,7 @@
 <a href="https://ephe.app/landing">Ephe</a> is an ephemeral markdown paper to organize your daily todo and thoughts.</p>
 </div>
 
-Traditional todo apps can be time-consuming and quickly overwhelming. A single page is all you need to organize your day.
+Traditional todo apps can be time-consuming and quickly overwhelming.
+A single page is all you need to organize your day.
 
 Please check out the [guide](.github/guide.md) for more details.
