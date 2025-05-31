@@ -31,4 +31,4 @@ It stays out of your way, but helps where it counts:
 - Customize appearance (Dark mode, Paper style, Width) from the bottom-left settings
 
 
-I hope this one page helps you start your day with focus and clarity.
+I hope this one page helps you start your day with focus.
