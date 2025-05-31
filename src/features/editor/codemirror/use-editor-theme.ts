@@ -8,21 +8,10 @@ import { tags } from "@lezer/highlight";
 export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean) => {
   const getHighlightStyle = () => {
     const COLORS = isDarkMode ? EPHE_COLORS.dark : EPHE_COLORS.light;
+    const CODE_SYNTAX_HIGHLIGHT = isDarkMode ? SYNTAX_HIGHLIGHT_STYLES.dark : SYNTAX_HIGHLIGHT_STYLES.light;
 
     const epheHighlightStyle = HighlightStyle.define([
-      { tag: tags.comment, color: COLORS.comment, fontStyle: "italic" },
-      { tag: tags.keyword, color: COLORS.keyword },
-      { tag: tags.string, color: COLORS.string },
-      { tag: tags.number, color: COLORS.number },
-      { tag: tags.typeName, color: COLORS.type },
-      { tag: tags.function(tags.variableName), color: COLORS.function },
-      { tag: tags.definition(tags.variableName), color: COLORS.variable },
-      { tag: tags.variableName, color: COLORS.variable },
-      {
-        tag: tags.constant(tags.variableName),
-        color: COLORS.constant,
-      },
-      { tag: tags.operator, color: COLORS.operator },
+      ...CODE_SYNTAX_HIGHLIGHT,
 
       // Markdown Style
       { tag: tags.heading, color: COLORS.heading },
@@ -132,4 +121,31 @@ const EPHE_COLORS = {
     heading: "#FFFFFF",
     emphasis: "#FFFFFF",
   },
+} as const;
+
+const SYNTAX_HIGHLIGHT_STYLES = {
+  light: [
+    { tag: tags.comment, color: "#6a737d", fontStyle: "italic" },
+    { tag: tags.keyword, color: "#d73a49" },
+    { tag: tags.string, color: "#032f62" },
+    { tag: tags.number, color: "#005cc5" },
+    { tag: tags.typeName, color: "#e36209", fontStyle: "italic" },
+    { tag: tags.function(tags.variableName), color: "#6f42c1" },
+    { tag: tags.definition(tags.variableName), color: "#22863a" },
+    { tag: tags.variableName, color: "#24292e" },
+    { tag: tags.constant(tags.variableName), color: "#b31d28" },
+    { tag: tags.operator, color: "#d73a49" },
+  ],
+  dark: [
+    { tag: tags.comment, color: "#9ca3af", fontStyle: "italic" },
+    { tag: tags.keyword, color: "#f97583" },
+    { tag: tags.string, color: "#9ecbff" },
+    { tag: tags.number, color: "#79b8ff" },
+    { tag: tags.typeName, color: "#ffab70", fontStyle: "italic" },
+    { tag: tags.function(tags.variableName), color: "#b392f0" },
+    { tag: tags.definition(tags.variableName), color: "#85e89d" },
+    { tag: tags.variableName, color: "#e1e4e8" },
+    { tag: tags.constant(tags.variableName), color: "#f97583" },
+    { tag: tags.operator, color: "#f97583" },
+  ],
 } as const;
