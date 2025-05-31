@@ -9,7 +9,6 @@ type FooterProps = {
 
 export const Footer = ({ leftContent, rightContent, autoHide = false }: FooterProps) => {
   const { isHidden } = useUserActivity({
-    hideDelay: 50,
     showDelay: 1500,
   });
 
