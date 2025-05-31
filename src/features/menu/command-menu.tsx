@@ -133,15 +133,15 @@ export function CommandMenu({
   //       const selection = editor.getSelection();
   //       const scrollTop = editor.getScrollTop();
   //       const content = editor.getValue();
-  //       const formattedContent = await markdownFormatterRef.current.formatMarkdown(content); // formatMarkdownはPromiseを返すと仮定
+  //       const formattedContent = await markdownFormatterRef.current.formatMarkdown(content); // formatMarkdown is assumed to return a Promise
 
   //       editor.setValue(formattedContent);
 
-  //       // カーソル位置とスクロール位置を復元
+  //       // Restore cursor position and scroll position
   //       if (selection) {
   //         editor.setSelection(selection);
   //       }
-  //       // setValue後のレンダリングを待ってからスクロール位置を復元
+  //       // Wait for rendering after setValue then restore scroll position
   //       setTimeout(() => editor.setScrollTop(scrollTop), 0);
 
   //       showToast("Document formatted successfully", "default");
@@ -163,10 +163,10 @@ export function CommandMenu({
   //     try {
   //       const github_user_id = prompt("Enter GitHub User ID:");
   //       if (!github_user_id) {
-  //         handleClose(); // キャンセルまたは空入力時は閉じる
+  //         handleClose(); // Close on cancel or empty input
   //         return;
   //       }
-  //       const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id); // fetchGitHubIssuesTaskListはPromiseを返すと仮定
+  //       const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id); // fetchGitHubIssuesTaskList is assumed to return a Promise
   //       const editor = editorRef.current;
   //       const selection = editor.getSelection();
   //       const position = editor.getPosition();
@@ -175,10 +175,10 @@ export function CommandMenu({
   //       if (selection && !selection.isEmpty()) {
   //         range = selection;
   //       } else if (position) {
-  //         // 選択範囲がない場合は現在のカーソル位置に挿入
+  //         // Insert at current cursor position if no selection
   //         range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
   //       } else {
-  //         // カーソル位置もない場合（エディタが空など）は先頭に挿入
+  //         // Insert at beginning if no cursor position (e.g., editor is empty)
   //         range = new monaco.Range(1, 1, 1, 1);
   //       }
 
@@ -211,7 +211,7 @@ export function CommandMenu({
           ) : (
             <ComputerDesktopIcon className="size-4 stroke-1" />
           ),
-        // shortcut: "⌘T", // Mac以外も考慮するなら修飾キーの表示を工夫する必要あり
+        // shortcut: "⌘T", // Need to consider display of modifier keys for non-Mac platforms
         perform: cycleThemeCallback,
         keywords: "theme toggle switch mode light dark system color appearance",
       },
@@ -250,18 +250,18 @@ export function CommandMenu({
     //     id: "format-document",
     //     name: "Format document",
     //     icon: <FormatIcon className="h-3.5 w-3.5" />,
-    //     shortcut: "⌘F", // ブラウザの検索と競合する可能性あり
+    //     shortcut: "⌘F", // May conflict with browser search
     //     perform: handleFormatDocumentCallback,
     //     keywords: "format document prettify code style arrange beautify markdown lint tidy",
     //   });
     // }
     // if (editorRef?.current) {
-    //   // エディタが存在する場合のみ表示
+    //   // Display only when editor exists
     //   list.push({
     //     id: "insert-github-issues",
     //     name: "Insert GitHub Issues (Public Repos)",
     //     icon: <GitHubIcon className="h-3.5 w-3.5" />,
-    //     shortcut: "⌘G", // ショートカットは要検討
+    //     shortcut: "⌘G", // Shortcut needs consideration
     //     perform: handleInsertGitHubIssuesCallback,
     //     keywords: "github issues insert fetch task todo list import integrate",
     //   });
@@ -319,13 +319,13 @@ export function CommandMenu({
             value={inputValue}
             onValueChange={setInputValue}
             placeholder="Type a command or search..."
-            className="w-full border-none bg-transparent py-2.5 pr-3 pl-9 text-neutral-900 text-sm outline-none placeholder:text-neutral-400 focus:ring-0 dark:text-neutral-100 dark:placeholder:text-neutral-500" // focus:ring-0 でフォーカス時のリングを消去
+            className="w-full border-none bg-transparent py-2.5 pr-3 pl-9 text-neutral-900 text-sm outline-none placeholder:text-neutral-400 focus:ring-0 dark:text-neutral-100 dark:placeholder:text-neutral-500" // focus:ring-0 removes the focus ring
           />
         </div>
 
         <Command.List
           ref={listRef}
-          className="scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent max-h-[min(60vh,350px)] overflow-y-auto p-2" // 高さを調整
+          className="scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent max-h-[min(60vh,350px)] overflow-y-auto p-2" // Adjust height
         >
           <Command.Empty className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">
             No results found.
@@ -340,17 +340,17 @@ export function CommandMenu({
               .map((command) => (
                 <Command.Item
                   key={command.id}
-                  // value に name と keywords を含めて検索対象にする
+                  // Include name and keywords in value for search
                   value={`${command.name} ${command.keywords || ""}`}
                   onSelect={command.perform}
                   className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                 >
                   <div className="flex items-center gap-2">
-                    {/* アイコン表示エリア */}
+                    {/* Icon display area */}
                     <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                       {command.icon}
                     </div>
-                    {/* コマンド名と状態表示 */}
+                    {/* Command name and status display */}
                     <span className="flex-grow truncate">
                       {" "}
                       {command.name}

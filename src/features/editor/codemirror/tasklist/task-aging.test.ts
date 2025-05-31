@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { EditorState } from "@codemirror/state";
-import { taskAgingPlugin, registerTaskCreation } from "./task-aging";
+import { registerTaskCreation, taskAgingPlugin } from "./task-aging";
 
 describe("Task Aging", () => {
   it("should register new tasks when created", () => {

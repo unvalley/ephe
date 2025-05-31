@@ -1,31 +1,31 @@
 import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
 
-// タスクの作成時間を保存するMap
+// Map to store task creation times
 const taskCreationTimes = new Map<string, number>();
 
-// タスクの年齢に基づいて透明度を計算
+// Calculate task opacity based on age
 const calculateTaskOpacity = (createdAt: number): number => {
   const now = Date.now();
 
-  // テスト用に非常に短い時間で変化するようにする（1分以内）
-  const ageInSeconds = (now - createdAt) / 1000; // 秒単位でテスト
+  // For testing purposes, use very short time intervals (within 1 minute)
+  const ageInSeconds = (now - createdAt) / 1000; // Test in seconds
 
-  if (ageInSeconds <= 10) return 1.0; // 0-10秒: 完全な色
-  if (ageInSeconds <= 20) return 0.8; // 10-20秒: 少し薄く
-  if (ageInSeconds <= 40) return 0.6; // 20-40秒: より薄く
-  return 0.4; // 40秒以上: かなり薄く
+  if (ageInSeconds <= 10) return 1.0; // 0-10 seconds: full color
+  if (ageInSeconds <= 20) return 0.8; // 10-20 seconds: slightly faded
+  if (ageInSeconds <= 40) return 0.6; // 20-40 seconds: more faded
+  return 0.4; // 40+ seconds: quite faded
 };
 
-// タスクのコンテンツとポジションからユニークキーを生成
+// Generate unique key from task content and position
 const getTaskKey = (lineText: string, lineNumber: number, position: number): string => {
   const taskMatch = lineText.match(/^(\s*)-\s*\[([ x])\]\s*(.*)$/);
   const content = taskMatch ? taskMatch[3].trim() : lineText.trim();
   return `${lineNumber}:${position}:${content}`;
 };
 
-// タスクの作成時間を登録
-const registerTaskCreation = (taskKey: string): void => {
+// Register task creation time
+export const registerTaskCreation = (taskKey: string): void => {
   if (!taskCreationTimes.has(taskKey)) {
     taskCreationTimes.set(taskKey, Date.now());
   }
@@ -44,13 +44,13 @@ export const taskAgingPlugin = ViewPlugin.fromClass(
 
     update(update: ViewUpdate) {
       if (update.docChanged || update.viewportChanged) {
-        // ドキュメントが変更された場合、古いタスクエントリを削除
+        // Clean up old task entries when document changes
         this.cleanupOldTasks(update.view);
         this.decorations = this.buildDecorations(update.view);
       }
     }
 
-    // 定期的に透明度を更新
+    // Periodically update opacity
     scheduleUpdate(view: EditorView) {
       this.updateTimer = window.setTimeout(() => {
         if (view.state) {
@@ -58,7 +58,7 @@ export const taskAgingPlugin = ViewPlugin.fromClass(
           view.requestMeasure();
           this.scheduleUpdate(view);
         }
-      }, 5000); // 5秒ごとに更新（テスト用）
+      }, 5000); // Update every 5 seconds (for testing)
     }
 
     destroy() {
@@ -76,10 +76,10 @@ export const taskAgingPlugin = ViewPlugin.fromClass(
         const taskMatch = line.text.match(/^(\s*)-\s*\[([ x])\]\s*(.*)$/);
 
         if (taskMatch && taskMatch[2] === " ") {
-          // 未完了タスクのみ
+          // Only incomplete tasks
           const taskKey = getTaskKey(line.text, i, line.from);
 
-          // 新しいタスクの場合は作成時間を登録
+          // Register creation time for new tasks
           registerTaskCreation(taskKey);
 
           const createdAt = taskCreationTimes.get(taskKey);
@@ -100,12 +100,12 @@ export const taskAgingPlugin = ViewPlugin.fromClass(
       return builder.finish();
     }
 
-    // 現在存在しないタスクのエントリを削除
+    // Clean up entries for tasks that no longer exist
     cleanupOldTasks(view: EditorView) {
       const currentTaskKeys = new Set<string>();
       const doc = view.state.doc;
 
-      // 現在存在するタスクのキーを収集
+      // Collect keys for currently existing tasks
       for (let i = 1; i <= doc.lines; i++) {
         const line = doc.line(i);
         const taskMatch = line.text.match(/^(\s*)-\s*\[([ x])\]\s*(.*)$/);
@@ -115,7 +115,7 @@ export const taskAgingPlugin = ViewPlugin.fromClass(
         }
       }
 
-      // 存在しないタスクのエントリを削除
+      // Remove entries for non-existent tasks
       for (const key of taskCreationTimes.keys()) {
         if (!currentTaskKeys.has(key)) {
           taskCreationTimes.delete(key);
