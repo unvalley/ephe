@@ -29,6 +29,7 @@ It stays out of your way, but helps where it counts:
 - You can see snapshots and task history recorded  
 - <kbd>Cmd</kbd> + <kbd>K</kbd> → opens the quick command menu  
 - Customize appearance (Dark mode, Paper style, Width) from the bottom-left settings
+- Task Flush (If set to instant, closing a task (`- [ ]`) deletes the line immediately)
 
 
 I hope this one page helps you start your day with focus.
