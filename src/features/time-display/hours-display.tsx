@@ -63,7 +63,7 @@ export const HoursDisplay = () => {
         type="button"
         onClick={() => setShowTooltip(!showTooltip)}
         onMouseEnter={() => setShowTooltip(true)}
-        className="whitespace-nowrap"
+        className="whitespace-nowrap rounded-md bg-white px-2 py-1 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:hover:bg-neutral-800"
       >
         {formattedToday}
       </button>
