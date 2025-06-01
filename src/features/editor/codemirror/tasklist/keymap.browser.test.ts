@@ -248,32 +248,31 @@ describe("taskKeyBindings - Shift-Tab Key", () => {
 });
 
 describe("taskKeyBindings - Delete Key", () => {
-  test("deletes empty task line at end", () => {
+  test("converts empty task line to regular list line at end", () => {
     const result = testKeyBehavior("- [ ]", 5, "Delete");
 
     expect(result.handled).toBe(true);
     expect(result.beforeText).toBe("- [ ]");
-    expect(result.afterText).toBe("");
-    expect(result.afterCursor).toBe(0);
+    expect(result.afterText).toBe("- ");
+    expect(result.afterCursor).toBe(2);
   });
 
-  test("deletes empty task line with content after", () => {
+  test("converts empty task line to regular list line with content after", () => {
     const result = testKeyBehavior("- [ ]\nNext line", 5, "Delete");
 
     expect(result.handled).toBe(true);
     expect(result.beforeText).toBe("- [ ]\nNext line");
-    // The actual behavior leaves a newline character
-    expect(result.afterText).toBe("\nNext line");
-    expect(result.afterCursor).toBe(0);
+    expect(result.afterText).toBe("- \nNext line");
+    expect(result.afterCursor).toBe(2);
   });
 
-  test("deletes empty task line in middle", () => {
+  test("converts empty task line to regular list line in middle", () => {
     const result = testKeyBehavior("Line 1\n- [ ]\nLine 3", 12, "Delete");
 
     expect(result.handled).toBe(true);
     expect(result.beforeText).toBe("Line 1\n- [ ]\nLine 3");
-    expect(result.afterText).toBe("Line 1\nLine 3");
-    expect(result.afterCursor).toBe(7);
+    expect(result.afterText).toBe("Line 1\n- \nLine 3");
+    expect(result.afterCursor).toBe(9);
   });
 
   test("does not handle cursor not at line end", () => {
@@ -300,20 +299,58 @@ describe("taskKeyBindings - Delete Key", () => {
     expect(handled).toBe(false);
   });
 
-  test("handles completed task deletion", () => {
+  test("converts completed task to regular list line", () => {
     const result = testKeyBehavior("- [x]", 5, "Delete");
 
     expect(result.handled).toBe(true);
     expect(result.beforeText).toBe("- [x]");
-    expect(result.afterText).toBe("");
+    expect(result.afterText).toBe("- ");
+    expect(result.afterCursor).toBe(2);
   });
 
-  test("handles bullet list empty task", () => {
+  test("converts bullet list empty task to regular list line", () => {
     const result = testKeyBehavior("* [ ]", 5, "Delete");
 
     expect(result.handled).toBe(true);
     expect(result.beforeText).toBe("* [ ]");
+    expect(result.afterText).toBe("* ");
+    expect(result.afterCursor).toBe(2);
+  });
+
+  test("converts empty regular list line to plain text", () => {
+    const result = testKeyBehavior("- ", 2, "Delete");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("- ");
     expect(result.afterText).toBe("");
+    expect(result.afterCursor).toBe(0);
+  });
+
+  test("converts empty asterisk list line to plain text", () => {
+    const result = testKeyBehavior("* ", 2, "Delete");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("* ");
+    expect(result.afterText).toBe("");
+    expect(result.afterCursor).toBe(0);
+  });
+
+  test("converts empty plus list line to plain text", () => {
+    const result = testKeyBehavior("+ ", 2, "Delete");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("+ ");
+    expect(result.afterText).toBe("");
+    expect(result.afterCursor).toBe(0);
+  });
+
+  test("preserves indentation when converting empty list to plain text", () => {
+    const result = testKeyBehavior("  - ", 4, "Delete");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("  - ");
+    expect(result.afterText).toBe("  ");
+    expect(result.afterCursor).toBe(2);
   });
 });
 
