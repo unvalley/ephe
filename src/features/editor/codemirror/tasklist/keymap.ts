@@ -229,43 +229,38 @@ export const taskKeyBindings: readonly KeyBinding[] = [
       }
 
       if (isTaskLineEndsWithSpace(line.text)) {
-        // Matched case: entire line is `- [ ]` (or - [x] etc.) with only whitespace
+        // Convert empty task line to regular list line instead of deleting the entire line
+        const match = line.text.match(/^(\s*)([-*]) \[[ xX]\]/);
+        if (match) {
+          const indent = match[1];
+          const bullet = match[2];
+          const newListLine = `${indent}${bullet} `;
 
-        // Create transaction to delete the line
-        const from = line.from;
-        let to = line.to;
+          view.dispatch({
+            changes: { from: line.from, to: line.to, insert: newListLine },
+            selection: { anchor: line.from + newListLine.length },
+            userEvent: "delete.task-to-list",
+          });
 
-        // Include newline character in deletion if it exists after the line
-        // (Prevent unintended indentation of next line)
-        // However, don't delete newline for the last line of document
-        if (line.to < state.doc.length) {
-          to += 1; // Include newline character
-        } else {
-          // For last line that's not also the first line,
-          // adjustment might be needed to avoid deleting previous line's newline
-          // For now, keep it simple: don't delete newline for last line
-          if (line.from > 0) {
-            // Adjust from to not delete previous newline? No, deleting entire line is intuitive.
-            // Keep it simple: don't delete newline for last line
-          }
+          return true; // Suppress default Delete behavior
         }
-        // For first line, don't delete newline to avoid merging with next line
-        if (line.from === 0 && line.to < state.doc.length) {
-          to = line.to;
+      }
+
+      // Handle empty regular list lines - convert to plain text
+      if (isEmptyListLine(line.text)) {
+        const match = line.text.match(/^(\s*)([-*+])\s*$/);
+        if (match) {
+          const indent = match[1];
+          const newPlainLine = indent;
+
+          view.dispatch({
+            changes: { from: line.from, to: line.to, insert: newPlainLine },
+            selection: { anchor: line.from + newPlainLine.length },
+            userEvent: "delete.list-to-text",
+          });
+
+          return true; // Suppress default Delete behavior
         }
-
-        // Final deletion range
-        const changes = { from: from, to: to };
-        // Place cursor at deletion start position
-        const selectionAfter = { anchor: from };
-
-        view.dispatch({
-          changes: changes,
-          selection: selectionAfter,
-          userEvent: "delete.task",
-        });
-
-        return true; // Suppress default Delete behavior
       }
 
       // Use default Delete behavior if pattern doesn't match
