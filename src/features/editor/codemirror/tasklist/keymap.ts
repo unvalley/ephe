@@ -2,7 +2,15 @@ import { indentMore, indentLess } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
 import { type KeyBinding, type EditorView, keymap } from "@codemirror/view";
 import { Prec } from "@codemirror/state";
-import { isTaskLine, isTaskLineEndsWithSpace, isRegularListLine, isEmptyListLine } from "./task-list-utils";
+import {
+  isTaskLine,
+  isTaskLineEndsWithSpace,
+  isRegularListLine,
+  isEmptyListLine,
+  parseTaskLine,
+  parseEmptyListLine,
+  parseRegularListLine,
+} from "./task-list-utils";
 
 const INDENT_SPACE = "  ";
 
@@ -56,10 +64,9 @@ export const taskKeyBindings: readonly KeyBinding[] = [
           }
 
           // If it's a task line with content, create a new task item
-          const match = line.text.match(/^(\s*)([-*]) \[[ xX]\]/);
-          if (match) {
-            const indent = match[1];
-            const bullet = match[2];
+          const parsed = parseTaskLine(line.text);
+          if (parsed) {
+            const { indent, bullet } = parsed;
             const newTaskLine = `\n${indent}${bullet} [ ] `;
 
             view.dispatch({
@@ -94,11 +101,10 @@ export const taskKeyBindings: readonly KeyBinding[] = [
           }
 
           // If it's a list line with content, create a new list item
-          const match = line.text.match(/^(\s*)([-*+])\s+(.*)$/);
-          if (match && match[3].trim() !== "") {
+          const parsed = parseRegularListLine(line.text);
+          if (parsed && parsed.content && parsed.content.trim() !== "") {
             // Only if there's actual content
-            const indent = match[1];
-            const bullet = match[2];
+            const { indent, bullet } = parsed;
             const newListLine = `\n${indent}${bullet} `;
 
             view.dispatch({
@@ -230,10 +236,9 @@ export const taskKeyBindings: readonly KeyBinding[] = [
 
       if (isTaskLineEndsWithSpace(line.text)) {
         // Convert empty task line to regular list line instead of deleting the entire line
-        const match = line.text.match(/^(\s*)([-*]) \[[ xX]\]/);
-        if (match) {
-          const indent = match[1];
-          const bullet = match[2];
+        const parsed = parseTaskLine(line.text);
+        if (parsed) {
+          const { indent, bullet } = parsed;
           const newListLine = `${indent}${bullet} `;
 
           view.dispatch({
@@ -248,9 +253,9 @@ export const taskKeyBindings: readonly KeyBinding[] = [
 
       // Handle empty regular list lines - convert to plain text
       if (isEmptyListLine(line.text)) {
-        const match = line.text.match(/^(\s*)([-*+])\s*$/);
-        if (match) {
-          const indent = match[1];
+        const parsed = parseEmptyListLine(line.text);
+        if (parsed) {
+          const { indent } = parsed;
           const newPlainLine = indent;
 
           view.dispatch({
