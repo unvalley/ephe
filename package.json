@@ -45,7 +45,7 @@
     "use-debounce": "^10.0.4"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.0.0-beta.2",
+    "@biomejs/biome": "2.0.0-beta.6",
     "@playwright/test": "^1.51.1",
     "@tailwindcss/postcss": "^4.0.14",
     "@tailwindcss/vite": "^4.0.14",

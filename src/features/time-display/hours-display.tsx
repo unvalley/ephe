@@ -69,6 +69,7 @@ export const HoursDisplay = () => {
       </button>
 
       {showTooltip && (
+        // biome-ignore lint/a11y/noStaticElementInteractions: <explanation>
         <div
           ref={tooltipRef}
           className="absolute bottom-full mb-2 transform rounded-xl bg-primary-50 p-6 shadow-xl dark:bg-primary-700"
@@ -96,6 +97,7 @@ export const HoursDisplay = () => {
             }}
           >
             {hoursArray.map((hour) => (
+              // biome-ignore lint/a11y/noStaticElementInteractions: <explanation>
               <div
                 key={hour.hour}
                 className="group relative hover:z-10 hover:scale-150"

@@ -1,4 +1,4 @@
-import { EditorView, Decoration, DecorationSet, ViewPlugin, ViewUpdate } from "@codemirror/view";
+import { type EditorView, Decoration, type DecorationSet, ViewPlugin, type ViewUpdate } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
 
 const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
@@ -12,12 +12,16 @@ const urlDecoration = Decoration.mark({
 type Range = { from: number; to: number };
 
 const getMatchRanges = (text: string, regex: RegExp): Range[] =>
-  Array.from(text.matchAll(regex))
-    .filter((m) => m.index !== undefined)
-    .map((m) => ({
-      from: m.index!,
-      to: m.index! + m[0].length,
-    }));
+  Array.from(text.matchAll(regex)).flatMap((m) =>
+    m.index !== undefined
+      ? [
+          {
+            from: m.index,
+            to: m.index + m[0].length,
+          },
+        ]
+      : [],
+  );
 
 const overlaps = (a: Range, b: Range) => !(a.to <= b.from || a.from >= b.to);
 
