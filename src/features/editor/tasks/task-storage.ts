@@ -119,7 +119,7 @@ const createTaskStorage = (storage: StorageProvider = createBrowserLocalStorage(
       .map((task) => ({
         id: task.id,
         content: task.content,
-        completedAt: new Date(task.completedAt!).toISOString(),
+        completedAt: task.completedAt ? new Date(task.completedAt).toISOString() : "",
         originalLine: task.originalLine || "",
         taskIdentifier: task.taskIdentifier || generateTaskIdentifier(task.content),
         section: task.section,

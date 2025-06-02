@@ -155,7 +155,8 @@ export const useMarkdownEditor = () => {
             const newPos = newLine.from + newColumn;
             view.dispatch({ selection: { anchor: newPos, head: newPos } });
           }
-        } catch (selectionError) {
+        } catch (error) {
+          console.error("Error restoring cursor position", error);
           view.dispatch({ selection: { anchor: 0, head: 0 } });
         }
         view.scrollDOM.scrollTop = Math.min(scrollTop, view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight);
