@@ -102,7 +102,7 @@ export const taskKeyBindings: readonly KeyBinding[] = [
 
           // If it's a list line with content, create a new list item
           const parsed = parseRegularListLine(line.text);
-          if (parsed && parsed.content && parsed.content.trim() !== "") {
+          if (parsed?.content && parsed.content.trim() !== "") {
             // Only if there's actual content
             const { indent, bullet } = parsed;
             const newListLine = `\n${indent}${bullet} `;
