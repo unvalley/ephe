@@ -19,4 +19,3 @@ Ephe gives you just one clean page to focus your day.
 
 See the <a href=".github/guide.md">guide</a> for details.
 
-<a href="https://www.producthunt.com/products/ephe?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-ephe" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=971094&theme=light&t=1748761518533" alt="Ephe - Open&#0045;source&#0032;Markdown&#0032;Paper&#0032;for&#0032;daily&#0032;todo&#0032;and&#0032;thoughts&#0046; | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
