@@ -11,7 +11,7 @@ import { useTheme } from "../../../utils/hooks/use-theme";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
-import { createDefaultTaskHandler, createChecklistPlugin } from "./tasklist";
+import { createDefaultTaskHandler, createChecklistPlugin, taskAgingPlugin } from "./tasklist";
 import { registerTaskHandler } from "./tasklist/task-close";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
@@ -155,7 +155,8 @@ export const useMarkdownEditor = () => {
             const newPos = newLine.from + newColumn;
             view.dispatch({ selection: { anchor: newPos, head: newPos } });
           }
-        } catch (selectionError) {
+        } catch (error) {
+          console.error("Error restoring cursor position", error);
           view.dispatch({ selection: { anchor: 0, head: 0 } });
         }
         view.scrollDOM.scrollTop = Math.min(scrollTop, view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight);
@@ -244,6 +245,7 @@ export const useMarkdownEditor = () => {
               preventDefault: true,
             },
           ]),
+          taskAgingPlugin,
           urlClickPlugin,
         ],
       });

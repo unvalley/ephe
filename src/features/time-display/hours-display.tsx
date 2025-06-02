@@ -78,6 +78,7 @@ export const HoursDisplay = () => {
             overflow: "hidden",
             transform: "translateX(-30%)",
           }}
+          role="tooltip"
           onMouseLeave={() => setShowTooltip(false)}
         >
           <div className="mb-2 text-center text-primary-500 text-sm dark:text-primary-400">
@@ -96,8 +97,9 @@ export const HoursDisplay = () => {
             }}
           >
             {hoursArray.map((hour) => (
-              <div
+              <button
                 key={hour.hour}
+                type="button"
                 className="group relative hover:z-10 hover:scale-150"
                 style={{
                   width: "5px",
@@ -106,6 +108,9 @@ export const HoursDisplay = () => {
                     hour.past || hour.current ? (isDarkMode ? "white" : "#333333") : isDarkMode ? "#444444" : "#dddddd",
                   borderRadius: "50%",
                   transition: "transform 0.2s, background-color 0.2s",
+                  border: "none",
+                  padding: "0",
+                  cursor: "default",
                 }}
                 onMouseEnter={() => setHoveredHour(formatHour(hour.hour))}
                 onMouseLeave={() => setHoveredHour(null)}
@@ -119,7 +124,7 @@ export const HoursDisplay = () => {
                 >
                   {formatHour(hour.hour)}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
