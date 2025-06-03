@@ -100,8 +100,8 @@ export function CommandMenu({
   };
 
   const toggleTaskAgingCallback = () => {
-    toggleTaskAgingMode();
-    showToast(`Task aging ${taskAgingMode ? "disabled" : "enabled"}`, "success");
+    const updatedTaskAgingMode = toggleTaskAgingMode();
+    showToast(`Task aging ${updatedTaskAgingMode ? "enabled" : "disabled"}`, "success");
     onClose();
   };
 
