@@ -205,7 +205,8 @@ export const taskAgingPlugin = ViewPlugin.fromClass(
     scheduleUpdate(view: EditorView) {
       this.updateTimer = window.setTimeout(() => {
         if (view.state) {
-          this.decorations = this.buildDecorations(view);
+          const { from, to } = view.viewport;
+          this.decorations = this.buildDecorations(view, from, to);
           view.requestMeasure();
           this.scheduleUpdate(view);
         }
