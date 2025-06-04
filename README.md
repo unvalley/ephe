@@ -4,7 +4,7 @@
     <img
       src="https://github.com/user-attachments/assets/2e2f6053-284b-4d61-a4c6-0a0dfaf6acf0"
       alt="Ephe screenshot"
-      width="400"
+      width="65%"
     />
   </a>
   <p>
