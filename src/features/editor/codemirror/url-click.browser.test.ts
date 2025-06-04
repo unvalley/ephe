@@ -1,12 +1,12 @@
 import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { test, expect, describe, vi } from "vitest";
-import { urlClickPlugin } from "./url-click";
+import { urlClickPlugin, urlHoverTooltip } from "./url-click";
 
 const createViewFromText = (text: string): EditorView => {
   const state = EditorState.create({
     doc: text,
-    extensions: [urlClickPlugin],
+    extensions: [urlClickPlugin, urlHoverTooltip],
   });
   return new EditorView({ state });
 };
