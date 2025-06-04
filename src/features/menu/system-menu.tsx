@@ -4,7 +4,7 @@ import { useTheme } from "../../utils/hooks/use-theme";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
-import { useFontFamily, type FontFamily, FONT_FAMILY_OPTIONS } from "../../utils/hooks/use-font";
+import { useFontFamily, FONT_FAMILY_OPTIONS } from "../../utils/hooks/use-font";
 import { useState, useEffect, useRef } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME } from "../../utils/theme-initializer";
