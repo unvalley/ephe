@@ -8,6 +8,7 @@ import { useRef, useState, useEffect, useLayoutEffect } from "react";
 import { showToast } from "../../../utils/components/toast";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 import { useTheme } from "../../../utils/hooks/use-theme";
+import { useFontFamily } from "../../../utils/hooks/use-font";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
@@ -87,7 +88,8 @@ export const useMarkdownEditor = () => {
 
   const { isDarkMode } = useTheme();
   const { isWideMode } = useEditorWidth();
-  const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode);
+  const { currentFontValue } = useFontFamily();
+  const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue);
   const { setCharCount } = useCharCount();
   const { isMobile } = useMobileDetector();
 
