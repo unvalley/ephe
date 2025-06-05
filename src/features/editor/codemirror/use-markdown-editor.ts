@@ -20,7 +20,7 @@ import { useEditorTheme } from "./use-editor-theme";
 import { useCharCount } from "../../../utils/hooks/use-char-count";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
-import { urlClickPlugin } from "./url-click";
+import { urlClickPlugin, urlHoverTooltip } from "./url-click";
 
 const storage = createJSONStorage<string>(() => localStorage);
 
@@ -245,6 +245,7 @@ export const useMarkdownEditor = () => {
             },
           ]),
           urlClickPlugin,
+          urlHoverTooltip,
         ],
       });
       const viewCurrent = new EditorView({ state, parent: container });
