@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.0.0-beta.6",
-    "@playwright/test": "^1.51.1",
+    "@playwright/test": "^1.52.0",
     "@tailwindcss/postcss": "^4.0.14",
     "@tailwindcss/vite": "^4.0.14",
     "@types/node": "^22",
@@ -62,7 +62,6 @@
     "eslint": "^9.26.0",
     "eslint-plugin-react-hooks": "^6.0.0-rc.1",
     "globals": "^16.0.0",
-    "playwright": "^1.52.0",
     "postcss": "^8.4.31",
     "rollup-plugin-visualizer": "^5.14.0",
     "tailwindcss": "^4",

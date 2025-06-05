@@ -7,6 +7,10 @@ export const useCommandK = () => {
     setIsCommandMenuOpen((prev) => !prev);
   };
 
+  const closeCommandMenu = () => {
+    setIsCommandMenuOpen(false);
+  };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "k" && (event.ctrlKey || event.metaKey)) {
@@ -20,5 +24,5 @@ export const useCommandK = () => {
     };
   }, [toggleCommandMenu]);
 
-  return { isCommandMenuOpen, toggleCommandMenu };
+  return { isCommandMenuOpen, toggleCommandMenu, closeCommandMenu };
 };

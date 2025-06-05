@@ -33,8 +33,7 @@ export const EditorPage = () => {
           </>
         }
       />
-
-      {isCommandMenuOpen && <CommandMenu open={isCommandMenuOpen} onClose={toggleCommandMenu} />}
+      <CommandMenu open={isCommandMenuOpen} onClose={toggleCommandMenu} />
     </div>
   );
 };

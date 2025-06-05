@@ -59,13 +59,36 @@ export function CommandMenu({
 
   useEffect(() => {
     if (open) {
-      const timer = setTimeout(() => {
+      // Reset input value immediately
+      setInputValue("");
+
+      // Use requestAnimationFrame for more reliable focus
+      const rafId = requestAnimationFrame(() => {
         inputRef.current?.focus();
-        setInputValue("");
-      }, 50);
-      return () => clearTimeout(timer);
+        // Ensure the element is actually focused
+        if (document.activeElement !== inputRef.current) {
+          inputRef.current?.focus();
+        }
+      });
+
+      return () => cancelAnimationFrame(rafId);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
 
   const cycleThemeCallback = () => {
     let nextTheme: ColorTheme;
@@ -280,166 +303,164 @@ export function CommandMenu({
   return (
     <>
       {open && (
-        <div
-          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px] transition-opacity dark:bg-black/50"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onClose();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              e.preventDefault();
-              onClose();
-            }
-          }}
-          aria-hidden="true"
-        />
-      )}
-
-      <Command
-        role="dialog"
-        label="Command Menu"
-        className={`-translate-x-1/2 fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] transform overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900 ${
-          open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
-        }`}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") {
-            e.preventDefault();
-            onClose();
-          }
-        }}
-      >
-        <div className="relative border-neutral-200 border-b dark:border-zinc-800">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <MagnifyingGlassIcon className="size-4 stroke-1" />
-          </div>
-          <Command.Input
-            ref={inputRef}
-            value={inputValue}
-            onValueChange={setInputValue}
-            placeholder="Type a command or search..."
-            className="w-full border-none bg-transparent py-2.5 pr-3 pl-9 text-neutral-900 text-sm outline-none placeholder:text-neutral-400 focus:ring-0 dark:text-neutral-100 dark:placeholder:text-neutral-500" // focus:ring-0 でフォーカス時のリングを消去
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px] transition-opacity dark:bg-black/50"
+            onClick={(e) => {
+              // Only close if clicking on the backdrop itself, not its children
+              if (e.target === e.currentTarget) {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+              }
+            }}
+            aria-hidden="true"
           />
-        </div>
 
-        <Command.List
-          ref={listRef}
-          className="scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent max-h-[min(60vh,350px)] overflow-y-auto p-2" // 高さを調整
-        >
-          <Command.Empty className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">
-            No results found.
-          </Command.Empty>
-
-          <Command.Group
-            heading="Interface Mode"
-            className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
+          <Command
+            role="dialog"
+            label="Command Menu"
+            className={`fixed left-1/2 top-[20%] z-50 w-[90vw] max-w-[640px] -translate-x-1/2 scale-100 transform overflow-hidden rounded-xl border border-neutral-200 bg-white opacity-100 shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900`}
+            onClick={(e) => {
+              // Prevent clicks inside the command menu from closing it
+              e.stopPropagation();
+            }}
           >
-            {commandsList()
-              .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width"].includes(cmd.id))
-              .map((command) => (
-                <Command.Item
-                  key={command.id}
-                  // value に name と keywords を含めて検索対象にする
-                  value={`${command.name} ${command.keywords || ""}`}
-                  onSelect={command.perform}
-                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                >
-                  <div className="flex items-center gap-2">
-                    {/* アイコン表示エリア */}
-                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                      {command.icon}
-                    </div>
-                    {/* コマンド名と状態表示 */}
-                    <span className="flex-grow truncate">
-                      {" "}
-                      {command.name}
-                      {command.id === "paper-mode" && paperMode && (
-                        <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({paperMode})</span>
+            <div className="relative border-neutral-200 border-b dark:border-zinc-800">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <MagnifyingGlassIcon className="size-4 stroke-1" />
+              </div>
+              <Command.Input
+                ref={inputRef}
+                value={inputValue}
+                onValueChange={setInputValue}
+                placeholder="Type a command or search..."
+                className="w-full border-none bg-transparent py-2.5 pr-3 pl-9 text-neutral-900 text-sm outline-none placeholder:text-neutral-400 focus:ring-0 dark:text-neutral-100 dark:placeholder:text-neutral-500" // focus:ring-0 でフォーカス時のリングを消去
+                autoFocus
+              />
+            </div>
+
+            <Command.List
+              ref={listRef}
+              className="scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent max-h-[min(60vh,350px)] overflow-y-auto p-2" // 高さを調整
+            >
+              <Command.Empty className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">
+                No results found.
+              </Command.Empty>
+
+              <Command.Group
+                heading="Interface Mode"
+                className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
+              >
+                {commandsList()
+                  .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width"].includes(cmd.id))
+                  .map((command) => (
+                    <Command.Item
+                      key={command.id}
+                      // value に name と keywords を含めて検索対象にする
+                      value={`${command.name} ${command.keywords || ""}`}
+                      onSelect={command.perform}
+                      className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                    >
+                      <div className="flex items-center gap-2">
+                        {/* アイコン表示エリア */}
+                        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                          {command.icon}
+                        </div>
+                        {/* コマンド名と状態表示 */}
+                        <span className="flex-grow truncate">
+                          {" "}
+                          {command.name}
+                          {command.id === "paper-mode" && paperMode && (
+                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({paperMode})</span>
+                          )}
+                          {command.id === "editor-width" && editorWidth && (
+                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                              ({editorWidth})
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      {command.shortcut && (
+                        <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                          {command.shortcut}
+                        </kbd>
                       )}
-                      {command.id === "editor-width" && editorWidth && (
-                        <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({editorWidth})</span>
+                    </Command.Item>
+                  ))}
+              </Command.Group>
+
+              <Command.Group
+                heading="Operations (WIP)"
+                className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
+              >
+                {commandsList()
+                  .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues"].includes(cmd.id))
+                  .map((command) => (
+                    <Command.Item
+                      key={command.id}
+                      value={`${command.name} ${command.keywords || ""}`}
+                      onSelect={command.perform}
+                      className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                          {command.icon}
+                        </div>
+                        <span className="flex-grow truncate">{command.name}</span>
+                      </div>
+                      {command.shortcut && (
+                        <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                          {command.shortcut}
+                        </kbd>
                       )}
-                    </span>
-                  </div>
-                  {command.shortcut && (
-                    <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-                      {command.shortcut}
-                    </kbd>
-                  )}
-                </Command.Item>
-              ))}
-          </Command.Group>
+                    </Command.Item>
+                  ))}
+              </Command.Group>
 
-          <Command.Group
-            heading="Operations (WIP)"
-            className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
-          >
-            {commandsList()
-              .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues"].includes(cmd.id))
-              .map((command) => (
-                <Command.Item
-                  key={command.id}
-                  value={`${command.name} ${command.keywords || ""}`}
-                  onSelect={command.perform}
-                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                      {command.icon}
-                    </div>
-                    <span className="flex-grow truncate">{command.name}</span>
-                  </div>
-                  {command.shortcut && (
-                    <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-                      {command.shortcut}
-                    </kbd>
-                  )}
-                </Command.Item>
-              ))}
-          </Command.Group>
+              <Command.Group
+                heading="Navigation"
+                className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
+              >
+                {commandsList()
+                  .filter((cmd) => ["github-repo", "history"].includes(cmd.id))
+                  .map((command) => (
+                    <Command.Item
+                      key={command.id}
+                      value={`${command.name} ${command.keywords || ""}`}
+                      onSelect={command.perform}
+                      className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                          {command.icon}
+                        </div>
+                        <span className="flex-grow truncate">{command.name}</span>
+                      </div>
+                      {command.shortcut && (
+                        <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                          {command.shortcut}
+                        </kbd>
+                      )}
+                    </Command.Item>
+                  ))}
+              </Command.Group>
+            </Command.List>
 
-          <Command.Group
-            heading="Navigation"
-            className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
-          >
-            {commandsList()
-              .filter((cmd) => ["github-repo", "history"].includes(cmd.id))
-              .map((command) => (
-                <Command.Item
-                  key={command.id}
-                  value={`${command.name} ${command.keywords || ""}`}
-                  onSelect={command.perform}
-                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                      {command.icon}
-                    </div>
-                    <span className="flex-grow truncate">{command.name}</span>
-                  </div>
-                  {command.shortcut && (
-                    <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-                      {command.shortcut}
-                    </kbd>
-                  )}
-                </Command.Item>
-              ))}
-          </Command.Group>
-        </Command.List>
-
-        <div className="flex items-center justify-between border-neutral-200 border-t px-3 py-2 text-neutral-500 text-xs dark:border-zinc-800 dark:text-neutral-400">
-          <div className="flex items-center gap-1">
-            <kbd className="rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-              ⌘
-            </kbd>
-            <kbd className="rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-              k
-            </kbd>
-            <span className="ml-1">to close</span>
-          </div>
-        </div>
-      </Command>
+            <div className="flex items-center justify-between border-neutral-200 border-t px-3 py-2 text-neutral-500 text-xs dark:border-zinc-800 dark:text-neutral-400">
+              <div className="flex items-center gap-1">
+                <kbd className="rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                  ⌘
+                </kbd>
+                <kbd className="rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                  k
+                </kbd>
+                <span className="ml-1">to close</span>
+              </div>
+            </div>
+          </Command>
+        </>
+      )}
     </>
   );
 }
