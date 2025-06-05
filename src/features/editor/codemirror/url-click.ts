@@ -13,14 +13,7 @@ const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]()]+/g;
 
 const urlDecoration = Decoration.mark({
   attributes: {
-    style: `
-      text-decoration: underline;
-      text-decoration-color: rgba(59, 130, 246, 0.4);
-      text-underline-offset: 2px;
-      transition: text-decoration-color 0.2s;
-    `,
-    onmouseover: "this.style.textDecorationColor='rgba(59, 130, 246, 0.8)'",
-    onmouseout: "this.style.textDecorationColor='rgba(59, 130, 246, 0.4)'",
+    style: "text-decoration: underline; text-underline-offset: 2px;",
   },
 });
 
@@ -83,6 +76,25 @@ const findUrlAtPos = (view: EditorView, pos: number): { url: string; from: numbe
   return null;
 };
 
+const createTooltipElement = (): HTMLElement => {
+  const dom = document.createElement("div");
+  const isDark = document.documentElement.classList.contains("dark");
+
+  dom.style.cssText = `
+    background-color: ${isDark ? "#475569" : "#1e293b"};
+    color: ${isDark ? "#e2e8f0" : "#f1f5f9"};
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    white-space: nowrap;
+    border: none;
+    font-family: inherit;
+  `;
+  dom.textContent = "Opt+Click to open link";
+  return dom;
+};
+
 export const urlHoverTooltip = hoverTooltip((view, pos) => {
   const urlInfo = findUrlAtPos(view, pos);
   if (!urlInfo) return null;
@@ -91,21 +103,7 @@ export const urlHoverTooltip = hoverTooltip((view, pos) => {
     pos: urlInfo.from,
     end: urlInfo.to,
     above: true,
-    create() {
-      const dom = document.createElement("div");
-      const isDark = document.body.classList.contains("dark");
-      dom.style.cssText = `
-        background-color: ${isDark ? "#475569" : "#1e293b"};
-        color: ${isDark ? "#e2e8f0" : "#f1f5f9"};
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        white-space: nowrap;
-      `;
-      dom.textContent = "Opt+Click to open link";
-      return { dom };
-    },
+    create: () => ({ dom: createTooltipElement() }),
   };
 });
 
