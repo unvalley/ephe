@@ -78,19 +78,6 @@ const findUrlAtPos = (view: EditorView, pos: number): { url: string; from: numbe
 
 const createTooltipElement = (): HTMLElement => {
   const dom = document.createElement("div");
-  const isDark = document.documentElement.classList.contains("dark");
-
-  dom.style.cssText = `
-    background-color: ${isDark ? "#475569" : "#1e293b"};
-    color: ${isDark ? "#e2e8f0" : "#f1f5f9"};
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    white-space: nowrap;
-    border: none;
-    font-family: inherit;
-  `;
   dom.textContent = "Opt+Click to open link";
   return dom;
 };
