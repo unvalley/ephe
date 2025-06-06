@@ -6,7 +6,7 @@ import { useTheme } from "../../utils/hooks/use-theme";
 import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-formatter";
 import { showToast } from "../../utils/components/toast";
 import type { PaperMode } from "../../utils/hooks/use-paper-mode";
-import { COLOR_THEME, type ColorTheme } from "../../utils/theme-initializer";
+import { COLOR_THEME } from "../../utils/theme-initializer";
 import type { EditorWidth } from "../../utils/hooks/use-editor-width";
 import {
   ComputerDesktopIcon,
@@ -52,32 +52,13 @@ export function CommandMenu({
   editorWidth,
   toggleEditorWidth,
 }: CommandMenuProps) {
-  const { theme, setTheme, nextTheme } = useTheme();
+  const { nextTheme, cycleTheme } = useTheme();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open) {
-      // Reset input value immediately
-      setInputValue("");
-
-      // Use requestAnimationFrame for more reliable focus
-      const rafId = requestAnimationFrame(() => {
-        inputRef.current?.focus();
-        // Ensure the element is actually focused
-        if (document.activeElement !== inputRef.current) {
-          inputRef.current?.focus();
-        }
-      });
-
-      return () => cancelAnimationFrame(rafId);
-    }
-  }, [open]);
-
-  useEffect(() => {
     if (!open) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -85,29 +66,9 @@ export function CommandMenu({
         onClose();
       }
     };
-
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open, onClose]);
-
-  const cycleThemeCallback = () => {
-    let nextTheme: ColorTheme;
-    if (theme === COLOR_THEME.LIGHT) {
-      nextTheme = COLOR_THEME.DARK;
-    } else if (theme === COLOR_THEME.DARK) {
-      nextTheme = COLOR_THEME.SYSTEM;
-    } else {
-      nextTheme = COLOR_THEME.LIGHT;
-    }
-    setTheme(nextTheme);
-    onClose();
-  };
-
-  const getNextThemeText = () => {
-    if (theme === COLOR_THEME.LIGHT) return "dark";
-    if (theme === COLOR_THEME.DARK) return "system";
-    return "light";
-  };
 
   const cyclePaperModeCallback = () => {
     cyclePaperMode?.();
@@ -217,11 +178,16 @@ export function CommandMenu({
     onClose();
   };
 
+  const cycleThemeThenClose = () => {
+    cycleTheme();
+    onClose();
+  };
+
   const commandsList = (): CommandItem[] => {
     const list: CommandItem[] = [
       {
         id: "theme-toggle",
-        name: `Switch to ${getNextThemeText()} mode`,
+        name: `Switch to ${nextTheme} mode`,
         icon:
           nextTheme === COLOR_THEME.LIGHT ? (
             <SunIcon className="size-4 stroke-1" />
@@ -231,7 +197,7 @@ export function CommandMenu({
             <ComputerDesktopIcon className="size-4 stroke-1" />
           ),
         // shortcut: "⌘T",
-        perform: cycleThemeCallback,
+        perform: cycleThemeThenClose,
         keywords: "theme toggle switch mode light dark system color appearance",
       },
     ];
@@ -289,8 +255,7 @@ export function CommandMenu({
       name: "Go to Ephe GitHub Repo",
       icon: <LinkIcon className="size-4 stroke-1" />,
       perform: goToGitHubRepo,
-      keywords:
-        "github ephe repository project code source link open website source-code",
+      keywords: "github ephe repository project code source link open website source-code",
     });
 
     return list;
@@ -351,11 +316,7 @@ export function CommandMenu({
                 className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
               >
                 {commandsList()
-                  .filter((cmd) =>
-                    ["theme-toggle", "paper-mode", "editor-width"].includes(
-                      cmd.id
-                    )
-                  )
+                  .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width"].includes(cmd.id))
                   .map((command) => (
                     <Command.Item
                       key={command.id}
@@ -371,9 +332,7 @@ export function CommandMenu({
                           {" "}
                           {command.name}
                           {command.id === "paper-mode" && paperMode && (
-                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
-                              ({paperMode})
-                            </span>
+                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({paperMode})</span>
                           )}
                           {command.id === "editor-width" && editorWidth && (
                             <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
@@ -396,13 +355,7 @@ export function CommandMenu({
                 className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
               >
                 {commandsList()
-                  .filter((cmd) =>
-                    [
-                      "export-markdown",
-                      "format-document",
-                      "insert-github-issues",
-                    ].includes(cmd.id)
-                  )
+                  .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues"].includes(cmd.id))
                   .map((command) => (
                     <Command.Item
                       key={command.id}
@@ -414,9 +367,7 @@ export function CommandMenu({
                         <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                           {command.icon}
                         </div>
-                        <span className="flex-grow truncate">
-                          {command.name}
-                        </span>
+                        <span className="flex-grow truncate">{command.name}</span>
                       </div>
                       {command.shortcut && (
                         <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
@@ -444,9 +395,7 @@ export function CommandMenu({
                         <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                           {command.icon}
                         </div>
-                        <span className="flex-grow truncate">
-                          {command.name}
-                        </span>
+                        <span className="flex-grow truncate">{command.name}</span>
                       </div>
                       {command.shortcut && (
                         <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">

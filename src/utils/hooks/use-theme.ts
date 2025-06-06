@@ -29,10 +29,21 @@ export const useTheme = () => {
     };
   }, [theme]);
 
-  const nextTheme = theme === COLOR_THEME.LIGHT ? COLOR_THEME.DARK : COLOR_THEME.LIGHT;
+  // Light -> Dark -> System
+  const nextTheme =
+    theme === COLOR_THEME.SYSTEM
+      ? COLOR_THEME.LIGHT
+      : theme === COLOR_THEME.LIGHT
+        ? COLOR_THEME.DARK
+        : COLOR_THEME.SYSTEM;
+
   const isDarkMode =
     theme === COLOR_THEME.DARK ||
     (theme === COLOR_THEME.SYSTEM && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
-  return { theme, nextTheme, setTheme, isDarkMode };
+  const cycleTheme = () => {
+    setTheme(nextTheme);
+  };
+
+  return { theme, nextTheme, setTheme, isDarkMode, cycleTheme };
 };
