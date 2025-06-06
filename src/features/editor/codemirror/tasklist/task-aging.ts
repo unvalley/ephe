@@ -6,18 +6,61 @@ import { getDefaultStore } from "jotai";
 import { LOCAL_STORAGE_KEYS } from "../../../../utils/constants";
 import { taskAgingEnabledAtom } from "../../../../utils/hooks/use-task-aging";
 
-// Task creation times storage using atomWithStorage
-const taskCreationTimesAtom = atomWithStorage<Record<string, number>>(LOCAL_STORAGE_KEYS.TASK_AGING_TIMES, {});
+type ISOString = string & { readonly __brand: "ISOString" };
+// `indent:content:line`
+type TaskKey = `${number}:${string}:${number}` & { readonly __brand: "TaskKey" };
+
+const createISOString = (): ISOString => {
+  return new Date().toISOString() as ISOString;
+};
+
+// Type guards
+const isValidISOString = (value: string): value is ISOString => {
+  try {
+    const date = new Date(value);
+    return !isNaN(date.getTime()) && date.toISOString() === value;
+  } catch {
+    return false;
+  }
+};
+
+// TODO: Handle Error in a better way
+const createTaskKey = (taskContent: string, indentLevel: number, lineNumber: number): TaskKey => {
+  if (indentLevel < 0 || lineNumber <= 0 || taskContent.trim().length === 0) {
+    throw new Error(`Invalid task key parameters: indent=${indentLevel}, line=${lineNumber}, content="${taskContent}"`);
+  }
+  return `${indentLevel}:${taskContent}:${lineNumber}` as TaskKey;
+};
+
+const isValidTaskKey = (value: string): value is TaskKey => {
+  const parts = value.split(":");
+  if (parts.length !== 3) return false;
+  
+  const [indentStr, content, lineStr] = parts;
+  const indent = parseInt(indentStr, 10);
+  const line = parseInt(lineStr, 10);
+  
+  return !isNaN(indent) && 
+         indent >= 0 && 
+         typeof content === "string" && 
+         content.length > 0 && 
+         !isNaN(line) && 
+         line > 0;
+};
+
+
+// Task creation times storage using atomWithStorage - now using ISO strings for consistency
+const taskCreationTimesAtom = atomWithStorage<Record<TaskKey, ISOString>>(LOCAL_STORAGE_KEYS.TASK_AGING_TIMES, {});
 
 const store = getDefaultStore();
 
 // Get task creation times from atom
-const getTaskCreationTimes = (): Record<string, number> => {
+const getTaskCreationTimes = (): Record<TaskKey, ISOString> => {
   return store.get(taskCreationTimesAtom);
 };
 
 // Set task creation times to atom
-const setTaskCreationTimes = (times: Record<string, number>): void => {
+const setTaskCreationTimes = (times: Record<TaskKey, ISOString>): void => {
   store.set(taskCreationTimesAtom, times);
 };
 
@@ -26,69 +69,98 @@ const isTaskAgingEnabled = (): boolean => {
   return store.get(taskAgingEnabledAtom);
 };
 
-// Calculate task opacity based on age
-const calculateTaskOpacity = (createdAt: number): number => {
-  const now = Date.now();
+// Calculate task opacity based on age with proper error handling
+const calculateTaskOpacity = (createdAt: ISOString): number => {
+  try {
+    const now = Date.now();
+    const createdAtTime = new Date(createdAt).getTime();
 
-  // For testing purposes, use very short time intervals (within 1 minute)
-  const ageInSeconds = (now - createdAt) / 1000; // Test in seconds
+    if (isNaN(createdAtTime)) {
+      console.warn(`Invalid date string for task aging: ${createdAt}`);
+      return 1.0; // Default to full opacity for invalid dates
+    }
 
-  if (ageInSeconds <= 10) return 1.0; // 0-10 seconds: full color
-  if (ageInSeconds <= 20) return 0.8; // 10-20 seconds: slightly faded
-  if (ageInSeconds <= 40) return 0.6; // 20-40 seconds: more faded
-  return 0.4; // 40+ seconds: quite faded
-};
+    // For testing purposes, use very short time intervals 24
+    const ageInSeconds = (now - createdAtTime) / 1000; // Test in seconds
 
-// Generate stable unique key from task content, indent level, and line number for uniqueness
-const getTaskKey = (taskContent: string, indentLevel: number, lineNumber: number): string => {
-  // Include line number for uniqueness while still allowing content-based migration
-  return `${indentLevel}:${taskContent}:${lineNumber}`;
+    if (ageInSeconds <= 10) return 1.0; // 0-10 seconds: full color
+    if (ageInSeconds <= 20) return 0.8; // 10-20 seconds: slightly faded
+    if (ageInSeconds <= 40) return 0.6; // 20-40 seconds: more faded
+    return 0.4; // 40+ seconds: quite faded
+  } catch (error) {
+    console.error(`Error calculating task opacity for ${createdAt}:`, error);
+    return 1.0; // Default to full opacity on error
+  }
 };
 
 // Register task creation time
-export const registerTaskCreation = (taskKey: string, taskContent: string, indentLevel: number): void => {
+export const registerTaskCreation = (taskKey: TaskKey, taskContent: string, indentLevel: number): void => {
   const taskCreationTimes = getTaskCreationTimes();
-  if (!taskCreationTimes[taskKey]) {
+  if (!(taskKey in taskCreationTimes)) {
     // Try to migrate from existing task with same content first
     migrateTaskByContent(taskContent, indentLevel, taskKey);
 
     // If no migration happened, create new entry
-    if (!taskCreationTimes[taskKey]) {
-      const updatedTimes = getTaskCreationTimes();
-      updatedTimes[taskKey] = Date.now();
+    const updatedTimes = getTaskCreationTimes();
+    if (!(taskKey in updatedTimes)) {
+      updatedTimes[taskKey] = createISOString();
       setTaskCreationTimes(updatedTimes);
     }
   }
 };
 
 // Reset task creation time (when task is edited)
-const resetTaskCreation = (taskKey: string): void => {
+const resetTaskCreation = (taskKey: TaskKey): void => {
   const taskCreationTimes = getTaskCreationTimes();
-  taskCreationTimes[taskKey] = Date.now();
+  taskCreationTimes[taskKey] = createISOString();
   setTaskCreationTimes(taskCreationTimes);
 };
 
 // Find and migrate task creation time based on content when task moves to different line
-const migrateTaskByContent = (taskContent: string, indentLevel: number, newKey: string): void => {
+const migrateTaskByContent = (taskContent: string, indentLevel: number, newKey: TaskKey): void => {
   const taskCreationTimes = getTaskCreationTimes();
+  let hasInvalidKeys = false;
+  let updatedTimes = { ...taskCreationTimes };
 
   // Look for existing keys with same content but different line numbers
   for (const [existingKey, timestamp] of Object.entries(taskCreationTimes)) {
+    // Validate existing key format
+    if (!isValidTaskKey(existingKey)) {
+      console.warn(`Invalid task key found during migration: ${existingKey}`);
+      // Create new object without the invalid key
+      updatedTimes = Object.fromEntries(
+        Object.entries(updatedTimes).filter(([k]) => k !== existingKey)
+      ) as Record<TaskKey, ISOString>;
+      hasInvalidKeys = true;
+      continue;
+    }
+
     const keyParts = existingKey.split(":");
     if (keyParts.length === 3) {
-      const existingIndent = parseInt(keyParts[0]);
+      const existingIndent = parseInt(keyParts[0], 10);
       const existingContent = keyParts[1];
 
-      if (existingIndent === indentLevel && existingContent === taskContent && existingKey !== newKey) {
+      if (!isNaN(existingIndent) && 
+          existingIndent === indentLevel && 
+          existingContent === taskContent && 
+          existingKey !== newKey) {
         // Found matching content, migrate if new key doesn't exist
-        if (!taskCreationTimes[newKey]) {
-          taskCreationTimes[newKey] = timestamp;
-          delete taskCreationTimes[existingKey];
-          setTaskCreationTimes(taskCreationTimes);
+        if (!(newKey in updatedTimes) && isValidISOString(timestamp)) {
+          // Create new object with migrated key
+          updatedTimes = Object.fromEntries([
+            ...Object.entries(updatedTimes).filter(([k]) => k !== existingKey),
+            [newKey, timestamp]
+          ]) as Record<TaskKey, ISOString>;
+          setTaskCreationTimes(updatedTimes);
           return; // Only migrate once
         }
       }
     }
+  }
+
+  // Update if we found invalid keys
+  if (hasInvalidKeys) {
+    setTaskCreationTimes(updatedTimes);
   }
 };
 
@@ -96,29 +168,59 @@ const migrateTaskByContent = (taskContent: string, indentLevel: number, newKey: 
 const cleanupOldEntries = (): void => {
   const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const taskCreationTimes = getTaskCreationTimes();
-  let hasChanges = false;
+  
+  const validEntries = Object.fromEntries(
+    Object.entries(taskCreationTimes).filter(([key, timestamp]) => {
+      // Remove entries with invalid key format
+      if (!isValidTaskKey(key)) {
+        console.warn(`Invalid task key found during cleanup: ${key}`);
+        return false;
+      }
 
-  for (const [key, timestamp] of Object.entries(taskCreationTimes)) {
-    if (timestamp < sevenDaysAgo) {
-      delete taskCreationTimes[key];
-      hasChanges = true;
-    }
-  }
+      // Remove entries with invalid timestamp format
+      if (!isValidISOString(timestamp)) {
+        console.warn(`Invalid timestamp found during cleanup: ${timestamp}`);
+        return false;
+      }
 
-  if (hasChanges) {
-    setTaskCreationTimes(taskCreationTimes);
+      try {
+        const timestampDate = new Date(timestamp).getTime();
+        if (isNaN(timestampDate)) {
+          console.warn(`Invalid timestamp date during cleanup: ${timestamp}`);
+          return false;
+        }
+        
+        // Keep entries that are newer than 7 days
+        return timestampDate >= sevenDaysAgo;
+      } catch (error) {
+        console.warn(`Error parsing timestamp during cleanup: ${timestamp}`, error);
+        return false;
+      }
+    })
+  ) as Record<TaskKey, ISOString>;
+
+  // Only update if changes were made
+  if (Object.keys(validEntries).length !== Object.keys(taskCreationTimes).length) {
+    setTaskCreationTimes(validEntries);
   }
 };
 
 // Initialize cleanup on module load
 cleanupOldEntries();
 
+// Task information interface
+interface TaskInfo {
+  readonly content: string;
+  readonly indent: number;
+  readonly key: TaskKey;
+}
+
 // Task aging plugin
 export const taskAgingPlugin = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
     updateTimer: number | null = null;
-    previousTasksMap = new Map<number, { content: string; indent: number; key: string }>();
+    previousTasksMap = new Map<number, TaskInfo>();
 
     constructor(view: EditorView) {
       this.buildTasksMap(view.state.doc);
@@ -127,17 +229,17 @@ export const taskAgingPlugin = ViewPlugin.fromClass(
     }
 
     // Build a map of current tasks for comparison
-    buildTasksMap(doc: Text) {
+    buildTasksMap(doc: Text): void {
       this.previousTasksMap.clear();
 
       for (let i = 1; i <= doc.lines; i++) {
         const line = doc.line(i);
         const taskMatch = line.text.match(/^(\s*)-\s*\[([ x])\]\s*(.*)$/);
 
-        if (taskMatch && taskMatch[2] === " ") {
-          const indentLevel = taskMatch[1].length;
-          const taskContent = taskMatch[3].trim();
-          const taskKey = getTaskKey(taskContent, indentLevel, i);
+        if (taskMatch?.[2] === " ") {
+          const indentLevel = taskMatch[1]?.length ?? 0;
+          const taskContent = taskMatch[3]?.trim() ?? "";
+          const taskKey = createTaskKey(taskContent, indentLevel, i);
 
           this.previousTasksMap.set(i, {
             content: taskContent,
@@ -148,7 +250,7 @@ export const taskAgingPlugin = ViewPlugin.fromClass(
       }
     }
 
-    update(update: ViewUpdate) {
+    update(update: ViewUpdate): void {
       if (update.docChanged || update.viewportChanged) {
         // Handle task migrations and detect actual edits
         this.handleTaskUpdates(update.view.state.doc);
@@ -163,18 +265,18 @@ export const taskAgingPlugin = ViewPlugin.fromClass(
     }
 
     // Handle task updates by migrating keys and detecting actual content changes
-    handleTaskUpdates(doc: Text) {
-      const currentTasksMap = new Map<number, { content: string; indent: number; key: string }>();
+    handleTaskUpdates(doc: Text): void {
+      const currentTasksMap = new Map<number, TaskInfo>();
 
       // Build current tasks map
       for (let i = 1; i <= doc.lines; i++) {
         const line = doc.line(i);
         const taskMatch = line.text.match(/^(\s*)-\s*\[([ x])\]\s*(.*)$/);
 
-        if (taskMatch && taskMatch[2] === " ") {
-          const indentLevel = taskMatch[1].length;
-          const taskContent = taskMatch[3].trim();
-          const taskKey = getTaskKey(taskContent, indentLevel, i);
+        if (taskMatch?.[2] === " ") {
+          const indentLevel = taskMatch[1]?.length ?? 0;
+          const taskContent = taskMatch[3]?.trim() ?? "";
+          const taskKey = createTaskKey(taskContent, indentLevel, i);
 
           currentTasksMap.set(i, {
             content: taskContent,
@@ -202,18 +304,17 @@ export const taskAgingPlugin = ViewPlugin.fromClass(
     }
 
     // Periodically update opacity
-    scheduleUpdate(view: EditorView) {
+    scheduleUpdate(view: EditorView): void {
       this.updateTimer = window.setTimeout(() => {
         if (view.state) {
-          const { from, to } = view.viewport;
-          this.decorations = this.buildDecorations(view, from, to);
+          this.decorations = this.buildDecorations(view);
           view.requestMeasure();
           this.scheduleUpdate(view);
         }
       }, 5000); // Update every 5 seconds (for testing)
     }
 
-    destroy() {
+    destroy(): void {
       if (this.updateTimer !== null) {
         window.clearTimeout(this.updateTimer);
       }
@@ -232,17 +333,17 @@ export const taskAgingPlugin = ViewPlugin.fromClass(
         const line = doc.line(i);
         const taskMatch = line.text.match(/^(\s*)-\s*\[([ x])\]\s*(.*)$/);
 
-        if (taskMatch && taskMatch[2] === " ") {
+        if (taskMatch?.[2] === " ") {
           // Only incomplete tasks
-          const indentLevel = taskMatch[1].length;
-          const taskContent = taskMatch[3].trim();
-          const taskKey = getTaskKey(taskContent, indentLevel, i);
+          const indentLevel = taskMatch[1]?.length ?? 0;
+          const taskContent = taskMatch[3]?.trim() ?? "";
+          const taskKey = createTaskKey(taskContent, indentLevel, i);
 
           // Register creation time for new tasks
           registerTaskCreation(taskKey, taskContent, indentLevel);
 
           const createdAt = getTaskCreationTimes()[taskKey];
-          if (createdAt) {
+          if (createdAt && isValidISOString(createdAt)) {
             const opacity = calculateTaskOpacity(createdAt);
 
             const decoration = Decoration.line({
@@ -260,35 +361,33 @@ export const taskAgingPlugin = ViewPlugin.fromClass(
     }
 
     // Clean up entries for tasks that no longer exist
-    cleanupOldTasks(view: EditorView) {
-      const currentTaskKeys = new Set<string>();
+    cleanupOldTasks(view: EditorView): void {
+      const currentTaskKeys = new Set<TaskKey>();
       const doc = view.state.doc;
 
       // Collect keys for currently existing tasks
       for (let i = 1; i <= doc.lines; i++) {
         const line = doc.line(i);
         const taskMatch = line.text.match(/^(\s*)-\s*\[([ x])\]\s*(.*)$/);
-        if (taskMatch && taskMatch[2] === " ") {
-          const indentLevel = taskMatch[1].length;
-          const taskContent = taskMatch[3].trim();
-          const taskKey = getTaskKey(taskContent, indentLevel, i);
+        if (taskMatch?.[2] === " ") {
+          const indentLevel = taskMatch[1]?.length ?? 0;
+          const taskContent = taskMatch[3]?.trim() ?? "";
+          const taskKey = createTaskKey(taskContent, indentLevel, i);
           currentTaskKeys.add(taskKey);
         }
       }
 
-      // Remove entries for non-existent tasks
-      let hasChanges = false;
+      // Create new object with only existing tasks
       const taskCreationTimes = getTaskCreationTimes();
-      for (const key of Object.keys(taskCreationTimes)) {
-        if (!currentTaskKeys.has(key)) {
-          delete taskCreationTimes[key];
-          hasChanges = true;
-        }
-      }
+      const filteredTimes = Object.fromEntries(
+        Object.entries(taskCreationTimes).filter(([key]) => 
+          currentTaskKeys.has(key as TaskKey)
+        )
+      ) as Record<TaskKey, ISOString>;
 
       // Persist changes if any deletions occurred
-      if (hasChanges) {
-        setTaskCreationTimes(taskCreationTimes);
+      if (Object.keys(filteredTimes).length !== Object.keys(taskCreationTimes).length) {
+        setTaskCreationTimes(filteredTimes);
       }
     }
   },

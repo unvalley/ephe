@@ -9,18 +9,18 @@ import {
   type StorageProvider,
 } from "../../../utils/storage";
 
-export interface Task {
+export type Task = {
   id: string;
   content: string;
   completed: boolean;
-  createdAt: number; // Unix timestamp when task was created
-  completedAt?: number; // Unix timestamp when task was completed
+  createdAt: string; // ISO string when task was created
+  completedAt?: string; // ISO string when task was completed
   originalLine?: string;
   taskIdentifier?: string;
   section?: string | undefined;
 }
 
-export interface TaskStorage {
+export type TaskStorage = {
   getAll: () => Task[];
   getById: (id: string) => Task | null;
   save: (task: Task) => void;
@@ -32,6 +32,7 @@ export interface TaskStorage {
   toggleTask: (id: string) => boolean;
   getCompletedTasks: () => CompletedTask[];
 }
+
 /**
  * Generate a unique identifier for a task based on its content
  */
@@ -90,7 +91,7 @@ const createTaskStorage = (storage: StorageProvider = createBrowserLocalStorage(
       id: crypto.randomUUID(),
       content,
       completed: false,
-      createdAt: Date.now(),
+      createdAt: new Date().toISOString(),
       taskIdentifier: generateTaskIdentifier(content),
     };
     baseStorage.save(task);
@@ -103,9 +104,9 @@ const createTaskStorage = (storage: StorageProvider = createBrowserLocalStorage(
 
     task.completed = !task.completed;
     if (task.completed) {
-      task.completedAt = Date.now();
+      task.completedAt = new Date().toISOString();
     } else {
-      delete task.completedAt;
+      task.completedAt = undefined;
     }
 
     baseStorage.save(task);
