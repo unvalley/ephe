@@ -1,12 +1,20 @@
-import { type EditorView, Decoration, type DecorationSet, ViewPlugin, type ViewUpdate } from "@codemirror/view";
+import {
+  type EditorView,
+  Decoration,
+  type DecorationSet,
+  ViewPlugin,
+  type ViewUpdate,
+  hoverTooltip,
+} from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
 
 const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
 const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]()]+/g;
 
 const urlDecoration = Decoration.mark({
-  class: "cm-url",
-  attributes: { style: "cursor: pointer;" },
+  attributes: {
+    style: "text-decoration: underline; text-underline-offset: 2px;",
+  },
 });
 
 type Range = { from: number; to: number };
@@ -47,6 +55,45 @@ const createUrlDecorations = (view: EditorView): DecorationSet => {
   return builder.finish();
 };
 
+const findUrlAtPos = (view: EditorView, pos: number): { url: string; from: number; to: number } | null => {
+  const { from: lineFrom, text } = view.state.doc.lineAt(pos);
+  const offset = pos - lineFrom;
+
+  for (const match of text.matchAll(MARKDOWN_LINK_REGEX)) {
+    const index = match.index;
+    if (index !== undefined && offset >= index && offset < index + match[0].length) {
+      return { url: match[2], from: lineFrom + index, to: lineFrom + index + match[0].length };
+    }
+  }
+
+  for (const match of text.matchAll(URL_REGEX)) {
+    const index = match.index;
+    if (index !== undefined && offset >= index && offset < index + match[0].length) {
+      return { url: match[0], from: lineFrom + index, to: lineFrom + index + match[0].length };
+    }
+  }
+
+  return null;
+};
+
+const createTooltipElement = (): HTMLElement => {
+  const dom = document.createElement("div");
+  dom.textContent = "Opt+Click to open link";
+  return dom;
+};
+
+export const urlHoverTooltip = hoverTooltip((view, pos) => {
+  const urlInfo = findUrlAtPos(view, pos);
+  if (!urlInfo) return null;
+
+  return {
+    pos: urlInfo.from,
+    end: urlInfo.to,
+    above: true,
+    create: () => ({ dom: createTooltipElement() }),
+  };
+});
+
 export const urlClickPlugin = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
@@ -65,6 +112,8 @@ export const urlClickPlugin = ViewPlugin.fromClass(
     decorations: (v) => v.decorations,
     eventHandlers: {
       mousedown: (event, view) => {
+        if (!event.altKey) return false;
+
         const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
         if (pos == null) return false;
 

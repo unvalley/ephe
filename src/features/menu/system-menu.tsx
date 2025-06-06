@@ -248,7 +248,7 @@ export const SystemMenu = () => {
                       className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <BoltIcon className={`size-4 stroke-1`} />
+                        <BoltIcon className={"size-4 stroke-1"} />
                       </span>
                       <span className={"capitalize"}>Task Flush: {taskAutoFlushMode}</span>
                     </button>

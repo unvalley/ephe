@@ -19,20 +19,6 @@ body.dark {
   color-scheme: dark;
 }
 
-/* Make the task part clickable */
-span.task-task {
-  cursor: pointer;
-  user-select: none;
-  display: inline-block;
-  margin-right: 0.25rem;
-  font-weight: normal;
-}
-
-/* Styling for completed tasks - using opacity instead of strikethrough */
-.task-completed-line {
-  opacity: 0.5;
-}
-
 /* TOC styles */
 .toc-container {
   position: sticky;
@@ -147,13 +133,33 @@ span.task-task {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* History sidebar styles */
-.history-sidebar {
-  width: 300px;
-  border-left: 1px solid rgb(229, 231, 235);
-  overflow: hidden;
+/* URL Tooltip styles for CodeMirror */
+.cm-tooltip {
+  background-color: white !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  padding: 6px 8px !important;
+  font-size: 12px !important;
+  animation: tooltip-show 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  line-height: 1 !important;
+  align-items: center !important;
+  transform-origin: center bottom !important;
 }
 
-.dark .history-sidebar {
-  border-color: rgb(55, 65, 81);
+.dark .cm-tooltip {
+  background-color: oklch(0.205 0 0) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+}
+
+@keyframes tooltip-show {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
