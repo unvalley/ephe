@@ -160,11 +160,9 @@ export function CommandMenu({
 
   //       editor.setValue(formattedContent);
 
-  //       // カーソル位置とスクロール位置を復元
   //       if (selection) {
   //         editor.setSelection(selection);
   //       }
-  //       // setValue後のレンダリングを待ってからスクロール位置を復元
   //       setTimeout(() => editor.setScrollTop(scrollTop), 0);
 
   //       showToast("Document formatted successfully", "default");
@@ -198,10 +196,8 @@ export function CommandMenu({
   //       if (selection && !selection.isEmpty()) {
   //         range = selection;
   //       } else if (position) {
-  //         // 選択範囲がない場合は現在のカーソル位置に挿入
   //         range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
   //       } else {
-  //         // カーソル位置もない場合（エディタが空など）は先頭に挿入
   //         range = new monaco.Range(1, 1, 1, 1);
   //       }
 
@@ -234,7 +230,7 @@ export function CommandMenu({
           ) : (
             <ComputerDesktopIcon className="size-4 stroke-1" />
           ),
-        // shortcut: "⌘T", // Mac以外も考慮するなら修飾キーの表示を工夫する必要あり
+        // shortcut: "⌘T",
         perform: cycleThemeCallback,
         keywords: "theme toggle switch mode light dark system color appearance",
       },
@@ -273,18 +269,17 @@ export function CommandMenu({
     //     id: "format-document",
     //     name: "Format document",
     //     icon: <FormatIcon className="h-3.5 w-3.5" />,
-    //     shortcut: "⌘F", // ブラウザの検索と競合する可能性あり
+    //     shortcut: "⌘F",
     //     perform: handleFormatDocumentCallback,
     //     keywords: "format document prettify code style arrange beautify markdown lint tidy",
     //   });
     // }
     // if (editorRef?.current) {
-    //   // エディタが存在する場合のみ表示
     //   list.push({
     //     id: "insert-github-issues",
     //     name: "Insert GitHub Issues (Public Repos)",
     //     icon: <GitHubIcon className="h-3.5 w-3.5" />,
-    //     shortcut: "⌘G", // ショートカットは要検討
+    //     shortcut: "⌘G",
     //     perform: handleInsertGitHubIssuesCallback,
     //     keywords: "github issues insert fetch task todo list import integrate",
     //   });
@@ -294,7 +289,8 @@ export function CommandMenu({
       name: "Go to Ephe GitHub Repo",
       icon: <LinkIcon className="size-4 stroke-1" />,
       perform: goToGitHubRepo,
-      keywords: "github ephe repository project code source link open website source-code",
+      keywords:
+        "github ephe repository project code source link open website source-code",
     });
 
     return list;
@@ -320,7 +316,9 @@ export function CommandMenu({
           <Command
             role="dialog"
             label="Command Menu"
-            className={"-translate-x-1/2 fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] scale-100 transform overflow-hidden rounded-xl border border-neutral-200 bg-white opacity-100 shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900"}
+            className={
+              "-translate-x-1/2 fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] scale-100 transform overflow-hidden rounded-xl border border-neutral-200 bg-white opacity-100 shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900"
+            }
             onClick={(e) => {
               // Prevent clicks inside the command menu from closing it
               e.stopPropagation();
@@ -353,26 +351,29 @@ export function CommandMenu({
                 className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
               >
                 {commandsList()
-                  .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width"].includes(cmd.id))
+                  .filter((cmd) =>
+                    ["theme-toggle", "paper-mode", "editor-width"].includes(
+                      cmd.id
+                    )
+                  )
                   .map((command) => (
                     <Command.Item
                       key={command.id}
-                      // value に name と keywords を含めて検索対象にする
                       value={`${command.name} ${command.keywords || ""}`}
                       onSelect={command.perform}
                       className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                     >
                       <div className="flex items-center gap-2">
-                        {/* アイコン表示エリア */}
                         <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                           {command.icon}
                         </div>
-                        {/* コマンド名と状態表示 */}
                         <span className="flex-grow truncate">
                           {" "}
                           {command.name}
                           {command.id === "paper-mode" && paperMode && (
-                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({paperMode})</span>
+                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                              ({paperMode})
+                            </span>
                           )}
                           {command.id === "editor-width" && editorWidth && (
                             <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
@@ -395,7 +396,13 @@ export function CommandMenu({
                 className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
               >
                 {commandsList()
-                  .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues"].includes(cmd.id))
+                  .filter((cmd) =>
+                    [
+                      "export-markdown",
+                      "format-document",
+                      "insert-github-issues",
+                    ].includes(cmd.id)
+                  )
                   .map((command) => (
                     <Command.Item
                       key={command.id}
@@ -407,7 +414,9 @@ export function CommandMenu({
                         <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                           {command.icon}
                         </div>
-                        <span className="flex-grow truncate">{command.name}</span>
+                        <span className="flex-grow truncate">
+                          {command.name}
+                        </span>
                       </div>
                       {command.shortcut && (
                         <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
@@ -435,7 +444,9 @@ export function CommandMenu({
                         <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
                           {command.icon}
                         </div>
-                        <span className="flex-grow truncate">{command.name}</span>
+                        <span className="flex-grow truncate">
+                          {command.name}
+                        </span>
                       </div>
                       {command.shortcut && (
                         <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
