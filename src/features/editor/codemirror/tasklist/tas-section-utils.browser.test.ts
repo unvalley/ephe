@@ -27,7 +27,7 @@ describe("findTaskSection", () => {
   });
 
   test("returns undefined when no heading exists above", () => {
-    const view = createViewFromText(`No heading here\nJust a line`);
+    const view = createViewFromText("No heading here\nJust a line");
     const result = findTaskSection(view, 2);
     expect(result).toBeUndefined();
   });

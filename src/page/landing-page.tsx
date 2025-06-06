@@ -13,7 +13,7 @@ export const LandingPage = () => {
                 href="https://github.com/unvalley/ephe"
                 target="_blank"
                 className="text-blue-400 hover:underline"
-                rel="noopener"
+                rel="noreferrer noopener"
               >
                 OSS
               </a>
@@ -40,7 +40,7 @@ export const LandingPage = () => {
             <a
               href="https://github.com/unvalley/ephe/blob/main/.github/guide.md"
               target="_blank"
-              rel="noopener"
+              rel="noreferrer noopener"
               className="text-blue-400 hover:underline"
             >
               guide
