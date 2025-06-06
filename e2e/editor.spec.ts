@@ -26,17 +26,41 @@ test.describe("Editor Page", () => {
 
   test("open and close command menu", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
+
+    const dialog = page.locator('div[role="dialog"]');
+    await expect(dialog).toHaveClass(/opacity-0/);
 
     // open command menu by Ctrl+K（ormd+K）
     const isMac = process.platform === "darwin";
     const modifier = isMac ? "Meta" : "Control";
     await page.keyboard.press(`${modifier}+k`);
-    await expect(page.locator('div[role="dialog"]')).toBeVisible();
+    await expect(dialog).toHaveClass(/opacity-100/);
 
     // close
     await page.keyboard.press(`${modifier}+k`);
-    await expect(page.locator('div[role="dialog"]')).not.toBeVisible();
+    await expect(dialog).toHaveClass(/opacity-0/);
+  });
+
+  test("close command menu with Escape key", async ({ page }) => {
+    await page.goto("/");
+
+    // Initially, the dialog should have opacity-0 class
+    const dialog = page.locator('div[role="dialog"]');
+    await expect(dialog).toHaveClass(/opacity-0/);
+
+    // open command menu
+    const isMac = process.platform === "darwin";
+    const modifier = isMac ? "Meta" : "Control";
+    await page.keyboard.press(`${modifier}+k`);
+
+    // Dialog should now have opacity-100 class
+    await expect(dialog).toHaveClass(/opacity-100/);
+
+    await expect(page.locator('input[placeholder="Type a command or search..."]')).toBeFocused();
+    await page.keyboard.press("Escape");
+
+    // Dialog should have opacity-0 class again
+    await expect(dialog).toHaveClass(/opacity-0/);
   });
 
   test("URL link styling and tooltip", async ({ page }) => {
