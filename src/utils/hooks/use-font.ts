@@ -5,13 +5,13 @@ import { atomWithStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 
 export const FONT_FAMILIES = {
+  IA_WRITER_MONO: {
+    value: "'iA Writer Mono', 'Menlo', 'Monaco', 'Courier New', monospace",
+    displayValue: "iA Writer Mono",
+  },
   MONOSPACE: {
     value: "'monospace', 'Menlo', 'Monaco', 'Courier New'",
     displayValue: "Monospace",
-  },
-  IA_WRITER_QUATTRO: {
-    value: "'iA Writer Quattro', 'IBM Plex Serif', 'Source Serif 4', serif",
-    displayValue: "iA Writer Quattro",
   },
   IBM_PLEX_MONO: {
     value: "'IBM Plex Mono', 'Menlo', 'Monaco', 'Courier New', monospace",
@@ -22,7 +22,7 @@ export const FONT_FAMILIES = {
 export type FontFamily = keyof typeof FONT_FAMILIES;
 export const FONT_FAMILY_OPTIONS = Object.keys(FONT_FAMILIES) as (keyof typeof FONT_FAMILIES)[];
 
-const fontFamilyAtom = atomWithStorage<FontFamily>(LOCAL_STORAGE_KEYS.FONT_FAMILY, "MONOSPACE");
+const fontFamilyAtom = atomWithStorage<FontFamily>(LOCAL_STORAGE_KEYS.FONT_FAMILY, "IA_WRITER_MONO");
 
 export const useFontFamily = () => {
   const [fontFamily, setFontFamily] = useAtom(fontFamilyAtom);

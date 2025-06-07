@@ -159,9 +159,9 @@ span.task-task {
 }
 
 @font-face {
-    font-family: 'iA Writer Quattro';
+    font-family: 'iA Writer Mono';
     font-style: normal;
     font-display: swap;
     font-weight: 400;
-    src: url(https://cdn.jsdelivr.net/fontsource/fonts/ia-writer-quattro@latest/latin-400-normal.woff2) format('woff2'), url(https://cdn.jsdelivr.net/fontsource/fonts/ia-writer-quattro@latest/latin-400-normal.woff) format('woff');
+    src: url(https://cdn.jsdelivr.net/fontsource/fonts/ia-writer-mono@latest/latin-400-normal.woff2) format('woff2'), url(https://cdn.jsdelivr.net/fontsource/fonts/ia-writer-mono@latest/latin-400-normal.woff) format('woff');
 }
