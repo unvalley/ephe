@@ -1,10 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)",
-      "Bash(pnpm lint:*)",
-      "Bash(pnpm dev:*)",
-      "Bash(npx tsc:*)"
+      "Bash(find:*)"
     ],
     "deny": []
   }
