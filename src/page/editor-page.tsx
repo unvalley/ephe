@@ -46,7 +46,7 @@ export const EditorPage = () => {
           </>
         }
       />
-      <CommandMenu open={isCommandMenuOpen} onClose={handleCommandMenuClose} />
+      <CommandMenu aria-modal="true" open={isCommandMenuOpen} onClose={handleCommandMenuClose} />
     </div>
   );
 };

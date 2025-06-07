@@ -42,7 +42,7 @@ type CommandItem = {
   keywords?: string;
 };
 
-export function CommandMenu({
+export const CommandMenu = ({
   open,
   onClose = () => {},
   editorContent = "",
@@ -51,7 +51,7 @@ export function CommandMenu({
   cyclePaperMode,
   editorWidth,
   toggleEditorWidth,
-}: CommandMenuProps) {
+}: CommandMenuProps) => {
   const { nextTheme, cycleTheme } = useTheme();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -427,4 +427,4 @@ export function CommandMenu({
       )}
     </>
   );
-}
+};
