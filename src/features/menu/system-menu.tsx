@@ -18,6 +18,7 @@ import {
   ComputerDesktopIcon,
   BoltIcon,
   DocumentTextIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { HistoryModal } from "../history/history-modal";
@@ -276,6 +277,21 @@ export const SystemMenu = () => {
                         <BoltIcon className={"size-4 stroke-1"} />
                       </span>
                       <span className={"capitalize"}>Task Flush: {taskAutoFlushMode}</span>
+                    </button>
+                  </MenuItem>
+                </div>
+
+                <div className="border-neutral-200 border-t py-1 dark:border-neutral-700">
+                  <MenuItem as="div">
+                    <button
+                      type="button"
+                      onClick={() => openTaskSnapshotModal(2)}
+                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
+                    >
+                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                        <Cog6ToothIcon className="size-4 stroke-1" />
+                      </span>
+                      <span>Settings</span>
                     </button>
                   </MenuItem>
                 </div>

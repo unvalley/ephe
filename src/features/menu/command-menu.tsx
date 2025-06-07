@@ -9,6 +9,7 @@ import type { PaperMode } from "../../utils/hooks/use-paper-mode";
 import { COLOR_THEME } from "../../utils/theme-initializer";
 import type { EditorWidth } from "../../utils/hooks/use-editor-width";
 import {
+  Cog6ToothIcon,
   ComputerDesktopIcon,
   DocumentIcon,
   LinkIcon,
@@ -31,6 +32,7 @@ type CommandMenuProps = {
   toggleEditorWidth?: () => void;
   previewMode?: boolean;
   togglePreviewMode?: () => void;
+  openSettings?: () => void;
 };
 
 type CommandItem = {
@@ -51,6 +53,7 @@ export function CommandMenu({
   cyclePaperMode,
   editorWidth,
   toggleEditorWidth,
+  openSettings,
 }: CommandMenuProps) {
   const { nextTheme, cycleTheme } = useTheme();
   const [inputValue, setInputValue] = useState("");
@@ -258,6 +261,19 @@ export function CommandMenu({
       keywords: "github ephe repository project code source link open website source-code",
     });
 
+    if (openSettings) {
+      list.push({
+        id: "settings",
+        name: "Open Settings",
+        icon: <Cog6ToothIcon className="size-4 stroke-1" />,
+        perform: () => {
+          openSettings();
+          onClose();
+        },
+        keywords: "settings preferences options config configuration system appearance tasks statistics",
+      });
+    }
+
     return list;
   };
 
@@ -383,7 +399,7 @@ export function CommandMenu({
                 className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
               >
                 {commandsList()
-                  .filter((cmd) => ["github-repo", "history"].includes(cmd.id))
+                  .filter((cmd) => ["github-repo", "history", "settings"].includes(cmd.id))
                   .map((command) => (
                     <Command.Item
                       key={command.id}

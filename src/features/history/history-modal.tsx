@@ -10,6 +10,7 @@ import {
   TransitionChild,
 } from "@headlessui/react";
 import { Fragment, useEffect, useState } from "react";
+import { SettingsTab } from "../settings/settings-tab";
 import type { Snapshot } from "../snapshots/snapshot-storage";
 import { useHistoryData } from "./use-history-data";
 
@@ -154,6 +155,14 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                       >
                         Snapshots
                       </Tab>
+                      <div className="flex items-center text-neutral-400 dark:text-neutral-500">/</div>
+                      <Tab
+                        className={({ selected }) =>
+                          `rounded-md px-2 py-1 transition-colors ${selected ? "" : "text-neutral-300 dark:text-neutral-500"}`
+                        }
+                      >
+                        Settings
+                      </Tab>
                     </TabList>
                     <TabPanels className="mt-2">
                       <TabPanel className="p-3">
@@ -285,6 +294,9 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                             </div>
                           )}
                         </div>
+                      </TabPanel>
+                      <TabPanel className="p-3">
+                        <SettingsTab />
                       </TabPanel>
                     </TabPanels>
                   </TabGroup>
