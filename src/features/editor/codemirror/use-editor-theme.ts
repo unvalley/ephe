@@ -3,9 +3,9 @@ import { EditorView } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 
 /**
- * Manages the CodeMirror theme and highlight style based on dark mode and editor width.
+ * Manages the CodeMirror theme and highlight style based on dark mode, editor width, and font family.
  */
-export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean) => {
+export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFamily: string) => {
   const getHighlightStyle = () => {
     const COLORS = isDarkMode ? EPHE_COLORS.dark : EPHE_COLORS.light;
     const CODE_SYNTAX_HIGHLIGHT = isDarkMode ? SYNTAX_HIGHLIGHT_STYLES.dark : SYNTAX_HIGHLIGHT_STYLES.light;
@@ -45,7 +45,7 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean) => {
         color: COLORS.foreground,
       },
       ".cm-content": {
-        fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace",
+        fontFamily: fontFamily,
         fontSize: "16px",
         padding: "60px 20px",
         lineHeight: "1.6",
@@ -66,7 +66,7 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean) => {
         outline: "none",
       },
       ".cm-scroller": {
-        fontFamily: "monospace",
+        fontFamily: fontFamily,
         background: "transparent",
       },
       ".cm-gutters": {

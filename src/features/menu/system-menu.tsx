@@ -4,6 +4,7 @@ import { useTheme } from "../../utils/hooks/use-theme";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
+import { useFontFamily, FONT_FAMILY_OPTIONS, FONT_FAMILIES } from "../../utils/hooks/use-font";
 import { useState, useEffect, useRef } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME } from "../../utils/theme-initializer";
@@ -16,6 +17,7 @@ import {
   MoonIcon,
   ComputerDesktopIcon,
   BoltIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { HistoryModal } from "../history/history-modal";
@@ -64,7 +66,12 @@ const useSnapshotCount = (menuOpen: boolean) => {
 const useHistoryModal = () => {
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [modalTabIndex, setModalTabIndex] = useState(0);
-  return { historyModalOpen, modalTabIndex, setHistoryModalOpen, setModalTabIndex };
+  return {
+    historyModalOpen,
+    modalTabIndex,
+    setHistoryModalOpen,
+    setModalTabIndex,
+  };
 };
 
 export const SystemMenu = () => {
@@ -74,6 +81,7 @@ export const SystemMenu = () => {
 
   const { theme, setTheme } = useTheme();
   const { paperMode, cyclePaperMode } = usePaperMode();
+  const { fontFamily, setFontFamily } = useFontFamily();
 
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
   const { charCount } = useCharCount();
@@ -105,7 +113,7 @@ export const SystemMenu = () => {
         {({ open }) => (
           <>
             <MenuButton
-              className="rounded-md bg-white px-2 py-1 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+              className="rounded-md bg-white px-2 py-1 text-neutral-900 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               System
@@ -113,7 +121,7 @@ export const SystemMenu = () => {
 
             {(open || menuOpen) && (
               <MenuItems
-                className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white shadow-md focus:outline-none dark:bg-primary-700"
+                className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white text-neutral-900 shadow-md focus:outline-none dark:bg-primary-700 dark:text-neutral-100"
                 portal={false}
                 static
               >
@@ -233,6 +241,23 @@ export const SystemMenu = () => {
                         <ViewColumnsIcon className="size-4 stroke-1" />
                       </span>
                       <span className="capitalize">{editorWidth} Width</span>
+                    </button>
+                  </MenuItem>
+                  <MenuItem as="div">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const fontKeys = FONT_FAMILY_OPTIONS;
+                        const currentIndex = fontKeys.indexOf(fontFamily);
+                        const nextIndex = (currentIndex + 1) % fontKeys.length;
+                        setFontFamily(fontKeys[nextIndex]);
+                      }}
+                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
+                    >
+                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                        <DocumentTextIcon className="size-4 stroke-1" />
+                      </span>
+                      <span className="capitalize">{FONT_FAMILIES[fontFamily].displayValue}</span>
                     </button>
                   </MenuItem>
                 </div>
