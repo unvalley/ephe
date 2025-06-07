@@ -4,7 +4,7 @@ import { useTheme } from "../../utils/hooks/use-theme";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
-import { useFontFamily, FONT_FAMILY_OPTIONS } from "../../utils/hooks/use-font";
+import { useFontFamily, FONT_FAMILY_OPTIONS, FONT_FAMILIES } from "../../utils/hooks/use-font";
 import { useState, useEffect, useRef } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME } from "../../utils/theme-initializer";
@@ -113,7 +113,7 @@ export const SystemMenu = () => {
         {({ open }) => (
           <>
             <MenuButton
-              className="rounded-md bg-white px-2 py-1 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+              className="rounded-md bg-white px-2 py-1 text-neutral-900 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               System
@@ -121,7 +121,7 @@ export const SystemMenu = () => {
 
             {(open || menuOpen) && (
               <MenuItems
-                className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white shadow-md focus:outline-none dark:bg-primary-700"
+                className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white text-neutral-900 shadow-md focus:outline-none dark:bg-primary-700 dark:text-neutral-100"
                 portal={false}
                 static
               >
@@ -257,7 +257,7 @@ export const SystemMenu = () => {
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         <DocumentTextIcon className="size-4 stroke-1" />
                       </span>
-                      <span>{}</span>
+                      <span className="capitalize">{FONT_FAMILIES[fontFamily].displayValue}</span>
                     </button>
                   </MenuItem>
                 </div>
