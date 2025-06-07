@@ -9,9 +9,9 @@ export const FONT_FAMILIES = {
     value: "'monospace', 'Menlo', 'Monaco', 'Courier New'",
     displayValue: "Monospace",
   },
-  PALATINO: {
-    value: "'Palatino', 'Palatino Linotype', 'Book Antiqua', serif",
-    displayValue: "Palatino",
+  IA_WRITER_QUATTRO: {
+    value: "'iA Writer Quattro', 'IBM Plex Serif', 'Source Serif 4', serif",
+    displayValue: "iA Writer Quattro",
   },
   IBM_PLEX_MONO: {
     value: "'IBM Plex Mono', 'Menlo', 'Monaco', 'Courier New', monospace",
