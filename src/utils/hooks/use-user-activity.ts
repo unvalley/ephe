@@ -5,7 +5,7 @@ type UseUserActivityOptions = {
 };
 
 export const useUserActivity = (options: UseUserActivityOptions = {}) => {
-  const { showDelay = 1000 } = options;
+  const { showDelay = 800 } = options;
   const [isTyping, setIsTyping] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const typingTimeoutRef = useRef<number | undefined>(undefined);
