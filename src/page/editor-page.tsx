@@ -8,14 +8,14 @@ import { HoursDisplay } from "../features/time-display/hours-display";
 import { Link } from "react-router-dom";
 import { EPHE_VERSION } from "../utils/constants";
 import { useCommandK } from "../utils/hooks/use-command-k";
-import { useRef, useCallback } from "react";
+import { useRef } from "react";
 
 export const EditorPage = () => {
   const { paperModeClass } = usePaperMode();
   const { isCommandMenuOpen, closeCommandMenu } = useCommandK();
   const editorRef = useRef<CodeMirrorEditorRef>(null);
 
-  const handleCommandMenuClose = useCallback(() => {
+  const handleCommandMenuClose = () => {
     closeCommandMenu();
     // Return focus to editor after closing
     // Use requestAnimationFrame to ensure the menu is fully closed before focusing
@@ -24,7 +24,7 @@ export const EditorPage = () => {
         editorRef.current.view.focus();
       }
     });
-  }, [closeCommandMenu]);
+  };
 
   return (
     <div className={`flex h-screen flex-col overflow-hidden antialiased ${paperModeClass}`}>

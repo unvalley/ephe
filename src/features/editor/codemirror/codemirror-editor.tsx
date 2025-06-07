@@ -11,9 +11,13 @@ export interface CodeMirrorEditorRef {
 export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef>((_, ref) => {
   const { editor, view } = useMarkdownEditor();
 
-  useImperativeHandle(ref, () => ({
-    view,
-  }), [view]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      view,
+    }),
+    [view],
+  );
 
   return <div data-testid="code-mirror-editor" ref={editor} className="mx-auto h-full w-full" />;
 });

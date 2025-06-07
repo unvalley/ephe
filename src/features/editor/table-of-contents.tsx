@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
 
 type TocItem = {
@@ -24,7 +24,7 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
   const prevContentRef = useRef<string>("");
   const hasInitializedRef = useRef(false);
 
-  const parseTocItems = useCallback((content: string): TocItem[] => {
+  const parseTocItems = (content: string): TocItem[] => {
     if (!content) return [];
 
     const lines = content.split("\n");
@@ -43,7 +43,7 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
     }
 
     return items;
-  }, []);
+  };
 
   // Always parse content on initial render and when content changes
   useEffect(() => {
@@ -62,7 +62,7 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
       prevContentRef.current = content;
       hasInitializedRef.current = true;
     }
-  }, [content, parseTocItems]);
+  }, [content]);
 
   const shouldRender = isVisible && tocItems.length > 0 && !!content;
   if (!shouldRender) {
