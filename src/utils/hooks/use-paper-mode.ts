@@ -37,6 +37,7 @@ export const usePaperMode = () => {
 
   return {
     paperMode,
+    setPaperMode,
     paperModeClass: PAPER_MODE_CLASSES[paperMode],
     cyclePaperMode,
     toggleNormalMode,
