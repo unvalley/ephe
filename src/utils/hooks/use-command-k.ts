@@ -1,15 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export const useCommandK = () => {
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
 
-  const toggleCommandMenu = () => {
+  const toggleCommandMenu = useCallback(() => {
     setIsCommandMenuOpen((prev) => !prev);
-  };
+  }, []);
 
-  const closeCommandMenu = () => {
+  const closeCommandMenu = useCallback(() => {
     setIsCommandMenuOpen(false);
-  };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

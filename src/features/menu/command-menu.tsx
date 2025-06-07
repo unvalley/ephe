@@ -64,10 +64,14 @@ export function CommandMenu({
         e.preventDefault();
         e.stopPropagation();
         onClose();
+      } else if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
       }
     };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown, true); // Use capture phase
+    return () => document.removeEventListener("keydown", handleKeyDown, true);
   }, [open, onClose]);
 
   const cyclePaperModeCallback = () => {
