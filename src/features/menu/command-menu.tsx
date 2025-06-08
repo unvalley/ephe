@@ -3,17 +3,14 @@
 import { Command } from "cmdk";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
-import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-formatter";
 import { showToast } from "../../utils/components/toast";
-import type { PaperMode } from "../../utils/hooks/use-paper-mode";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { COLOR_THEME } from "../../utils/theme-initializer";
-import type { EditorWidth } from "../../utils/hooks/use-editor-width";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useFontFamily, FONT_FAMILIES, FONT_FAMILY_OPTIONS } from "../../utils/hooks/use-font";
 import type { EditorView } from "@codemirror/view";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
-import { HistoryModal } from "../history/history-modal";
+import { DprintMarkdownFormatter } from "../editor/markdown/formatter/dprint-markdown-formatter";
 import {
   ComputerDesktopIcon,
   DocumentIcon,
@@ -28,18 +25,31 @@ import {
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 
+// Custom hook for markdown formatter
+const useMarkdownFormatter = () => {
+  const ref = useRef<DprintMarkdownFormatter | null>(null);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const fmt = await DprintMarkdownFormatter.getInstance();
+      if (alive) {
+        ref.current = fmt;
+      }
+    })();
+    return () => {
+      alive = false;
+      ref.current = null;
+    };
+  }, []);
+  return ref;
+};
+
 type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;
   editorContent?: string;
   editorView?: EditorView;
-  markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
-  paperMode?: PaperMode;
-  cyclePaperMode?: () => PaperMode;
-  editorWidth?: EditorWidth;
-  toggleEditorWidth?: () => void;
-  previewMode?: boolean;
-  togglePreviewMode?: () => void;
+  onOpenHistoryModal?: (tabIndex: number) => void;
 };
 
 type CommandItem = {
@@ -56,17 +66,16 @@ export const CommandMenu = ({
   onClose = () => {},
   editorContent = "",
   editorView,
-  markdownFormatterRef,
+  onOpenHistoryModal,
 }: CommandMenuProps) => {
   const { nextTheme, cycleTheme } = useTheme();
   const { paperMode: currentPaperMode, cyclePaperMode } = usePaperMode();
   const { editorWidth: currentEditorWidth, toggleEditorWidth } = useEditorWidth();
   const { fontFamily, setFontFamily } = useFontFamily();
+  const formatterRef = useMarkdownFormatter();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const [historyModalOpen, setHistoryModalOpen] = useState(false);
-  const [historyModalTabIndex, setHistoryModalTabIndex] = useState(0);
 
   useEffect(() => {
     if (!open) {
@@ -108,21 +117,25 @@ export const CommandMenu = ({
   };
 
   const openTaskModalCallback = () => {
+    if (!onOpenHistoryModal) return;
     onClose(); // Close command menu first
-    // Use setTimeout to ensure command menu is fully closed before opening modal
-    setTimeout(() => {
-      setHistoryModalTabIndex(0);
-      setHistoryModalOpen(true);
-    }, 0);
+    // Use requestAnimationFrame to ensure command menu has completed its close animation
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        onOpenHistoryModal(0);
+      });
+    });
   };
 
   const openSnapshotModalCallback = () => {
+    if (!onOpenHistoryModal) return;
     onClose(); // Close command menu first
-    // Use setTimeout to ensure command menu is fully closed before opening modal
-    setTimeout(() => {
-      setHistoryModalTabIndex(1);
-      setHistoryModalOpen(true);
-    }, 0);
+    // Use requestAnimationFrame to ensure command menu has completed its close animation
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        onOpenHistoryModal(1);
+      });
+    });
   };
 
   const handleExportMarkdownCallback = () => {
@@ -152,7 +165,7 @@ export const CommandMenu = ({
   };
 
   const handleFormatDocumentCallback = async () => {
-    if (!editorView || !markdownFormatterRef?.current) {
+    if (!editorView || !formatterRef.current) {
       showToast("Editor or markdown formatter not available", "error");
       onClose();
       return;
@@ -165,7 +178,7 @@ export const CommandMenu = ({
       const cursorLineNumber = cursorLine.number;
       const cursorColumn = cursorPos - cursorLine.from;
       const currentText = state.doc.toString();
-      const formattedText = await markdownFormatterRef.current.formatMarkdown(currentText);
+      const formattedText = await formatterRef.current.formatMarkdown(currentText);
       
       if (formattedText !== currentText) {
         editorView.dispatch({
@@ -291,7 +304,7 @@ export const CommandMenu = ({
       });
     }
     
-    if (editorView && markdownFormatterRef?.current) {
+    if (editorView && formatterRef.current) {
       list.push({
         id: "format-document",
         name: "Format document",
@@ -503,12 +516,6 @@ export const CommandMenu = ({
           </Command>
         </>
       )}
-      
-      <HistoryModal
-        isOpen={historyModalOpen}
-        onClose={() => setHistoryModalOpen(false)}
-        initialTabIndex={historyModalTabIndex}
-      />
     </>
   );
 };

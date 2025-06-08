@@ -20,7 +20,6 @@ import {
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 import { taskStorage } from "../editor/tasks/task-storage";
-import { HistoryModal } from "../history/history-modal";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
 import { useTaskAutoFlush } from "../../utils/hooks/use-task-auto-flush";
 
@@ -63,21 +62,13 @@ const useSnapshotCount = (menuOpen: boolean) => {
 
 // const tocVisibilityAtom = atomWithStorage<boolean>(LOCAL_STORAGE_KEYS.TOC_MODE, false);
 
-const useHistoryModal = () => {
-  const [historyModalOpen, setHistoryModalOpen] = useState(false);
-  const [modalTabIndex, setModalTabIndex] = useState(0);
-  return {
-    historyModalOpen,
-    modalTabIndex,
-    setHistoryModalOpen,
-    setModalTabIndex,
-  };
+type SystemMenuProps = {
+  onOpenHistoryModal?: (tabIndex: number) => void;
 };
 
-export const SystemMenu = () => {
+export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { historyModalOpen, modalTabIndex, setHistoryModalOpen, setModalTabIndex } = useHistoryModal();
 
   const { theme, setTheme } = useTheme();
   const { paperMode, cyclePaperMode } = usePaperMode();
@@ -90,9 +81,9 @@ export const SystemMenu = () => {
   const { taskAutoFlushMode, setTaskAutoFlushMode } = useTaskAutoFlush();
 
   const openTaskSnapshotModal = (tabIndex: number) => {
-    setModalTabIndex(tabIndex);
-    setHistoryModalOpen(true);
+    if (!onOpenHistoryModal) return;
     setMenuOpen(false);
+    onOpenHistoryModal(tabIndex);
   };
 
   useEffect(() => {
@@ -284,12 +275,6 @@ export const SystemMenu = () => {
           </>
         )}
       </Menu>
-
-      <HistoryModal
-        isOpen={historyModalOpen}
-        onClose={() => setHistoryModalOpen(false)}
-        initialTabIndex={modalTabIndex}
-      />
     </>
   );
 };
