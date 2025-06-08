@@ -8,12 +8,23 @@ import { HoursDisplay } from "../features/time-display/hours-display";
 import { Link } from "react-router-dom";
 import { EPHE_VERSION } from "../utils/constants";
 import { useCommandK } from "../utils/hooks/use-command-k";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { useAtom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
+import { LOCAL_STORAGE_KEYS } from "../utils/constants";
+import { HistoryModal } from "../features/history/history-modal";
+
+const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
 export const EditorPage = () => {
   const { paperModeClass } = usePaperMode();
-  const { isCommandMenuOpen, closeCommandMenu } = useCommandK();
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [historyModalTabIndex, setHistoryModalTabIndex] = useState(0);
+  // Track any modal being open
+  const isAnyModalOpen = historyModalOpen;
+  const { isCommandMenuOpen, closeCommandMenu } = useCommandK(isAnyModalOpen);
   const editorRef = useRef<CodeMirrorEditorRef>(null);
+  const [editorContent] = useAtom(editorAtom);
 
   const handleCommandMenuClose = () => {
     closeCommandMenu();
@@ -26,6 +37,11 @@ export const EditorPage = () => {
     });
   };
 
+  const openHistoryModal = (tabIndex: number) => {
+    setHistoryModalTabIndex(tabIndex);
+    setHistoryModalOpen(true);
+  };
+
   return (
     <div className={`flex h-screen flex-col overflow-hidden antialiased ${paperModeClass}`}>
       <div className="relative flex flex-1 overflow-hidden">
@@ -36,7 +52,7 @@ export const EditorPage = () => {
 
       <Footer
         autoHide={true}
-        leftContent={<SystemMenu />}
+        leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} />}
         rightContent={
           <>
             <HoursDisplay />
@@ -46,7 +62,20 @@ export const EditorPage = () => {
           </>
         }
       />
-      <CommandMenu aria-modal="true" open={isCommandMenuOpen} onClose={handleCommandMenuClose} />
+      <CommandMenu 
+        aria-modal="true" 
+        open={isCommandMenuOpen} 
+        onClose={handleCommandMenuClose}
+        editorContent={editorContent}
+        editorView={editorRef.current?.view}
+        onOpenHistoryModal={openHistoryModal}
+      />
+      
+      <HistoryModal
+        isOpen={historyModalOpen}
+        onClose={() => setHistoryModalOpen(false)}
+        initialTabIndex={historyModalTabIndex}
+      />
     </div>
   );
 };

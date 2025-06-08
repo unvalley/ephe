@@ -3,11 +3,14 @@
 import { Command } from "cmdk";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
-import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-formatter";
 import { showToast } from "../../utils/components/toast";
-import type { PaperMode } from "../../utils/hooks/use-paper-mode";
+import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { COLOR_THEME } from "../../utils/theme-initializer";
-import type { EditorWidth } from "../../utils/hooks/use-editor-width";
+import { useEditorWidth } from "../../utils/hooks/use-editor-width";
+import { useFontFamily, FONT_FAMILIES, FONT_FAMILY_OPTIONS } from "../../utils/hooks/use-font";
+import type { EditorView } from "@codemirror/view";
+import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
+import { DprintMarkdownFormatter } from "../editor/markdown/formatter/dprint-markdown-formatter";
 import {
   ComputerDesktopIcon,
   DocumentIcon,
@@ -17,20 +20,36 @@ import {
   NewspaperIcon,
   SunIcon,
   ViewColumnsIcon,
+  CodeBracketIcon,
+  CheckCircleIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
+
+// Custom hook for markdown formatter
+const useMarkdownFormatter = () => {
+  const ref = useRef<DprintMarkdownFormatter | null>(null);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const fmt = await DprintMarkdownFormatter.getInstance();
+      if (alive) {
+        ref.current = fmt;
+      }
+    })();
+    return () => {
+      alive = false;
+      ref.current = null;
+    };
+  }, []);
+  return ref;
+};
 
 type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;
   editorContent?: string;
-  //   editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
-  markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
-  paperMode?: PaperMode;
-  cyclePaperMode?: () => PaperMode;
-  editorWidth?: EditorWidth;
-  toggleEditorWidth?: () => void;
-  previewMode?: boolean;
-  togglePreviewMode?: () => void;
+  editorView?: EditorView;
+  onOpenHistoryModal?: (tabIndex: number) => void;
 };
 
 type CommandItem = {
@@ -39,26 +58,30 @@ type CommandItem = {
   icon?: React.ReactNode;
   shortcut?: string;
   perform: () => void;
-  keywords?: string;
 };
 
 export const CommandMenu = ({
   open,
   onClose = () => {},
   editorContent = "",
-  //   markdownFormatterRef,
-  paperMode,
-  cyclePaperMode,
-  editorWidth,
-  toggleEditorWidth,
+  editorView,
+  onOpenHistoryModal,
 }: CommandMenuProps) => {
   const { nextTheme, cycleTheme } = useTheme();
+  const { paperMode: currentPaperMode, cyclePaperMode } = usePaperMode();
+  const { editorWidth: currentEditorWidth, toggleEditorWidth } = useEditorWidth();
+  const { fontFamily, setFontFamily } = useFontFamily();
+  const formatterRef = useMarkdownFormatter();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      // Clear input when menu closes
+      setInputValue("");
+      return;
+    }
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -74,17 +97,47 @@ export const CommandMenu = ({
     return () => document.removeEventListener("keydown", handleKeyDown, true);
   }, [open, onClose]);
 
-  const cyclePaperModeCallback = () => {
-    cyclePaperMode?.();
+  const cyclePaperModeThenClose = () => {
+    cyclePaperMode();
     onClose();
   };
 
-  const toggleEditorWidthCallback = () => {
-    toggleEditorWidth?.();
+  const toggleEditorWidthThenClose = () => {
+    toggleEditorWidth();
     onClose();
   };
 
-  const handleExportMarkdownCallback = () => {
+  const cycleFont = () => {
+    const fontKeys = FONT_FAMILY_OPTIONS;
+    const currentIndex = fontKeys.indexOf(fontFamily);
+    const nextIndex = (currentIndex + 1) % fontKeys.length;
+    setFontFamily(fontKeys[nextIndex]);
+    onClose();
+  };
+
+  const openTaskModal = () => {
+    if (!onOpenHistoryModal) return;
+    onClose(); // Close command menu first
+    // Use requestAnimationFrame to ensure command menu has completed its close animation
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        onOpenHistoryModal(0);
+      });
+    });
+  };
+
+  const openSnapshotModal = () => {
+    if (!onOpenHistoryModal) return;
+    onClose(); // Close command menu first
+    // Use requestAnimationFrame to ensure command menu has completed its close animation
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        onOpenHistoryModal(1);
+      });
+    });
+  };
+
+  const handleExportMarkdown = () => {
     if (!editorContent) {
       showToast("No content to export", "error");
       onClose();
@@ -110,72 +163,85 @@ export const CommandMenu = ({
     }
   };
 
-  //   const handleFormatDocumentCallback = useCallback(async () => {
-  //     if (!editorRef?.current || !markdownFormatterRef?.current) {
-  //       showToast("Editor or markdown formatter not available", "error");
-  //       handleClose();
-  //       return;
-  //     }
-  //     try {
-  //       const editor = editorRef.current;
-  //       const selection = editor.getSelection();
-  //       const scrollTop = editor.getScrollTop();
-  //       const content = editor.getValue();
-  //       const formattedContent = await markdownFormatterRef.current.formatMarkdown(content); // formatMarkdownはPromiseを返すと仮定
+  const handleFormatDocument = async () => {
+    if (!editorView || !formatterRef.current) {
+      showToast("Editor or markdown formatter not available", "error");
+      onClose();
+      return;
+    }
+    try {
+      const { state } = editorView;
+      const scrollTop = editorView.scrollDOM.scrollTop;
+      const cursorPos = state.selection.main.head;
+      const cursorLine = state.doc.lineAt(cursorPos);
+      const cursorLineNumber = cursorLine.number;
+      const cursorColumn = cursorPos - cursorLine.from;
+      const currentText = state.doc.toString();
+      const formattedText = await formatterRef.current.formatMarkdown(currentText);
 
-  //       editor.setValue(formattedContent);
+      if (formattedText !== currentText) {
+        editorView.dispatch({
+          changes: { from: 0, to: state.doc.length, insert: formattedText },
+        });
 
-  //       if (selection) {
-  //         editor.setSelection(selection);
-  //       }
-  //       setTimeout(() => editor.setScrollTop(scrollTop), 0);
+        // Restore cursor position after formatting
+        try {
+          const newState = editorView.state;
+          const newDocLineCount = newState.doc.lines;
+          if (cursorLineNumber <= newDocLineCount) {
+            const newLine = newState.doc.line(cursorLineNumber);
+            const newColumn = Math.min(cursorColumn, newLine.length);
+            const newPos = newLine.from + newColumn;
+            editorView.dispatch({ selection: { anchor: newPos, head: newPos } });
+          }
+        } catch (_selectionError) {
+          editorView.dispatch({ selection: { anchor: 0, head: 0 } });
+        }
+        editorView.scrollDOM.scrollTop = Math.min(
+          scrollTop,
+          editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight,
+        );
+      }
 
-  //       showToast("Document formatted successfully", "default");
-  //     } catch (error) {
-  //       const message = error instanceof Error ? error.message : "unknown";
-  //       showToast(`Error formatting document: ${message}`, "error");
-  //       console.error("Formatting error:", error);
-  //     } finally {
-  //       handleClose();
-  //     }
-  //   }, [markdownFormatterRef, handleClose]);
+      showToast("Document formatted", "default");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown";
+      showToast(`Error formatting document: ${message}`, "error");
+      console.error("Formatting error:", error);
+    } finally {
+      onClose();
+    }
+  };
 
-  //   const handleInsertGitHubIssuesCallback = useCallback(async () => {
-  //     if (!editorRef?.current) {
-  //       showToast("Editor not available", "error");
-  //       handleClose();
-  //       return;
-  //     }
-  //     try {
-  //       const github_user_id = prompt("Enter GitHub User ID:");
-  //       if (!github_user_id) {
-  //         handleClose(); // キャンセルまたは空入力時は閉じる
-  //         return;
-  //       }
-  //       const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id); // fetchGitHubIssuesTaskListはPromiseを返すと仮定
-  //       const editor = editorRef.current;
-  //       const selection = editor.getSelection();
-  //       const position = editor.getPosition();
+  const handleInsertGitHubIssues = async () => {
+    if (!editorView) {
+      showToast("Editor not available", "error");
+      onClose();
+      return;
+    }
+    try {
+      const github_user_id = prompt("Enter GitHub User ID:");
+      if (!github_user_id) {
+        onClose();
+        return;
+      }
+      const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id);
+      const state = editorView.state;
+      const cursorPos = state.selection.main.head;
 
-  //       let range: monaco.IRange;
-  //       if (selection && !selection.isEmpty()) {
-  //         range = selection;
-  //       } else if (position) {
-  //         range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
-  //       } else {
-  //         range = new monaco.Range(1, 1, 1, 1);
-  //       }
+      editorView.dispatch({
+        changes: { from: cursorPos, to: cursorPos, insert: issuesTaskList },
+        selection: { anchor: cursorPos + issuesTaskList.length },
+      });
 
-  //       editor.executeEdits("insert-github-issues", [{ range, text: issuesTaskList, forceMoveMarkers: true }]);
-
-  //       showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
-  //     } catch (error) {
-  //       console.error("Error inserting GitHub issues:", error);
-  //       showToast("Failed to insert GitHub issues", "error");
-  //     } finally {
-  //       handleClose();
-  //     }
-  //   }, [editorRef, handleClose]);
+      showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
+    } catch (error) {
+      console.error("Error inserting GitHub issues:", error);
+      showToast("Failed to insert GitHub issues", "error");
+    } finally {
+      onClose();
+    }
+  };
 
   const goToGitHubRepo = () => {
     window.open("https://github.com/unvalley/ephe", "_blank");
@@ -202,64 +268,76 @@ export const CommandMenu = ({
           ),
         // shortcut: "⌘T",
         perform: cycleThemeThenClose,
-        keywords: "theme toggle switch mode light dark system color appearance",
       },
     ];
 
-    if (cyclePaperMode) {
-      list.push({
-        id: "paper-mode",
-        name: "Cycle paper mode",
-        icon: <NewspaperIcon className="size-4 stroke-1" />,
-        perform: cyclePaperModeCallback,
-        keywords: "paper mode cycle switch document style layout background",
-      });
-    }
-    if (toggleEditorWidth) {
-      list.push({
-        id: "editor-width",
-        name: "Toggle editor width",
-        icon: <ViewColumnsIcon className="size-4 stroke-1" />,
-        perform: toggleEditorWidthCallback,
-        keywords: "editor width toggle resize narrow wide full layout column",
-      });
-    }
+    list.push({
+      id: "paper-mode",
+      name: "Cycle paper mode",
+      icon: <NewspaperIcon className="size-4 stroke-1" />,
+      perform: cyclePaperModeThenClose,
+    });
+
+    list.push({
+      id: "editor-width",
+      name: "Toggle editor width",
+      icon: <ViewColumnsIcon className="size-4 stroke-1" />,
+      perform: toggleEditorWidthThenClose,
+    });
+
+    list.push({
+      id: "font-family",
+      name: "Change font",
+      icon: <DocumentTextIcon className="size-4 stroke-1" />,
+      perform: cycleFont,
+    });
     if (editorContent) {
       list.push({
         id: "export-markdown",
         name: "Export markdown",
         icon: <DocumentIcon className="size-4 stroke-1" />,
         // shortcut: "⌘S",
-        perform: handleExportMarkdownCallback,
-        keywords: "export markdown save download file md text document",
+        perform: handleExportMarkdown,
       });
     }
-    // if (editorRef?.current && markdownFormatterRef?.current) {
-    //   list.push({
-    //     id: "format-document",
-    //     name: "Format document",
-    //     icon: <FormatIcon className="h-3.5 w-3.5" />,
-    //     shortcut: "⌘F",
-    //     perform: handleFormatDocumentCallback,
-    //     keywords: "format document prettify code style arrange beautify markdown lint tidy",
-    //   });
-    // }
-    // if (editorRef?.current) {
-    //   list.push({
-    //     id: "insert-github-issues",
-    //     name: "Insert GitHub Issues (Public Repos)",
-    //     icon: <GitHubIcon className="h-3.5 w-3.5" />,
-    //     shortcut: "⌘G",
-    //     perform: handleInsertGitHubIssuesCallback,
-    //     keywords: "github issues insert fetch task todo list import integrate",
-    //   });
-    // }
+
+    if (editorView && formatterRef.current) {
+      list.push({
+        id: "format-document",
+        name: "Format document",
+        icon: <CodeBracketIcon className="size-4 stroke-1" />,
+        shortcut: "⌘S",
+        perform: handleFormatDocument,
+      });
+    }
+
+    if (editorView) {
+      list.push({
+        id: "insert-github-issues",
+        name: "Create GitHub issue list (Public Repos)",
+        icon: <LinkIcon className="size-4 stroke-1" />,
+        perform: handleInsertGitHubIssues,
+      });
+    }
+
+    list.push({
+      id: "open-tasks",
+      name: "Open task modal",
+      icon: <CheckCircleIcon className="size-4 stroke-1" />,
+      perform: openTaskModal,
+    });
+
+    list.push({
+      id: "open-snapshots",
+      name: "Open snapshot modal",
+      icon: <DocumentIcon className="size-4 stroke-1" />,
+      perform: openSnapshotModal,
+    });
     list.push({
       id: "github-repo",
       name: "Go to Ephe GitHub Repo",
       icon: <LinkIcon className="size-4 stroke-1" />,
       perform: goToGitHubRepo,
-      keywords: "github ephe repository project code source link open website source-code",
     });
 
     return list;
@@ -316,15 +394,15 @@ export const CommandMenu = ({
               </Command.Empty>
 
               <Command.Group
-                heading="Interface Mode"
+                heading="Interface"
                 className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
               >
                 {commandsList()
-                  .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width"].includes(cmd.id))
+                  .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width", "font-family"].includes(cmd.id))
                   .map((command) => (
                     <Command.Item
                       key={command.id}
-                      value={`${command.name} ${command.keywords || ""}`}
+                      value={command.name}
                       onSelect={command.perform}
                       className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                     >
@@ -335,12 +413,19 @@ export const CommandMenu = ({
                         <span className="flex-grow truncate">
                           {" "}
                           {command.name}
-                          {command.id === "paper-mode" && paperMode && (
-                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({paperMode})</span>
-                          )}
-                          {command.id === "editor-width" && editorWidth && (
+                          {command.id === "paper-mode" && currentPaperMode && (
                             <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
-                              ({editorWidth})
+                              ({currentPaperMode})
+                            </span>
+                          )}
+                          {command.id === "editor-width" && currentEditorWidth && (
+                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                              ({currentEditorWidth})
+                            </span>
+                          )}
+                          {command.id === "font-family" && (
+                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                              ({FONT_FAMILIES[fontFamily].displayValue})
                             </span>
                           )}
                         </span>
@@ -355,15 +440,23 @@ export const CommandMenu = ({
               </Command.Group>
 
               <Command.Group
-                heading="Operations (WIP)"
+                heading="Operations"
                 className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
               >
                 {commandsList()
-                  .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues"].includes(cmd.id))
+                  .filter((cmd) =>
+                    [
+                      "export-markdown",
+                      "format-document",
+                      "insert-github-issues",
+                      "open-tasks",
+                      "open-snapshots",
+                    ].includes(cmd.id),
+                  )
                   .map((command) => (
                     <Command.Item
                       key={command.id}
-                      value={`${command.name} ${command.keywords || ""}`}
+                      value={command.name}
                       onSelect={command.perform}
                       className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                     >
@@ -391,7 +484,7 @@ export const CommandMenu = ({
                   .map((command) => (
                     <Command.Item
                       key={command.id}
-                      value={`${command.name} ${command.keywords || ""}`}
+                      value={command.name}
                       onSelect={command.perform}
                       className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                     >
