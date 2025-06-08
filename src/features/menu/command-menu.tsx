@@ -58,7 +58,6 @@ type CommandItem = {
   icon?: React.ReactNode;
   shortcut?: string;
   perform: () => void;
-  keywords?: string;
 };
 
 export const CommandMenu = ({
@@ -179,12 +178,12 @@ export const CommandMenu = ({
       const cursorColumn = cursorPos - cursorLine.from;
       const currentText = state.doc.toString();
       const formattedText = await formatterRef.current.formatMarkdown(currentText);
-      
+
       if (formattedText !== currentText) {
         editorView.dispatch({
           changes: { from: 0, to: state.doc.length, insert: formattedText },
         });
-        
+
         // Restore cursor position after formatting
         try {
           const newState = editorView.state;
@@ -198,7 +197,10 @@ export const CommandMenu = ({
         } catch (_selectionError) {
           editorView.dispatch({ selection: { anchor: 0, head: 0 } });
         }
-        editorView.scrollDOM.scrollTop = Math.min(scrollTop, editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight);
+        editorView.scrollDOM.scrollTop = Math.min(
+          scrollTop,
+          editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight,
+        );
       }
 
       showToast("Document formatted", "default");
@@ -226,7 +228,7 @@ export const CommandMenu = ({
       const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id);
       const state = editorView.state;
       const cursorPos = state.selection.main.head;
-      
+
       editorView.dispatch({
         changes: { from: cursorPos, to: cursorPos, insert: issuesTaskList },
         selection: { anchor: cursorPos + issuesTaskList.length },
@@ -266,7 +268,6 @@ export const CommandMenu = ({
           ),
         // shortcut: "⌘T",
         perform: cycleThemeThenClose,
-        keywords: "theme toggle switch mode light dark system color appearance",
       },
     ];
 
@@ -275,7 +276,6 @@ export const CommandMenu = ({
       name: "Cycle paper mode",
       icon: <NewspaperIcon className="size-4 stroke-1" />,
       perform: cyclePaperModeCallback,
-      keywords: "paper mode cycle switch document style layout background",
     });
 
     list.push({
@@ -283,7 +283,6 @@ export const CommandMenu = ({
       name: "Toggle editor width",
       icon: <ViewColumnsIcon className="size-4 stroke-1" />,
       perform: toggleEditorWidthCallback,
-      keywords: "editor width toggle resize narrow wide full layout column",
     });
 
     list.push({
@@ -291,7 +290,6 @@ export const CommandMenu = ({
       name: "Change font",
       icon: <DocumentTextIcon className="size-4 stroke-1" />,
       perform: cycleFontCallback,
-      keywords: "font family typeface text style monospace",
     });
     if (editorContent) {
       list.push({
@@ -300,10 +298,9 @@ export const CommandMenu = ({
         icon: <DocumentIcon className="size-4 stroke-1" />,
         // shortcut: "⌘S",
         perform: handleExportMarkdownCallback,
-        keywords: "export markdown save download file md text document",
       });
     }
-    
+
     if (editorView && formatterRef.current) {
       list.push({
         id: "format-document",
@@ -311,17 +308,15 @@ export const CommandMenu = ({
         icon: <CodeBracketIcon className="size-4 stroke-1" />,
         shortcut: "⌘S",
         perform: handleFormatDocumentCallback,
-        keywords: "format document prettify code style arrange beautify markdown lint tidy",
       });
     }
-    
+
     if (editorView) {
       list.push({
         id: "insert-github-issues",
         name: "Create GitHub issue list (Public Repos)",
         icon: <LinkIcon className="size-4 stroke-1" />,
         perform: handleInsertGitHubIssuesCallback,
-        keywords: "github issues insert fetch task todo list import integrate create",
       });
     }
 
@@ -330,7 +325,6 @@ export const CommandMenu = ({
       name: "Open task modal",
       icon: <CheckCircleIcon className="size-4 stroke-1" />,
       perform: openTaskModalCallback,
-      keywords: "task modal history completed closed todo done check",
     });
 
     list.push({
@@ -338,14 +332,12 @@ export const CommandMenu = ({
       name: "Open snapshot modal",
       icon: <DocumentIcon className="size-4 stroke-1" />,
       perform: openSnapshotModalCallback,
-      keywords: "snapshot modal history backup save version restore",
     });
     list.push({
       id: "github-repo",
       name: "Go to Ephe GitHub Repo",
       icon: <LinkIcon className="size-4 stroke-1" />,
       perform: goToGitHubRepo,
-      keywords: "github ephe repository project code source link open website source-code",
     });
 
     return list;
@@ -422,7 +414,9 @@ export const CommandMenu = ({
                           {" "}
                           {command.name}
                           {command.id === "paper-mode" && currentPaperMode && (
-                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({currentPaperMode})</span>
+                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                              ({currentPaperMode})
+                            </span>
                           )}
                           {command.id === "editor-width" && currentEditorWidth && (
                             <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
@@ -450,7 +444,15 @@ export const CommandMenu = ({
                 className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
               >
                 {commandsList()
-                  .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues", "open-tasks", "open-snapshots"].includes(cmd.id))
+                  .filter((cmd) =>
+                    [
+                      "export-markdown",
+                      "format-document",
+                      "insert-github-issues",
+                      "open-tasks",
+                      "open-snapshots",
+                    ].includes(cmd.id),
+                  )
                   .map((command) => (
                     <Command.Item
                       key={command.id}
