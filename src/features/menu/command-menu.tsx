@@ -97,17 +97,17 @@ export const CommandMenu = ({
     return () => document.removeEventListener("keydown", handleKeyDown, true);
   }, [open, onClose]);
 
-  const cyclePaperModeCallback = () => {
+  const cyclePaperModeThenClose = () => {
     cyclePaperMode();
     onClose();
   };
 
-  const toggleEditorWidthCallback = () => {
+  const toggleEditorWidthThenClose = () => {
     toggleEditorWidth();
     onClose();
   };
 
-  const cycleFontCallback = () => {
+  const cycleFont = () => {
     const fontKeys = FONT_FAMILY_OPTIONS;
     const currentIndex = fontKeys.indexOf(fontFamily);
     const nextIndex = (currentIndex + 1) % fontKeys.length;
@@ -115,7 +115,7 @@ export const CommandMenu = ({
     onClose();
   };
 
-  const openTaskModalCallback = () => {
+  const openTaskModal = () => {
     if (!onOpenHistoryModal) return;
     onClose(); // Close command menu first
     // Use requestAnimationFrame to ensure command menu has completed its close animation
@@ -126,7 +126,7 @@ export const CommandMenu = ({
     });
   };
 
-  const openSnapshotModalCallback = () => {
+  const openSnapshotModal = () => {
     if (!onOpenHistoryModal) return;
     onClose(); // Close command menu first
     // Use requestAnimationFrame to ensure command menu has completed its close animation
@@ -137,7 +137,7 @@ export const CommandMenu = ({
     });
   };
 
-  const handleExportMarkdownCallback = () => {
+  const handleExportMarkdown = () => {
     if (!editorContent) {
       showToast("No content to export", "error");
       onClose();
@@ -163,7 +163,7 @@ export const CommandMenu = ({
     }
   };
 
-  const handleFormatDocumentCallback = async () => {
+  const handleFormatDocument = async () => {
     if (!editorView || !formatterRef.current) {
       showToast("Editor or markdown formatter not available", "error");
       onClose();
@@ -213,7 +213,7 @@ export const CommandMenu = ({
     }
   };
 
-  const handleInsertGitHubIssuesCallback = async () => {
+  const handleInsertGitHubIssues = async () => {
     if (!editorView) {
       showToast("Editor not available", "error");
       onClose();
@@ -275,21 +275,21 @@ export const CommandMenu = ({
       id: "paper-mode",
       name: "Cycle paper mode",
       icon: <NewspaperIcon className="size-4 stroke-1" />,
-      perform: cyclePaperModeCallback,
+      perform: cyclePaperModeThenClose,
     });
 
     list.push({
       id: "editor-width",
       name: "Toggle editor width",
       icon: <ViewColumnsIcon className="size-4 stroke-1" />,
-      perform: toggleEditorWidthCallback,
+      perform: toggleEditorWidthThenClose,
     });
 
     list.push({
       id: "font-family",
       name: "Change font",
       icon: <DocumentTextIcon className="size-4 stroke-1" />,
-      perform: cycleFontCallback,
+      perform: cycleFont,
     });
     if (editorContent) {
       list.push({
@@ -297,7 +297,7 @@ export const CommandMenu = ({
         name: "Export markdown",
         icon: <DocumentIcon className="size-4 stroke-1" />,
         // shortcut: "⌘S",
-        perform: handleExportMarkdownCallback,
+        perform: handleExportMarkdown,
       });
     }
 
@@ -307,7 +307,7 @@ export const CommandMenu = ({
         name: "Format document",
         icon: <CodeBracketIcon className="size-4 stroke-1" />,
         shortcut: "⌘S",
-        perform: handleFormatDocumentCallback,
+        perform: handleFormatDocument,
       });
     }
 
@@ -316,7 +316,7 @@ export const CommandMenu = ({
         id: "insert-github-issues",
         name: "Create GitHub issue list (Public Repos)",
         icon: <LinkIcon className="size-4 stroke-1" />,
-        perform: handleInsertGitHubIssuesCallback,
+        perform: handleInsertGitHubIssues,
       });
     }
 
@@ -324,14 +324,14 @@ export const CommandMenu = ({
       id: "open-tasks",
       name: "Open task modal",
       icon: <CheckCircleIcon className="size-4 stroke-1" />,
-      perform: openTaskModalCallback,
+      perform: openTaskModal,
     });
 
     list.push({
       id: "open-snapshots",
       name: "Open snapshot modal",
       icon: <DocumentIcon className="size-4 stroke-1" />,
-      perform: openSnapshotModalCallback,
+      perform: openSnapshotModal,
     });
     list.push({
       id: "github-repo",
@@ -402,7 +402,7 @@ export const CommandMenu = ({
                   .map((command) => (
                     <Command.Item
                       key={command.id}
-                      value={`${command.name} ${command.keywords || ""}`}
+                      value={command.name}
                       onSelect={command.perform}
                       className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                     >
@@ -456,7 +456,7 @@ export const CommandMenu = ({
                   .map((command) => (
                     <Command.Item
                       key={command.id}
-                      value={`${command.name} ${command.keywords || ""}`}
+                      value={command.name}
                       onSelect={command.perform}
                       className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                     >
@@ -484,7 +484,7 @@ export const CommandMenu = ({
                   .map((command) => (
                     <Command.Item
                       key={command.id}
-                      value={`${command.name} ${command.keywords || ""}`}
+                      value={command.name}
                       onSelect={command.perform}
                       className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
                     >
