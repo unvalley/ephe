@@ -3,16 +3,6 @@ import { EditorState, EditorSelection } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import { moveTaskUp, moveTaskDown } from "./task-reorder";
 
-/**
- * BULLETPROOF Task Reorder Test Suite
- * 
- * Test Matrix:
- * 1. Empty Line Separation
- * 2. Section Boundaries (Headings)
- * 3. Nesting Integrity
- * 4. Edge Cases
- */
-
 // Helper to create an editor state with content
 function createEditorState(doc: string, cursorPos?: number) {
   return EditorState.create({
@@ -24,7 +14,7 @@ function createEditorState(doc: string, cursorPos?: number) {
 // Helper to create a mock editor view
 function createMockView(initialState: EditorState) {
   let currentState = initialState;
-  
+
   const view = {
     get state() {
       return currentState;
@@ -36,7 +26,7 @@ function createMockView(initialState: EditorState) {
       }
     }),
   } as unknown as EditorView;
-  
+
   return view;
 }
 
@@ -128,7 +118,7 @@ describe("Task Reorder - Section Boundaries", () => {
     const result = moveTaskUp(view);
     expect(result).toBe(true);
     expect(view.dispatch).toHaveBeenCalled();
-    
+
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`# Section 1
 - [ ] Task B
@@ -166,7 +156,7 @@ describe("Task Reorder - Nesting Integrity", () => {
     const result = moveTaskDown(view);
     expect(result).toBe(true);
     expect(view.dispatch).toHaveBeenCalled();
-    
+
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- [ ] Parent B
 - [ ] Parent A
@@ -213,7 +203,7 @@ describe("Task Reorder - Nesting Integrity", () => {
     const result = moveTaskDown(view);
     expect(result).toBe(true);
     expect(view.dispatch).toHaveBeenCalled();
-    
+
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- [ ] Parent A
   - [ ] Child A1
@@ -233,7 +223,7 @@ describe("Task Reorder - Nesting Integrity", () => {
     const result = moveTaskDown(view);
     expect(result).toBe(true);
     expect(view.dispatch).toHaveBeenCalled();
-    
+
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- [ ] Level 1
   - [ ] Level 2
@@ -255,7 +245,7 @@ describe("Task Reorder - Nesting Integrity", () => {
     const result = moveTaskDown(view);
     expect(result).toBe(true);
     expect(view.dispatch).toHaveBeenCalled();
-    
+
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- [ ] Task A
 - [ ] Task C
@@ -291,7 +281,7 @@ Some paragraph text
     const result = moveTaskUp(view);
     expect(result).toBe(true);
     expect(view.dispatch).toHaveBeenCalled();
-    
+
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- Regular item B
 - Regular item A
@@ -308,7 +298,7 @@ Some paragraph text
     const result = moveTaskDown(view);
     expect(result).toBe(true);
     expect(view.dispatch).toHaveBeenCalled();
-    
+
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- Regular item B
 - [ ] Task A`);
@@ -350,7 +340,7 @@ Regular text line
 
     const resultUp = moveTaskUp(view);
     const resultDown = moveTaskDown(view);
-    
+
     expect(resultUp).toBe(false);
     expect(resultDown).toBe(false);
     expect(view.dispatch).not.toHaveBeenCalled();
@@ -362,10 +352,7 @@ Regular text line
 
     const state = EditorState.create({
       doc,
-      selection: EditorSelection.create([
-        EditorSelection.cursor(0),
-        EditorSelection.cursor(13)
-      ])
+      selection: EditorSelection.create([EditorSelection.cursor(0), EditorSelection.cursor(13)]),
     });
     const view = createMockView(state);
 
@@ -384,7 +371,7 @@ Regular text line
     const result = moveTaskUp(view);
     expect(result).toBe(true);
     expect(view.dispatch).toHaveBeenCalled();
-    
+
     // Check cursor position was preserved
     const call = (view.dispatch as any).mock.calls[0][0];
     expect(call.selection).toBeDefined();
@@ -404,7 +391,7 @@ Regular text line
     const result = moveTaskDown(view);
     expect(result).toBe(true);
     expect(view.dispatch).toHaveBeenCalled();
-    
+
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- [ ] Task B
   - [ ] Subtask B1
@@ -457,11 +444,11 @@ Regular paragraph text here.
     view = createMockView(state);
     result = moveTaskDown(view);
     expect(result).toBe(true);
-    
+
     const newDoc = view.state.doc.toString();
     const expected = doc.replace(
       "  - [ ] Subtask 1.1\n  - [ ] Subtask 1.2",
-      "  - [ ] Subtask 1.2\n  - [ ] Subtask 1.1"
+      "  - [ ] Subtask 1.2\n  - [ ] Subtask 1.1",
     );
     expect(newDoc).toBe(expected);
   });
@@ -504,25 +491,25 @@ describe("Task Reorder - Newline Preservation", () => {
     const doc = `- [ ] A
 - [ ] B
 - [ ] C`;
-    
+
     const state = createEditorState(doc, 10); // Cursor on B
     const view = createMockView(state);
-    
+
     moveTaskUp(view);
-    
+
     const result = view.state.doc.toString();
     expect(result).toBe(`- [ ] B
 - [ ] A
 - [ ] C`);
-    
+
     // Check that each line is separate
-    const lines = result.split('\n');
+    const lines = result.split("\n");
     expect(lines).toHaveLength(3);
-    expect(lines[0]).toBe('- [ ] B');
-    expect(lines[1]).toBe('- [ ] A');
-    expect(lines[2]).toBe('- [ ] C');
-    
+    expect(lines[0]).toBe("- [ ] B");
+    expect(lines[1]).toBe("- [ ] A");
+    expect(lines[2]).toBe("- [ ] C");
+
     // Ensure no concatenation
-    expect(result).not.toContain('- [ ] B- [ ] A');
+    expect(result).not.toContain("- [ ] B- [ ] A");
   });
 });
