@@ -9,6 +9,7 @@ import { showToast } from "../../../utils/components/toast";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 import { useTheme } from "../../../utils/hooks/use-theme";
 import { useFontFamily } from "../../../utils/hooks/use-font";
+import { useDebounce } from "../../../utils/hooks/use-debounce";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
@@ -98,6 +99,11 @@ export const useMarkdownEditor = () => {
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
 
+  // Debounced content update to reduce localStorage writes
+  const debouncedSetContent = useDebounce((updatedContent: string) => {
+    setContent(updatedContent);
+  }, 300);
+
   // Listen for content restore events
   useEffect(() => {
     const handleContentRestored = (event: CustomEvent<{ content: string }>) => {
@@ -124,11 +130,11 @@ export const useMarkdownEditor = () => {
   useEffect(() => {
     if (view && content !== view.state.doc.toString()) {
       view.dispatch({
-        changes: { from: 0, to: view.state.doc.length, insert: content },
+        changes: { from: 0, to: view.state.doc.length, insert: content || "" },
       });
     }
-    setCharCount(content.length);
-  }, [view, content]);
+    setCharCount(content?.length || 0);
+  }, [view, content, setCharCount]);
 
   const onFormat = async (view: EditorView) => {
     if (!formatterRef.current) {
@@ -200,7 +206,7 @@ export const useMarkdownEditor = () => {
   useLayoutEffect(() => {
     if (!view && container) {
       const state = EditorState.create({
-        doc: content,
+        doc: content || "",
         extensions: [
           keymap.of(defaultKeymap),
           history(),
@@ -219,9 +225,7 @@ export const useMarkdownEditor = () => {
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {
               const updatedContent = update.state.doc.toString();
-              window.requestAnimationFrame(() => {
-                setContent(updatedContent);
-              });
+              debouncedSetContent(updatedContent);
             }
           }),
 
@@ -260,7 +264,7 @@ export const useMarkdownEditor = () => {
     view,
     container,
     content,
-    setContent,
+    debouncedSetContent,
     onFormat,
     onSaveSnapshot,
     highlightCompartment.of,
