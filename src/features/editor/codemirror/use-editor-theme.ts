@@ -41,7 +41,7 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
       "&": {
         height: "100%",
         width: "100%",
-        background: COLORS.background,
+        background: "transparent",
         color: COLORS.foreground,
       },
       ".cm-content": {
@@ -107,7 +107,7 @@ const EPHE_COLORS = {
     emphasis: "#000000",
   },
   dark: {
-    background: "#121212",
+    background: "#0d1117",
     foreground: "#F5F5F5",
     comment: "#757575",
     keyword: "#F5F5F5",
