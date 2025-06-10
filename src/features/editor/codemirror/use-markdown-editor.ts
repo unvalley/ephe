@@ -90,10 +90,8 @@ export const useMarkdownEditor = () => {
   const { isDarkMode } = useTheme();
   const { isWideMode } = useEditorWidth();
   const { currentFontValue } = useFontFamily();
-  const { setCharCount } = useCharCount();
-  
-  // Get theme configuration
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue);
+  const { setCharCount } = useCharCount();
   const { isMobile } = useMobileDetector();
 
   const themeCompartment = useRef(new Compartment()).current;
