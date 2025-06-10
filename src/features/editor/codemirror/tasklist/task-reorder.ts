@@ -1,12 +1,8 @@
 import type { EditorView } from "@codemirror/view";
 import type { Text } from "@codemirror/state";
+import { isTaskLine, isRegularListLine, parseTaskLine, parseRegularListLine } from "./task-list-utils";
 
-const REGEX = {
-  TASK_LINE: /^\s*- \[([ x])\]/,
-  REGULAR_LIST_LINE: /^\s*[-*+]\s(?!\[([ x])\])/,
-  HEADING_LINE: /^#+\s/,
-  LEADING_WHITESPACE: /^(\s*)/,
-} as const;
+const MARKDOWN_HEADING = /^#{1,6}\s+\S/;
 
 type LineRange = {
   startLine: number;
@@ -21,19 +17,20 @@ type BlockRange = {
 
 type TaskBlock = readonly [number, number];
 
-const isTaskLine = (text: string): boolean => REGEX.TASK_LINE.test(text);
-
-const isRegularListLine = (text: string): boolean => REGEX.REGULAR_LIST_LINE.test(text);
-
 const isListLine = (text: string): boolean => isTaskLine(text) || isRegularListLine(text);
 
-const isHeadingLine = (text: string): boolean => REGEX.HEADING_LINE.test(text);
+const isHeadingLine = (text: string): boolean => MARKDOWN_HEADING.test(text);
 
 const isEmptyLine = (text: string): boolean => text.trim() === "";
 
 const getIndentLevel = (text: string): number => {
-  const match = text.match(REGEX.LEADING_WHITESPACE);
-  return match?.[1].length ?? 0;
+  const taskParsed = parseTaskLine(text);
+  if (taskParsed) return taskParsed.indent.length;
+  
+  const listParsed = parseRegularListLine(text);
+  if (listParsed) return listParsed.indent.length;
+  
+  return 0;
 };
 
 const isValidLineNumber = (doc: Text, lineNumber: number): boolean => {
