@@ -19,323 +19,292 @@ type BlockRange = {
   content: string;
 };
 
-const isTaskLine = (text: string): boolean => {
-  return REGEX.TASK_LINE.test(text);
-};
+type TaskBlock = readonly [number, number];
 
-const isRegularListLine = (text: string): boolean => {
-  return REGEX.REGULAR_LIST_LINE.test(text);
-};
+const isTaskLine = (text: string): boolean => REGEX.TASK_LINE.test(text);
 
-const isListLine = (text: string): boolean => {
-  return isTaskLine(text) || isRegularListLine(text);
-};
+const isRegularListLine = (text: string): boolean => REGEX.REGULAR_LIST_LINE.test(text);
 
-const isHeadingLine = (text: string): boolean => {
-  return REGEX.HEADING_LINE.test(text);
-};
+const isListLine = (text: string): boolean => isTaskLine(text) || isRegularListLine(text);
 
-const isEmptyLine = (text: string): boolean => {
-  return text.trim() === "";
-};
+const isHeadingLine = (text: string): boolean => REGEX.HEADING_LINE.test(text);
+
+const isEmptyLine = (text: string): boolean => text.trim() === "";
 
 const getIndentLevel = (text: string): number => {
   const match = text.match(REGEX.LEADING_WHITESPACE);
-  return match ? match[1].length : 0;
+  return match?.[1].length ?? 0;
+};
+
+const isValidLineNumber = (doc: Text, lineNumber: number): boolean => {
+  return lineNumber >= 1 && lineNumber <= doc.lines;
 };
 
 const findSectionBoundaries = (doc: Text, lineNumber: number): LineRange => {
-  let startLine = 1;
-  let endLine = doc.lines;
-  
-  // Search backwards for section start (heading or document start)
-  for (let i = lineNumber - 1; i >= 1; i--) {
-    const line = doc.line(i);
-    if (isHeadingLine(line.text)) {
-      startLine = i + 1; // Section starts after the heading
-      break;
+  const findSectionStart = (lineNum: number): number => {
+    for (let i = lineNum - 1; i >= 1; i--) {
+      if (!isValidLineNumber(doc, i)) continue;
+      
+      if (isHeadingLine(doc.line(i).text)) {
+        return i + 1;
+      }
     }
-  }
-  
-  // Search forwards for section end (next heading or document end)
-  for (let i = lineNumber + 1; i <= doc.lines; i++) {
-    const line = doc.line(i);
-    if (isHeadingLine(line.text)) {
-      endLine = i - 1; // Section ends before the next heading
-      break;
+    return 1;
+  };
+
+  const findSectionEnd = (lineNum: number): number => {
+    for (let i = lineNum + 1; i <= doc.lines; i++) {
+      if (!isValidLineNumber(doc, i)) continue;
+      
+      if (isHeadingLine(doc.line(i).text)) {
+        return i - 1;
+      }
     }
-  }
-  
-  return { startLine, endLine };
+    return doc.lines;
+  };
+
+  return {
+    startLine: findSectionStart(lineNumber),
+    endLine: findSectionEnd(lineNumber),
+  };
 };
 
-const findTaskBlockWithChildren = (doc: Text, lineNumber: number): [number, number] | null => {
+const findTaskBlockWithChildren = (doc: Text, lineNumber: number): TaskBlock | undefined => {
+  if (!isValidLineNumber(doc, lineNumber)) return undefined;
+  
   const line = doc.line(lineNumber);
-  
-  if (!isListLine(line.text)) {
-    return null;
-  }
-  
+  if (!isListLine(line.text)) return undefined;
+
   const baseIndent = getIndentLevel(line.text);
-  let endLine = lineNumber;
   
-  // Look forward for all children (more indented items)
-  for (let i = lineNumber + 1; i <= doc.lines; i++) {
-    const nextLine = doc.line(i);
+  const findEndLine = (startLine: number): number => {
+    let lastValidLine = startLine;
     
-    // Stop at empty lines
-    if (isEmptyLine(nextLine.text)) {
-      break;
+    for (let i = startLine + 1; i <= doc.lines; i++) {
+      if (!isValidLineNumber(doc, i)) break;
+      
+      const nextLine = doc.line(i);
+      
+      if (isEmptyLine(nextLine.text)) break;
+      if (!isListLine(nextLine.text)) break;
+      
+      const nextIndent = getIndentLevel(nextLine.text);
+      if (nextIndent <= baseIndent) break;
+      
+      lastValidLine = i;
     }
     
-    // Stop at non-list lines
-    if (!isListLine(nextLine.text)) {
-      break;
-    }
-    
-    const nextIndent = getIndentLevel(nextLine.text);
-    
-    // Stop at items with same or less indentation
-    if (nextIndent <= baseIndent) {
-      break;
-    }
-    
-    // This is a child, include it
-    endLine = i;
-  }
-  
-  return [lineNumber, endLine];
+    return lastValidLine;
+  };
+
+  return [lineNumber, findEndLine(lineNumber)] as const;
 };
 
-const findParentTask = (doc: Text, lineNumber: number): number | null => {
+const findParentTask = (doc: Text, lineNumber: number): number | undefined => {
+  if (!isValidLineNumber(doc, lineNumber)) return undefined;
+  
   const line = doc.line(lineNumber);
-  if (!isListLine(line.text)) return null;
+  if (!isListLine(line.text)) return undefined;
   
   const currentIndent = getIndentLevel(line.text);
-  if (currentIndent === 0) return null; // Top-level tasks have no parent
+  if (currentIndent === 0) return undefined;
   
-  // Search backwards for a task with less indentation
   for (let i = lineNumber - 1; i >= 1; i--) {
+    if (!isValidLineNumber(doc, i)) continue;
+    
     const checkLine = doc.line(i);
     
-    // Stop at empty lines
-    if (isEmptyLine(checkLine.text)) {
-      return null;
-    }
+    if (isEmptyLine(checkLine.text)) return undefined;
     
     if (isListLine(checkLine.text)) {
       const checkIndent = getIndentLevel(checkLine.text);
-      if (checkIndent < currentIndent) {
-        return i; // Found the parent
-      }
+      if (checkIndent < currentIndent) return i;
     }
   }
   
-  return null;
+  return undefined;
 };
 
 const findUpwardTarget = (
   doc: Text,
   lineNumber: number,
   currentIndent: number,
-  parentLine: number | null
-): number | null => {
+  parentLine: number | undefined
+): number | undefined => {
   for (let i = lineNumber - 1; i >= 1; i--) {
+    if (!isValidLineNumber(doc, i)) continue;
+    
     const checkLine = doc.line(i);
     
-    // Stop at empty lines
-    if (isEmptyLine(checkLine.text)) {
-      return null; // Would cross empty line
-    }
+    if (isEmptyLine(checkLine.text)) return undefined;
+    if (isHeadingLine(checkLine.text)) return undefined;
     
-    // Stop at headings
-    if (isHeadingLine(checkLine.text)) {
-      return null; // Would cross section boundary
-    }
+    if (!isListLine(checkLine.text)) continue;
     
-    if (isListLine(checkLine.text)) {
-      const checkIndent = getIndentLevel(checkLine.text);
-      
-      // For child tasks, only consider siblings at exact same indent
-      if (parentLine !== null) {
-        if (checkIndent === currentIndent) {
-          return i;
-        } else if (checkIndent < currentIndent) {
-          // Hit parent or higher level, stop
-          return null;
-        }
-      } else {
-        // For top-level tasks, can swap with tasks at same or lower indent
-        if (checkIndent <= currentIndent) {
-          return i;
-        }
-      }
+    const checkIndent = getIndentLevel(checkLine.text);
+    
+    if (parentLine !== undefined) {
+      if (checkIndent === currentIndent) return i;
+      if (checkIndent < currentIndent) return undefined;
+    } else {
+      if (checkIndent <= currentIndent) return i;
     }
   }
   
-  return null;
+  return undefined;
 };
 
 const findDownwardTarget = (
   doc: Text,
   blockEndLine: number,
   currentIndent: number,
-  parentLine: number | null,
+  parentLine: number | undefined,
   maxLine: number
-): number | null => {
+): number | undefined => {
   for (let i = blockEndLine + 1; i <= maxLine; i++) {
+    if (!isValidLineNumber(doc, i)) continue;
+    
     const checkLine = doc.line(i);
     
-    // Stop at empty lines
-    if (isEmptyLine(checkLine.text)) {
-      return null; // Would cross empty line
-    }
+    if (isEmptyLine(checkLine.text)) return undefined;
+    if (isHeadingLine(checkLine.text)) return undefined;
     
-    // Stop at headings
-    if (isHeadingLine(checkLine.text)) {
-      return null; // Would cross section boundary
-    }
+    if (!isListLine(checkLine.text)) continue;
     
-    if (isListLine(checkLine.text)) {
-      const checkIndent = getIndentLevel(checkLine.text);
-      
-      // For child tasks, only consider siblings at exact same indent
-      if (parentLine !== null) {
-        if (checkIndent === currentIndent) {
-          return i;
-        } else if (checkIndent < currentIndent) {
-          // Hit parent boundary or higher level
-          return null;
-        }
-      } else {
-        // For top-level tasks
-        if (checkIndent <= currentIndent) {
-          return i;
-        }
-      }
+    const checkIndent = getIndentLevel(checkLine.text);
+    
+    if (parentLine !== undefined) {
+      if (checkIndent === currentIndent) return i;
+      if (checkIndent < currentIndent) return undefined;
+    } else {
+      if (checkIndent <= currentIndent) return i;
     }
   }
   
-  return null;
+  return undefined;
 };
 
 const canMoveTaskUp = (view: EditorView, lineNumber: number): boolean => {
-  const doc = view.state.doc;
-  const line = doc.line(lineNumber);
-  
-  // Must be a list line
-  if (!isListLine(line.text)) return false;
-  
-  // Can't move first line up
   if (lineNumber === 1) return false;
   
-  // Get current task's properties
-  const currentIndent = getIndentLevel(line.text);
-  const currentSection = findSectionBoundaries(doc, lineNumber);
+  const doc = view.state.doc;
+  if (!isValidLineNumber(doc, lineNumber)) return false;
   
-  // Check what's immediately above
+  const line = doc.line(lineNumber);
+  if (!isListLine(line.text)) return false;
+  
+  if (!isValidLineNumber(doc, lineNumber - 1)) return false;
   const prevLine = doc.line(lineNumber - 1);
   
-  // Cannot move across empty lines
-  if (isEmptyLine(prevLine.text)) {
-    return false;
-  }
+  if (isEmptyLine(prevLine.text)) return false;
+  if (isHeadingLine(prevLine.text)) return false;
   
-  // Cannot move across headings
-  if (isHeadingLine(prevLine.text)) {
-    return false;
-  }
-  
-  // Find the target position
+  const currentIndent = getIndentLevel(line.text);
   const parentLine = findParentTask(doc, lineNumber);
   const targetLine = findUpwardTarget(doc, lineNumber, currentIndent, parentLine);
   
-  if (!targetLine) return false;
+  if (targetLine === undefined) return false;
   
-  // Check if target is in same section
+  const currentSection = findSectionBoundaries(doc, lineNumber);
   const targetSection = findSectionBoundaries(doc, targetLine);
-  if (currentSection.startLine !== targetSection.startLine || 
-      currentSection.endLine !== targetSection.endLine) {
-    return false;
-  }
   
-  return true;
+  return currentSection.startLine === targetSection.startLine && 
+         currentSection.endLine === targetSection.endLine;
 };
 
 const canMoveTaskDown = (view: EditorView, lineNumber: number): boolean => {
   const doc = view.state.doc;
-  const line = doc.line(lineNumber);
+  if (!isValidLineNumber(doc, lineNumber)) return false;
   
-  // Must be a list line
+  const line = doc.line(lineNumber);
   if (!isListLine(line.text)) return false;
   
-  // Get the complete block with children
   const blockRange = findTaskBlockWithChildren(doc, lineNumber);
-  if (!blockRange) return false;
+  if (blockRange === undefined) return false;
   
   const [, blockEndLine] = blockRange;
   
-  // Can't move last line down
   if (blockEndLine >= doc.lines) return false;
-  
-  // Get current task's properties
-  const currentIndent = getIndentLevel(line.text);
-  const currentSection = findSectionBoundaries(doc, lineNumber);
-  
-  // Check if there's any line below
-  if (blockEndLine + 1 > doc.lines) return false;
+  if (!isValidLineNumber(doc, blockEndLine + 1)) return false;
   
   const nextLine = doc.line(blockEndLine + 1);
   
-  // Cannot move across empty lines
-  if (isEmptyLine(nextLine.text)) {
-    return false;
-  }
+  if (isEmptyLine(nextLine.text)) return false;
+  if (isHeadingLine(nextLine.text)) return false;
   
-  // Cannot move across headings
-  if (isHeadingLine(nextLine.text)) {
-    return false;
-  }
-  
-  // Determine search boundary based on parent
+  const currentIndent = getIndentLevel(line.text);
   const parentLine = findParentTask(doc, lineNumber);
-  let maxLine = doc.lines;
   
-  if (parentLine !== null) {
-    // Find parent's block end to limit search
-    const parentBlock = findTaskBlockWithChildren(doc, parentLine);
-    if (parentBlock) {
-      maxLine = parentBlock[1];
-    }
-  }
+  const maxLine = parentLine !== undefined
+    ? findTaskBlockWithChildren(doc, parentLine)?.[1] ?? doc.lines
+    : doc.lines;
   
-  // Find the target position
   const targetLine = findDownwardTarget(doc, blockEndLine, currentIndent, parentLine, maxLine);
   
-  if (!targetLine) return false;
+  if (targetLine === undefined) return false;
   
-  // Check if target is in same section
+  const currentSection = findSectionBoundaries(doc, lineNumber);
   const targetSection = findSectionBoundaries(doc, targetLine);
-  if (currentSection.startLine !== targetSection.startLine || 
-      currentSection.endLine !== targetSection.endLine) {
-    return false;
-  }
   
-  return true;
+  return currentSection.startLine === targetSection.startLine && 
+         currentSection.endLine === targetSection.endLine;
 };
 
-const getBlockContent = (doc: Text, startLine: number, endLine: number): BlockRange => {
+const getBlockContent = (doc: Text, startLine: number, endLine: number): BlockRange | undefined => {
+  if (!isValidLineNumber(doc, startLine) || !isValidLineNumber(doc, endLine)) {
+    return undefined;
+  }
+  
   const start = doc.line(startLine).from;
   const end = doc.line(endLine).to;
   const content = doc.sliceString(start, end);
+  
   return { start, end, content };
+};
+
+const swapBlocks = (
+  view: EditorView,
+  currentBlock: BlockRange,
+  targetBlock: BlockRange,
+  cursorOffset: number,
+  userEvent: string
+): boolean => {
+  try {
+    // Calculate the new cursor position after the swap
+    // When swapping blocks, CodeMirror applies changes sequentially, which affects positions
+    // We need to account for how the first change affects the position of the second block
+    let newCursorPos: number;
+    if (currentBlock.start < targetBlock.start) {
+      // Moving down: after the first change, the document length changes by the size difference
+      // The cursor should be placed at the start of where the target block was,
+      // adjusted for the size of the replacement
+      const targetSize = targetBlock.end - targetBlock.start;
+      newCursorPos = currentBlock.start + targetSize + cursorOffset;
+    } else {
+      // Moving up: current block goes to where target was
+      newCursorPos = targetBlock.start + cursorOffset;
+    }
+    
+    const changes = [
+      { from: currentBlock.start, to: currentBlock.end, insert: targetBlock.content },
+      { from: targetBlock.start, to: targetBlock.end, insert: currentBlock.content }
+    ];
+    
+    view.dispatch({
+      changes,
+      selection: { anchor: newCursorPos },
+      userEvent
+    });
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 export const moveTaskUp = (view: EditorView): boolean => {
   const { state } = view;
   const { selection } = state;
   
-  // Only handle single cursor
   if (selection.ranges.length > 1) return false;
   
   const pos = selection.main.head;
@@ -344,49 +313,36 @@ export const moveTaskUp = (view: EditorView): boolean => {
   if (!canMoveTaskUp(view, line.number)) return false;
   
   const blockRange = findTaskBlockWithChildren(state.doc, line.number);
-  if (!blockRange) return false;
+  if (blockRange === undefined) return false;
   
   const [blockStartLine, blockEndLine] = blockRange;
   const doc = state.doc;
   
-  // Get the content of the block to move
   const currentBlock = getBlockContent(doc, blockStartLine, blockEndLine);
+  if (!currentBlock) return false;
   
-  // Find the target task to swap with
   const currentIndent = getIndentLevel(doc.line(blockStartLine).text);
   const parentLine = findParentTask(doc, line.number);
   const targetLine = findUpwardTarget(doc, line.number, currentIndent, parentLine);
   
-  if (!targetLine) return false;
+  if (targetLine === undefined) return false;
   
-  // Get target block range
   const targetBlockRange = findTaskBlockWithChildren(doc, targetLine);
-  if (!targetBlockRange) return false;
+  if (targetBlockRange === undefined) return false;
   
   const [targetStartLine, targetEndLine] = targetBlockRange;
   const targetBlock = getBlockContent(doc, targetStartLine, targetEndLine);
+  if (!targetBlock) return false;
   
-  // Calculate cursor position in the block
-  const cursorOffsetInBlock = pos - currentBlock.start;
+  const cursorOffsetInBlock = Math.max(0, pos - currentBlock.start);
   
-  // Perform the swap
-  view.dispatch({
-    changes: [
-      { from: currentBlock.start, to: currentBlock.end, insert: targetBlock.content },
-      { from: targetBlock.start, to: targetBlock.end, insert: currentBlock.content }
-    ],
-    selection: { anchor: targetBlock.start + cursorOffsetInBlock },
-    userEvent: "move.task.up"
-  });
-  
-  return true;
+  return swapBlocks(view, currentBlock, targetBlock, cursorOffsetInBlock, "move.task.up");
 };
 
 export const moveTaskDown = (view: EditorView): boolean => {
   const { state } = view;
   const { selection } = state;
   
-  // Only handle single cursor
   if (selection.ranges.length > 1) return false;
   
   const pos = selection.main.head;
@@ -395,52 +351,32 @@ export const moveTaskDown = (view: EditorView): boolean => {
   if (!canMoveTaskDown(view, line.number)) return false;
   
   const blockRange = findTaskBlockWithChildren(state.doc, line.number);
-  if (!blockRange) return false;
+  if (blockRange === undefined) return false;
   
   const [blockStartLine, blockEndLine] = blockRange;
   const doc = state.doc;
   
-  // Get the content of the block to move
   const currentBlock = getBlockContent(doc, blockStartLine, blockEndLine);
+  if (!currentBlock) return false;
   
-  // Find the target task to swap with
   const currentIndent = getIndentLevel(doc.line(blockStartLine).text);
   const parentLine = findParentTask(doc, line.number);
   
-  // Determine search boundary
-  let maxLine = doc.lines;
-  if (parentLine !== null) {
-    const parentBlock = findTaskBlockWithChildren(doc, parentLine);
-    if (parentBlock) {
-      maxLine = parentBlock[1];
-    }
-  }
+  const maxLine = parentLine !== undefined
+    ? findTaskBlockWithChildren(doc, parentLine)?.[1] ?? doc.lines
+    : doc.lines;
   
   const targetLine = findDownwardTarget(doc, blockEndLine, currentIndent, parentLine, maxLine);
   
-  if (!targetLine) return false;
+  if (targetLine === undefined) return false;
   
-  // Get target block
   const targetBlockRange = findTaskBlockWithChildren(doc, targetLine);
-  if (!targetBlockRange) return false;
+  if (targetBlockRange === undefined) return false;
   
   const targetBlock = getBlockContent(doc, targetBlockRange[0], targetBlockRange[1]);
+  if (!targetBlock) return false;
   
-  // Calculate cursor position in the block
-  const cursorOffsetInBlock = pos - currentBlock.start;
+  const cursorOffsetInBlock = Math.max(0, pos - currentBlock.start);
   
-  // Calculate the new position after the swap
-  const newBlockStart = targetBlock.start + (targetBlock.end - targetBlock.start - (currentBlock.end - currentBlock.start));
-  
-  // Perform the swap
-  view.dispatch({
-    changes: [
-      { from: currentBlock.start, to: currentBlock.end, insert: targetBlock.content },
-      { from: targetBlock.start, to: targetBlock.end, insert: currentBlock.content }
-    ],
-    selection: { anchor: newBlockStart + cursorOffsetInBlock },
-    userEvent: "move.task.down"
-  });
-  
-  return true;
+  return swapBlocks(view, currentBlock, targetBlock, cursorOffsetInBlock, "move.task.down");
 };
