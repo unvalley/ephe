@@ -1,18 +1,6 @@
 import type { EditorView } from "@codemirror/view";
 import type { Text } from "@codemirror/state";
 
-/**
- * BULLETPROOF Markdown Task Reorder System
- * 
- * Core Rules:
- * 1. Tasks cannot move across empty lines
- * 2. Tasks cannot move across section boundaries (headings)
- * 3. Nested tasks maintain their parent-child relationships
- * 4. Parent tasks move with all their children as a unit
- * 5. Child tasks cannot move outside their parent's scope
- */
-
-// ===== Constants =====
 const REGEX = {
   TASK_LINE: /^\s*- \[([ x])\]/,
   REGULAR_LIST_LINE: /^\s*[-*+]\s(?!\[([ x])\])/,
@@ -20,7 +8,6 @@ const REGEX = {
   LEADING_WHITESPACE: /^(\s*)/,
 } as const;
 
-// ===== Type Definitions =====
 type LineRange = {
   startLine: number;
   endLine: number;
@@ -32,7 +19,6 @@ type BlockRange = {
   content: string;
 };
 
-// ===== Line Type Checkers =====
 const isTaskLine = (text: string): boolean => {
   return REGEX.TASK_LINE.test(text);
 };
@@ -53,17 +39,11 @@ const isEmptyLine = (text: string): boolean => {
   return text.trim() === "";
 };
 
-// ===== Utility Functions =====
 const getIndentLevel = (text: string): number => {
   const match = text.match(REGEX.LEADING_WHITESPACE);
   return match ? match[1].length : 0;
 };
 
-// ===== Section Management =====
-/**
- * Find the section boundaries for a given line
- * A section is defined by headings or document boundaries
- */
 const findSectionBoundaries = (doc: Text, lineNumber: number): LineRange => {
   let startLine = 1;
   let endLine = doc.lines;
@@ -89,11 +69,6 @@ const findSectionBoundaries = (doc: Text, lineNumber: number): LineRange => {
   return { startLine, endLine };
 };
 
-// ===== Task Block Management =====
-/**
- * Find the complete task block including all nested children
- * Returns [startLine, endLine] inclusive or null if not a task
- */
 const findTaskBlockWithChildren = (doc: Text, lineNumber: number): [number, number] | null => {
   const line = doc.line(lineNumber);
   
@@ -132,10 +107,6 @@ const findTaskBlockWithChildren = (doc: Text, lineNumber: number): [number, numb
   return [lineNumber, endLine];
 };
 
-/**
- * Find the parent task of a given line
- * Returns the line number of the parent or null if no parent
- */
 const findParentTask = (doc: Text, lineNumber: number): number | null => {
   const line = doc.line(lineNumber);
   if (!isListLine(line.text)) return null;
@@ -163,10 +134,6 @@ const findParentTask = (doc: Text, lineNumber: number): number | null => {
   return null;
 };
 
-// ===== Movement Target Finding =====
-/**
- * Find a valid target line for moving up
- */
 const findUpwardTarget = (
   doc: Text,
   lineNumber: number,
@@ -209,9 +176,6 @@ const findUpwardTarget = (
   return null;
 };
 
-/**
- * Find a valid target line for moving down
- */
 const findDownwardTarget = (
   doc: Text,
   blockEndLine: number,
@@ -255,10 +219,6 @@ const findDownwardTarget = (
   return null;
 };
 
-// ===== Movement Validation =====
-/**
- * Check if moving a task block up is allowed
- */
 const canMoveTaskUp = (view: EditorView, lineNumber: number): boolean => {
   const doc = view.state.doc;
   const line = doc.line(lineNumber);
@@ -276,12 +236,12 @@ const canMoveTaskUp = (view: EditorView, lineNumber: number): boolean => {
   // Check what's immediately above
   const prevLine = doc.line(lineNumber - 1);
   
-  // Rule 1: Cannot move across empty lines
+  // Cannot move across empty lines
   if (isEmptyLine(prevLine.text)) {
     return false;
   }
   
-  // Rule 2: Cannot move across headings
+  // Cannot move across headings
   if (isHeadingLine(prevLine.text)) {
     return false;
   }
@@ -302,9 +262,6 @@ const canMoveTaskUp = (view: EditorView, lineNumber: number): boolean => {
   return true;
 };
 
-/**
- * Check if moving a task block down is allowed
- */
 const canMoveTaskDown = (view: EditorView, lineNumber: number): boolean => {
   const doc = view.state.doc;
   const line = doc.line(lineNumber);
@@ -330,12 +287,12 @@ const canMoveTaskDown = (view: EditorView, lineNumber: number): boolean => {
   
   const nextLine = doc.line(blockEndLine + 1);
   
-  // Rule 1: Cannot move across empty lines
+  // Cannot move across empty lines
   if (isEmptyLine(nextLine.text)) {
     return false;
   }
   
-  // Rule 2: Cannot move across headings
+  // Cannot move across headings
   if (isHeadingLine(nextLine.text)) {
     return false;
   }
@@ -367,10 +324,6 @@ const canMoveTaskDown = (view: EditorView, lineNumber: number): boolean => {
   return true;
 };
 
-// ===== Block Content Extraction =====
-/**
- * Get the content of a block as a range object
- */
 const getBlockContent = (doc: Text, startLine: number, endLine: number): BlockRange => {
   const start = doc.line(startLine).from;
   const end = doc.line(endLine).to;
@@ -378,10 +331,6 @@ const getBlockContent = (doc: Text, startLine: number, endLine: number): BlockRa
   return { start, end, content };
 };
 
-// ===== Main Movement Functions =====
-/**
- * Move a task up with all its children
- */
 export const moveTaskUp = (view: EditorView): boolean => {
   const { state } = view;
   const { selection } = state;
@@ -433,9 +382,6 @@ export const moveTaskUp = (view: EditorView): boolean => {
   return true;
 };
 
-/**
- * Move a task down with all its children
- */
 export const moveTaskDown = (view: EditorView): boolean => {
   const { state } = view;
   const { selection } = state;
