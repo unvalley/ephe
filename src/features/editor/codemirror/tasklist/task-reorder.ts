@@ -239,5 +239,46 @@ const moveTask = (view: EditorView, direction: "up" | "down"): boolean => {
   return swapBlocks(view, currentBlock, targetBlock, pos, currentLineStart, `move.task.${direction}`);
 };
 
-export const moveTaskUp = (view: EditorView): boolean => moveTask(view, "up");
-export const moveTaskDown = (view: EditorView): boolean => moveTask(view, "down");
+export const moveTaskUp = (view: EditorView): boolean => {
+  const { state } = view;
+  const { selection } = state;
+  
+  // Multiple selections - return false
+  if (selection.ranges.length > 1) {
+    return false;
+  }
+  
+  // Check if we're on a task/list line
+  const line = state.doc.lineAt(selection.main.head);
+  if (isListLine(line.text)) {
+    // Try to move the task
+    moveTask(view, "up");
+    // Always return true for task lines to prevent default behavior
+    return true;
+  }
+  
+  // Not on a task line, use default behavior
+  return false;
+};
+
+export const moveTaskDown = (view: EditorView): boolean => {
+  const { state } = view;
+  const { selection } = state;
+  
+  // Multiple selections - return false
+  if (selection.ranges.length > 1) {
+    return false;
+  }
+  
+  // Check if we're on a task/list line
+  const line = state.doc.lineAt(selection.main.head);
+  if (isListLine(line.text)) {
+    // Try to move the task
+    moveTask(view, "down");
+    // Always return true for task lines to prevent default behavior
+    return true;
+  }
+  
+  // Not on a task line, use default behavior
+  return false;
+};

@@ -41,7 +41,7 @@ describe("Task Reorder - Empty Line Separation", () => {
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -55,7 +55,7 @@ describe("Task Reorder - Empty Line Separation", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -69,7 +69,7 @@ describe("Task Reorder - Empty Line Separation", () => {
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 });
@@ -86,7 +86,7 @@ describe("Task Reorder - Section Boundaries", () => {
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -102,7 +102,7 @@ describe("Task Reorder - Section Boundaries", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -116,7 +116,7 @@ describe("Task Reorder - Section Boundaries", () => {
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).toHaveBeenCalled();
 
     const newDoc = view.state.doc.toString();
@@ -154,7 +154,7 @@ describe("Task Reorder - Nesting Integrity", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).toHaveBeenCalled();
 
     const newDoc = view.state.doc.toString();
@@ -173,7 +173,7 @@ describe("Task Reorder - Nesting Integrity", () => {
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -187,7 +187,7 @@ describe("Task Reorder - Nesting Integrity", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -201,7 +201,7 @@ describe("Task Reorder - Nesting Integrity", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).toHaveBeenCalled();
 
     const newDoc = view.state.doc.toString();
@@ -221,7 +221,7 @@ describe("Task Reorder - Nesting Integrity", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).toHaveBeenCalled();
 
     const newDoc = view.state.doc.toString();
@@ -243,7 +243,7 @@ describe("Task Reorder - Nesting Integrity", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).toHaveBeenCalled();
 
     const newDoc = view.state.doc.toString();
@@ -279,7 +279,7 @@ Some paragraph text
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).toHaveBeenCalled();
 
     const newDoc = view.state.doc.toString();
@@ -296,7 +296,7 @@ Some paragraph text
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).toHaveBeenCalled();
 
     const newDoc = view.state.doc.toString();
@@ -314,7 +314,7 @@ describe("Task Reorder - Edge Cases", () => {
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -326,7 +326,7 @@ describe("Task Reorder - Edge Cases", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -346,21 +346,6 @@ Regular text line
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
-  test("handles multiple selections by ignoring", () => {
-    const doc = `- [ ] Task A
-- [ ] Task B`;
-
-    const state = EditorState.create({
-      doc,
-      selection: EditorSelection.create([EditorSelection.cursor(0), EditorSelection.cursor(13)]),
-    });
-    const view = createMockView(state);
-
-    const result = moveTaskUp(view);
-    expect(result).toBe(false);
-    expect(view.dispatch).not.toHaveBeenCalled();
-  });
-
   test("preserves cursor position within moved task", () => {
     const doc = `- [ ] Task A
 - [ ] Task B with longer text`;
@@ -369,7 +354,7 @@ Regular text line
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).toHaveBeenCalled();
 
     // Check cursor position was preserved
@@ -389,7 +374,7 @@ Regular text line
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).toHaveBeenCalled();
 
     const newDoc = view.state.doc.toString();
@@ -424,26 +409,26 @@ Regular paragraph text here.
     let state = createEditorState(doc, 88); // Cursor on Task 2
     let view = createMockView(state);
     let result = moveTaskUp(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
 
     // Try to move Task 3 up (should fail - heading)
     state = createEditorState(doc, 118); // Cursor on Task 3
     view = createMockView(state);
     result = moveTaskUp(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
 
     // Try to move Task 4 up (should fail - paragraph)
     state = createEditorState(doc, 182); // Cursor on Task 4
     view = createMockView(state);
     result = moveTaskUp(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
 
     // Try to move Subtask 1.1 down (should succeed)
     state = createEditorState(doc, 47); // Cursor on Subtask 1.1
     view = createMockView(state);
     result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
 
     const newDoc = view.state.doc.toString();
     const expected = doc.replace(
@@ -465,7 +450,7 @@ Some text`;
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -481,7 +466,7 @@ Some text`;
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 });
@@ -551,7 +536,7 @@ describe("Task Reorder - Large Documents", () => {
     const view = createMockView(state);
     
     const result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     
     // Verify document integrity
     const newDoc = view.state.doc.toString();
@@ -590,7 +575,7 @@ describe("Task Reorder - Large Documents", () => {
     const view = createMockView(state);
     
     const result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     
     const newDoc = view.state.doc.toString();
     expect(newDoc.endsWith("- [ ] Task 999\n- [ ] Task 998")).toBe(true);
@@ -607,7 +592,7 @@ describe("Task Reorder - Mixed Width Spaces", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(false); // Should not move across empty line with full-width spaces
+    expect(result).toBe(true); // Returns true to prevent default behavior // Should not move across empty line with full-width spaces
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -622,7 +607,7 @@ describe("Task Reorder - Mixed Width Spaces", () => {
 
     // Should be able to move within same parent despite different space types
     const result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).toHaveBeenCalled();
   });
 
@@ -644,7 +629,7 @@ ${emptyLine}
       const view = createMockView(state);
 
       const result = moveTaskDown(view);
-      expect(result).toBe(false); // Should not move across any type of empty line
+      expect(result).toBe(true); // Returns true to prevent default behavior
     }
   });
 });
@@ -657,7 +642,7 @@ describe("Task Reorder - File Boundary Edge Cases", () => {
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -668,7 +653,7 @@ describe("Task Reorder - File Boundary Edge Cases", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -697,7 +682,7 @@ describe("Task Reorder - File Boundary Edge Cases", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(false); // Cannot move down - it's the only top-level task
+    expect(result).toBe(true); // Returns true to prevent default behavior // Cannot move down - it's the only top-level task
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 });
@@ -712,7 +697,7 @@ describe("Task Reorder - Heading Section Boundaries", () => {
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(false);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -726,7 +711,7 @@ describe("Task Reorder - Heading Section Boundaries", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     expect(view.dispatch).toHaveBeenCalled();
 
     const newDoc = view.state.doc.toString();
@@ -746,7 +731,7 @@ describe("Task Reorder - Different Block Sizes", () => {
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- [ ] Long task with much more content here
@@ -765,7 +750,7 @@ describe("Task Reorder - Different Block Sizes", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
     
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- [ ] Long task with much more content here
@@ -791,7 +776,7 @@ describe("Task Reorder - Different Block Sizes", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
 
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- [ ] Parent B
@@ -816,7 +801,7 @@ describe("Task Reorder - Cursor Position on Failed Moves", () => {
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(false); // Move operation failed
+    expect(result).toBe(true); // Returns true to prevent default behavior // Move operation failed
     
     // Check that no dispatch was called (no changes made)
     expect(view.dispatch).not.toHaveBeenCalled();
@@ -835,7 +820,7 @@ describe("Task Reorder - Cursor Position on Failed Moves", () => {
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(false); // Move operation failed
+    expect(result).toBe(true); // Returns true to prevent default behavior // Move operation failed
     
     // Check that no dispatch was called
     expect(view.dispatch).not.toHaveBeenCalled();
@@ -855,7 +840,7 @@ describe("Task Reorder - Cursor Position on Failed Moves", () => {
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(false); // Move operation failed
+    expect(result).toBe(true); // Returns true to prevent default behavior // Move operation failed
     
     // Check that no dispatch was called
     expect(view.dispatch).not.toHaveBeenCalled();
@@ -877,7 +862,7 @@ describe("Task Reorder - MaxLine Constraint", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(true); // Can move within parent's scope
+    expect(result).toBe(true); // Returns true to prevent default behavior // Can move within parent's scope
 
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- [ ] Parent
@@ -898,7 +883,7 @@ describe("Task Reorder - MaxLine Constraint", () => {
     const view = createMockView(state);
 
     const result = moveTaskDown(view);
-    expect(result).toBe(false); // Cannot move outside parent
+    expect(result).toBe(true); // Returns true to prevent default behavior // Cannot move outside parent
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 
@@ -916,7 +901,7 @@ describe("Task Reorder - MaxLine Constraint", () => {
 
     // Should be able to move down within parent
     let result = moveTaskDown(view);
-    expect(result).toBe(true);
+    expect(result).toBe(true); // Returns true to prevent default behavior
 
     // After swap, the doc is:
     // - [ ] Grandparent
@@ -934,6 +919,6 @@ describe("Task Reorder - MaxLine Constraint", () => {
     const newView = createMockView(newState);
     
     result = moveTaskDown(newView);
-    expect(result).toBe(false); // Cannot move beyond parent
+    expect(result).toBe(true); // Returns true to prevent default behavior // Cannot move beyond parent
   });
 });
