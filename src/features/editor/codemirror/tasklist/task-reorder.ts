@@ -150,6 +150,35 @@ const getBlockContent = (doc: Text, startLine: number, endLine: number): BlockRa
   return { start, end, content: doc.sliceString(start, end) };
 };
 
+const calculateNewCursorPosition = (
+  cursorPos: number,
+  currentLineStart: number,
+  currentBlock: BlockRange,
+  targetBlock: BlockRange,
+  isMovingDown: boolean,
+): number => {
+  // Step 1: Calculate cursor offset within the current line
+  // Example: If cursor is at pos 25 and line starts at pos 20, offset is 5
+  const cursorOffsetInLine = cursorPos - currentLineStart;
+
+  // Step 2: Calculate the line's offset within its block
+  // Example: If line starts at pos 20 and block starts at pos 10, line offset is 10
+  const currentLineOffset = currentLineStart - currentBlock.start;
+
+  // Step 3: Calculate new position based on movement direction
+  if (isMovingDown) {
+    // When moving down, the current block will be placed after the target block
+    // We need to account for the size difference between blocks
+    // Example: If target is longer, cursor needs to shift further
+    const sizeDiff = targetBlock.content.length - currentBlock.content.length;
+    return targetBlock.start + currentLineOffset + cursorOffsetInLine + sizeDiff;
+  } else {
+    // When moving up, the current block will be placed where the target block is
+    // The cursor maintains its relative position within the moved block
+    return targetBlock.start + currentLineOffset + cursorOffsetInLine;
+  }
+};
+
 const swapBlocks = (
   view: EditorView,
   currentBlock: BlockRange,
@@ -158,27 +187,13 @@ const swapBlocks = (
   currentLineStart: number,
   userEvent: string,
 ): boolean => {
-  // Calculate cursor offset within the current line
-  const cursorOffsetInLine = cursorPos - currentLineStart;
-  
-  // Get the current line's offset within its block
-  const currentLineOffset = currentLineStart - currentBlock.start;
-  
-  // Determine swap order and calculate new position
   const isMovingDown = currentBlock.start < targetBlock.start;
-  let newCursorPos: number;
-  
-  if (isMovingDown) {
-    // When moving down, the current block takes the place of the target block
-    // But we need to account for the size difference between the blocks
-    const sizeDiff = targetBlock.content.length - currentBlock.content.length;
-    newCursorPos = targetBlock.start + currentLineOffset + cursorOffsetInLine + sizeDiff;
-  } else {
-    // When moving up, the current block moves to where the target block is
-    newCursorPos = targetBlock.start + currentLineOffset + cursorOffsetInLine;
-  }
+
+  // Calculate where the cursor should be after the swap
+  const newCursorPos = calculateNewCursorPosition(cursorPos, currentLineStart, currentBlock, targetBlock, isMovingDown);
 
   // Always swap in document order to avoid position conflicts
+  // This ensures the first change doesn't affect the position of the second
   const [first, second] = isMovingDown ? [currentBlock, targetBlock] : [targetBlock, currentBlock];
 
   view.dispatch({
@@ -242,12 +257,12 @@ const moveTask = (view: EditorView, direction: "up" | "down"): boolean => {
 export const moveTaskUp = (view: EditorView): boolean => {
   const { state } = view;
   const { selection } = state;
-  
+
   // Multiple selections - return false
   if (selection.ranges.length > 1) {
     return false;
   }
-  
+
   // Check if we're on a task/list line
   const line = state.doc.lineAt(selection.main.head);
   if (isListLine(line.text)) {
@@ -256,7 +271,7 @@ export const moveTaskUp = (view: EditorView): boolean => {
     // Always return true for task lines to prevent default behavior
     return true;
   }
-  
+
   // Not on a task line, use default behavior
   return false;
 };
@@ -264,12 +279,12 @@ export const moveTaskUp = (view: EditorView): boolean => {
 export const moveTaskDown = (view: EditorView): boolean => {
   const { state } = view;
   const { selection } = state;
-  
+
   // Multiple selections - return false
   if (selection.ranges.length > 1) {
     return false;
   }
-  
+
   // Check if we're on a task/list line
   const line = state.doc.lineAt(selection.main.head);
   if (isListLine(line.text)) {
@@ -278,7 +293,7 @@ export const moveTaskDown = (view: EditorView): boolean => {
     // Always return true for task lines to prevent default behavior
     return true;
   }
-  
+
   // Not on a task line, use default behavior
   return false;
 };
