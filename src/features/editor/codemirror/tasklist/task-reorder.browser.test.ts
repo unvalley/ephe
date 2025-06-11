@@ -701,3 +701,177 @@ describe("Task Reorder - File Boundary Edge Cases", () => {
     expect(view.dispatch).not.toHaveBeenCalled();
   });
 });
+
+describe("Task Reorder - Heading Section Boundaries", () => {
+  test("task directly under heading cannot move into heading", () => {
+    const doc = `# Section 1
+- [ ] Task A
+- [ ] Task B`;
+
+    const state = createEditorState(doc, 12); // Cursor on Task A
+    const view = createMockView(state);
+
+    const result = moveTaskUp(view);
+    expect(result).toBe(false);
+    expect(view.dispatch).not.toHaveBeenCalled();
+  });
+
+  test("task can move within section that includes heading", () => {
+    const doc = `# Section 1
+- [ ] Task A
+- [ ] Task B
+- [ ] Task C`;
+
+    const state = createEditorState(doc, 25); // Cursor on Task B
+    const view = createMockView(state);
+
+    const result = moveTaskDown(view);
+    expect(result).toBe(true);
+    expect(view.dispatch).toHaveBeenCalled();
+
+    const newDoc = view.state.doc.toString();
+    expect(newDoc).toBe(`# Section 1
+- [ ] Task A
+- [ ] Task C
+- [ ] Task B`);
+  });
+});
+
+describe("Task Reorder - Different Block Sizes", () => {
+  test("swaps blocks of different lengths upward correctly", () => {
+    const doc = `- [ ] Short task
+- [ ] Long task with much more content here`;
+
+    const state = createEditorState(doc, 17); // Cursor on long task
+    const view = createMockView(state);
+
+    const result = moveTaskUp(view);
+    expect(result).toBe(true);
+    
+    const newDoc = view.state.doc.toString();
+    expect(newDoc).toBe(`- [ ] Long task with much more content here
+- [ ] Short task`);
+
+    // Check cursor position is maintained correctly
+    const call = (view.dispatch as any).mock.calls[0][0];
+    expect(call.selection.anchor).toBe(0); // Cursor at start of moved block
+  });
+
+  test("swaps blocks of different lengths downward correctly", () => {
+    const doc = `- [ ] Short task
+- [ ] Long task with much more content here`;
+
+    const state = createEditorState(doc, 0); // Cursor at start of short task
+    const view = createMockView(state);
+
+    const result = moveTaskDown(view);
+    expect(result).toBe(true);
+    
+    const newDoc = view.state.doc.toString();
+    expect(newDoc).toBe(`- [ ] Long task with much more content here
+- [ ] Short task`);
+
+    // Check cursor position accounts for size difference
+    const call = (view.dispatch as any).mock.calls[0][0];
+    // Moving down: cursor should be at target.start + offset + sizeDiff
+    // sizeDiff = deltaTarget - deltaCurrent = 44 - 16 = 28
+    const expectedPos = 17 + 0 + 28 - 1; // Start of target + offset + size diff - 1 = 44
+    expect(call.selection.anchor).toBe(expectedPos);
+  });
+
+  test("handles blocks with children of different sizes", () => {
+    const doc = `- [ ] Parent A
+  - [ ] Child A1
+  - [ ] Child A2
+  - [ ] Child A3
+- [ ] Parent B
+  - [ ] Child B1`;
+
+    const state = createEditorState(doc, 0); // Cursor on Parent A
+    const view = createMockView(state);
+
+    const result = moveTaskDown(view);
+    expect(result).toBe(true);
+
+    const newDoc = view.state.doc.toString();
+    expect(newDoc).toBe(`- [ ] Parent B
+  - [ ] Child B1
+- [ ] Parent A
+  - [ ] Child A1
+  - [ ] Child A2
+  - [ ] Child A3`);
+  });
+});
+
+describe("Task Reorder - MaxLine Constraint", () => {
+  test("nested task respects maxLine when moving down", () => {
+    const doc = `- [ ] Parent
+  - [ ] Child 1
+  - [ ] Child 2
+  - [ ] Child 3
+- [ ] Another Parent`;
+
+    const state = createEditorState(doc, 31); // Cursor on Child 2
+    const view = createMockView(state);
+
+    const result = moveTaskDown(view);
+    expect(result).toBe(true); // Can move within parent's scope
+
+    const newDoc = view.state.doc.toString();
+    expect(newDoc).toBe(`- [ ] Parent
+  - [ ] Child 1
+  - [ ] Child 3
+  - [ ] Child 2
+- [ ] Another Parent`);
+  });
+
+  test("nested task cannot move beyond parent scope", () => {
+    const doc = `- [ ] Parent
+  - [ ] Child 1
+  - [ ] Child 2
+- [ ] Another Parent
+  - [ ] Another Child`;
+
+    const state = createEditorState(doc, 45); // Cursor on Child 2
+    const view = createMockView(state);
+
+    const result = moveTaskDown(view);
+    expect(result).toBe(false); // Cannot move outside parent
+    expect(view.dispatch).not.toHaveBeenCalled();
+  });
+
+  test("deeply nested task respects all parent boundaries", () => {
+    const doc = `- [ ] Grandparent
+  - [ ] Parent
+    - [ ] Child 1
+    - [ ] Child 2
+    - [ ] Child 3
+  - [ ] Uncle
+- [ ] Great Uncle`;
+
+    const state = createEditorState(doc, 51); // Cursor on Child 2
+    const view = createMockView(state);
+
+    // Should be able to move down within parent
+    let result = moveTaskDown(view);
+    expect(result).toBe(true);
+
+    // After swap, the doc is:
+    // - [ ] Grandparent
+    //   - [ ] Parent
+    //     - [ ] Child 1
+    //     - [ ] Child 3
+    //     - [ ] Child 2
+    //   - [ ] Uncle
+    // - [ ] Great Uncle
+    
+    // Reset and try to move Child 2 down (it's now the last child)
+    const newDoc = view.state.doc.toString();
+    const child2Pos = newDoc.indexOf("- [ ] Child 2");
+    const newState = createEditorState(newDoc, child2Pos + 5); // Cursor on Child 2
+    const newView = createMockView(newState);
+    
+    result = moveTaskDown(newView);
+    expect(result).toBe(false); // Cannot move beyond parent
+  });
+});

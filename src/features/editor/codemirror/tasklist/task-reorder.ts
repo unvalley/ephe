@@ -39,7 +39,7 @@ const findSectionBoundaries = (doc: Text, lineNumber: number): LineRange => {
   const findSectionStart = (lineNum: number): number => {
     for (let i = lineNum - 1; i >= 1; i--) {
       if (isHeadingLine(doc.line(i).text)) {
-        return i + 1;
+        return i; // Include the heading line itself
       }
     }
     return 1;
@@ -121,9 +121,12 @@ const findTarget = (
   maxLine?: number
 ): number | undefined => {
   const step = direction === "up" ? -1 : 1;
-  const limit = direction === "up" ? 1 : (maxLine ?? doc.lines);
+  const lowerBound = direction === "up" ? 1 : startLine + step;
+  const upperBound = direction === "up" ? startLine - step : (maxLine ?? doc.lines);
   
-  for (let i = startLine + step; direction === "up" ? i >= limit : i <= limit; i += step) {
+  for (let i = startLine + step; 
+       direction === "up" ? i >= lowerBound : i <= upperBound; 
+       i += step) {
     const checkLine = doc.line(i);
     
     if (isEmptyLine(checkLine.text)) return undefined;
@@ -233,9 +236,14 @@ const swapBlocks = (
           { from: currentBlock.start, to: currentBlock.end, insert: targetBlock.content }
         ];
     
-    // Calculate new cursor position: target block's start + offset
-    // CodeMirror automatically adjusts offsets when applying changes
-    const newCursorPos = targetBlock.start + cursorOffset;
+    // Calculate new cursor position to handle size differences correctly
+    const deltaCurrent = currentBlock.end - currentBlock.start;
+    const deltaTarget = targetBlock.end - targetBlock.start;
+    const sizeDiff = deltaTarget - deltaCurrent;
+    
+    const newCursorPos = currentBlock.start < targetBlock.start
+      ? targetBlock.start + cursorOffset + sizeDiff  // moving down
+      : targetBlock.start + cursorOffset;            // moving up
     
     view.dispatch({
       changes,
