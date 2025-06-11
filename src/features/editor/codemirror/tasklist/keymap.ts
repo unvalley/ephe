@@ -11,6 +11,7 @@ import {
   parseEmptyListLine,
   parseRegularListLine,
 } from "./task-list-utils";
+import { moveTaskUp, moveTaskDown } from "./task-reorder";
 
 const INDENT_SPACE = "  ";
 
@@ -24,6 +25,14 @@ const getIndentLength = (lineText: string): number => {
 };
 
 export const taskKeyBindings: readonly KeyBinding[] = [
+  {
+    key: "Mod-ArrowUp",
+    run: moveTaskUp,
+  },
+  {
+    key: "Mod-ArrowDown",
+    run: moveTaskDown,
+  },
   {
     key: "Enter",
     run: (view: EditorView): boolean => {
