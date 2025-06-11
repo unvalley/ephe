@@ -513,3 +513,191 @@ describe("Task Reorder - Newline Preservation", () => {
     expect(result).not.toContain("- [ ] B- [ ] A");
   });
 });
+
+describe("Task Reorder - Large Documents", () => {
+  test("handles swapping in 1000-line document without corruption", () => {
+    // Generate a large document with tasks
+    const lines: string[] = [];
+    
+    // Add header
+    lines.push("# Large Document Test");
+    lines.push("");
+    
+    // Add 1000 tasks in groups
+    for (let section = 0; section < 10; section++) {
+      lines.push(`## Section ${section + 1}`);
+      lines.push("");
+      
+      for (let task = 0; task < 100; task++) {
+        lines.push(`- [ ] Task ${section}.${task}`);
+        
+        // Add some nested tasks
+        if (task % 10 === 0) {
+          lines.push(`  - [ ] Subtask ${section}.${task}.1`);
+          lines.push(`  - [ ] Subtask ${section}.${task}.2`);
+        }
+      }
+      
+      lines.push("");
+    }
+    
+    const doc = lines.join("\n");
+    
+    // Test moving a task in the middle of the document
+    const middleTaskLine = 500;
+    const cursorPos = doc.split("\n").slice(0, middleTaskLine).join("\n").length + 1;
+    
+    const state = createEditorState(doc, cursorPos);
+    const view = createMockView(state);
+    
+    const result = moveTaskDown(view);
+    expect(result).toBe(true);
+    
+    // Verify document integrity
+    const newDoc = view.state.doc.toString();
+    const newLines = newDoc.split("\n");
+    
+    // Same number of lines
+    expect(newLines.length).toBe(lines.length);
+    
+    // Headers should remain intact
+    expect(newLines.filter(line => line.startsWith("#")).length).toBe(
+      lines.filter(line => line.startsWith("#")).length
+    );
+    
+    // Same number of tasks
+    expect(newLines.filter(line => line.includes("- [ ]")).length).toBe(
+      lines.filter(line => line.includes("- [ ]")).length
+    );
+  });
+
+  test("performance: moves task at end of 1000-line document", () => {
+    const lines: string[] = [];
+    
+    // Generate 998 tasks
+    for (let i = 0; i < 998; i++) {
+      lines.push(`- [ ] Task ${i}`);
+    }
+    
+    // Add the last two tasks we'll swap
+    lines.push("- [ ] Task 998");
+    lines.push("- [ ] Task 999");
+    
+    const doc = lines.join("\n");
+    const secondLastLinePos = doc.lastIndexOf("- [ ] Task 998");
+    
+    const state = createEditorState(doc, secondLastLinePos);
+    const view = createMockView(state);
+    
+    const result = moveTaskDown(view);
+    expect(result).toBe(true);
+    
+    const newDoc = view.state.doc.toString();
+    expect(newDoc.endsWith("- [ ] Task 999\n- [ ] Task 998")).toBe(true);
+  });
+});
+
+describe("Task Reorder - Mixed Width Spaces", () => {
+  test("handles full-width spaces in empty lines", () => {
+    const doc = `- [ ] Task A
+　　　
+- [ ] Task B`;
+
+    const state = createEditorState(doc, 0); // Cursor on Task A
+    const view = createMockView(state);
+
+    const result = moveTaskDown(view);
+    expect(result).toBe(false); // Should not move across empty line with full-width spaces
+    expect(view.dispatch).not.toHaveBeenCalled();
+  });
+
+  test("handles mixed half and full-width spaces in indentation", () => {
+    const doc = `- [ ] Parent
+  - [ ] Child with normal spaces
+　　- [ ] Child with full-width spaces
+    - [ ] Nested with mixed`;
+
+    const state = createEditorState(doc, 14); // Cursor on first child
+    const view = createMockView(state);
+
+    // Should be able to move within same parent despite different space types
+    const result = moveTaskDown(view);
+    expect(result).toBe(true);
+    expect(view.dispatch).toHaveBeenCalled();
+  });
+
+  test("recognizes empty lines with various space types", () => {
+    const testCases = [
+      "   ",          // Regular spaces
+      "　　　",        // Full-width spaces
+      " 　 　",        // Mixed spaces
+      "\t\t",         // Tabs
+      " \t　",        // All mixed
+    ];
+
+    for (const emptyLine of testCases) {
+      const doc = `- [ ] Task A
+${emptyLine}
+- [ ] Task B`;
+
+      const state = createEditorState(doc, 0); // Cursor on Task A
+      const view = createMockView(state);
+
+      const result = moveTaskDown(view);
+      expect(result).toBe(false); // Should not move across any type of empty line
+    }
+  });
+});
+
+describe("Task Reorder - File Boundary Edge Cases", () => {
+  test("first task in file cannot move up", () => {
+    const doc = `- [ ] First Task`;
+
+    const state = createEditorState(doc, 0);
+    const view = createMockView(state);
+
+    const result = moveTaskUp(view);
+    expect(result).toBe(false);
+    expect(view.dispatch).not.toHaveBeenCalled();
+  });
+
+  test("last task in file cannot move down", () => {
+    const doc = `- [ ] Last Task`;
+
+    const state = createEditorState(doc, 0);
+    const view = createMockView(state);
+
+    const result = moveTaskDown(view);
+    expect(result).toBe(false);
+    expect(view.dispatch).not.toHaveBeenCalled();
+  });
+
+  test("handles document with only headings", () => {
+    const doc = `# Section 1
+## Subsection 1.1
+### Subsubsection 1.1.1`;
+
+    const state = createEditorState(doc, 15); // Cursor on second heading
+    const view = createMockView(state);
+
+    const resultUp = moveTaskUp(view);
+    const resultDown = moveTaskDown(view);
+
+    expect(resultUp).toBe(false);
+    expect(resultDown).toBe(false);
+    expect(view.dispatch).not.toHaveBeenCalled();
+  });
+
+  test("single task with children at end of file", () => {
+    const doc = `- [ ] Parent
+  - [ ] Child 1
+  - [ ] Child 2`;
+
+    const state = createEditorState(doc, 0); // Cursor on parent
+    const view = createMockView(state);
+
+    const result = moveTaskDown(view);
+    expect(result).toBe(false); // Cannot move down - it's the only top-level task
+    expect(view.dispatch).not.toHaveBeenCalled();
+  });
+});
