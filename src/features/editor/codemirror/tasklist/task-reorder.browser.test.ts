@@ -803,6 +803,68 @@ describe("Task Reorder - Different Block Sizes", () => {
   });
 });
 
+describe("Task Reorder - Cursor Position on Failed Moves", () => {
+  test("cursor stays in place when nested task has no valid upward target", () => {
+    const doc = `## Section
+- [ ] Parent task
+  - [ ] First nested task with cursor here
+  - [ ] Second nested task
+- [ ] Another parent`;
+
+    const cursorPos = 38; // Cursor after "cursor here" in first nested task
+    const state = createEditorState(doc, cursorPos);
+    const view = createMockView(state);
+
+    const result = moveTaskUp(view);
+    expect(result).toBe(false); // Move operation failed
+    
+    // Check that no dispatch was called (no changes made)
+    expect(view.dispatch).not.toHaveBeenCalled();
+    
+    // Document should remain unchanged
+    expect(view.state.doc.toString()).toBe(doc);
+  });
+
+  test("cursor stays in place when task at document start tries to move up", () => {
+    const doc = `- [ ] First task in document
+  - [ ] Nested task
+- [ ] Second task`;
+
+    const cursorPos = 15; // Cursor in first task
+    const state = createEditorState(doc, cursorPos);
+    const view = createMockView(state);
+
+    const result = moveTaskUp(view);
+    expect(result).toBe(false); // Move operation failed
+    
+    // Check that no dispatch was called
+    expect(view.dispatch).not.toHaveBeenCalled();
+    
+    // Document should remain unchanged
+    expect(view.state.doc.toString()).toBe(doc);
+  });
+
+  test("cursor stays in place when task cannot move across section boundary", () => {
+    const doc = `## Section 1
+- [ ] Task in section 1
+## Section 2
+- [ ] Task in section 2`;
+
+    const cursorPos = 36; // Cursor in "Task in section 2"
+    const state = createEditorState(doc, cursorPos);
+    const view = createMockView(state);
+
+    const result = moveTaskUp(view);
+    expect(result).toBe(false); // Move operation failed
+    
+    // Check that no dispatch was called
+    expect(view.dispatch).not.toHaveBeenCalled();
+    
+    // Document should remain unchanged
+    expect(view.state.doc.toString()).toBe(doc);
+  });
+});
+
 describe("Task Reorder - MaxLine Constraint", () => {
   test("nested task respects maxLine when moving down", () => {
     const doc = `- [ ] Parent

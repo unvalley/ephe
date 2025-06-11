@@ -27,11 +27,45 @@ const getIndentLength = (lineText: string): number => {
 export const taskKeyBindings: readonly KeyBinding[] = [
   {
     key: "Mod-ArrowUp",
-    run: moveTaskUp,
+    run: (view: EditorView): boolean => {
+      const { state } = view;
+      const { selection } = state;
+      
+      // Check if we're on a task/list line
+      if (selection.ranges.length === 1) {
+        const line = state.doc.lineAt(selection.main.head);
+        if (isTaskLine(line.text) || isRegularListLine(line.text)) {
+          // Try to move the task
+          moveTaskUp(view);
+          // Always return true for task lines to prevent default behavior
+          return true;
+        }
+      }
+      
+      // Not on a task line, use default behavior
+      return false;
+    },
   },
   {
     key: "Mod-ArrowDown",
-    run: moveTaskDown,
+    run: (view: EditorView): boolean => {
+      const { state } = view;
+      const { selection } = state;
+      
+      // Check if we're on a task/list line
+      if (selection.ranges.length === 1) {
+        const line = state.doc.lineAt(selection.main.head);
+        if (isTaskLine(line.text) || isRegularListLine(line.text)) {
+          // Try to move the task
+          moveTaskDown(view);
+          // Always return true for task lines to prevent default behavior
+          return true;
+        }
+      }
+      
+      // Not on a task line, use default behavior
+      return false;
+    },
   },
   {
     key: "Enter",
