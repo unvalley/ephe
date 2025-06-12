@@ -9,16 +9,16 @@ import { useState, useEffect, useRef } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME } from "../../utils/theme-initializer";
 import {
-  CheckCircleIcon,
-  DocumentIcon,
-  HashtagIcon,
-  ViewColumnsIcon,
-  SunIcon,
-  MoonIcon,
-  ComputerDesktopIcon,
-  BoltIcon,
-  DocumentTextIcon,
-} from "@heroicons/react/24/outline";
+  CheckCircle,
+  File,
+  Hash,
+  Columns,
+  Sun,
+  Moon,
+  Desktop,
+  Lightning,
+  FileText,
+} from "@phosphor-icons/react";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
 import { useTaskAutoFlush } from "../../utils/hooks/use-task-auto-flush";
@@ -122,7 +122,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                   <MenuItem disabled>
                     <div className="flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30">
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <HashtagIcon className="size-4 stroke-1" />
+                        <Hash className="size-4" weight="thin" />
                       </span>
                       <span>{charCount > 0 ? `${charCount.toLocaleString()} chars` : "No content"}</span>
                     </div>
@@ -136,9 +136,9 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         {todayCompletedTasks > 0 ? (
-                          <CheckCircleIcon className="size-4 stroke-2 text-green-600" />
+                          <CheckCircle className="size-4 text-green-600" weight="regular" />
                         ) : (
-                          <CheckCircleIcon className="size-4 stroke-2" />
+                          <CheckCircle className="size-4" weight="regular" />
                         )}
                       </span>
                       <span className={todayCompletedTasks > 0 ? "text-green-600 dark:text-green-400" : ""}>
@@ -154,7 +154,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                       onClick={() => openTaskSnapshotModal(1)}
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <DocumentIcon className="size-4 stroke-1" />
+                        <File className="size-4" weight="thin" />
                       </span>
                       <span>{snapshotCount > 0 ? `${snapshotCount} snapshots` : "No snapshots"}</span>
                     </button>
@@ -180,11 +180,11 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         {theme === COLOR_THEME.LIGHT ? (
-                          <SunIcon className="size-4 stroke-1" />
+                          <Sun className="size-4" weight="thin" />
                         ) : theme === COLOR_THEME.DARK ? (
-                          <MoonIcon className="size-4 stroke-1" />
+                          <Moon className="size-4" weight="thin" />
                         ) : (
-                          <ComputerDesktopIcon className="size-4 stroke-1" />
+                          <Desktop className="size-4" weight="thin" />
                         )}
                       </span>
                       <span className="capitalize">{theme} Mode</span>
@@ -229,7 +229,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                       className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <ViewColumnsIcon className="size-4 stroke-1" />
+                        <Columns className="size-4" weight="thin" />
                       </span>
                       <span className="capitalize">{editorWidth} Width</span>
                     </button>
@@ -246,7 +246,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                       className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <DocumentTextIcon className="size-4 stroke-1" />
+                        <FileText className="size-4" weight="thin" />
                       </span>
                       <span className="capitalize">{FONT_FAMILIES[fontFamily].displayValue}</span>
                     </button>
@@ -264,7 +264,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                       className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <BoltIcon className={"size-4 stroke-1"} />
+                        <Lightning className={"size-4"} weight="thin" />
                       </span>
                       <span className={"capitalize"}>Task Flush: {taskAutoFlushMode}</span>
                     </button>
