@@ -93,44 +93,9 @@ export const useMarkdownEditor = () => {
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue);
   const { setCharCount } = useCharCount();
   const { isMobile } = useMobileDetector();
-  const { resetCursorPosition, cursorTrackingExtension } = useCursorPosition(view);
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
-
-  // Listen for content restore events
-  useEffect(() => {
-    const handleContentRestored = (event: CustomEvent<{ content: string }>) => {
-      if (view && event.detail.content) {
-        // Update the editor content
-        view.dispatch({
-          changes: { from: 0, to: view.state.doc.length, insert: event.detail.content },
-        });
-        // Also update the atom value to keep them in sync
-        setContent(event.detail.content);
-        // Reset cursor position when content is restored
-        resetCursorPosition();
-      }
-    };
-    // Add event listener with type assertion
-    window.addEventListener("ephe:content-restored", handleContentRestored as EventListener);
-    return () => {
-      // Remove event listener on cleanup
-      window.removeEventListener("ephe:content-restored", handleContentRestored as EventListener);
-    };
-  }, [view, setContent, resetCursorPosition]);
-
-  // Listen for external content updates
-  // - text edit emits storage event
-  // - subscribe updates the editor content
-  useEffect(() => {
-    if (view && content !== view.state.doc.toString()) {
-      view.dispatch({
-        changes: { from: 0, to: view.state.doc.length, insert: content },
-      });
-    }
-    setCharCount(content.length);
-  }, [view, content]);
 
   const onFormat = async (view: EditorView) => {
     if (!formatterRef.current) {
@@ -226,9 +191,6 @@ export const useMarkdownEditor = () => {
               });
             }
           }),
-          
-          // Add cursor position tracking with debounce
-          cursorTrackingExtension || [],
 
           themeCompartment.of(editorTheme),
           highlightCompartment.of(editorHighlightStyle),
@@ -266,7 +228,6 @@ export const useMarkdownEditor = () => {
     container,
     content,
     setContent,
-    cursorTrackingExtension,
     onFormat,
     onSaveSnapshot,
     highlightCompartment.of,
@@ -276,6 +237,30 @@ export const useMarkdownEditor = () => {
     isMobile,
   ]);
 
+  const { resetCursorPosition } = useCursorPosition(view);
+
+  // Listen for content restore events
+  useEffect(() => {
+    const handleContentRestored = (event: CustomEvent<{ content: string }>) => {
+      if (view && event.detail.content) {
+        // Update the editor content
+        view.dispatch({
+          changes: { from: 0, to: view.state.doc.length, insert: event.detail.content },
+        });
+        // Also update the atom value to keep them in sync
+        setContent(event.detail.content);
+        // Reset cursor position when content is restored
+        resetCursorPosition();
+      }
+    };
+    // Add event listener with type assertion
+    window.addEventListener("ephe:content-restored", handleContentRestored as EventListener);
+    return () => {
+      // Remove event listener on cleanup
+      window.removeEventListener("ephe:content-restored", handleContentRestored as EventListener);
+    };
+  }, [view, setContent, resetCursorPosition]);
+
   // Update theme when dark mode changes
   useEffect(() => {
     if (view) {
@@ -284,6 +269,18 @@ export const useMarkdownEditor = () => {
       });
     }
   }, [view, highlightCompartment.reconfigure, themeCompartment.reconfigure, editorTheme, editorHighlightStyle]);
+
+  // Listen for external content updates
+  // - text edit emits storage event
+  // - subscribe updates the editor content
+  useEffect(() => {
+    if (view && content !== view.state.doc.toString()) {
+      view.dispatch({
+        changes: { from: 0, to: view.state.doc.length, insert: content },
+      });
+    }
+    setCharCount(content.length);
+  }, [view, content]);
 
   return {
     editor,
