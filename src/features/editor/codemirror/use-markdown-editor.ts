@@ -93,7 +93,7 @@ export const useMarkdownEditor = () => {
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue);
   const { setCharCount } = useCharCount();
   const { isMobile } = useMobileDetector();
-  const { saveCursorPosition, resetCursorPosition } = useCursorPosition(view);
+  const { resetCursorPosition, cursorTrackingExtension } = useCursorPosition(view);
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
@@ -225,12 +225,10 @@ export const useMarkdownEditor = () => {
                 setContent(updatedContent);
               });
             }
-            // Save cursor position on selection changes
-            if (update.selectionSet) {
-              const { from, to } = update.state.selection.main;
-              saveCursorPosition(from, to);
-            }
           }),
+          
+          // Add cursor position tracking with debounce
+          cursorTrackingExtension || [],
 
           themeCompartment.of(editorTheme),
           highlightCompartment.of(editorHighlightStyle),
@@ -268,7 +266,7 @@ export const useMarkdownEditor = () => {
     container,
     content,
     setContent,
-    saveCursorPosition,
+    cursorTrackingExtension,
     onFormat,
     onSaveSnapshot,
     highlightCompartment.of,

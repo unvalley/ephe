@@ -1,59 +1,43 @@
 import type { EditorView } from "@codemirror/view";
-import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { useEffect } from "react";
+import { useAtom } from "jotai";
+import { useLayoutEffect } from "react";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 
-const cursorPositionAtom = atomWithStorage<{ from: number; to: number }>(LOCAL_STORAGE_KEYS.CURSOR_POSITION, {
-  from: 0,
-  to: 0,
-});
+const INITIAL_CURSOR_POSITION = { from: 0, to: 0 };
+const cursorAtom = atomWithStorage<{ from: number; to: number }>(
+  LOCAL_STORAGE_KEYS.CURSOR_POSITION,
+  INITIAL_CURSOR_POSITION,
+);
 
-export const useCursorPosition = (view: EditorView | undefined) => {
-  const [cursorPosition, setCursorPosition] = useAtom(cursorPositionAtom);
+export const useCursorPosition = (view?: EditorView) => {
+  const [cursorPosition, setCursorPosition] = useAtom(cursorAtom);
 
-  // Save cursor position whenever selection changes
-  const saveCursorPosition = (from: number, to: number) => {
-    setCursorPosition({ from, to });
-  };
+  useLayoutEffect(() => {
+    if (typeof window === "undefined" || !view) return;
 
-  // Restore cursor position to the editor
-  const restoreCursorPosition = () => {
-    if (!view) return;
-
-    const docLength = view.state.doc.length;
-    if (cursorPosition.from !== 0 || cursorPosition.to !== 0) {
-      // Ensure cursor position is within document bounds
-      const safeFrom = Math.min(cursorPosition.from, docLength);
-      const safeTo = Math.min(cursorPosition.to, docLength);
-
+    if (cursorPosition.from || cursorPosition.to) {
+      const len = view.state.doc.length;
       view.dispatch({
-        selection: { anchor: safeFrom, head: safeTo },
+        selection: {
+          anchor: Math.min(cursorPosition.from, len),
+          head: Math.min(cursorPosition.to, len),
+        },
         scrollIntoView: true,
       });
     }
-  };
 
-  // Reset cursor position (useful when content is replaced)
-  const resetCursorPosition = () => {
-    setCursorPosition({ from: 0, to: 0 });
-  };
+    const save = () => {
+      const { from, to } = view.state.selection.main;
+      setCursorPosition((prev) => (prev.from === from && prev.to === to ? prev : { from, to }));
+    };
 
-  // Auto-restore cursor position when view is ready
-  useEffect(() => {
-    if (view) {
-      // Small delay to ensure editor is fully initialized
-      const timer = setTimeout(() => {
-        restoreCursorPosition();
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [view]); // Only run when view becomes available
+    // only save cursor position when the page is hidden
+    window.addEventListener("pagehide", save);
+    return () => window.removeEventListener("pagehide", save);
+  }, [view, cursorPosition, setCursorPosition]);
 
-  return {
-    cursorPosition,
-    saveCursorPosition,
-    restoreCursorPosition,
-    resetCursorPosition,
-  };
+  const resetCursorPosition = () => setCursorPosition(INITIAL_CURSOR_POSITION);
+
+  return { cursorPosition, resetCursorPosition };
 };
