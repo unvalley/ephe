@@ -1,30 +1,24 @@
 import type { EditorView } from "@codemirror/view";
 import { useAtom } from "jotai";
-import { atomWithStorage, createJSONStorage } from "jotai/utils";
-import { useCallback, useEffect } from "react";
+import { atomWithStorage } from "jotai/utils";
+import { useEffect } from "react";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 
-const cursorStorage = createJSONStorage<{ from: number; to: number }>(() => localStorage);
-
-const cursorPositionAtom = atomWithStorage<{ from: number; to: number }>(
-  LOCAL_STORAGE_KEYS.CURSOR_POSITION,
-  { from: 0, to: 0 },
-  cursorStorage
-);
+const cursorPositionAtom = atomWithStorage<{ from: number; to: number }>(LOCAL_STORAGE_KEYS.CURSOR_POSITION, {
+  from: 0,
+  to: 0,
+});
 
 export const useCursorPosition = (view: EditorView | undefined) => {
   const [cursorPosition, setCursorPosition] = useAtom(cursorPositionAtom);
 
   // Save cursor position whenever selection changes
-  const saveCursorPosition = useCallback(
-    (from: number, to: number) => {
-      setCursorPosition({ from, to });
-    },
-    [setCursorPosition]
-  );
+  const saveCursorPosition = (from: number, to: number) => {
+    setCursorPosition({ from, to });
+  };
 
   // Restore cursor position to the editor
-  const restoreCursorPosition = useCallback(() => {
+  const restoreCursorPosition = () => {
     if (!view) return;
 
     const docLength = view.state.doc.length;
@@ -38,12 +32,12 @@ export const useCursorPosition = (view: EditorView | undefined) => {
         scrollIntoView: true,
       });
     }
-  }, [view, cursorPosition]);
+  };
 
   // Reset cursor position (useful when content is replaced)
-  const resetCursorPosition = useCallback(() => {
+  const resetCursorPosition = () => {
     setCursorPosition({ from: 0, to: 0 });
-  }, [setCursorPosition]);
+  };
 
   // Auto-restore cursor position when view is ready
   useEffect(() => {
