@@ -30,6 +30,7 @@ It stays out of your way, but helps where it counts:
 - <kbd>Cmd</kbd> + <kbd>K</kbd> → opens the quick command menu  
 - Customize appearance (Dark mode, Paper style, Width) from the bottom-left settings
 - Task Flush (If set to instant, closing a task (`- [ ]`) deletes the line immediately)
+- <kbd>Cmd</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd> moves tasks and lists up or down
 
 
 I hope this one page helps you start your day with focus.
