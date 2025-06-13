@@ -22,6 +22,7 @@ import { useCharCount } from "../../../utils/hooks/use-char-count";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
+import { useCursorPosition } from "./use-cursor-position";
 
 const storage = createJSONStorage<string>(() => localStorage);
 
@@ -92,6 +93,7 @@ export const useMarkdownEditor = () => {
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue);
   const { setCharCount } = useCharCount();
   const { isMobile } = useMobileDetector();
+  const { saveCursorPosition, resetCursorPosition } = useCursorPosition(view);
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
@@ -106,6 +108,8 @@ export const useMarkdownEditor = () => {
         });
         // Also update the atom value to keep them in sync
         setContent(event.detail.content);
+        // Reset cursor position when content is restored
+        resetCursorPosition();
       }
     };
     // Add event listener with type assertion
@@ -114,7 +118,7 @@ export const useMarkdownEditor = () => {
       // Remove event listener on cleanup
       window.removeEventListener("ephe:content-restored", handleContentRestored as EventListener);
     };
-  }, [view, setContent]);
+  }, [view, setContent, resetCursorPosition]);
 
   // Listen for external content updates
   // - text edit emits storage event
@@ -221,6 +225,11 @@ export const useMarkdownEditor = () => {
                 setContent(updatedContent);
               });
             }
+            // Save cursor position on selection changes
+            if (update.selectionSet) {
+              const { from, to } = update.state.selection.main;
+              saveCursorPosition(from, to);
+            }
           }),
 
           themeCompartment.of(editorTheme),
@@ -259,6 +268,7 @@ export const useMarkdownEditor = () => {
     container,
     content,
     setContent,
+    saveCursorPosition,
     onFormat,
     onSaveSnapshot,
     highlightCompartment.of,
