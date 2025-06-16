@@ -4,7 +4,7 @@ import { languages } from "@codemirror/language-data";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
 import { EditorView, keymap, placeholder } from "@codemirror/view";
 import { useAtom } from "jotai";
-import { useRef, useState, useEffect, useLayoutEffect } from "react";
+import { useRef, useState, useEffect, useLayoutEffect, useCallback } from "react";
 import { showToast } from "../../../utils/components/toast";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 import { useTheme } from "../../../utils/hooks/use-theme";
@@ -97,7 +97,8 @@ export const useMarkdownEditor = () => {
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
 
-  const onFormat = async (view: EditorView) => {
+  // Memoized format function to prevent recreation on every render
+  const onFormat = useCallback(async (view: EditorView) => {
     if (!formatterRef.current) {
       showToast("Formatter not initialized yet", "error");
       return false;
@@ -126,7 +127,7 @@ export const useMarkdownEditor = () => {
             const newPos = newLine.from + newColumn;
             view.dispatch({ selection: { anchor: newPos, head: newPos } });
           }
-        } catch (selectionError) {
+        } catch (_selectionError) {
           view.dispatch({ selection: { anchor: 0, head: 0 } });
         }
         view.scrollDOM.scrollTop = Math.min(scrollTop, view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight);
@@ -139,9 +140,10 @@ export const useMarkdownEditor = () => {
       showToast(`Error formatting document: ${message}`, "error");
       return false;
     }
-  };
+  }, [formatterRef]);
 
-  const onSaveSnapshot = async (view: EditorView) => {
+  // Memoized snapshot function
+  const onSaveSnapshot = useCallback(async (view: EditorView) => {
     try {
       const currentText = view.state.doc.toString();
 
@@ -158,7 +160,21 @@ export const useMarkdownEditor = () => {
       showToast(`Error saving snapshot: ${message}`, "error");
       return false;
     }
-  };
+  }, []);
+
+  // Memoized update listener to prevent recreation
+  const updateListener = useCallback(
+    (setContent: (content: string) => void) =>
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          const updatedContent = update.state.doc.toString();
+          window.requestAnimationFrame(() => {
+            setContent(updatedContent);
+          });
+        }
+      }),
+    []
+  );
 
   useEffect(() => {
     if (editor.current) setContainer(editor.current);
@@ -183,14 +199,7 @@ export const useMarkdownEditor = () => {
           }),
 
           EditorView.lineWrapping,
-          EditorView.updateListener.of((update) => {
-            if (update.docChanged) {
-              const updatedContent = update.state.doc.toString();
-              window.requestAnimationFrame(() => {
-                setContent(updatedContent);
-              });
-            }
-          }),
+          updateListener(setContent),
 
           themeCompartment.of(editorTheme),
           highlightCompartment.of(editorHighlightStyle),
@@ -228,13 +237,15 @@ export const useMarkdownEditor = () => {
     container,
     content,
     setContent,
-    onFormat,
-    onSaveSnapshot,
-    highlightCompartment.of,
-    themeCompartment.of,
     editorTheme,
     editorHighlightStyle,
     isMobile,
+    onFormat,
+    onSaveSnapshot,
+    updateListener,
+    themeCompartment,
+    highlightCompartment,
+    taskHandlerRef,
   ]);
 
   const { resetCursorPosition } = useCursorPosition(view);
@@ -268,7 +279,7 @@ export const useMarkdownEditor = () => {
         effects: [themeCompartment.reconfigure(editorTheme), highlightCompartment.reconfigure(editorHighlightStyle)],
       });
     }
-  }, [view, highlightCompartment.reconfigure, themeCompartment.reconfigure, editorTheme, editorHighlightStyle]);
+  }, [view, themeCompartment, highlightCompartment, editorTheme, editorHighlightStyle]);
 
   // Listen for external content updates
   // - text edit emits storage event
@@ -280,7 +291,7 @@ export const useMarkdownEditor = () => {
       });
     }
     setCharCount(content.length);
-  }, [view, content]);
+  }, [view, content, setCharCount]);
 
   return {
     editor,

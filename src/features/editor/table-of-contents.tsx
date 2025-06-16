@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
 
 type TocItem = {
@@ -16,7 +16,16 @@ type TocProps = {
   isVisible: boolean;
 };
 
+// Extract constants to avoid recreating on every render
 const HEADING_REGEX = /^(#{1,6})\s+(.+)$/;
+const BASE_PADDING = 0.5;
+const LEVEL_PADDING_INCREMENT = 0.75;
+
+// Memoized style calculation function
+const createItemStyle = (level: number): React.CSSProperties => ({
+  paddingLeft: `${(level - 1) * LEVEL_PADDING_INCREMENT + BASE_PADDING}rem`,
+  lineHeight: 1.3,
+});
 
 export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVisible }) => {
   const [tocItems, setTocItems] = useState<TocItem[]>([]);
@@ -24,14 +33,19 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
   const prevContentRef = useRef<string>("");
   const hasInitializedRef = useRef(false);
 
+  // Optimized parsing function with early returns
   const parseTocItems = useCallback((content: string): TocItem[] => {
-    if (!content) return [];
+    if (!content?.trim()) return [];
 
     const lines = content.split("\n");
+    if (lines.length === 0) return [];
+
     const items: TocItem[] = [];
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+      if (!line.startsWith('#')) continue; // Quick filter before regex
+      
       const match = HEADING_REGEX.exec(line);
       if (match) {
         items.push({
@@ -45,15 +59,24 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
     return items;
   }, []);
 
-  // Always parse content on initial render and when content changes
+  // Memoized class names to avoid recalculation
+  const itemBaseClassName = useMemo(
+    () => 
+      `cursor-pointer whitespace-normal break-words rounded px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+        isDarkMode 
+          ? "text-neutral-400 hover:text-neutral-200" 
+          : "text-neutral-500 hover:text-neutral-800"
+      }`,
+    [isDarkMode]
+  );
+
+  // Optimized content parsing effect
   useEffect(() => {
-    // Always parse content regardless of visibility
     if (!content) {
-      setTocItems([]);
+      if (tocItems.length > 0) setTocItems([]);
       return;
     }
 
-    // Always parse on initial load or when content changes
     const shouldUpdate = !hasInitializedRef.current || content !== prevContentRef.current;
 
     if (shouldUpdate) {
@@ -62,10 +85,10 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
       prevContentRef.current = content;
       hasInitializedRef.current = true;
     }
-  }, [content, parseTocItems]);
+  }, [content, parseTocItems, tocItems.length]);
 
-  const shouldRender = isVisible && tocItems.length > 0 && !!content;
-  if (!shouldRender) {
+  // Early return for better performance
+  if (!isVisible || tocItems.length === 0 || !content) {
     return null;
   }
 
@@ -75,11 +98,8 @@ export const TableOfContents: React.FC<TocProps> = ({ content, onItemClick, isVi
         {tocItems.map((item) => (
           <li
             key={item.line}
-            className={`cursor-pointer whitespace-normal break-words rounded px-2 py-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 ${isDarkMode ? "text-neutral-400 hover:text-neutral-200" : "text-neutral-500 hover:text-neutral-800"}`}
-            style={{
-              paddingLeft: `${(item.level - 1) * 0.75 + 0.5}rem`,
-              lineHeight: 1.3,
-            }}
+            className={itemBaseClassName}
+            style={createItemStyle(item.level)}
             onClick={() => onItemClick(item.line)}
             onKeyDown={() => {}}
           >
