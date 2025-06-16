@@ -10,6 +10,7 @@ export const LOCAL_STORAGE_KEYS = {
   TASK_AUTO_FLUSH_MODE: "ephe:task-auto-flush-mode",
   FONT_FAMILY: "ephe:font-family",
   CURSOR_POSITION: "ephe:cursor-position",
+  OPEN_LINK_MODIFIER: "ephe:open-link-modifier",
 } as const;
 
 export const EPHE_VERSION = "0.0.1";

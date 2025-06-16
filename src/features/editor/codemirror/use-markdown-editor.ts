@@ -21,8 +21,9 @@ import { useEditorTheme } from "./use-editor-theme";
 import { useCharCount } from "../../../utils/hooks/use-char-count";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
-import { urlClickPlugin, urlHoverTooltip } from "./url-click";
+import { urlClickPlugin, urlHoverTooltip, setCurrentModifier } from "./url-click";
 import { useCursorPosition } from "./use-cursor-position";
+import { useOpenLinkModifier } from "../../../utils/hooks/use-open-link-modifier";
 
 const storage = createJSONStorage<string>(() => localStorage);
 
@@ -90,6 +91,7 @@ export const useMarkdownEditor = () => {
   const { isDarkMode } = useTheme();
   const { isWideMode } = useEditorWidth();
   const { currentFontValue } = useFontFamily();
+  const { openLinkModifier } = useOpenLinkModifier();
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue);
   const { setCharCount } = useCharCount();
   const { isMobile } = useMobileDetector();
@@ -163,6 +165,10 @@ export const useMarkdownEditor = () => {
   useEffect(() => {
     if (editor.current) setContainer(editor.current);
   }, []);
+
+  useEffect(() => {
+    setCurrentModifier(openLinkModifier);
+  }, [openLinkModifier]);
 
   useLayoutEffect(() => {
     if (!view && container) {

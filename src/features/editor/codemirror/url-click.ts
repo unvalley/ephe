@@ -7,6 +7,7 @@ import {
   hoverTooltip,
 } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
+import { useOpenLinkModifier, type OpenLinkModifier } from "../../../utils/hooks/use-open-link-modifier";
 
 const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
 const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]()]+/g;
@@ -76,10 +77,37 @@ const findUrlAtPos = (view: EditorView, pos: number): { url: string; from: numbe
   return null;
 };
 
-const createTooltipElement = (): HTMLElement => {
+export const openLinkAtPos = (view: EditorView, pos: number): boolean => {
+  const urlInfo = findUrlAtPos(view, pos);
+  if (!urlInfo) return false;
+  
+  window.open(urlInfo.url, "_blank", "noopener,noreferrer");
+  return true;
+};
+
+const getModifierText = (modifier: OpenLinkModifier): string => {
+  switch (modifier) {
+    case "cmd":
+      return "⌘+Click to open link";
+    case "ctrl":
+      return "Ctrl+Click to open link";
+    case "ctrlAlt":
+      return "Ctrl+Alt+Click to open link";
+    case "alt":
+      return "Alt+Click to open link";
+  }
+};
+
+const createTooltipElement = (modifier: OpenLinkModifier): HTMLElement => {
   const dom = document.createElement("div");
-  dom.textContent = "Opt+Click to open link";
+  dom.textContent = getModifierText(modifier);
   return dom;
+};
+
+let currentModifier: OpenLinkModifier = "cmd";
+
+export const setCurrentModifier = (modifier: OpenLinkModifier) => {
+  currentModifier = modifier;
 };
 
 export const urlHoverTooltip = hoverTooltip((view, pos) => {
@@ -90,7 +118,7 @@ export const urlHoverTooltip = hoverTooltip((view, pos) => {
     pos: urlInfo.from,
     end: urlInfo.to,
     above: true,
-    create: () => ({ dom: createTooltipElement() }),
+    create: () => ({ dom: createTooltipElement(currentModifier) }),
   };
 });
 
@@ -112,7 +140,20 @@ export const urlClickPlugin = ViewPlugin.fromClass(
     decorations: (v) => v.decorations,
     eventHandlers: {
       mousedown: (event, view) => {
-        if (!event.altKey) return false;
+        const modifierPressed = (() => {
+          switch (currentModifier) {
+            case "cmd":
+              return event.metaKey;
+            case "ctrl":
+              return event.ctrlKey && !event.altKey;
+            case "ctrlAlt":
+              return event.ctrlKey && event.altKey;
+            case "alt":
+              return event.altKey && !event.ctrlKey;
+          }
+        })();
+
+        if (!modifierPressed) return false;
 
         const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
         if (pos == null) return false;
@@ -123,8 +164,9 @@ export const urlClickPlugin = ViewPlugin.fromClass(
         for (const match of text.matchAll(MARKDOWN_LINK_REGEX)) {
           const index = match.index;
           if (index !== undefined && offset >= index && offset < index + match[0].length) {
-            window.open(match[2], "_blank", "noopener,noreferrer");
             event.preventDefault();
+            event.stopPropagation();
+            window.open(match[2], "_blank", "noopener,noreferrer");
             return true;
           }
         }
@@ -132,8 +174,9 @@ export const urlClickPlugin = ViewPlugin.fromClass(
         for (const match of text.matchAll(URL_REGEX)) {
           const index = match.index;
           if (index !== undefined && offset >= index && offset < index + match[0].length) {
-            window.open(match[0], "_blank", "noopener,noreferrer");
             event.preventDefault();
+            event.stopPropagation();
+            window.open(match[0], "_blank", "noopener,noreferrer");
             return true;
           }
         }
