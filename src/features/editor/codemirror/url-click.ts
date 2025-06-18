@@ -138,11 +138,11 @@ export const urlClickPlugin = ViewPlugin.fromClass(
     }
 
     private removeGlobalListeners() {
-      if ((this as Record<string, unknown>)._handleKeyDown) {
-        document.removeEventListener("keydown", (this as Record<string, unknown>)._handleKeyDown as EventListener);
+      if (this._handleKeyDown) {
+        document.removeEventListener("keydown", this._handleKeyDown);
       }
-      if ((this as Record<string, unknown>)._handleKeyUp) {
-        document.removeEventListener("keyup", (this as Record<string, unknown>)._handleKeyUp as EventListener);
+      if (this._handleKeyUp) {
+        document.removeEventListener("keyup", this._handleKeyUp);
       }
     }
   },
