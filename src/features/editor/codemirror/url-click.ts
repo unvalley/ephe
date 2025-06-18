@@ -7,6 +7,7 @@ import {
   hoverTooltip,
 } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
+import { getModifierKey, getModifierKeyName } from "../../../utils/platform";
 
 const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
 const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]()]+/g;
@@ -78,7 +79,7 @@ const findUrlAtPos = (view: EditorView, pos: number): { url: string; from: numbe
 
 const createTooltipElement = (): HTMLElement => {
   const dom = document.createElement("div");
-  dom.textContent = "Opt+Click to open link";
+  dom.textContent = `${getModifierKeyName()}+Click to open link`;
   return dom;
 };
 
@@ -100,6 +101,7 @@ export const urlClickPlugin = ViewPlugin.fromClass(
 
     constructor(view: EditorView) {
       this.decorations = createUrlDecorations(view);
+      this.setupGlobalListeners(view);
     }
 
     update(update: ViewUpdate) {
@@ -107,12 +109,51 @@ export const urlClickPlugin = ViewPlugin.fromClass(
         this.decorations = createUrlDecorations(update.view);
       }
     }
+
+    destroy() {
+      this.removeGlobalListeners();
+    }
+
+    private setupGlobalListeners(view: EditorView) {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Control" || e.key === "Meta") {
+          view.dom.style.userSelect = "none";
+          view.dom.style.webkitUserSelect = "none";
+        }
+      };
+
+      const handleKeyUp = (e: KeyboardEvent) => {
+        if (e.key === "Control" || e.key === "Meta") {
+          view.dom.style.userSelect = "";
+          view.dom.style.webkitUserSelect = "";
+        }
+      };
+
+      document.addEventListener("keydown", handleKeyDown);
+      document.addEventListener("keyup", handleKeyUp);
+
+      // Store handlers for cleanup
+      (this as Record<string, unknown>)._handleKeyDown = handleKeyDown;
+      (this as Record<string, unknown>)._handleKeyUp = handleKeyUp;
+    }
+
+    private removeGlobalListeners() {
+      if ((this as Record<string, unknown>)._handleKeyDown) {
+        document.removeEventListener("keydown", (this as Record<string, unknown>)._handleKeyDown as EventListener);
+      }
+      if ((this as Record<string, unknown>)._handleKeyUp) {
+        document.removeEventListener("keyup", (this as Record<string, unknown>)._handleKeyUp as EventListener);
+      }
+    }
   },
   {
     decorations: (v) => v.decorations,
     eventHandlers: {
       mousedown: (event, view) => {
-        if (!event.altKey) return false;
+        const modifierKey = getModifierKey();
+        const isModifierPressed = event[modifierKey as keyof MouseEvent] as boolean;
+        
+        if (!isModifierPressed) return false;
 
         const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
         if (pos == null) return false;

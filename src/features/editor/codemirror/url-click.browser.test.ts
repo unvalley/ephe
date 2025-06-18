@@ -1,6 +1,6 @@
 import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
-import { test, expect, describe, vi } from "vitest";
+import { test, expect, describe, vi, beforeEach } from "vitest";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
 
 const createViewFromText = (text: string): EditorView => {
@@ -102,5 +102,62 @@ Third line without URL`;
 
     expect(view.state.doc.toString()).toBe("Test content with https://example.com link");
     expect(view.dom).toBeDefined();
+  });
+
+  describe("platform-specific behavior", () => {
+    beforeEach(() => {
+      vi.resetModules();
+    });
+
+    test("uses correct modifier key based on platform", async () => {
+      // Test macOS behavior
+      Object.defineProperty(navigator, "userAgent", {
+        value: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        configurable: true,
+      });
+      const macPlatform = await import("../../../utils/platform");
+      expect(macPlatform.getModifierKey()).toBe("metaKey");
+      expect(macPlatform.getModifierKeyName()).toBe("Cmd");
+
+      // Test Windows behavior
+      Object.defineProperty(navigator, "userAgent", {
+        value: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        configurable: true,
+      });
+      vi.resetModules();
+      const winPlatform = await import("../../../utils/platform");
+      expect(winPlatform.getModifierKey()).toBe("ctrlKey");
+      expect(winPlatform.getModifierKeyName()).toBe("Ctrl");
+
+      // Test Linux behavior
+      Object.defineProperty(navigator, "userAgent", {
+        value: "Mozilla/5.0 (X11; Linux x86_64)",
+        configurable: true,
+      });
+      vi.resetModules();
+      const linuxPlatform = await import("../../../utils/platform");
+      expect(linuxPlatform.getModifierKey()).toBe("ctrlKey");
+      expect(linuxPlatform.getModifierKeyName()).toBe("Ctrl");
+    });
+  });
+
+  describe("text selection prevention", () => {
+    test("prevents text selection when modifier key is pressed", () => {
+      const view = createViewFromText("Visit https://example.com");
+      
+      // Simulate keydown event
+      const keydownEvent = new KeyboardEvent("keydown", { key: "Control" });
+      document.dispatchEvent(keydownEvent);
+
+      // Check that userSelect style is applied
+      expect(view.dom.style.userSelect).toBe("none");
+
+      // Simulate keyup event
+      const keyupEvent = new KeyboardEvent("keyup", { key: "Control" });
+      document.dispatchEvent(keyupEvent);
+
+      // Check that userSelect style is removed
+      expect(view.dom.style.userSelect).toBe("");
+    });
   });
 });
