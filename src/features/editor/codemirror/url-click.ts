@@ -7,6 +7,7 @@ import {
   hoverTooltip,
 } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
+import { getModifierKeyName, isLinkActivationModifier } from "../../../utils/platform";
 
 const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
 const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]()]+/g;
@@ -76,11 +77,9 @@ const findUrlAtPos = (view: EditorView, pos: number): { url: string; from: numbe
   return null;
 };
 
-const createTooltipElement = (): HTMLElement => {
-  const dom = document.createElement("div");
-  dom.textContent = "Opt+Click to open link";
-  return dom;
-};
+// Create tooltip DOM node once
+const tooltipDom = document.createElement("div");
+tooltipDom.textContent = `${getModifierKeyName()}+Click to open link`;
 
 export const urlHoverTooltip = hoverTooltip((view, pos) => {
   const urlInfo = findUrlAtPos(view, pos);
@@ -90,7 +89,7 @@ export const urlHoverTooltip = hoverTooltip((view, pos) => {
     pos: urlInfo.from,
     end: urlInfo.to,
     above: true,
-    create: () => ({ dom: createTooltipElement() }),
+    create: () => ({ dom: tooltipDom }),
   };
 });
 
@@ -112,33 +111,17 @@ export const urlClickPlugin = ViewPlugin.fromClass(
     decorations: (v) => v.decorations,
     eventHandlers: {
       mousedown: (event, view) => {
-        if (!event.altKey) return false;
+        if (!isLinkActivationModifier(event)) return false;
 
         const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
         if (pos == null) return false;
 
-        const { from, text } = view.state.doc.lineAt(pos);
-        const offset = pos - from;
+        const urlInfo = findUrlAtPos(view, pos);
+        if (!urlInfo) return false;
 
-        for (const match of text.matchAll(MARKDOWN_LINK_REGEX)) {
-          const index = match.index;
-          if (index !== undefined && offset >= index && offset < index + match[0].length) {
-            window.open(match[2], "_blank", "noopener,noreferrer");
-            event.preventDefault();
-            return true;
-          }
-        }
-
-        for (const match of text.matchAll(URL_REGEX)) {
-          const index = match.index;
-          if (index !== undefined && offset >= index && offset < index + match[0].length) {
-            window.open(match[0], "_blank", "noopener,noreferrer");
-            event.preventDefault();
-            return true;
-          }
-        }
-
-        return false;
+        window.open(urlInfo.url, "_blank", "noopener,noreferrer");
+        event.preventDefault();
+        return true;
       },
     },
   },

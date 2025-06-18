@@ -1,6 +1,6 @@
 import { EditorView } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
-import { test, expect, describe, vi } from "vitest";
+import { test, expect, describe, vi, beforeEach } from "vitest";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
 
 const createViewFromText = (text: string): EditorView => {
@@ -102,5 +102,39 @@ Third line without URL`;
 
     expect(view.state.doc.toString()).toBe("Test content with https://example.com link");
     expect(view.dom).toBeDefined();
+  });
+
+  describe("platform-specific behavior", () => {
+    beforeEach(() => {
+      vi.resetModules();
+    });
+
+    test("uses correct modifier key based on platform", async () => {
+      // Test macOS behavior
+      Object.defineProperty(navigator, "userAgent", {
+        value: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        configurable: true,
+      });
+      const macPlatform = await import("../../../utils/platform");
+      expect(macPlatform.getModifierKeyName()).toBe("Cmd");
+
+      // Test Windows behavior
+      Object.defineProperty(navigator, "userAgent", {
+        value: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        configurable: true,
+      });
+      vi.resetModules();
+      const winPlatform = await import("../../../utils/platform");
+      expect(winPlatform.getModifierKeyName()).toBe("Ctrl");
+
+      // Test Linux behavior
+      Object.defineProperty(navigator, "userAgent", {
+        value: "Mozilla/5.0 (X11; Linux x86_64)",
+        configurable: true,
+      });
+      vi.resetModules();
+      const linuxPlatform = await import("../../../utils/platform");
+      expect(linuxPlatform.getModifierKeyName()).toBe("Ctrl");
+    });
   });
 });
