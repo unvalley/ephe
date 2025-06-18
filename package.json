@@ -32,8 +32,8 @@
     "@dprint/formatter": "^0.4.1",
     "@dprint/markdown": "^0.18.0",
     "@headlessui/react": "^2.2.4",
-    "@heroicons/react": "^2.2.0",
     "@lezer/highlight": "^1.2.1",
+    "@phosphor-icons/react": "^2.1.10",
     "@tailwindcss/typography": "^0.5.16",
     "cmdk": "^1.1.1",
     "codemirror": "^6.0.1",
@@ -45,7 +45,7 @@
     "use-debounce": "^10.0.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.0.0-beta.6",
+    "@biomejs/biome": "^2.0.0",
     "@playwright/test": "^1.53.0",
     "@tailwindcss/postcss": "^4.1.10",
     "@tailwindcss/vite": "^4.1.10",
