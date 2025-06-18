@@ -17,3 +17,5 @@ export const getModifierKey = () => {
 export const getModifierKeyName = () => {
   return isMac() ? "Cmd" : "Ctrl";
 };
+
+export const isLinkActivationModifier = (e: MouseEvent): boolean => (isMac() ? e.metaKey : e.ctrlKey);

@@ -7,7 +7,7 @@ import {
   hoverTooltip,
 } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
-import { getModifierKey, getModifierKeyName } from "../../../utils/platform";
+import { getModifierKey, getModifierKeyName, isLinkActivationModifier } from "../../../utils/platform";
 
 const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
 const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]()]+/g;
@@ -111,22 +111,17 @@ export const urlClickPlugin = ViewPlugin.fromClass(
     decorations: (v) => v.decorations,
     eventHandlers: {
       mousedown: (event, view) => {
-        const modifierKey = getModifierKey();
-        const isModifierPressed = event[modifierKey as keyof MouseEvent] as boolean;
-        
-        if (!isModifierPressed) return false;
+        if (!isLinkActivationModifier(event)) return false;
 
         const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
         if (pos == null) return false;
 
         const urlInfo = findUrlAtPos(view, pos);
-        if (urlInfo) {
-          window.open(urlInfo.url, "_blank", "noopener,noreferrer");
-          event.preventDefault();
-          return true;
-        }
+        if (!urlInfo) return false;
 
-        return false;
+        window.open(urlInfo.url, "_blank", "noopener,noreferrer");
+        event.preventDefault();
+        return true;
       },
     },
   },
