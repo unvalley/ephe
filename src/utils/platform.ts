@@ -1,13 +1,19 @@
-const platform = (() => {
+export const getPlatform = () => {
   if (typeof navigator === "undefined") return "linux";
   const ua = navigator.userAgent.toLowerCase();
   if (ua.includes("mac")) return "mac";
   if (ua.includes("win")) return "windows";
   return "linux";
-})();
+};
 
-export const isMac = platform === "mac";
-export const isWindows = platform === "windows";
-export const isLinux = platform === "linux";
-export const getModifierKey = () => (isMac ? "metaKey" : "ctrlKey");
-export const getModifierKeyName = () => (isMac ? "Cmd" : "Ctrl");
+export const isMac = () => getPlatform() === "mac";
+export const isWindows = () => getPlatform() === "windows";
+export const isLinux = () => getPlatform() === "linux";
+
+export const getModifierKey = () => {
+  return isMac() ? "metaKey" : "ctrlKey";
+};
+
+export const getModifierKeyName = () => {
+  return isMac() ? "Cmd" : "Ctrl";
+};

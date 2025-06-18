@@ -141,23 +141,4 @@ Third line without URL`;
     });
   });
 
-  describe("text selection prevention", () => {
-    test("prevents text selection when modifier key is pressed", () => {
-      const view = createViewFromText("Visit https://example.com");
-      
-      // Simulate keydown event
-      const keydownEvent = new KeyboardEvent("keydown", { key: "Control" });
-      document.dispatchEvent(keydownEvent);
-
-      // Check that userSelect style is applied
-      expect(view.dom.style.userSelect).toBe("none");
-
-      // Simulate keyup event
-      const keyupEvent = new KeyboardEvent("keyup", { key: "Control" });
-      document.dispatchEvent(keyupEvent);
-
-      // Check that userSelect style is removed
-      expect(view.dom.style.userSelect).toBe("");
-    });
-  });
 });

@@ -77,11 +77,9 @@ const findUrlAtPos = (view: EditorView, pos: number): { url: string; from: numbe
   return null;
 };
 
-const createTooltipElement = (): HTMLElement => {
-  const dom = document.createElement("div");
-  dom.textContent = `${getModifierKeyName()}+Click to open link`;
-  return dom;
-};
+// Create tooltip DOM node once
+const tooltipDom = document.createElement("div");
+tooltipDom.textContent = `${getModifierKeyName()}+Click to open link`;
 
 export const urlHoverTooltip = hoverTooltip((view, pos) => {
   const urlInfo = findUrlAtPos(view, pos);
@@ -91,7 +89,7 @@ export const urlHoverTooltip = hoverTooltip((view, pos) => {
     pos: urlInfo.from,
     end: urlInfo.to,
     above: true,
-    create: () => ({ dom: createTooltipElement() }),
+    create: () => ({ dom: tooltipDom }),
   };
 });
 
@@ -101,48 +99,11 @@ export const urlClickPlugin = ViewPlugin.fromClass(
 
     constructor(view: EditorView) {
       this.decorations = createUrlDecorations(view);
-      this.setupGlobalListeners(view);
     }
 
     update(update: ViewUpdate) {
       if (update.docChanged || update.viewportChanged) {
         this.decorations = createUrlDecorations(update.view);
-      }
-    }
-
-    destroy() {
-      this.removeGlobalListeners();
-    }
-
-    private setupGlobalListeners(view: EditorView) {
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === "Control" || e.key === "Meta") {
-          view.dom.style.userSelect = "none";
-          view.dom.style.webkitUserSelect = "none";
-        }
-      };
-
-      const handleKeyUp = (e: KeyboardEvent) => {
-        if (e.key === "Control" || e.key === "Meta") {
-          view.dom.style.userSelect = "";
-          view.dom.style.webkitUserSelect = "";
-        }
-      };
-
-      document.addEventListener("keydown", handleKeyDown);
-      document.addEventListener("keyup", handleKeyUp);
-
-      // Store handlers for cleanup
-      this._handleKeyDown = handleKeyDown;
-      this._handleKeyUp = handleKeyUp;
-    }
-
-    private removeGlobalListeners() {
-      if (this._handleKeyDown) {
-        document.removeEventListener("keydown", this._handleKeyDown);
-      }
-      if (this._handleKeyUp) {
-        document.removeEventListener("keyup", this._handleKeyUp);
       }
     }
   },
@@ -158,25 +119,11 @@ export const urlClickPlugin = ViewPlugin.fromClass(
         const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
         if (pos == null) return false;
 
-        const { from, text } = view.state.doc.lineAt(pos);
-        const offset = pos - from;
-
-        for (const match of text.matchAll(MARKDOWN_LINK_REGEX)) {
-          const index = match.index;
-          if (index !== undefined && offset >= index && offset < index + match[0].length) {
-            window.open(match[2], "_blank", "noopener,noreferrer");
-            event.preventDefault();
-            return true;
-          }
-        }
-
-        for (const match of text.matchAll(URL_REGEX)) {
-          const index = match.index;
-          if (index !== undefined && offset >= index && offset < index + match[0].length) {
-            window.open(match[0], "_blank", "noopener,noreferrer");
-            event.preventDefault();
-            return true;
-          }
+        const urlInfo = findUrlAtPos(view, pos);
+        if (urlInfo) {
+          window.open(urlInfo.url, "_blank", "noopener,noreferrer");
+          event.preventDefault();
+          return true;
         }
 
         return false;
