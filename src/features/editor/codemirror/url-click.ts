@@ -7,7 +7,7 @@ import {
   hoverTooltip,
 } from "@codemirror/view";
 import { RangeSetBuilder } from "@codemirror/state";
-import { getModifierKey, getModifierKeyName, isLinkActivationModifier } from "../../../utils/platform";
+import { getModifierKeyName, isLinkActivationModifier } from "../../../utils/platform";
 
 const MARKDOWN_LINK_REGEX = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
 const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`[\]()]+/g;

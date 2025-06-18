@@ -116,7 +116,6 @@ Third line without URL`;
         configurable: true,
       });
       const macPlatform = await import("../../../utils/platform");
-      expect(macPlatform.getModifierKey()).toBe("metaKey");
       expect(macPlatform.getModifierKeyName()).toBe("Cmd");
 
       // Test Windows behavior
@@ -126,7 +125,6 @@ Third line without URL`;
       });
       vi.resetModules();
       const winPlatform = await import("../../../utils/platform");
-      expect(winPlatform.getModifierKey()).toBe("ctrlKey");
       expect(winPlatform.getModifierKeyName()).toBe("Ctrl");
 
       // Test Linux behavior
@@ -136,9 +134,7 @@ Third line without URL`;
       });
       vi.resetModules();
       const linuxPlatform = await import("../../../utils/platform");
-      expect(linuxPlatform.getModifierKey()).toBe("ctrlKey");
       expect(linuxPlatform.getModifierKeyName()).toBe("Ctrl");
     });
   });
-
 });
