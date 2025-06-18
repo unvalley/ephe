@@ -12,17 +12,18 @@ import type { EditorView } from "@codemirror/view";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import { DprintMarkdownFormatter } from "../editor/markdown/formatter/dprint-markdown-formatter";
 import {
-  Desktop,
-  File,
-  Link,
-  MagnifyingGlass,
-  Moon,
-  Newspaper,
-  Sun,
-  Columns,
-  CodeBlock,
-  CheckCircle,
-  FileText,
+  CheckCircleIcon,
+  FileIcon,
+  LinkIcon,
+  MagnifyingGlassIcon,
+  SunIcon,
+  MoonIcon,
+  DesktopIcon,
+  ArrowsHorizontalIcon,
+  CodeBlockIcon,
+  TextAaIcon,
+  NotebookIcon,
+  GithubLogoIcon,
 } from "@phosphor-icons/react";
 
 // Custom hook for markdown formatter
@@ -260,13 +261,12 @@ export const CommandMenu = ({
         name: `Switch to ${nextTheme} mode`,
         icon:
           nextTheme === COLOR_THEME.LIGHT ? (
-            <Sun className="size-4" weight="thin" />
+            <SunIcon className="size-4" weight="light" />
           ) : nextTheme === COLOR_THEME.DARK ? (
-            <Moon className="size-4" weight="thin" />
+            <MoonIcon className="size-4" weight="light" />
           ) : (
-            <Desktop className="size-4" weight="thin" />
+            <DesktopIcon className="size-4" weight="light" />
           ),
-        // shortcut: "⌘T",
         perform: cycleThemeThenClose,
       },
     ];
@@ -274,29 +274,28 @@ export const CommandMenu = ({
     list.push({
       id: "paper-mode",
       name: "Cycle paper mode",
-      icon: <Newspaper className="size-4" weight="thin" />,
+      icon: <NotebookIcon className="size-4" weight="light" />, // changed from Newspaper
       perform: cyclePaperModeThenClose,
     });
 
     list.push({
       id: "editor-width",
       name: "Toggle editor width",
-      icon: <Columns className="size-4" weight="thin" />,
+      icon: <ArrowsHorizontalIcon className="size-4" weight="light" />, // changed from Columns
       perform: toggleEditorWidthThenClose,
     });
 
     list.push({
       id: "font-family",
       name: "Change font",
-      icon: <FileText className="size-4" weight="thin" />,
+      icon: <TextAaIcon className="size-4" weight="light" />, // changed from FileText
       perform: cycleFont,
     });
     if (editorContent) {
       list.push({
         id: "export-markdown",
         name: "Export markdown",
-        icon: <File className="size-4" weight="thin" />,
-        // shortcut: "⌘S",
+        icon: <FileIcon className="size-4" weight="light" />,
         perform: handleExportMarkdown,
       });
     }
@@ -305,7 +304,7 @@ export const CommandMenu = ({
       list.push({
         id: "format-document",
         name: "Format document",
-        icon: <CodeBlock className="size-4" weight="thin" />,
+        icon: <CodeBlockIcon className="size-4" weight="light" />,
         shortcut: "⌘S",
         perform: handleFormatDocument,
       });
@@ -315,7 +314,7 @@ export const CommandMenu = ({
       list.push({
         id: "insert-github-issues",
         name: "Create GitHub issue list (Public Repos)",
-        icon: <Link className="size-4" weight="thin" />,
+        icon: <GithubLogoIcon className="size-4" weight="light" />,
         perform: handleInsertGitHubIssues,
       });
     }
@@ -323,20 +322,20 @@ export const CommandMenu = ({
     list.push({
       id: "open-tasks",
       name: "Open task modal",
-      icon: <CheckCircle className="size-4" weight="thin" />,
+      icon: <CheckCircleIcon className="size-4" weight="light" />,
       perform: openTaskModal,
     });
 
     list.push({
       id: "open-snapshots",
       name: "Open snapshot modal",
-      icon: <File className="size-4" weight="thin" />,
+      icon: <FileIcon className="size-4" weight="light" />,
       perform: openSnapshotModal,
     });
     list.push({
       id: "github-repo",
       name: "Go to Ephe GitHub Repo",
-      icon: <Link className="size-4" weight="thin" />,
+      icon: <LinkIcon className="size-4" weight="light" />,
       perform: goToGitHubRepo,
     });
 
@@ -373,7 +372,7 @@ export const CommandMenu = ({
           >
             <div className="relative border-neutral-200 border-b dark:border-zinc-800">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <MagnifyingGlass className="size-4" weight="thin" />
+                <MagnifyingGlassIcon className="size-4" weight="thin" />
               </div>
               <Command.Input
                 ref={inputRef}
