@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach, afterAll } from "vitest";
-import { getPlatform, isMac, isWindows, isLinux, getModifierKey, getModifierKeyName } from "./platform";
+import { getPlatform, isMac, isWindows, isLinux, getModifierKeyName } from "./platform";
 
 describe("platform utilities", () => {
   const originalUserAgent = navigator.userAgent;
