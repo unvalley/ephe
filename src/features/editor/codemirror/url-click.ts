@@ -133,8 +133,8 @@ export const urlClickPlugin = ViewPlugin.fromClass(
       document.addEventListener("keyup", handleKeyUp);
 
       // Store handlers for cleanup
-      (this as Record<string, unknown>)._handleKeyDown = handleKeyDown;
-      (this as Record<string, unknown>)._handleKeyUp = handleKeyUp;
+      this._handleKeyDown = handleKeyDown;
+      this._handleKeyUp = handleKeyUp;
     }
 
     private removeGlobalListeners() {
