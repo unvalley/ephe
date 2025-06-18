@@ -62,15 +62,15 @@ export const EditorPage = () => {
           </>
         }
       />
-      <CommandMenu 
-        aria-modal="true" 
-        open={isCommandMenuOpen} 
+      <CommandMenu
+        aria-modal="true"
+        open={isCommandMenuOpen}
         onClose={handleCommandMenuClose}
         editorContent={editorContent}
         editorView={editorRef.current?.view}
         onOpenHistoryModal={openHistoryModal}
       />
-      
+
       <HistoryModal
         isOpen={historyModalOpen}
         onClose={() => setHistoryModalOpen(false)}

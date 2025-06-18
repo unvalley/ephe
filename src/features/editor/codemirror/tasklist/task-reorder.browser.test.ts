@@ -503,80 +503,80 @@ describe("Task Reorder - Large Documents", () => {
   test("handles swapping in 1000-line document without corruption", () => {
     // Generate a large document with tasks
     const lines: string[] = [];
-    
+
     // Add header
     lines.push("# Large Document Test");
     lines.push("");
-    
+
     // Add 1000 tasks in groups
     for (let section = 0; section < 10; section++) {
       lines.push(`## Section ${section + 1}`);
       lines.push("");
-      
+
       for (let task = 0; task < 100; task++) {
         lines.push(`- [ ] Task ${section}.${task}`);
-        
+
         // Add some nested tasks
         if (task % 10 === 0) {
           lines.push(`  - [ ] Subtask ${section}.${task}.1`);
           lines.push(`  - [ ] Subtask ${section}.${task}.2`);
         }
       }
-      
+
       lines.push("");
     }
-    
+
     const doc = lines.join("\n");
-    
+
     // Test moving a task in the middle of the document
     const middleTaskLine = 500;
     const cursorPos = doc.split("\n").slice(0, middleTaskLine).join("\n").length + 1;
-    
+
     const state = createEditorState(doc, cursorPos);
     const view = createMockView(state);
-    
+
     const result = moveTaskDown(view);
     expect(result).toBe(true); // Returns true to prevent default behavior
-    
+
     // Verify document integrity
     const newDoc = view.state.doc.toString();
     const newLines = newDoc.split("\n");
-    
+
     // Same number of lines
     expect(newLines.length).toBe(lines.length);
-    
+
     // Headers should remain intact
-    expect(newLines.filter(line => line.startsWith("#")).length).toBe(
-      lines.filter(line => line.startsWith("#")).length
+    expect(newLines.filter((line) => line.startsWith("#")).length).toBe(
+      lines.filter((line) => line.startsWith("#")).length,
     );
-    
+
     // Same number of tasks
-    expect(newLines.filter(line => line.includes("- [ ]")).length).toBe(
-      lines.filter(line => line.includes("- [ ]")).length
+    expect(newLines.filter((line) => line.includes("- [ ]")).length).toBe(
+      lines.filter((line) => line.includes("- [ ]")).length,
     );
   });
 
   test("performance: moves task at end of 1000-line document", () => {
     const lines: string[] = [];
-    
+
     // Generate 998 tasks
     for (let i = 0; i < 998; i++) {
       lines.push(`- [ ] Task ${i}`);
     }
-    
+
     // Add the last two tasks we'll swap
     lines.push("- [ ] Task 998");
     lines.push("- [ ] Task 999");
-    
+
     const doc = lines.join("\n");
     const secondLastLinePos = doc.lastIndexOf("- [ ] Task 998");
-    
+
     const state = createEditorState(doc, secondLastLinePos);
     const view = createMockView(state);
-    
+
     const result = moveTaskDown(view);
     expect(result).toBe(true); // Returns true to prevent default behavior
-    
+
     const newDoc = view.state.doc.toString();
     expect(newDoc.endsWith("- [ ] Task 999\n- [ ] Task 998")).toBe(true);
   });
@@ -613,11 +613,11 @@ describe("Task Reorder - Mixed Width Spaces", () => {
 
   test("recognizes empty lines with various space types", () => {
     const testCases = [
-      "   ",          // Regular spaces
-      "　　　",        // Full-width spaces
-      " 　 　",        // Mixed spaces
-      "\t\t",         // Tabs
-      " \t　",        // All mixed
+      "   ", // Regular spaces
+      "　　　", // Full-width spaces
+      " 　 　", // Mixed spaces
+      "\t\t", // Tabs
+      " \t　", // All mixed
     ];
 
     for (const emptyLine of testCases) {
@@ -732,7 +732,7 @@ describe("Task Reorder - Different Block Sizes", () => {
 
     const result = moveTaskUp(view);
     expect(result).toBe(true); // Returns true to prevent default behavior
-    
+
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- [ ] Long task with much more content here
 - [ ] Short task`);
@@ -751,7 +751,7 @@ describe("Task Reorder - Different Block Sizes", () => {
 
     const result = moveTaskDown(view);
     expect(result).toBe(true); // Returns true to prevent default behavior
-    
+
     const newDoc = view.state.doc.toString();
     expect(newDoc).toBe(`- [ ] Long task with much more content here
 - [ ] Short task`);
@@ -802,10 +802,10 @@ describe("Task Reorder - Cursor Position on Failed Moves", () => {
 
     const result = moveTaskUp(view);
     expect(result).toBe(true); // Returns true to prevent default behavior // Move operation failed
-    
+
     // Check that no dispatch was called (no changes made)
     expect(view.dispatch).not.toHaveBeenCalled();
-    
+
     // Document should remain unchanged
     expect(view.state.doc.toString()).toBe(doc);
   });
@@ -821,10 +821,10 @@ describe("Task Reorder - Cursor Position on Failed Moves", () => {
 
     const result = moveTaskUp(view);
     expect(result).toBe(true); // Returns true to prevent default behavior // Move operation failed
-    
+
     // Check that no dispatch was called
     expect(view.dispatch).not.toHaveBeenCalled();
-    
+
     // Document should remain unchanged
     expect(view.state.doc.toString()).toBe(doc);
   });
@@ -841,10 +841,10 @@ describe("Task Reorder - Cursor Position on Failed Moves", () => {
 
     const result = moveTaskUp(view);
     expect(result).toBe(true); // Returns true to prevent default behavior // Move operation failed
-    
+
     // Check that no dispatch was called
     expect(view.dispatch).not.toHaveBeenCalled();
-    
+
     // Document should remain unchanged
     expect(view.state.doc.toString()).toBe(doc);
   });
@@ -911,13 +911,13 @@ describe("Task Reorder - MaxLine Constraint", () => {
     //     - [ ] Child 2
     //   - [ ] Uncle
     // - [ ] Great Uncle
-    
+
     // Reset and try to move Child 2 down (it's now the last child)
     const newDoc = view.state.doc.toString();
     const child2Pos = newDoc.indexOf("- [ ] Child 2");
     const newState = createEditorState(newDoc, child2Pos + 5); // Cursor on Child 2
     const newView = createMockView(newState);
-    
+
     result = moveTaskDown(newView);
     expect(result).toBe(true); // Returns true to prevent default behavior // Cannot move beyond parent
   });
