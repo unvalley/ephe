@@ -119,7 +119,7 @@ export const urlClickPlugin = ViewPlugin.fromClass(
         const urlInfo = findUrlAtPos(view, pos);
         if (!urlInfo) return false;
 
-        window.open(urlInfo.url, "_blank", "noopener,noreferrer");
+        window.open(urlInfo.url, "_blank", "noopener,noreferrer")?.focus();
         event.preventDefault();
         return true;
       },
