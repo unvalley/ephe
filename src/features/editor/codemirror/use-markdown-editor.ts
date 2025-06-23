@@ -23,6 +23,7 @@ import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
 import { useCursorPosition } from "./use-cursor-position";
+import { useDebouncedCallback } from "use-debounce";
 
 const storage = createJSONStorage<string>(() => localStorage);
 
@@ -96,6 +97,8 @@ export const useMarkdownEditor = () => {
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
+
+  const debouncedSetContent = useDebouncedCallback(setContent, 200);
 
   const onFormat = async (view: EditorView) => {
     if (!formatterRef.current) {
@@ -186,9 +189,7 @@ export const useMarkdownEditor = () => {
           EditorView.updateListener.of((update) => {
             if (update.docChanged) {
               const updatedContent = update.state.doc.toString();
-              window.requestAnimationFrame(() => {
-                setContent(updatedContent);
-              });
+              debouncedSetContent(updatedContent);
             }
           }),
 
