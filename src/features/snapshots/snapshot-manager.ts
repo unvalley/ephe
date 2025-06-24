@@ -3,6 +3,7 @@
  */
 
 import { snapshotStorage } from "./snapshot-storage";
+import { syncManager } from "../sync/sync-manager";
 
 /**
  * Create an automatic snapshot of the current editor content
@@ -31,6 +32,17 @@ export const createAutoSnapshot = ({ content }: { content: string; title: string
     content,
     charCount: content.length,
   });
+
+  // Sync the newly created snapshot if sync is enabled
+  if (syncManager.isEnabled()) {
+    const snapshots = snapshotStorage.getAll();
+    const latestSnapshot = snapshots[snapshots.length - 1];
+    if (latestSnapshot) {
+      syncManager.syncSnapshot(latestSnapshot).catch(error => {
+        console.error('Failed to sync snapshot:', error);
+      });
+    }
+  }
 };
 
 /**

@@ -7,6 +7,7 @@ import { LandingPage } from "./page/landing-page";
 import { ToastContainer } from "./utils/components/toast";
 import { NotFound } from "./page/404-page";
 import { EditorPage } from "./page/editor-page";
+import { SyncInitializer } from "./features/sync/sync-initializer";
 
 const root = document.getElementById("root");
 if (!root) {
@@ -16,6 +17,7 @@ if (!root) {
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <BrowserRouter>
+      <SyncInitializer />
       <Routes>
         <Route path="/" element={<EditorPage />} />
         <Route path="landing" element={<LandingPage />} />

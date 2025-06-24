@@ -12,6 +12,8 @@ import {
 import { Fragment, useEffect, useState } from "react";
 import type { Snapshot } from "../snapshots/snapshot-storage";
 import { useHistoryData } from "./use-history-data";
+import { useSyncStatus } from "../sync/use-sync-status";
+import { CloudCheck } from "@phosphor-icons/react";
 
 type HistoryModalProps = {
   isOpen: boolean;
@@ -51,6 +53,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
     handleDeleteAllSnapshots,
     refresh,
   } = useHistoryData();
+  const { isSynced, isCheckingSync } = useSyncStatus(snapshots);
 
   useEffect(() => {
     setSelectedTabIndex(initialTabIndex);
@@ -225,7 +228,15 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                             ) : selectedSnapshot ? (
                               <div className="flex h-full flex-col">
                                 <div className="mb-4 flex items-center justify-between">
-                                  <h4 className="text-md">{formatDate(selectedSnapshot.timestamp)}</h4>
+                                  <div className="flex items-center gap-3">
+                                    <h4 className="text-md">{formatDate(selectedSnapshot.timestamp)}</h4>
+                                    {!isCheckingSync && isSynced(selectedSnapshot.id) && (
+                                      <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                        <CloudCheck className="size-4" weight="light" />
+                                        <span className="text-xs">Synced</span>
+                                      </div>
+                                    )}
+                                  </div>
                                   <div className="flex space-x-2">
                                     <button type="button" onClick={handleRestore} className={BUTTON_STYLES.primary}>
                                       Restore
@@ -275,8 +286,11 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                                       aria-label={`Select snapshot: ${formatDate(snapshot.timestamp)}`}
                                       type="button"
                                     >
-                                      <div className="flex flex-col">
+                                      <div className="flex items-center justify-between">
                                         <h5 className="truncate text-sm">{formatDate(snapshot.timestamp)}</h5>
+                                        {!isCheckingSync && isSynced(snapshot.id) && (
+                                          <CloudCheck className="size-3 text-green-600 dark:text-green-400" weight="light" />
+                                        )}
                                       </div>
                                     </button>
                                   ))}
