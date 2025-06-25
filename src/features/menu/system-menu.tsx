@@ -4,6 +4,7 @@ import { useTheme } from "../../utils/hooks/use-theme";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
+import { useWordCount } from "../../utils/hooks/use-word-count";
 import { useFontFamily, FONT_FAMILY_OPTIONS, FONT_FAMILIES } from "../../utils/hooks/use-font";
 import { useState, useEffect, useRef } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
@@ -77,6 +78,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
 
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
   const { charCount } = useCharCount();
+  const { wordCount } = useWordCount();
   const { todayCompletedTasks } = useTodayCompletedTasks(menuOpen);
   const { snapshotCount } = useSnapshotCount(menuOpen);
   const { taskAutoFlushMode, setTaskAutoFlushMode } = useTaskAutoFlush();
@@ -126,6 +128,15 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                         <HashIcon className="size-4" weight="light" />
                       </span>
                       <span>{charCount > 0 ? `${charCount.toLocaleString()} chars` : "No content"}</span>
+                    </div>
+                  </MenuItem>
+                  
+                  <MenuItem disabled>
+                    <div className="flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30">
+                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                        <TextAaIcon className="size-4" weight="light" />
+                      </span>
+                      <span>{wordCount > 0 ? `${wordCount.toLocaleString()} words` : "No words"}</span>
                     </div>
                   </MenuItem>
 
