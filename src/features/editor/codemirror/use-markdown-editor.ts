@@ -228,7 +228,7 @@ export const useMarkdownEditor = () => {
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, [editorRef.current]);
+  }, [editorRef.current]); // FIXME
 
   const { resetCursorPosition } = useCursorPosition(viewRef.current ?? undefined);
 
