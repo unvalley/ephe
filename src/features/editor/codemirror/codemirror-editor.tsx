@@ -5,18 +5,20 @@ import { useImperativeHandle } from "react";
 import type { EditorView } from "@codemirror/view";
 
 export type CodeMirrorEditorRef = {
-  view: EditorView | undefined;
+  view: EditorView | null;
 };
 
-export const CodeMirrorEditor = ({ ref }: { ref?: React.Ref<CodeMirrorEditorRef> }) => {
-  const { editor, view } = useMarkdownEditor();
+export const CodeMirrorEditor = ({ ref }: { ref: React.Ref<CodeMirrorEditorRef> }) => {
+  const { editor, view: viewRef } = useMarkdownEditor();
 
   useImperativeHandle(
     ref,
     () => ({
-      view,
+      get view() {
+        return viewRef.current;
+      },
     }),
-    [view],
+    [],
   );
 
   return <div data-testid="code-mirror-editor" ref={editor} className="mx-auto h-full w-full" />;

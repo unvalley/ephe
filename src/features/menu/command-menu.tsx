@@ -49,7 +49,7 @@ type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;
   editorContent?: string;
-  editorView?: EditorView;
+  editorView: EditorView | null;
   onOpenHistoryModal?: (tabIndex: number) => void;
 };
 

@@ -67,7 +67,7 @@ export const EditorPage = () => {
         open={isCommandMenuOpen}
         onClose={handleCommandMenuClose}
         editorContent={editorContent}
-        editorView={editorRef.current?.view}
+        editorView={editorRef.current?.view ?? null}
         onOpenHistoryModal={openHistoryModal}
       />
 
