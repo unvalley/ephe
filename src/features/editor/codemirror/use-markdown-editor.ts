@@ -4,7 +4,7 @@ import { languages } from "@codemirror/language-data";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
 import { EditorView, keymap, placeholder } from "@codemirror/view";
 import { useAtom } from "jotai";
-import { useRef, useState, useEffect, useLayoutEffect } from "react";
+import { useRef, useEffect, useLayoutEffect } from "react";
 import { showToast } from "../../../utils/components/toast";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 import { useTheme } from "../../../utils/hooks/use-theme";
@@ -80,9 +80,8 @@ const useTaskHandler = () => {
 };
 
 export const useMarkdownEditor = () => {
-  const editor = useRef<HTMLDivElement | null>(null);
-  const [container, setContainer] = useState<HTMLDivElement>();
-  const [view, setView] = useState<EditorView>();
+  const editorRef = useRef<HTMLDivElement | null>(null);
+  const viewRef = useRef<EditorView | null>(null);
   const [content, setContent] = useAtom(editorAtom);
 
   const formatterRef = useMarkdownFormatter();
@@ -98,9 +97,13 @@ export const useMarkdownEditor = () => {
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
 
-  const debouncedSetContent = useDebouncedCallback(setContent, 200);
+  const debouncedSetContent = useDebouncedCallback((view: EditorView) => {
+    setContent(view.state.doc.toString());
+  }, 200);
 
-  const onFormat = async (view: EditorView) => {
+  const onFormat = async () => {
+    const view = viewRef.current;
+    if (!view) return false;
     if (!formatterRef.current) {
       showToast("Formatter not initialized yet", "error");
       return false;
@@ -144,7 +147,9 @@ export const useMarkdownEditor = () => {
     }
   };
 
-  const onSaveSnapshot = async (view: EditorView) => {
+  const onSaveSnapshot = async () => {
+    const view = viewRef.current;
+    if (!view) return false;
     try {
       const currentText = view.state.doc.toString();
 
@@ -163,85 +168,73 @@ export const useMarkdownEditor = () => {
     }
   };
 
-  useEffect(() => {
-    if (editor.current) setContainer(editor.current);
-  }, []);
-
   useLayoutEffect(() => {
-    if (!view && container) {
-      const state = EditorState.create({
-        doc: content,
-        extensions: [
-          keymap.of(defaultKeymap),
-          history(),
-          keymap.of(historyKeymap),
+    if (!editorRef.current || viewRef.current) return;
 
-          // Task key bindings with high priority BEFORE markdown extension
-          Prec.high(createChecklistPlugin(taskHandlerRef.current)),
+    const state = EditorState.create({
+      doc: content,
+      extensions: [
+        keymap.of(defaultKeymap),
+        history({ minDepth: 50, newGroupDelay: 250 }),
+        keymap.of(historyKeymap),
 
-          markdown({
-            base: markdownLanguage,
-            codeLanguages: languages,
-            addKeymap: true,
-          }),
+        // Task key bindings with high priority BEFORE markdown extension
+        Prec.high(createChecklistPlugin(taskHandlerRef.current)),
 
-          EditorView.lineWrapping,
-          EditorView.updateListener.of((update) => {
-            if (update.docChanged) {
-              const updatedContent = update.state.doc.toString();
-              debouncedSetContent(updatedContent);
-            }
-          }),
+        markdown({
+          base: markdownLanguage,
+          codeLanguages: languages,
+          addKeymap: true,
+        }),
 
-          themeCompartment.of(editorTheme),
-          highlightCompartment.of(editorHighlightStyle),
-          // Only show placeholder on non-mobile devices
-          ...(isMobile ? [] : [placeholder(getRandomQuote())]),
+        EditorView.lineWrapping,
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            debouncedSetContent(update.view);
+          }
+        }),
 
-          keymap.of([
-            {
-              key: "Mod-s",
-              run: (targetView) => {
-                onFormat(targetView);
-                return true;
-              },
-              preventDefault: true,
+        themeCompartment.of(editorTheme),
+        highlightCompartment.of(editorHighlightStyle),
+        // Only show placeholder on non-mobile devices
+        ...(isMobile ? [] : [placeholder(getRandomQuote())]),
+
+        keymap.of([
+          {
+            key: "Mod-s",
+            run: () => {
+              void onFormat();
+              return true;
             },
-            {
-              key: "Mod-Shift-s",
-              run: (targetView) => {
-                onSaveSnapshot(targetView);
-                return true;
-              },
-              preventDefault: true,
+            preventDefault: true,
+          },
+          {
+            key: "Mod-Shift-s",
+            run: () => {
+              void onSaveSnapshot();
+              return true;
             },
-          ]),
-          urlClickPlugin,
-          urlHoverTooltip,
-        ],
-      });
-      const viewCurrent = new EditorView({ state, parent: container });
-      setView(viewCurrent);
-      viewCurrent.focus(); // store focus
-    }
-  }, [
-    view,
-    container,
-    content,
-    setContent,
-    onFormat,
-    onSaveSnapshot,
-    highlightCompartment.of,
-    themeCompartment.of,
-    editorTheme,
-    editorHighlightStyle,
-    isMobile,
-  ]);
+            preventDefault: true,
+          },
+        ]),
+        urlClickPlugin,
+        urlHoverTooltip,
+      ],
+    });
+    viewRef.current = new EditorView({ state, parent: editorRef.current });
+    viewRef.current.focus();
 
-  const { resetCursorPosition } = useCursorPosition(view);
+    return () => {
+      viewRef.current?.destroy();
+      viewRef.current = null;
+    };
+  }, [editorRef.current]); // FIXME
+
+  const { resetCursorPosition } = useCursorPosition(viewRef.current ?? undefined);
 
   // Listen for content restore events
   useEffect(() => {
+    const view = viewRef.current;
     const handleContentRestored = (event: CustomEvent<{ content: string }>) => {
       if (view && event.detail.content) {
         // Update the editor content
@@ -260,33 +253,35 @@ export const useMarkdownEditor = () => {
       // Remove event listener on cleanup
       window.removeEventListener("ephe:content-restored", handleContentRestored as EventListener);
     };
-  }, [view, setContent, resetCursorPosition]);
+  }, [viewRef.current, setContent, resetCursorPosition]);
 
   // Update theme when dark mode changes
   useEffect(() => {
-    if (view) {
-      view.dispatch({
-        effects: [themeCompartment.reconfigure(editorTheme), highlightCompartment.reconfigure(editorHighlightStyle)],
-      });
-    }
-  }, [view, highlightCompartment.reconfigure, themeCompartment.reconfigure, editorTheme, editorHighlightStyle]);
+    const view = viewRef.current;
+    if (!view) return;
+    view.dispatch({
+      effects: [themeCompartment.reconfigure(editorTheme), highlightCompartment.reconfigure(editorHighlightStyle)],
+    });
+  }, [highlightCompartment.reconfigure, themeCompartment.reconfigure, editorTheme, editorHighlightStyle]);
 
   // Listen for external content updates
   // - text edit emits storage event
   // - subscribe updates the editor content
   useEffect(() => {
-    if (view && content !== view.state.doc.toString()) {
+    const view = viewRef.current;
+    if (!view) return;
+    if (content.length !== view.state.doc.length || content !== view.state.doc.sliceString(0)) {
       view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: content },
       });
     }
     setCharCount(content.length);
-  }, [view, content]);
+  }, [content]);
 
   return {
-    editor,
-    view,
-    onFormat: view ? () => onFormat(view) : undefined,
-    onSaveSnapshot: view ? () => onSaveSnapshot(view) : undefined,
+    editor: editorRef,
+    view: viewRef,
+    onFormat: viewRef.current ? () => onFormat() : undefined,
+    onSaveSnapshot: viewRef.current ? () => onSaveSnapshot() : undefined,
   };
 };
