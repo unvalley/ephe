@@ -191,6 +191,7 @@ export const useMarkdownEditor = () => {
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             debouncedSetContent(update.view);
+            setCharCount(update.view.state.doc.length);
           }
         }),
 
@@ -228,7 +229,7 @@ export const useMarkdownEditor = () => {
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, [editorRef.current]);
+  }, []);
 
   const { resetCursorPosition } = useCursorPosition(viewRef.current ?? undefined);
 
@@ -275,8 +276,13 @@ export const useMarkdownEditor = () => {
         changes: { from: 0, to: view.state.doc.length, insert: content },
       });
     }
-    setCharCount(content.length);
   }, [content]);
+
+  useEffect(() => {
+    return () => {
+      debouncedSetContent.cancel();
+    };
+  }, [debouncedSetContent]);
 
   return {
     editor: editorRef,
