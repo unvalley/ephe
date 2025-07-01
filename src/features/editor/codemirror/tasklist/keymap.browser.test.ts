@@ -352,6 +352,24 @@ describe("taskKeyBindings - Delete Key", () => {
     expect(result.afterText).toBe("  ");
     expect(result.afterCursor).toBe(2);
   });
+
+  test("removes checkbox when delete pressed after checkbox with content", () => {
+    const result = testKeyBehavior("- [ ] aaaa", 6, "Delete");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("- [ ] aaaa");
+    expect(result.afterText).toBe("- aaaa");
+    expect(result.afterCursor).toBe(2);
+  });
+
+  test("removes checkbox when delete pressed after checkbox with indented content", () => {
+    const result = testKeyBehavior("  - [ ] aaaa", 8, "Delete");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("  - [ ] aaaa");
+    expect(result.afterText).toBe("  - aaaa");
+    expect(result.afterCursor).toBe(4);
+  });
 });
 
 describe("taskKeyBindings - Integration", () => {
