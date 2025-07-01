@@ -63,12 +63,13 @@ export const HoursDisplay = () => {
         type="button"
         onClick={() => setShowTooltip(!showTooltip)}
         onMouseEnter={() => setShowTooltip(true)}
-        className="whitespace-nowrap"
+        className="whitespace-nowrap rounded-md bg-white px-2 py-1 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:hover:bg-neutral-800"
       >
         {formattedToday}
       </button>
 
       {showTooltip && (
+        // biome-ignore lint/a11y/noStaticElementInteractions: <explanation>
         <div
           ref={tooltipRef}
           className="absolute bottom-full mb-2 transform rounded-xl bg-primary-50 p-6 shadow-xl dark:bg-primary-700"
@@ -97,9 +98,9 @@ export const HoursDisplay = () => {
             }}
           >
             {hoursArray.map((hour) => (
-              <button
+              // biome-ignore lint/a11y/noStaticElementInteractions: <explanation>
+              <div
                 key={hour.hour}
-                type="button"
                 className="group relative hover:z-10 hover:scale-150"
                 style={{
                   width: "5px",
@@ -124,7 +125,7 @@ export const HoursDisplay = () => {
                 >
                   {formatHour(hour.hour)}
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         </div>

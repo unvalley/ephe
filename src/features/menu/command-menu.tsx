@@ -3,36 +3,56 @@
 import { Command } from "cmdk";
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "../../utils/hooks/use-theme";
-import type { MarkdownFormatter } from "../editor/markdown/formatter/markdown-formatter";
 import { showToast } from "../../utils/components/toast";
-import type { PaperMode } from "../../utils/hooks/use-paper-mode";
-import { COLOR_THEME, type ColorTheme } from "../../utils/theme-initializer";
-import type { EditorWidth } from "../../utils/hooks/use-editor-width";
+import { usePaperMode } from "../../utils/hooks/use-paper-mode";
+import { COLOR_THEME } from "../../utils/theme-initializer";
+import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useTaskAging } from "../../utils/hooks/use-task-aging";
+import { useFontFamily, FONT_FAMILIES, FONT_FAMILY_OPTIONS } from "../../utils/hooks/use-font";
+import type { EditorView } from "@codemirror/view";
+import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
+import { DprintMarkdownFormatter } from "../editor/markdown/formatter/dprint-markdown-formatter";
 import {
-  ComputerDesktopIcon,
-  DocumentIcon,
+  CheckCircleIcon,
+  FileIcon,
   LinkIcon,
   MagnifyingGlassIcon,
-  MoonIcon,
-  NewspaperIcon,
   SunIcon,
-  ViewColumnsIcon,
-  ClockIcon,
-} from "@heroicons/react/24/outline";
+  MoonIcon,
+  DesktopIcon,
+  ArrowsHorizontalIcon,
+  CodeBlockIcon,
+  TextAaIcon,
+  NotebookIcon,
+  GithubLogoIcon,
+  Clock,
+} from "@phosphor-icons/react";
+
+// Custom hook for markdown formatter
+const useMarkdownFormatter = () => {
+  const ref = useRef<DprintMarkdownFormatter | null>(null);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const fmt = await DprintMarkdownFormatter.getInstance();
+      if (alive) {
+        ref.current = fmt;
+      }
+    })();
+    return () => {
+      alive = false;
+      ref.current = null;
+    };
+  }, []);
+  return ref;
+};
 
 type CommandMenuProps = {
   open: boolean;
   onClose?: () => void;
   editorContent?: string;
-  //   editorRef?: React.RefObject<monaco.editor.IStandaloneCodeEditor | null>;
-  markdownFormatterRef?: React.RefObject<MarkdownFormatter | null>;
-  paperMode?: PaperMode;
-  cyclePaperMode?: () => PaperMode;
-  editorWidth?: EditorWidth;
-  toggleEditorWidth?: () => void;
-  previewMode?: boolean;
-  togglePreviewMode?: () => void;
+  editorView: EditorView | null;
+  onOpenHistoryModal?: (tabIndex: number) => void;
 };
 
 type CommandItem = {
@@ -41,61 +61,61 @@ type CommandItem = {
   icon?: React.ReactNode;
   shortcut?: string;
   perform: () => void;
-  keywords?: string;
 };
 
-export function CommandMenu({
+export const CommandMenu = ({
   open,
   onClose = () => {},
   editorContent = "",
-  //   markdownFormatterRef,
-  paperMode,
-  cyclePaperMode,
-  editorWidth,
-  toggleEditorWidth,
-}: CommandMenuProps) {
-  const { theme, setTheme, nextTheme } = useTheme();
+  editorView,
+  onOpenHistoryModal,
+}: CommandMenuProps) => {
+  const { nextTheme, cycleTheme } = useTheme();
+  const { paperMode: currentPaperMode, cyclePaperMode } = usePaperMode();
+  const { editorWidth: currentEditorWidth, toggleEditorWidth } = useEditorWidth();
+  const { fontFamily, setFontFamily } = useFontFamily();
   const { taskAgingMode, toggleTaskAgingMode } = useTaskAging();
+  const formatterRef = useMarkdownFormatter();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open) {
-      const timer = setTimeout(() => {
-        inputRef.current?.focus();
-        setInputValue("");
-      }, 50);
-      return () => clearTimeout(timer);
+    if (!open) {
+      // Clear input when menu closes
+      setInputValue("");
+      return;
     }
-  }, [open]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      } else if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown, true); // Use capture phase
+    return () => document.removeEventListener("keydown", handleKeyDown, true);
+  }, [open, onClose]);
 
-  const cycleThemeCallback = () => {
-    let nextTheme: ColorTheme;
-    if (theme === COLOR_THEME.LIGHT) {
-      nextTheme = COLOR_THEME.DARK;
-    } else if (theme === COLOR_THEME.DARK) {
-      nextTheme = COLOR_THEME.SYSTEM;
-    } else {
-      nextTheme = COLOR_THEME.LIGHT;
-    }
-    setTheme(nextTheme);
+  const cyclePaperModeThenClose = () => {
+    cyclePaperMode();
     onClose();
   };
 
-  const getNextThemeText = () => {
-    if (theme === COLOR_THEME.LIGHT) return "dark";
-    if (theme === COLOR_THEME.DARK) return "system";
-    return "light";
-  };
-
-  const cyclePaperModeCallback = () => {
-    cyclePaperMode?.();
+  const toggleEditorWidthThenClose = () => {
+    toggleEditorWidth();
     onClose();
   };
 
-  const toggleEditorWidthCallback = () => {
-    toggleEditorWidth?.();
+  const cycleFont = () => {
+    const fontKeys = FONT_FAMILY_OPTIONS;
+    const currentIndex = fontKeys.indexOf(fontFamily);
+    const nextIndex = (currentIndex + 1) % fontKeys.length;
+    setFontFamily(fontKeys[nextIndex]);
     onClose();
   };
 
@@ -105,7 +125,29 @@ export function CommandMenu({
     onClose();
   };
 
-  const handleExportMarkdownCallback = () => {
+  const openTaskModal = () => {
+    if (!onOpenHistoryModal) return;
+    onClose(); // Close command menu first
+    // Use requestAnimationFrame to ensure command menu has completed its close animation
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        onOpenHistoryModal(0);
+      });
+    });
+  };
+
+  const openSnapshotModal = () => {
+    if (!onOpenHistoryModal) return;
+    onClose(); // Close command menu first
+    // Use requestAnimationFrame to ensure command menu has completed its close animation
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        onOpenHistoryModal(1);
+      });
+    });
+  };
+
+  const handleExportMarkdown = () => {
     if (!editorContent) {
       showToast("No content to export", "error");
       onClose();
@@ -131,79 +173,93 @@ export function CommandMenu({
     }
   };
 
-  //   const handleFormatDocumentCallback = useCallback(async () => {
-  //     if (!editorRef?.current || !markdownFormatterRef?.current) {
-  //       showToast("Editor or markdown formatter not available", "error");
-  //       handleClose();
-  //       return;
-  //     }
-  //     try {
-  //       const editor = editorRef.current;
-  //       const selection = editor.getSelection();
-  //       const scrollTop = editor.getScrollTop();
-  //       const content = editor.getValue();
-  //       const formattedContent = await markdownFormatterRef.current.formatMarkdown(content); // formatMarkdown is assumed to return a Promise
+  const handleFormatDocument = async () => {
+    if (!editorView || !formatterRef.current) {
+      showToast("Editor or markdown formatter not available", "error");
+      onClose();
+      return;
+    }
+    try {
+      const { state } = editorView;
+      const scrollTop = editorView.scrollDOM.scrollTop;
+      const cursorPos = state.selection.main.head;
+      const cursorLine = state.doc.lineAt(cursorPos);
+      const cursorLineNumber = cursorLine.number;
+      const cursorColumn = cursorPos - cursorLine.from;
+      const currentText = state.doc.toString();
+      const formattedText = await formatterRef.current.formatMarkdown(currentText);
 
-  //       editor.setValue(formattedContent);
+      if (formattedText !== currentText) {
+        editorView.dispatch({
+          changes: { from: 0, to: state.doc.length, insert: formattedText },
+        });
 
-  //       // Restore cursor position and scroll position
-  //       if (selection) {
-  //         editor.setSelection(selection);
-  //       }
-  //       // Wait for rendering after setValue then restore scroll position
-  //       setTimeout(() => editor.setScrollTop(scrollTop), 0);
+        // Restore cursor position after formatting
+        try {
+          const newState = editorView.state;
+          const newDocLineCount = newState.doc.lines;
+          if (cursorLineNumber <= newDocLineCount) {
+            const newLine = newState.doc.line(cursorLineNumber);
+            const newColumn = Math.min(cursorColumn, newLine.length);
+            const newPos = newLine.from + newColumn;
+            editorView.dispatch({ selection: { anchor: newPos, head: newPos } });
+          }
+        } catch (_selectionError) {
+          editorView.dispatch({ selection: { anchor: 0, head: 0 } });
+        }
+        editorView.scrollDOM.scrollTop = Math.min(
+          scrollTop,
+          editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight,
+        );
+      }
 
-  //       showToast("Document formatted successfully", "default");
-  //     } catch (error) {
-  //       const message = error instanceof Error ? error.message : "unknown";
-  //       showToast(`Error formatting document: ${message}`, "error");
-  //       console.error("Formatting error:", error);
-  //     } finally {
-  //       handleClose();
-  //     }
-  //   }, [markdownFormatterRef, handleClose]);
+      showToast("Document formatted", "default");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown";
+      showToast(`Error formatting document: ${message}`, "error");
+      console.error("Formatting error:", error);
+    } finally {
+      onClose();
+    }
+  };
 
-  //   const handleInsertGitHubIssuesCallback = useCallback(async () => {
-  //     if (!editorRef?.current) {
-  //       showToast("Editor not available", "error");
-  //       handleClose();
-  //       return;
-  //     }
-  //     try {
-  //       const github_user_id = prompt("Enter GitHub User ID:");
-  //       if (!github_user_id) {
-  //         handleClose(); // Close on cancel or empty input
-  //         return;
-  //       }
-  //       const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id); // fetchGitHubIssuesTaskList is assumed to return a Promise
-  //       const editor = editorRef.current;
-  //       const selection = editor.getSelection();
-  //       const position = editor.getPosition();
+  const handleInsertGitHubIssues = async () => {
+    if (!editorView) {
+      showToast("Editor not available", "error");
+      onClose();
+      return;
+    }
+    try {
+      const github_user_id = prompt("Enter GitHub User ID:");
+      if (!github_user_id) {
+        onClose();
+        return;
+      }
+      const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id);
+      const state = editorView.state;
+      const cursorPos = state.selection.main.head;
 
-  //       let range: monaco.IRange;
-  //       if (selection && !selection.isEmpty()) {
-  //         range = selection;
-  //       } else if (position) {
-  //         // Insert at current cursor position if no selection
-  //         range = new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column);
-  //       } else {
-  //         // Insert at beginning if no cursor position (e.g., editor is empty)
-  //         range = new monaco.Range(1, 1, 1, 1);
-  //       }
+      editorView.dispatch({
+        changes: { from: cursorPos, to: cursorPos, insert: issuesTaskList },
+        selection: { anchor: cursorPos + issuesTaskList.length },
+      });
 
-  //       editor.executeEdits("insert-github-issues", [{ range, text: issuesTaskList, forceMoveMarkers: true }]);
-
-  //       showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
-  //     } catch (error) {
-  //       console.error("Error inserting GitHub issues:", error);
-  //       showToast("Failed to insert GitHub issues", "error");
-  //     } finally {
-  //       handleClose();
-  //     }
-  //   }, [editorRef, handleClose]);
+      showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
+    } catch (error) {
+      console.error("Error inserting GitHub issues:", error);
+      showToast("Failed to insert GitHub issues", "error");
+    } finally {
+      onClose();
+    }
+  };
 
   const goToGitHubRepo = () => {
     window.open("https://github.com/unvalley/ephe", "_blank");
+    onClose();
+  };
+
+  const cycleThemeThenClose = () => {
+    cycleTheme();
     onClose();
   };
 
@@ -211,83 +267,92 @@ export function CommandMenu({
     const list: CommandItem[] = [
       {
         id: "theme-toggle",
-        name: `Switch to ${getNextThemeText()} mode`,
+        name: `Switch to ${nextTheme} mode`,
         icon:
           nextTheme === COLOR_THEME.LIGHT ? (
-            <SunIcon className="size-4 stroke-1" />
+            <SunIcon className="size-4" weight="light" />
           ) : nextTheme === COLOR_THEME.DARK ? (
-            <MoonIcon className="size-4 stroke-1" />
+            <MoonIcon className="size-4" weight="light" />
           ) : (
-            <ComputerDesktopIcon className="size-4 stroke-1" />
+            <DesktopIcon className="size-4" weight="light" />
           ),
-        // shortcut: "⌘T", // Need to consider display of modifier keys for non-Mac platforms
-        perform: cycleThemeCallback,
-        keywords: "theme toggle switch mode light dark system color appearance",
+        perform: cycleThemeThenClose,
       },
     ];
 
-    if (cyclePaperMode) {
-      list.push({
-        id: "paper-mode",
-        name: "Cycle paper mode",
-        icon: <NewspaperIcon className="size-4 stroke-1" />,
-        perform: cyclePaperModeCallback,
-        keywords: "paper mode cycle switch document style layout background",
-      });
-    }
-    if (toggleEditorWidth) {
-      list.push({
-        id: "editor-width",
-        name: "Toggle editor width",
-        icon: <ViewColumnsIcon className="size-4 stroke-1" />,
-        perform: toggleEditorWidthCallback,
-        keywords: "editor width toggle resize narrow wide full layout column",
-      });
-    }
+    list.push({
+      id: "paper-mode",
+      name: "Cycle paper mode",
+      icon: <NotebookIcon className="size-4" weight="light" />, // changed from Newspaper
+      perform: cyclePaperModeThenClose,
+    });
+
+    list.push({
+      id: "editor-width",
+      name: "Toggle editor width",
+      icon: <ArrowsHorizontalIcon className="size-4" weight="light" />, // changed from Columns
+      perform: toggleEditorWidthThenClose,
+    });
+
+    list.push({
+      id: "font-family",
+      name: "Change font",
+      icon: <TextAaIcon className="size-4" weight="light" />, // changed from FileText
+      perform: cycleFont,
+    });
     if (editorContent) {
       list.push({
         id: "export-markdown",
         name: "Export markdown",
-        icon: <DocumentIcon className="size-4 stroke-1" />,
-        // shortcut: "⌘S",
-        perform: handleExportMarkdownCallback,
-        keywords: "export markdown save download file md text document",
+        icon: <FileIcon className="size-4" weight="light" />,
+        perform: handleExportMarkdown,
       });
     }
-    // if (editorRef?.current && markdownFormatterRef?.current) {
-    //   list.push({
-    //     id: "format-document",
-    //     name: "Format document",
-    //     icon: <FormatIcon className="h-3.5 w-3.5" />,
-    //     shortcut: "⌘F", // May conflict with browser search
-    //     perform: handleFormatDocumentCallback,
-    //     keywords: "format document prettify code style arrange beautify markdown lint tidy",
-    //   });
-    // }
-    // if (editorRef?.current) {
-    //   // Display only when editor exists
-    //   list.push({
-    //     id: "insert-github-issues",
-    //     name: "Insert GitHub Issues (Public Repos)",
-    //     icon: <GitHubIcon className="h-3.5 w-3.5" />,
-    //     shortcut: "⌘G", // Shortcut needs consideration
-    //     perform: handleInsertGitHubIssuesCallback,
-    //     keywords: "github issues insert fetch task todo list import integrate",
-    //   });
-    // }
+
+    if (editorView && formatterRef.current) {
+      list.push({
+        id: "format-document",
+        name: "Format document",
+        icon: <CodeBlockIcon className="size-4" weight="light" />,
+        shortcut: "⌘S",
+        perform: handleFormatDocument,
+      });
+    }
+
+    if (editorView) {
+      list.push({
+        id: "insert-github-issues",
+        name: "Create GitHub issue list (Public Repos)",
+        icon: <GithubLogoIcon className="size-4" weight="light" />,
+        perform: handleInsertGitHubIssues,
+      });
+    }
+
+    list.push({
+      id: "open-tasks",
+      name: "Open task modal",
+      icon: <CheckCircleIcon className="size-4" weight="light" />,
+      perform: openTaskModal,
+    });
+
+    list.push({
+      id: "open-snapshots",
+      name: "Open snapshot modal",
+      icon: <FileIcon className="size-4" weight="light" />,
+      perform: openSnapshotModal,
+    });
     list.push({
       id: "task-aging",
       name: `${taskAgingMode ? "Disable" : "Enable"} task aging`,
-      icon: <ClockIcon className="size-4 stroke-1" />,
+      icon: <Clock className="size-4" weight="light" />,
       perform: toggleTaskAgingCallback,
       keywords: "task aging toggle enable disable fade opacity time",
     });
     list.push({
       id: "github-repo",
       name: "Go to Ephe GitHub Repo",
-      icon: <LinkIcon className="size-4 stroke-1" />,
+      icon: <LinkIcon className="size-4" weight="light" />,
       perform: goToGitHubRepo,
-      keywords: "github ephe repository project code source link open website source-code",
     });
 
     return list;
@@ -296,171 +361,183 @@ export function CommandMenu({
   return (
     <>
       {open && (
-        <div
-          className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px] transition-opacity dark:bg-black/50"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onClose();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              e.preventDefault();
-              onClose();
-            }
-          }}
-          aria-hidden="true"
-        />
-      )}
-
-      <Command
-        role="dialog"
-        label="Command Menu"
-        className={`-translate-x-1/2 fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] transform overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900 ${
-          open ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
-        }`}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") {
-            e.preventDefault();
-            onClose();
-          }
-        }}
-      >
-        <div className="relative border-neutral-200 border-b dark:border-zinc-800">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <MagnifyingGlassIcon className="size-4 stroke-1" />
-          </div>
-          <Command.Input
-            ref={inputRef}
-            value={inputValue}
-            onValueChange={setInputValue}
-            placeholder="Type a command or search..."
-            className="w-full border-none bg-transparent py-2.5 pr-3 pl-9 text-neutral-900 text-sm outline-none placeholder:text-neutral-400 focus:ring-0 dark:text-neutral-100 dark:placeholder:text-neutral-500" // focus:ring-0 removes the focus ring
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px] transition-opacity dark:bg-black/50"
+            onClick={(e) => {
+              // Only close if clicking on the backdrop itself, not its children
+              if (e.target === e.currentTarget) {
+                e.preventDefault();
+                e.stopPropagation();
+                onClose();
+              }
+            }}
+            aria-hidden="true"
           />
-        </div>
 
-        <Command.List
-          ref={listRef}
-          className="scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent max-h-[min(60vh,350px)] overflow-y-auto p-2" // Adjust height
-        >
-          <Command.Empty className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">
-            No results found.
-          </Command.Empty>
-
-          <Command.Group
-            heading="Interface Mode"
-            className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
+          <Command
+            role="dialog"
+            label="Command Menu"
+            className={
+              "-translate-x-1/2 fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] scale-100 transform overflow-hidden rounded-xl border border-neutral-200 bg-white opacity-100 shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900"
+            }
+            onClick={(e) => {
+              // Prevent clicks inside the command menu from closing it
+              e.stopPropagation();
+            }}
           >
-            {commandsList()
-              .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width", "task-aging"].includes(cmd.id))
-              .map((command) => (
-                <Command.Item
-                  key={command.id}
-                  // Include name and keywords in value for search
-                  value={`${command.name} ${command.keywords || ""}`}
-                  onSelect={command.perform}
-                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                >
-                  <div className="flex items-center gap-2">
-                    {/* Icon display area */}
-                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                      {command.icon}
-                    </div>
-                    {/* Command name and status display */}
-                    <span className="flex-grow truncate">
-                      {" "}
-                      {command.name}
-                      {command.id === "paper-mode" && paperMode && (
-                        <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({paperMode})</span>
-                      )}
-                      {command.id === "editor-width" && editorWidth && (
-                        <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">({editorWidth})</span>
-                      )}
-                      {command.id === "task-aging" && (
-                        <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
-                          ({taskAgingMode ? "on" : "off"})
+            <div className="relative border-neutral-200 border-b dark:border-zinc-800">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <MagnifyingGlassIcon className="size-4" weight="thin" />
+              </div>
+              <Command.Input
+                ref={inputRef}
+                value={inputValue}
+                onValueChange={setInputValue}
+                placeholder="Type a command or search..."
+                className="w-full border-none bg-transparent py-2.5 pr-3 pl-9 text-neutral-900 text-sm outline-none placeholder:text-neutral-400 focus:ring-0 dark:text-neutral-100 dark:placeholder:text-neutral-500" // focus:ring-0 でフォーカス時のリングを消去
+                autoFocus
+              />
+            </div>
+
+            <Command.List
+              ref={listRef}
+              className="scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent max-h-[min(60vh,350px)] overflow-y-auto p-2" // 高さを調整
+            >
+              <Command.Empty className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">
+                No results found.
+              </Command.Empty>
+
+              <Command.Group
+                heading="Interface"
+                className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
+              >
+                {commandsList()
+                  .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width", "font-family", "task-aging"].includes(cmd.id))
+                  .map((command) => (
+                    <Command.Item
+                      key={command.id}
+                      value={command.name}
+                      onSelect={command.perform}
+                      className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                          {command.icon}
+                        </div>
+                        <span className="flex-grow truncate">
+                          {" "}
+                          {command.name}
+                          {command.id === "paper-mode" && currentPaperMode && (
+                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                              ({currentPaperMode})
+                            </span>
+                          )}
+                          {command.id === "editor-width" && currentEditorWidth && (
+                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                              ({currentEditorWidth})
+                            </span>
+                          )}
+                          {command.id === "font-family" && (
+                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                              ({FONT_FAMILIES[fontFamily].displayValue})
+                            </span>
+                          )}
+                          {command.id === "task-aging" && (
+                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                              ({taskAgingMode ? "on" : "off"})
+                            </span>
+                          )}
                         </span>
+                      </div>
+                      {command.shortcut && (
+                        <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                          {command.shortcut}
+                        </kbd>
                       )}
-                    </span>
-                  </div>
-                  {command.shortcut && (
-                    <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-                      {command.shortcut}
-                    </kbd>
-                  )}
-                </Command.Item>
-              ))}
-          </Command.Group>
+                    </Command.Item>
+                  ))}
+              </Command.Group>
 
-          <Command.Group
-            heading="Operations (WIP)"
-            className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
-          >
-            {commandsList()
-              .filter((cmd) => ["export-markdown", "format-document", "insert-github-issues"].includes(cmd.id))
-              .map((command) => (
-                <Command.Item
-                  key={command.id}
-                  value={`${command.name} ${command.keywords || ""}`}
-                  onSelect={command.perform}
-                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                      {command.icon}
-                    </div>
-                    <span className="flex-grow truncate">{command.name}</span>
-                  </div>
-                  {command.shortcut && (
-                    <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-                      {command.shortcut}
-                    </kbd>
-                  )}
-                </Command.Item>
-              ))}
-          </Command.Group>
+              <Command.Group
+                heading="Operations"
+                className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
+              >
+                {commandsList()
+                  .filter((cmd) =>
+                    [
+                      "export-markdown",
+                      "format-document",
+                      "insert-github-issues",
+                      "open-tasks",
+                      "open-snapshots",
+                    ].includes(cmd.id),
+                  )
+                  .map((command) => (
+                    <Command.Item
+                      key={command.id}
+                      value={command.name}
+                      onSelect={command.perform}
+                      className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                          {command.icon}
+                        </div>
+                        <span className="flex-grow truncate">{command.name}</span>
+                      </div>
+                      {command.shortcut && (
+                        <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                          {command.shortcut}
+                        </kbd>
+                      )}
+                    </Command.Item>
+                  ))}
+              </Command.Group>
 
-          <Command.Group
-            heading="Navigation"
-            className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
-          >
-            {commandsList()
-              .filter((cmd) => ["github-repo", "history"].includes(cmd.id))
-              .map((command) => (
-                <Command.Item
-                  key={command.id}
-                  value={`${command.name} ${command.keywords || ""}`}
-                  onSelect={command.perform}
-                  className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                      {command.icon}
-                    </div>
-                    <span className="flex-grow truncate">{command.name}</span>
-                  </div>
-                  {command.shortcut && (
-                    <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-                      {command.shortcut}
-                    </kbd>
-                  )}
-                </Command.Item>
-              ))}
-          </Command.Group>
-        </Command.List>
+              <Command.Group
+                heading="Navigation"
+                className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
+              >
+                {commandsList()
+                  .filter((cmd) => ["github-repo", "history"].includes(cmd.id))
+                  .map((command) => (
+                    <Command.Item
+                      key={command.id}
+                      value={command.name}
+                      onSelect={command.perform}
+                      className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                          {command.icon}
+                        </div>
+                        <span className="flex-grow truncate">{command.name}</span>
+                      </div>
+                      {command.shortcut && (
+                        <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                          {command.shortcut}
+                        </kbd>
+                      )}
+                    </Command.Item>
+                  ))}
+              </Command.Group>
+            </Command.List>
 
-        <div className="flex items-center justify-between border-neutral-200 border-t px-3 py-2 text-neutral-500 text-xs dark:border-zinc-800 dark:text-neutral-400">
-          <div className="flex items-center gap-1">
-            <kbd className="rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-              ⌘
-            </kbd>
-            <kbd className="rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-              k
-            </kbd>
-            <span className="ml-1">to close</span>
-          </div>
-        </div>
-      </Command>
+            <div className="flex items-center justify-between border-neutral-200 border-t px-3 py-2 text-neutral-500 text-xs dark:border-zinc-800 dark:text-neutral-400">
+              <div className="flex items-center gap-1">
+                <kbd className="rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                  ⌘
+                </kbd>
+                <kbd className="rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                  k
+                </kbd>
+                <span className="ml-1">to close</span>
+              </div>
+            </div>
+          </Command>
+        </>
+      )}
     </>
   );
-}
+};

@@ -5,22 +5,24 @@ import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
 import { useTaskAging } from "../../utils/hooks/use-task-aging";
+import { useFontFamily, FONT_FAMILY_OPTIONS, FONT_FAMILIES } from "../../utils/hooks/use-font";
 import { useState, useEffect, useRef } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME } from "../../utils/theme-initializer";
 import {
   CheckCircleIcon,
-  DocumentIcon,
-  HashtagIcon,
-  ViewColumnsIcon,
+  FileIcon,
+  HashIcon,
   SunIcon,
   MoonIcon,
-  ComputerDesktopIcon,
-  BoltIcon,
-  ClockIcon,
-} from "@heroicons/react/24/outline";
+  DesktopIcon,
+  LightningIcon,
+  ArrowsHorizontalIcon,
+  TextAaIcon,
+  NotebookIcon,
+  Clock,
+} from "@phosphor-icons/react";
 import { taskStorage } from "../editor/tasks/task-storage";
-import { HistoryModal } from "../history/history-modal";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
 import { useTaskAutoFlush } from "../../utils/hooks/use-task-auto-flush";
 
@@ -63,19 +65,17 @@ const useSnapshotCount = (menuOpen: boolean) => {
 
 // const tocVisibilityAtom = atomWithStorage<boolean>(LOCAL_STORAGE_KEYS.TOC_MODE, false);
 
-const useHistoryModal = () => {
-  const [historyModalOpen, setHistoryModalOpen] = useState(false);
-  const [modalTabIndex, setModalTabIndex] = useState(0);
-  return { historyModalOpen, modalTabIndex, setHistoryModalOpen, setModalTabIndex };
+type SystemMenuProps = {
+  onOpenHistoryModal?: (tabIndex: number) => void;
 };
 
-export const SystemMenu = () => {
+export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { historyModalOpen, modalTabIndex, setHistoryModalOpen, setModalTabIndex } = useHistoryModal();
 
   const { theme, setTheme } = useTheme();
   const { paperMode, cyclePaperMode } = usePaperMode();
+  const { fontFamily, setFontFamily } = useFontFamily();
 
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
   const { charCount } = useCharCount();
@@ -85,9 +85,9 @@ export const SystemMenu = () => {
   const { taskAgingMode, toggleTaskAgingMode } = useTaskAging();
 
   const openTaskSnapshotModal = (tabIndex: number) => {
-    setModalTabIndex(tabIndex);
-    setHistoryModalOpen(true);
+    if (!onOpenHistoryModal) return;
     setMenuOpen(false);
+    onOpenHistoryModal(tabIndex);
   };
 
   useEffect(() => {
@@ -108,7 +108,7 @@ export const SystemMenu = () => {
         {({ open }) => (
           <>
             <MenuButton
-              className="rounded-md px-2 py-1 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              className="rounded-md bg-white px-2 py-1 text-neutral-900 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
               onClick={() => setMenuOpen(!menuOpen)}
             >
               System
@@ -116,7 +116,7 @@ export const SystemMenu = () => {
 
             {(open || menuOpen) && (
               <MenuItems
-                className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white shadow-md focus:outline-none dark:bg-primary-700"
+                className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white text-neutral-900 shadow-md focus:outline-none dark:bg-primary-700 dark:text-neutral-100"
                 portal={false}
                 static
               >
@@ -126,7 +126,7 @@ export const SystemMenu = () => {
                   <MenuItem disabled>
                     <div className="flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30">
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <HashtagIcon className="size-4 stroke-1" />
+                        <HashIcon className="size-4" weight="light" />
                       </span>
                       <span>{charCount > 0 ? `${charCount.toLocaleString()} chars` : "No content"}</span>
                     </div>
@@ -140,9 +140,9 @@ export const SystemMenu = () => {
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         {todayCompletedTasks > 0 ? (
-                          <CheckCircleIcon className="size-4 stroke-2 text-green-600" />
+                          <CheckCircleIcon className="size-4 text-green-600" weight="light" />
                         ) : (
-                          <CheckCircleIcon className="size-4 stroke-2" />
+                          <CheckCircleIcon className="size-4" weight="light" />
                         )}
                       </span>
                       <span className={todayCompletedTasks > 0 ? "text-green-600 dark:text-green-400" : ""}>
@@ -158,7 +158,7 @@ export const SystemMenu = () => {
                       onClick={() => openTaskSnapshotModal(1)}
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <DocumentIcon className="size-4 stroke-1" />
+                        <FileIcon className="size-4" weight="light" />
                       </span>
                       <span>{snapshotCount > 0 ? `${snapshotCount} snapshots` : "No snapshots"}</span>
                     </button>
@@ -184,11 +184,11 @@ export const SystemMenu = () => {
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
                         {theme === COLOR_THEME.LIGHT ? (
-                          <SunIcon className="size-4 stroke-1" />
+                          <SunIcon className="size-4" weight="light" />
                         ) : theme === COLOR_THEME.DARK ? (
-                          <MoonIcon className="size-4 stroke-1" />
+                          <MoonIcon className="size-4" weight="light" />
                         ) : (
-                          <ComputerDesktopIcon className="size-4 stroke-1" />
+                          <DesktopIcon className="size-4" weight="light" />
                         )}
                       </span>
                       <span className="capitalize">{theme} Mode</span>
@@ -202,24 +202,7 @@ export const SystemMenu = () => {
                       className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        {paperMode === "normal" ? (
-                          <span className="h-4 w-4 border border-neutral-500 dark:border-neutral-600" />
-                        ) : paperMode === "graph" ? (
-                          <span className="grid h-4 w-4 grid-cols-3 border border-neutral-500 opacity-70 dark:border-neutral-600">
-                            <span
-                              className="col-span-3 border-neutral-500 border-b dark:border-neutral-500"
-                              style={{ height: "33%" }}
-                            />
-                            <span
-                              className="col-span-3 border-neutral-500 border-b dark:border-neutral-500"
-                              style={{ height: "66%" }}
-                            />
-                          </span>
-                        ) : (
-                          <span className="flex h-4 w-4 items-center justify-center border border-neutral-500 dark:border-neutral-600">
-                            <span className="h-1 w-1 rounded-full bg-neutral-400 dark:bg-neutral-500" />
-                          </span>
-                        )}
+                        <NotebookIcon className="size-4" weight="light" />
                       </span>
                       <span className="capitalize">{paperMode} Paper</span>
                     </button>
@@ -233,9 +216,26 @@ export const SystemMenu = () => {
                       className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <ViewColumnsIcon className="size-4 stroke-1" />
+                        <ArrowsHorizontalIcon className="size-4" weight="light" />
                       </span>
                       <span className="capitalize">{editorWidth} Width</span>
+                    </button>
+                  </MenuItem>
+                  <MenuItem as="div">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const fontKeys = FONT_FAMILY_OPTIONS;
+                        const currentIndex = fontKeys.indexOf(fontFamily);
+                        const nextIndex = (currentIndex + 1) % fontKeys.length;
+                        setFontFamily(fontKeys[nextIndex]);
+                      }}
+                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
+                    >
+                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                        <TextAaIcon className="size-4" weight="light" />
+                      </span>
+                      <span className="capitalize">{FONT_FAMILIES[fontFamily].displayValue}</span>
                     </button>
                   </MenuItem>
                 </div>
@@ -251,7 +251,7 @@ export const SystemMenu = () => {
                       className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <BoltIcon className={`size-4 stroke-1`} />
+                        <LightningIcon className={"size-4"} weight="light" />
                       </span>
                       <span className={"capitalize"}>Task Flush: {taskAutoFlushMode}</span>
                     </button>
@@ -266,7 +266,7 @@ export const SystemMenu = () => {
                       className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <ClockIcon className={`size-4 stroke-1`} />
+                        <Clock className={"size-4"} weight="light" />
                       </span>
                       <span className={"capitalize"}>Task Aging: {taskAgingMode ? "on" : "off"}</span>
                     </button>
@@ -277,12 +277,6 @@ export const SystemMenu = () => {
           </>
         )}
       </Menu>
-
-      <HistoryModal
-        isOpen={historyModalOpen}
-        onClose={() => setHistoryModalOpen(false)}
-        initialTabIndex={modalTabIndex}
-      />
     </>
   );
 };

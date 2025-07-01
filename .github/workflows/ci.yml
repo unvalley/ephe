@@ -26,7 +26,7 @@ jobs:
       - uses: pnpm/action-setup@v3
         with:
           version: ${{ env.PNPM_VERSION }}
-          run_install: false
+          run_install: true
 
       - uses: actions/setup-node@v4
         with:
@@ -57,7 +57,7 @@ jobs:
       - uses: pnpm/action-setup@v3
         with:
           version: ${{ env.PNPM_VERSION }}
-          run_install: false
+          run_install: true
 
       - uses: actions/setup-node@v4
         with:
@@ -87,7 +87,7 @@ jobs:
       - uses: pnpm/action-setup@v3
         with:
           version: ${{ env.PNPM_VERSION }}
-          run_install: false
+          run_install: true
 
       - uses: actions/setup-node@v4
         with:

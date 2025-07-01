@@ -1,11 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
-export const useCommandK = () => {
+export const useCommandK = (isModalOpen?: boolean) => {
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
 
-  const toggleCommandMenu = () => {
+  const toggleCommandMenu = useCallback(() => {
+    // Don't open command menu if a modal is open
+    if (isModalOpen) return;
     setIsCommandMenuOpen((prev) => !prev);
-  };
+  }, [isModalOpen]);
+
+  const closeCommandMenu = useCallback(() => {
+    setIsCommandMenuOpen(false);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -20,5 +26,12 @@ export const useCommandK = () => {
     };
   }, [toggleCommandMenu]);
 
-  return { isCommandMenuOpen, toggleCommandMenu };
+  // Close command menu if modal opens
+  useEffect(() => {
+    if (isModalOpen && isCommandMenuOpen) {
+      closeCommandMenu();
+    }
+  }, [isModalOpen, isCommandMenuOpen, closeCommandMenu]);
+
+  return { isCommandMenuOpen, toggleCommandMenu, closeCommandMenu };
 };

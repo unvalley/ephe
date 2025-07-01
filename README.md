@@ -1,27 +1,21 @@
 <div align="center">
-  <h1 style="border-bottom: none;" >
-      <a href="https://ephe.app">Ephe</a>
-      <br />
-  </h1>
-<a href="https://ephe.app">
-  <img alt="ephe screenshot" src="https://github.com/user-attachments/assets/360797f0-1847-4fa6-935f-230bd5ff067a" style="width: 100%">
-</a>
-<p align="center">A local-only, open-source Markdown Page for organizing your todo and ideas.</p>
+  <p>Ephe</p>
+  <a href="https://ephe.app/landing">
+    <img
+      src="https://github.com/user-attachments/assets/2e2f6053-284b-4d61-a4c6-0a0dfaf6acf0"
+      alt="Ephe screenshot"
+      width="65%"
+    />
+  </a>
+  <p>
+    <a href="https://ephe.app/landing">Ephe</a> is an ephemeral markdown paper  
+    to organize your daily todos and thoughts.
+  </p>
 </div>
 
-## What is Ephe
+Traditional todo apps can be overwhelming.  
+Ephe is designed to organize your tasks with plain Markdown.  
+Ephe gives you just one clean page to focus your day.  
 
-Ephe is an _ephemeral_ markdown paper to organize your daily todo and ideas.
+See the <a href=".github/guide.md">guide</a> for details.
 
-Traditional todo apps can be time-consuming and quickly overwhelming. A single page is all you need to organize your day.
-
-## Fun features
-
-- `-[ ` or `- [ ` automatically completes to `- [ ] `.
-- Dark mode.
-- Format on save (using [dprint](https://github.com/dprint/dprint)).
-- Record history (tasks and snapshots).
-- Command + k menu.
-- Customizable Editor Appearance (Paper, Width).
-
-https://github.com/user-attachments/assets/9967182a-0858-499b-bbaf-11157bbba2bc
