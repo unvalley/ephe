@@ -346,7 +346,6 @@ export const CommandMenu = ({
       name: `${taskAgingMode ? "Disable" : "Enable"} task aging`,
       icon: <Clock className="size-4" weight="light" />,
       perform: toggleTaskAgingCallback,
-      keywords: "task aging toggle enable disable fade opacity time",
     });
     list.push({
       id: "github-repo",
