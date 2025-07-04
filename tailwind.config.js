@@ -87,7 +87,7 @@ module.exports = {
       },
     },
     fontFamily: {
-      //   "space-mono": ["var(--font-space-mono)"],
+      mynerve: ["Mynerve", "cursive"],
     },
     gridTemplateColumns: {
       24: "repeat(24, minmax(0, 1fr))",
