@@ -63,9 +63,30 @@ The codebase follows a feature-based structure under `src/features/`:
 ### Development Guidelines
 
 1. **Performance Focus**: Minimize re-renders, use React.memo and useMemo appropriately
-2. **Functional Design**: Prefer immutable data structures and pure functions
+2. **Functional Design**: Prefer immutable data structures and pure functions (inspired by Rich Hickey's principles)
 3. **Side Effects Isolation**: Keep side effects in custom hooks or effect handlers
 4. **Keyboard-First**: All features should be accessible via keyboard shortcuts
+
+### Philosophy & Design Principles
+
+This codebase embraces principles from Rich Hickey and John Ousterhout:
+
+#### Rich Hickey's Functional Programming Principles:
+- **Simplicity over ease**: Choose simple solutions that compose well
+- **Data orientation**: Treat data as immutable values, not objects with behavior
+- **Pure functions**: Maximize referential transparency and minimize side effects
+- **Explicit over implicit**: Make data flow and transformations visible
+- **Accretion**: Grow software by adding capabilities, not by modifying existing code
+
+#### John Ousterhout's Software Design Principles:
+- **Deep modules**: Create powerful interfaces that hide complexity (see CodeMirror extensions)
+- **Strategic programming**: Invest time upfront in good design to reduce future complexity
+- **Information hiding**: Minimize dependencies between modules and expose minimal interfaces
+- **Exception aggregation**: Handle errors at the highest appropriate level
+- **Define errors out of existence**: Design APIs that make errors impossible or unlikely
+- **Pull complexity downward**: Better to have complex implementation than complex interface
+- **Together or apart**: Related functionality should be together; unrelated should be separate
+- **Comments for why, not what**: Focus on design decisions and non-obvious behavior
 
 ### Important Patterns
 
