@@ -12,7 +12,6 @@ import {
 import { Fragment, useEffect, useState } from "react";
 import type { Snapshot } from "../snapshots/snapshot-storage";
 import { useHistoryData } from "./use-history-data";
-import { CloudCheck, CloudX, CloudArrowUp } from "@phosphor-icons/react";
 
 type HistoryModalProps = {
   isOpen: boolean;
@@ -40,12 +39,9 @@ const BUTTON_STYLES = {
     "rounded border border-transparent bg-neutral-100 px-4 py-2 text-sm transition-colors hover:bg-neutral-200 focus-visible:ring-offset-2 dark:bg-neutral-700 dark:hover:bg-neutral-600",
 } as const;
 
-type SyncStatus = 'synced' | 'pending' | 'disabled';
-
 export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryModalProps) => {
   const [selectedTabIndex, setSelectedTabIndex] = useState(initialTabIndex);
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
-  const [syncStatuses, setSyncStatuses] = useState<Record<string, SyncStatus>>({});
   const {
     snapshots,
     tasks,
@@ -55,24 +51,6 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
     handleDeleteAllSnapshots,
     refresh,
   } = useHistoryData();
-
-  // Mock sync status - in a real implementation this would check actual sync state
-  const getSyncStatus = (snapshotId: string): SyncStatus => {
-    return syncStatuses[snapshotId] || 'disabled';
-  };
-
-  const cycleSyncStatus = (snapshotId: string) => {
-    const currentStatus = getSyncStatus(snapshotId);
-    const nextStatus: SyncStatus = 
-      currentStatus === 'disabled' ? 'pending' :
-      currentStatus === 'pending' ? 'synced' : 
-      'disabled';
-    
-    setSyncStatuses(prev => ({
-      ...prev,
-      [snapshotId]: nextStatus
-    }));
-  };
 
   useEffect(() => {
     setSelectedTabIndex(initialTabIndex);
@@ -129,10 +107,6 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
       handleDeleteAllSnapshots();
       setSelectedSnapshot(null);
     }
-  };
-
-  const handleSyncInfoClick = (snapshotId: string) => {
-    cycleSyncStatus(snapshotId);
   };
 
   return (
@@ -251,32 +225,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                             ) : selectedSnapshot ? (
                               <div className="flex h-full flex-col">
                                 <div className="mb-4 flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    <h4 className="text-md">{formatDate(selectedSnapshot.timestamp)}</h4>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleSyncInfoClick(selectedSnapshot.id)}
-                                      className="group relative flex items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-700"
-                                      title="Click to cycle sync status"
-                                    >
-                                      {getSyncStatus(selectedSnapshot.id) === 'synced' ? (
-                                        <>
-                                          <CloudCheck className="size-4 text-green-600 dark:text-green-400" weight="light" />
-                                          <span className="text-green-600 dark:text-green-400">Synced</span>
-                                        </>
-                                      ) : getSyncStatus(selectedSnapshot.id) === 'pending' ? (
-                                        <>
-                                          <CloudArrowUp className="size-4 text-amber-600 dark:text-amber-400" weight="light" />
-                                          <span className="text-amber-600 dark:text-amber-400">Pending</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <CloudX className="size-4 text-neutral-400" weight="light" />
-                                          <span className="text-neutral-400">Not synced</span>
-                                        </>
-                                      )}
-                                    </button>
-                                  </div>
+                                  <h4 className="text-md">{formatDate(selectedSnapshot.timestamp)}</h4>
                                   <div className="flex space-x-2">
                                     <button type="button" onClick={handleRestore} className={BUTTON_STYLES.primary}>
                                       Restore
@@ -326,14 +275,8 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                                       aria-label={`Select snapshot: ${formatDate(snapshot.timestamp)}`}
                                       type="button"
                                     >
-                                      <div className="flex items-center justify-between">
+                                      <div className="flex flex-col">
                                         <h5 className="truncate text-sm">{formatDate(snapshot.timestamp)}</h5>
-                                        {getSyncStatus(snapshot.id) === 'synced' && (
-                                          <CloudCheck className="size-3 text-green-600 dark:text-green-400" weight="light" />
-                                        )}
-                                        {getSyncStatus(snapshot.id) === 'pending' && (
-                                          <CloudArrowUp className="size-3 text-amber-600 dark:text-amber-400" weight="light" />
-                                        )}
                                       </div>
                                     </button>
                                   ))}
