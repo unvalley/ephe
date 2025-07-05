@@ -13,6 +13,7 @@ interface SnapshotStorage {
   getAll: () => Snapshot[];
   getById: (id: string) => Snapshot | null;
   save: (snapshot: Omit<Snapshot, "id" | "timestamp">) => void;
+  add: (snapshot: Snapshot) => void;
   deleteById: (id: string) => void;
   deleteAll: () => void;
   getByDate: (filter?: DateFilter) => Record<string, Snapshot[]>;
@@ -44,6 +45,7 @@ const createSnapshotStorage = (storage: StorageProvider = createBrowserLocalStor
   return {
     ...baseStorage,
     save,
+    add: baseStorage.save,
     getByDate,
   };
 };

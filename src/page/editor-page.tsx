@@ -13,6 +13,7 @@ import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../utils/constants";
 import { HistoryModal } from "../features/history/history-modal";
+import { SyncModal } from "../features/sync/sync-modal";
 
 const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "");
 
@@ -20,8 +21,9 @@ export const EditorPage = () => {
   const { paperModeClass } = usePaperMode();
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [historyModalTabIndex, setHistoryModalTabIndex] = useState(0);
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
   // Track any modal being open
-  const isAnyModalOpen = historyModalOpen;
+  const isAnyModalOpen = historyModalOpen || syncModalOpen;
   const { isCommandMenuOpen, closeCommandMenu } = useCommandK(isAnyModalOpen);
   const editorRef = useRef<CodeMirrorEditorRef>(null);
   const [editorContent] = useAtom(editorAtom);
@@ -52,7 +54,7 @@ export const EditorPage = () => {
 
       <Footer
         autoHide={true}
-        leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} />}
+        leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} onOpenSyncModal={() => setSyncModalOpen(true)} />}
         rightContent={
           <>
             <HoursDisplay />
@@ -75,6 +77,11 @@ export const EditorPage = () => {
         isOpen={historyModalOpen}
         onClose={() => setHistoryModalOpen(false)}
         initialTabIndex={historyModalTabIndex}
+      />
+
+      <SyncModal
+        isOpen={syncModalOpen}
+        onClose={() => setSyncModalOpen(false)}
       />
     </div>
   );

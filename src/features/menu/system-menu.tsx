@@ -19,6 +19,7 @@ import {
   ArrowsHorizontalIcon,
   TextAaIcon,
   NotebookIcon,
+  CloudArrowUp,
 } from "@phosphor-icons/react";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
@@ -65,9 +66,10 @@ const useSnapshotCount = (menuOpen: boolean) => {
 
 type SystemMenuProps = {
   onOpenHistoryModal?: (tabIndex: number) => void;
+  onOpenSyncModal?: () => void;
 };
 
-export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
+export const SystemMenu = ({ onOpenHistoryModal, onOpenSyncModal }: SystemMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -251,6 +253,27 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                         <LightningIcon className={"size-4"} weight="light" />
                       </span>
                       <span className={"capitalize"}>Task Flush: {taskAutoFlushMode}</span>
+                    </button>
+                  </MenuItem>
+                </div>
+
+                <div className="py-1">
+                  <div className="px-3 py-2 text-primary-400 text-xs dark:text-primary-300">Sync</div>
+                  <MenuItem as="div">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onOpenSyncModal) {
+                          setMenuOpen(false);
+                          onOpenSyncModal();
+                        }
+                      }}
+                      className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
+                    >
+                      <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                        <CloudArrowUp className="size-4" weight="light" />
+                      </span>
+                      <span>Cross-Browser Sync</span>
                     </button>
                   </MenuItem>
                 </div>
