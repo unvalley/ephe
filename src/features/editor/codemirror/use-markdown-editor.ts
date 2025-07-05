@@ -17,7 +17,6 @@ import { registerTaskHandler } from "./tasklist/task-close";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
 import { useEditorTheme } from "./use-editor-theme";
 import { useCharCount } from "../../../utils/hooks/use-char-count";
-import { countWords } from "../../../utils/hooks/use-word-count";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
