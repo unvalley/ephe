@@ -24,29 +24,18 @@ export const useWordCount = () => {
   return { wordCount, setWordCount };
 };
 
-// CJK character ranges
-const CJK_REGEX = /[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF]/g;
-const CJK_PUNCTUATION = /[\u3000-\u303F\uFF00-\uFFEF]/g;
-
 export const countWords = (text: string): number => {
   if (!text || text.trim().length === 0) {
     return 0;
   }
 
-  // Remove CJK punctuation from the text
-  const cleanText = text.replace(CJK_PUNCTUATION, ' ');
+  // Match word boundaries or CJK characters
+  // \b\w+\b matches word boundaries (works for Latin-based languages)
+  // [\u4E00-\u9FFF] matches CJK ideographs (Chinese/Japanese Kanji)
+  // [\u3040-\u309F\u30A0-\u30FF] matches Japanese Hiragana and Katakana
+  // [\uAC00-\uD7AF] matches Korean Hangul
+  const wordPattern = /\b\w+\b|[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF]/g;
   
-  // Extract CJK characters
-  const cjkMatches = cleanText.match(CJK_REGEX) || [];
-  const cjkCount = cjkMatches.length;
-  
-  // Remove CJK characters from text to count non-CJK words
-  const nonCjkText = cleanText.replace(CJK_REGEX, ' ');
-  
-  // Count non-CJK words (space-separated)
-  const nonCjkWords = nonCjkText.trim().split(/\s+/).filter(word => word.length > 0);
-  const nonCjkCount = nonCjkWords.length;
-  
-  // Total count: CJK characters + non-CJK words
-  return cjkCount + nonCjkCount;
+  const matches = text.match(wordPattern) || [];
+  return matches.length;
 };
