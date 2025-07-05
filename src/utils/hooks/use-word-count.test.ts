@@ -8,25 +8,26 @@ describe("countWords", () => {
     expect(countWords("  Multiple   spaces   between   words  ")).toBe(4);
   });
 
-  it("counts Japanese characters correctly", () => {
-    expect(countWords("こんにちは")).toBe(5); // 5 Hiragana characters
-    expect(countWords("カタカナ")).toBe(4); // 4 Katakana characters
-    expect(countWords("日本語")).toBe(3); // 3 Kanji characters
+  it("counts Japanese words correctly", () => {
+    expect(countWords("こんにちは")).toBe(1); // "こんにちは" as one word
+    expect(countWords("カタカナ")).toBe(1); // "カタカナ" as one word
+    expect(countWords("日本語")).toBe(1); // "日本語" as one word
+    expect(countWords("私は学生です")).toBe(4); // 私/は/学生/です
   });
 
-  it("counts Korean characters correctly", () => {
-    expect(countWords("안녕하세요")).toBe(5); // 5 Korean characters
-    expect(countWords("한국어")).toBe(3); // 3 Korean characters
+  it("counts Korean words correctly", () => {
+    expect(countWords("안녕하세요")).toBe(1); // "안녕하세요" as one word
+    expect(countWords("한국어")).toBe(1); // "한국어" as one word
   });
 
   it("counts mixed language text correctly", () => {
-    expect(countWords("Hello 世界")).toBe(3); // 1 English word + 2 Japanese characters
-    expect(countWords("This is 日本語 text")).toBe(6); // 3 English words + 3 Japanese characters
+    expect(countWords("Hello 世界")).toBe(2); // 1 English word + 1 Japanese word
+    expect(countWords("This is 日本語 text")).toBe(4); // 3 English words + 1 Japanese word
   });
 
   it("handles punctuation correctly", () => {
     expect(countWords("Hello, world!")).toBe(2);
-    expect(countWords("これは、テストです。")).toBe(8); // Japanese punctuation removed
+    expect(countWords("これは、テストです。")).toBe(4); // これ/は/テスト/です
   });
 
   it("handles empty and whitespace strings", () => {
