@@ -52,6 +52,8 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
         maxWidth: isWideMode ? "100%" : "680px",
         margin: "0 auto",
         caretColor: COLORS.foreground,
+        fontFeatureSettings: fontFamily.includes("Mynerve") ? '"calt" off, "salt" off' : "normal",
+        fontVariantLigatures: fontFamily.includes("Mynerve") ? "none" : "normal",
       },
       ".cm-cursor": {
         borderLeftColor: COLORS.foreground,
@@ -68,6 +70,8 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
       ".cm-scroller": {
         fontFamily: fontFamily,
         background: "transparent",
+        fontFeatureSettings: fontFamily.includes("Mynerve") ? '"calt" off, "salt" off, "liga" off, "dlig" off, "clig" off' : "normal",
+        fontVariantLigatures: fontFamily.includes("Mynerve") ? "none" : "normal",
       },
       ".cm-gutters": {
         background: "transparent",

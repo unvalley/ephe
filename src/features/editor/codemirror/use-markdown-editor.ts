@@ -14,8 +14,6 @@ import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
 import { createDefaultTaskHandler, createChecklistPlugin, taskAgingPlugin } from "./tasklist";
 import { registerTaskHandler } from "./tasklist/task-close";
-import { atomWithStorage, createJSONStorage } from "jotai/utils";
-import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
 import { useEditorTheme } from "./use-editor-theme";
 import { useCharCount } from "../../../utils/hooks/use-char-count";
@@ -24,31 +22,7 @@ import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
 import { useCursorPosition } from "./use-cursor-position";
 import { useDebouncedCallback } from "use-debounce";
-
-const storage = createJSONStorage<string>(() => localStorage);
-
-const crossTabStorage = {
-  ...storage,
-  subscribe: (key: string, callback: (value: string) => void, initialValue: string): (() => void) => {
-    if (typeof window === "undefined" || typeof window.addEventListener !== "function") {
-      return () => {};
-    }
-    const handler = (e: StorageEvent) => {
-      if (e.storageArea === localStorage && e.key === key) {
-        try {
-          const newValue = e.newValue ? JSON.parse(e.newValue) : initialValue;
-          callback(newValue);
-        } catch {
-          callback(initialValue);
-        }
-      }
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  },
-};
-
-const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "", crossTabStorage);
+import { editorContentAtom } from "../../../utils/atoms/editor";
 
 const useMarkdownFormatter = () => {
   const ref = useRef<DprintMarkdownFormatter | null>(null);
@@ -82,7 +56,7 @@ const useTaskHandler = () => {
 export const useMarkdownEditor = () => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const [content, setContent] = useAtom(editorAtom);
+  const [content, setContent] = useAtom(editorContentAtom);
 
   const formatterRef = useMarkdownFormatter();
   const taskHandlerRef = useTaskHandler();
@@ -98,8 +72,10 @@ export const useMarkdownEditor = () => {
   const highlightCompartment = useRef(new Compartment()).current;
 
   const debouncedSetContent = useDebouncedCallback((view: EditorView) => {
-    setContent(view.state.doc.toString());
-  }, 200);
+    const newContent = view.state.doc.toString();
+    // Only update if content actually changed to prevent unnecessary updates
+    setContent((prevContent) => prevContent !== newContent ? newContent : prevContent);
+  }, 300);
 
   const onFormat = async () => {
     const view = viewRef.current;
@@ -191,7 +167,14 @@ export const useMarkdownEditor = () => {
         EditorView.lineWrapping,
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
-            debouncedSetContent(update.view);
+            // Skip updates from programmatic changes (formatting, restore, etc.)
+            // Only update for user input
+            const isUserInput = update.transactions.some(tr => tr.isUserEvent("input") || tr.isUserEvent("delete"));
+            if (isUserInput) {
+              debouncedSetContent(update.view);
+              const updatedContent = update.state.doc.toString();
+              setCharCount(updatedContent.length);
+            }
           }
         }),
 
@@ -230,7 +213,7 @@ export const useMarkdownEditor = () => {
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, [editorRef.current]); // FIXME
+  }, []); // Remove editorRef.current dependency to prevent re-initialization
 
   const { resetCursorPosition } = useCursorPosition(viewRef.current ?? undefined);
 
@@ -272,13 +255,32 @@ export const useMarkdownEditor = () => {
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
-    if (content.length !== view.state.doc.length || content !== view.state.doc.sliceString(0)) {
-      view.dispatch({
-        changes: { from: 0, to: view.state.doc.length, insert: content },
-      });
+    
+    // Get the current document content
+    const currentDocContent = view.state.doc.toString();
+    
+    // Skip if content is exactly the same as current editor content
+    // This prevents cyclic updates when our own changes come back through the state
+    if (content === currentDocContent) {
+      setCharCount(content.length);
+      return;
     }
+    
+    // Update the editor with the new content while preserving cursor position
+    const currentSelection = view.state.selection.main;
+    const currentAnchor = currentSelection.anchor;
+    const currentHead = currentSelection.head;
+    
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: content },
+      selection: { 
+        anchor: Math.min(currentAnchor, content.length),
+        head: Math.min(currentHead, content.length)
+      },
+    });
+    
     setCharCount(content.length);
-  }, [content]);
+  }, [content, setCharCount]);
 
   return {
     editor: editorRef,

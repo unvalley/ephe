@@ -17,6 +17,10 @@ export const FONT_FAMILIES = {
     value: "'IBM Plex Mono', 'Menlo', 'Monaco', 'Courier New', monospace",
     displayValue: "IBM Plex Mono",
   },
+  MYNERVE: {
+    value: "'Mynerve', cursive",
+    displayValue: "Mynerve",
+  },
 } as const;
 
 export type FontFamily = keyof typeof FONT_FAMILIES;
