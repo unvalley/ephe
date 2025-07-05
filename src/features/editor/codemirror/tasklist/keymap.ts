@@ -14,6 +14,7 @@ import {
 import { moveTaskUp, moveTaskDown } from "./task-reorder";
 
 const INDENT_SPACE = "  ";
+const TASK_WITH_WHITESPACE = 4; // "[ ] " is 4 characters
 
 // Regular expression to get leading whitespace
 const leadingWhitespaceRegex = /^(\s*)/;
@@ -22,6 +23,28 @@ const leadingWhitespaceRegex = /^(\s*)/;
 const getIndentLength = (lineText: string): number => {
   const match = lineText.match(leadingWhitespaceRegex);
   return match ? match[1].length : 0;
+};
+
+// Check if cursor is positioned right after task in a task line
+const isCursorAfterTask = (
+  lineText: string,
+  cursorPos: number,
+  lineFrom: number,
+): { isAfterTask: boolean; indent: string; bullet: string } => {
+  const parsed = parseTaskLine(lineText);
+  if (!parsed) {
+    return { isAfterTask: false, indent: "", bullet: "" };
+  }
+
+  const { indent, bullet } = parsed;
+  const taskStart = lineFrom + indent.length + bullet.length + 1; // after "- " or "* "
+  const taskEnd = taskStart + TASK_WITH_WHITESPACE;
+
+  return {
+    isAfterTask: cursorPos === taskEnd,
+    indent,
+    bullet,
+  };
 };
 
 export const taskKeyBindings: readonly KeyBinding[] = [
@@ -236,6 +259,22 @@ export const taskKeyBindings: readonly KeyBinding[] = [
 
       const pos = selection.main.head;
       const line = state.doc.lineAt(pos);
+
+      // Check if cursor is right after task "[ ] " in a task line
+      const taskInfo = isCursorAfterTask(line.text, pos, line.from);
+      if (taskInfo.isAfterTask && pos < line.to) {
+        const { indent, bullet } = taskInfo;
+        const newListLine = `${indent}${bullet} `;
+        const contentAfterTask = line.text.substring(pos - line.from);
+        
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: newListLine + contentAfterTask },
+          selection: { anchor: line.from + newListLine.length },
+          userEvent: "delete.task",
+        });
+        
+        return true;
+      }
 
       // Use default behavior if cursor is not at line end
       // (Allow normal character deletion when Delete is pressed in the middle of line)

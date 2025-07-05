@@ -352,6 +352,60 @@ describe("taskKeyBindings - Delete Key", () => {
     expect(result.afterText).toBe("  ");
     expect(result.afterCursor).toBe(2);
   });
+
+  test("removes task when delete pressed after task with content", () => {
+    const result = testKeyBehavior("- [ ] aaaa", 6, "Delete");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("- [ ] aaaa");
+    expect(result.afterText).toBe("- aaaa");
+    expect(result.afterCursor).toBe(2);
+  });
+
+  test("removes task when delete pressed after task with indented content", () => {
+    const result = testKeyBehavior("  - [ ] aaaa", 8, "Delete");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("  - [ ] aaaa");
+    expect(result.afterText).toBe("  - aaaa");
+    expect(result.afterCursor).toBe(4);
+  });
+
+  test("removes checked task when delete pressed after task with lowercase x", () => {
+    const result = testKeyBehavior("- [x] completed task", 6, "Delete");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("- [x] completed task");
+    expect(result.afterText).toBe("- completed task");
+    expect(result.afterCursor).toBe(2);
+  });
+
+  test("removes checked task when delete pressed after task with uppercase X", () => {
+    const result = testKeyBehavior("- [X] completed task", 6, "Delete");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("- [X] completed task");
+    expect(result.afterText).toBe("- completed task");
+    expect(result.afterCursor).toBe(2);
+  });
+
+  test("removes checked task with asterisk bullet", () => {
+    const result = testKeyBehavior("* [x] completed task", 6, "Delete");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("* [x] completed task");
+    expect(result.afterText).toBe("* completed task");
+    expect(result.afterCursor).toBe(2);
+  });
+
+  test("removes indented checked task", () => {
+    const result = testKeyBehavior("  - [X] indented completed", 8, "Delete");
+
+    expect(result.handled).toBe(true);
+    expect(result.beforeText).toBe("  - [X] indented completed");
+    expect(result.afterText).toBe("  - indented completed");
+    expect(result.afterCursor).toBe(4);
+  });
 });
 
 describe("taskKeyBindings - Integration", () => {
