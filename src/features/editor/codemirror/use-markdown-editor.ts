@@ -14,42 +14,16 @@ import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
 import { createDefaultTaskHandler, createChecklistPlugin } from "./tasklist";
 import { registerTaskHandler } from "./tasklist/task-close";
-import { atomWithStorage, createJSONStorage } from "jotai/utils";
-import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
 import { useEditorTheme } from "./use-editor-theme";
 import { useCharCount } from "../../../utils/hooks/use-char-count";
-import { useWordCount, countWords } from "../../../utils/hooks/use-word-count";
+import { countWords } from "../../../utils/hooks/use-word-count";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
 import { useCursorPosition } from "./use-cursor-position";
 import { useDebouncedCallback } from "use-debounce";
-
-const storage = createJSONStorage<string>(() => localStorage);
-
-const crossTabStorage = {
-  ...storage,
-  subscribe: (key: string, callback: (value: string) => void, initialValue: string): (() => void) => {
-    if (typeof window === "undefined" || typeof window.addEventListener !== "function") {
-      return () => {};
-    }
-    const handler = (e: StorageEvent) => {
-      if (e.storageArea === localStorage && e.key === key) {
-        try {
-          const newValue = e.newValue ? JSON.parse(e.newValue) : initialValue;
-          callback(newValue);
-        } catch {
-          callback(initialValue);
-        }
-      }
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  },
-};
-
-const editorAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "", crossTabStorage);
+import { editorContentAtom } from "../../../utils/atoms/editor";
 
 const useMarkdownFormatter = () => {
   const ref = useRef<DprintMarkdownFormatter | null>(null);
@@ -83,7 +57,7 @@ const useTaskHandler = () => {
 export const useMarkdownEditor = () => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const [content, setContent] = useAtom(editorAtom);
+  const [content, setContent] = useAtom(editorContentAtom);
 
   const formatterRef = useMarkdownFormatter();
   const taskHandlerRef = useTaskHandler();
@@ -93,7 +67,6 @@ export const useMarkdownEditor = () => {
   const { currentFontValue } = useFontFamily();
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue);
   const { setCharCount } = useCharCount();
-  const { setWordCount } = useWordCount();
   const { isMobile } = useMobileDetector();
 
   const themeCompartment = useRef(new Compartment()).current;
@@ -201,7 +174,6 @@ export const useMarkdownEditor = () => {
               debouncedSetContent(update.view);
               const updatedContent = update.state.doc.toString();
               setCharCount(updatedContent.length);
-              setWordCount(countWords(updatedContent));
             }
           }
         }),
@@ -307,8 +279,7 @@ export const useMarkdownEditor = () => {
     });
     
     setCharCount(content.length);
-    setWordCount(countWords(content));
-  }, [content, setCharCount, setWordCount]);
+  }, [content, setCharCount]);
 
   return {
     editor: editorRef,

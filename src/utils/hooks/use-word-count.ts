@@ -1,27 +1,17 @@
-import { useAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { atom } from "jotai";
-import { LOCAL_STORAGE_KEYS } from "../constants";
-import { useEffect } from "react";
+import { editorContentAtom } from "../atoms/editor";
 
-export const wordCountAtom = atom<number>(0);
+// Derive word count from editor content
+export const wordCountAtom = atom((get) => {
+  const content = get(editorContentAtom);
+  return countWords(content);
+});
 
+// Hook to use word count
 export const useWordCount = () => {
-  const [wordCount, setWordCount] = useAtom(wordCountAtom);
-
-  // Initialize word count from editor content if not already set
-  useEffect(() => {
-    if (wordCount === 0) {
-      const editorContent = localStorage.getItem(LOCAL_STORAGE_KEYS.EDITOR_CONTENT);
-      if (editorContent == null) {
-        setWordCount(0);
-      } else {
-        const content = editorContent.slice(1, -1); // Remove quotes
-        setWordCount(countWords(content));
-      }
-    }
-  }, [wordCount, setWordCount]);
-
-  return { wordCount, setWordCount };
+  const wordCount = useAtomValue(wordCountAtom);
+  return { wordCount };
 };
 
 export const countWords = (text: string): number => {
@@ -29,13 +19,33 @@ export const countWords = (text: string): number => {
     return 0;
   }
 
-  // Match word boundaries or CJK characters
-  // \b\w+\b matches word boundaries (works for Latin-based languages)
-  // [\u4E00-\u9FFF] matches CJK ideographs (Chinese/Japanese Kanji)
-  // [\u3040-\u309F\u30A0-\u30FF] matches Japanese Hiragana and Katakana
-  // [\uAC00-\uD7AF] matches Korean Hangul
-  const wordPattern = /\b\w+\b|[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF]/g;
+  // Use Intl.Segmenter if available
+  // Note: It may over-segment Japanese text, but it's still better than nothing
+  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
+    try {
+      // Detect if text contains Japanese characters
+      const hasJapanese = /[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF]/.test(text);
+      
+      // Use appropriate locale: 'ja' for Japanese content, 'en' for others
+      const locale = hasJapanese ? 'ja' : 'en';
+      const segmenter = new Intl.Segmenter(locale, { granularity: 'word' });
+      const segments = segmenter.segment(text);
+      
+      let wordCount = 0;
+      for (const segment of segments) {
+        if (segment.isWordLike) {
+          wordCount++;
+        }
+      }    
+      return wordCount;
+    } catch (e) {
+      // Fall through to regex approach
+    }
+  }
+
+  // Fallback: Count English words and Japanese character groups
+  const englishWords = text.match(/\b[a-zA-Z0-9]+\b/g) || [];
+  const japaneseGroups = text.match(/[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF]+/g) || [];
   
-  const matches = text.match(wordPattern) || [];
-  return matches.length;
+  return englishWords.length + japaneseGroups.length;
 };
