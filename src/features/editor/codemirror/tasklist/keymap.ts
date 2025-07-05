@@ -25,23 +25,23 @@ const getIndentLength = (lineText: string): number => {
   return match ? match[1].length : 0;
 };
 
-// Check if cursor is positioned right after checkbox in a task line
-const isCursorAfterCheckbox = (
+// Check if cursor is positioned right after task in a task line
+const isCursorAfterTask = (
   lineText: string,
   cursorPos: number,
   lineFrom: number,
-): { isAfterCheckbox: boolean; indent: string; bullet: string } => {
+): { isAfterTask: boolean; indent: string; bullet: string } => {
   const parsed = parseTaskLine(lineText);
   if (!parsed) {
-    return { isAfterCheckbox: false, indent: "", bullet: "" };
+    return { isAfterTask: false, indent: "", bullet: "" };
   }
 
   const { indent, bullet } = parsed;
-  const checkboxStart = lineFrom + indent.length + bullet.length + 1; // after "- " or "* "
-  const checkboxEnd = checkboxStart + TASK_WITH_WHITESPACE;
+  const taskStart = lineFrom + indent.length + bullet.length + 1; // after "- " or "* "
+  const taskEnd = taskStart + TASK_WITH_WHITESPACE;
 
   return {
-    isAfterCheckbox: cursorPos === checkboxEnd,
+    isAfterTask: cursorPos === taskEnd,
     indent,
     bullet,
   };
@@ -260,17 +260,17 @@ export const taskKeyBindings: readonly KeyBinding[] = [
       const pos = selection.main.head;
       const line = state.doc.lineAt(pos);
 
-      // Check if cursor is right after checkbox "[ ] " in a task line
-      const checkboxInfo = isCursorAfterCheckbox(line.text, pos, line.from);
-      if (checkboxInfo.isAfterCheckbox && pos < line.to) {
-        const { indent, bullet } = checkboxInfo;
+      // Check if cursor is right after task "[ ] " in a task line
+      const taskInfo = isCursorAfterTask(line.text, pos, line.from);
+      if (taskInfo.isAfterTask && pos < line.to) {
+        const { indent, bullet } = taskInfo;
         const newListLine = `${indent}${bullet} `;
-        const contentAfterCheckbox = line.text.substring(pos - line.from);
+        const contentAfterTask = line.text.substring(pos - line.from);
         
         view.dispatch({
-          changes: { from: line.from, to: line.to, insert: newListLine + contentAfterCheckbox },
+          changes: { from: line.from, to: line.to, insert: newListLine + contentAfterTask },
           selection: { anchor: line.from + newListLine.length },
-          userEvent: "delete.checkbox",
+          userEvent: "delete.task",
         });
         
         return true;

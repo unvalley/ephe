@@ -353,7 +353,7 @@ describe("taskKeyBindings - Delete Key", () => {
     expect(result.afterCursor).toBe(2);
   });
 
-  test("removes checkbox when delete pressed after checkbox with content", () => {
+  test("removes task when delete pressed after task with content", () => {
     const result = testKeyBehavior("- [ ] aaaa", 6, "Delete");
 
     expect(result.handled).toBe(true);
@@ -362,7 +362,7 @@ describe("taskKeyBindings - Delete Key", () => {
     expect(result.afterCursor).toBe(2);
   });
 
-  test("removes checkbox when delete pressed after checkbox with indented content", () => {
+  test("removes task when delete pressed after task with indented content", () => {
     const result = testKeyBehavior("  - [ ] aaaa", 8, "Delete");
 
     expect(result.handled).toBe(true);
