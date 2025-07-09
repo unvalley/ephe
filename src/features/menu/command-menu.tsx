@@ -11,11 +11,13 @@ import { useFontFamily, FONT_FAMILIES, FONT_FAMILY_OPTIONS } from "../../utils/h
 import type { EditorView } from "@codemirror/view";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import { DprintMarkdownFormatter } from "../editor/markdown/formatter/dprint-markdown-formatter";
+import { createAutoSnapshot } from "../snapshots/snapshot-manager";
 import {
   CheckCircleIcon,
   FileIcon,
   LinkIcon,
   MagnifyingGlassIcon,
+  FloppyDiskIcon,
   SunIcon,
   MoonIcon,
   DesktopIcon,
@@ -254,6 +256,27 @@ export const CommandMenu = ({
     onClose();
   };
 
+  const handleSaveSnapshot = () => {
+    if (!editorContent) {
+      showToast("No content to save", "error");
+      onClose();
+      return;
+    }
+    try {
+      createAutoSnapshot({
+        content: editorContent,
+        title: "Manual Snapshot",
+        description: "Saved from command menu"
+      });
+      showToast("Snapshot saved successfully", "success");
+    } catch (error) {
+      console.error("Failed to save snapshot:", error);
+      showToast("Failed to save snapshot", "error");
+    } finally {
+      onClose();
+    }
+  };
+
   const commandsList = (): CommandItem[] => {
     const list: CommandItem[] = [
       {
@@ -332,6 +355,15 @@ export const CommandMenu = ({
       icon: <FileIcon className="size-4" weight="light" />,
       perform: openSnapshotModal,
     });
+
+    if (editorContent) {
+      list.push({
+        id: "save-snapshot",
+        name: "Save snapshot",
+        icon: <FloppyDiskIcon className="size-4" weight="light" />,
+        perform: handleSaveSnapshot,
+      });
+    }
     list.push({
       id: "github-repo",
       name: "Go to Ephe GitHub Repo",
@@ -450,6 +482,7 @@ export const CommandMenu = ({
                       "insert-github-issues",
                       "open-tasks",
                       "open-snapshots",
+                      "save-snapshot",
                     ].includes(cmd.id),
                   )
                   .map((command) => (
