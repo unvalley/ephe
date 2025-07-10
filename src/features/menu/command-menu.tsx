@@ -314,12 +314,12 @@ export const CommandMenu = ({
       icon: <TextAaIcon className="size-4" weight="light" />, // changed from FileText
       perform: cycleFont,
     });
-      list.push({
-        id: "export-markdown",
-        name: "Export markdown",
-        icon: <FileIcon className="size-4" weight="light" />,
-        perform: handleExportMarkdown,
-      });
+    list.push({
+      id: "export-markdown",
+      name: "Export markdown",
+      icon: <FileIcon className="size-4" weight="light" />,
+      perform: handleExportMarkdown,
+    });
 
     if (editorView && formatterRef.current) {
       list.push({

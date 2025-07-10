@@ -266,13 +266,13 @@ export const taskKeyBindings: readonly KeyBinding[] = [
         const { indent, bullet } = taskInfo;
         const newListLine = `${indent}${bullet} `;
         const contentAfterTask = line.text.substring(pos - line.from);
-        
+
         view.dispatch({
           changes: { from: line.from, to: line.to, insert: newListLine + contentAfterTask },
           selection: { anchor: line.from + newListLine.length },
           userEvent: "delete.task",
         });
-        
+
         return true;
       }
 

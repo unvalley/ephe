@@ -24,8 +24,4 @@ const crossTabStorage = {
   },
 };
 
-export const editorContentAtom = atomWithStorage<string>(
-  LOCAL_STORAGE_KEYS.EDITOR_CONTENT,
-  "",
-  crossTabStorage,
-);
+export const editorContentAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "", crossTabStorage);
