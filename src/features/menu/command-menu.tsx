@@ -16,6 +16,7 @@ import {
   FileIcon,
   LinkIcon,
   MagnifyingGlassIcon,
+  FloppyDiskIcon,
   SunIcon,
   MoonIcon,
   DesktopIcon,
@@ -25,6 +26,7 @@ import {
   NotebookIcon,
   GithubLogoIcon,
 } from "@phosphor-icons/react";
+import { snapshotStorage } from "../snapshots/snapshot-storage";
 
 // Custom hook for markdown formatter
 const useMarkdownFormatter = () => {
@@ -254,6 +256,27 @@ export const CommandMenu = ({
     onClose();
   };
 
+  const handleSaveSnapshot = () => {
+    if (!editorContent) {
+      showToast("No content to save", "error");
+      onClose();
+      return;
+    }
+
+    try {
+      snapshotStorage.save({
+        content: editorContent,
+        charCount: editorContent.length,
+      });
+      showToast("Snapshot saved", "default");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "unknown";
+      showToast(`Error saving snapshot: ${message}`, "error");
+    } finally {
+      onClose();
+    }
+  };
+
   const commandsList = (): CommandItem[] => {
     const list: CommandItem[] = [
       {
@@ -291,14 +314,12 @@ export const CommandMenu = ({
       icon: <TextAaIcon className="size-4" weight="light" />, // changed from FileText
       perform: cycleFont,
     });
-    if (editorContent) {
       list.push({
         id: "export-markdown",
         name: "Export markdown",
         icon: <FileIcon className="size-4" weight="light" />,
         perform: handleExportMarkdown,
       });
-    }
 
     if (editorView && formatterRef.current) {
       list.push({
@@ -331,6 +352,13 @@ export const CommandMenu = ({
       name: "Open snapshot modal",
       icon: <FileIcon className="size-4" weight="light" />,
       perform: openSnapshotModal,
+    });
+
+    list.push({
+      id: "save-snapshot",
+      name: "Save snapshot",
+      icon: <FloppyDiskIcon className="size-4" weight="light" />,
+      perform: handleSaveSnapshot,
     });
     list.push({
       id: "github-repo",
@@ -450,6 +478,7 @@ export const CommandMenu = ({
                       "insert-github-issues",
                       "open-tasks",
                       "open-snapshots",
+                      "save-snapshot",
                     ].includes(cmd.id),
                   )
                   .map((command) => (
