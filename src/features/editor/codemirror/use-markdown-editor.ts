@@ -74,7 +74,7 @@ export const useMarkdownEditor = () => {
   const debouncedSetContent = useDebouncedCallback((view: EditorView) => {
     const newContent = view.state.doc.toString();
     // Only update if content actually changed to prevent unnecessary updates
-    setContent((prevContent) => prevContent !== newContent ? newContent : prevContent);
+    setContent((prevContent) => (prevContent !== newContent ? newContent : prevContent));
   }, 300);
 
   const onFormat = async () => {
@@ -128,6 +128,10 @@ export const useMarkdownEditor = () => {
     if (!view) return false;
     try {
       const currentText = view.state.doc.toString();
+      if (!currentText) {
+        showToast("No content to save", "error");
+        return false;
+      }
 
       // snapshot
       snapshotStorage.save({
@@ -168,7 +172,7 @@ export const useMarkdownEditor = () => {
           if (update.docChanged) {
             // Skip updates from programmatic changes (formatting, restore, etc.)
             // Only update for user input
-            const isUserInput = update.transactions.some(tr => tr.isUserEvent("input") || tr.isUserEvent("delete"));
+            const isUserInput = update.transactions.some((tr) => tr.isUserEvent("input") || tr.isUserEvent("delete"));
             if (isUserInput) {
               debouncedSetContent(update.view);
               const updatedContent = update.state.doc.toString();
@@ -253,30 +257,30 @@ export const useMarkdownEditor = () => {
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
-    
+
     // Get the current document content
     const currentDocContent = view.state.doc.toString();
-    
+
     // Skip if content is exactly the same as current editor content
     // This prevents cyclic updates when our own changes come back through the state
     if (content === currentDocContent) {
       setCharCount(content.length);
       return;
     }
-    
+
     // Update the editor with the new content while preserving cursor position
     const currentSelection = view.state.selection.main;
     const currentAnchor = currentSelection.anchor;
     const currentHead = currentSelection.head;
-    
+
     view.dispatch({
       changes: { from: 0, to: view.state.doc.length, insert: content },
-      selection: { 
+      selection: {
         anchor: Math.min(currentAnchor, content.length),
-        head: Math.min(currentHead, content.length)
+        head: Math.min(currentHead, content.length),
       },
     });
-    
+
     setCharCount(content.length);
   }, [content, setCharCount]);
 
