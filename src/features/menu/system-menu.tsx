@@ -11,7 +11,6 @@ import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME } from "../../utils/theme-initializer";
 import {
   CheckCircleIcon,
-  FileIcon,
   HashIcon,
   SunIcon,
   MoonIcon,
@@ -20,6 +19,7 @@ import {
   ArrowsHorizontalIcon,
   TextAaIcon,
   NotebookIcon,
+  FloppyDiskIcon,
 } from "@phosphor-icons/react";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
@@ -166,7 +166,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                       onClick={() => openTaskSnapshotModal(1)}
                     >
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">
-                        <FileIcon className="size-4" weight="light" />
+                        <FloppyDiskIcon className="size-4" weight="light" />
                       </span>
                       <span>{snapshotCount > 0 ? `${snapshotCount} snapshots` : "No snapshots"}</span>
                     </button>
