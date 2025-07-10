@@ -11,7 +11,6 @@ import { useFontFamily, FONT_FAMILIES, FONT_FAMILY_OPTIONS } from "../../utils/h
 import type { EditorView } from "@codemirror/view";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import { DprintMarkdownFormatter } from "../editor/markdown/formatter/dprint-markdown-formatter";
-import { createAutoSnapshot } from "../snapshots/snapshot-manager";
 import {
   CheckCircleIcon,
   FileIcon,
