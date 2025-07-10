@@ -130,7 +130,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                       <span>{charCount > 0 ? `${charCount.toLocaleString()} chars` : "No content"}</span>
                     </div>
                   </MenuItem>
-                  
+
                   <MenuItem disabled>
                     <div className="flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30">
                       <span className="mr-3 flex h-5 w-5 items-center justify-center">

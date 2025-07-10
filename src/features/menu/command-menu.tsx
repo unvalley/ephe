@@ -27,6 +27,7 @@ import {
   NotebookIcon,
   GithubLogoIcon,
 } from "@phosphor-icons/react";
+import { snapshotStorage } from "../snapshots/snapshot-storage";
 
 // Custom hook for markdown formatter
 const useMarkdownFormatter = () => {
@@ -262,16 +263,16 @@ export const CommandMenu = ({
       onClose();
       return;
     }
+
     try {
-      createAutoSnapshot({
+      snapshotStorage.save({
         content: editorContent,
-        title: "Manual Snapshot",
-        description: "Saved from command menu"
+        charCount: editorContent.length,
       });
-      showToast("Snapshot saved successfully", "success");
+      showToast("Snapshot saved", "default");
     } catch (error) {
-      console.error("Failed to save snapshot:", error);
-      showToast("Failed to save snapshot", "error");
+      const message = error instanceof Error ? error.message : "unknown";
+      showToast(`Error saving snapshot: ${message}`, "error");
     } finally {
       onClose();
     }
@@ -314,14 +315,12 @@ export const CommandMenu = ({
       icon: <TextAaIcon className="size-4" weight="light" />, // changed from FileText
       perform: cycleFont,
     });
-    if (editorContent) {
       list.push({
         id: "export-markdown",
         name: "Export markdown",
         icon: <FileIcon className="size-4" weight="light" />,
         perform: handleExportMarkdown,
       });
-    }
 
     if (editorView && formatterRef.current) {
       list.push({
@@ -356,14 +355,12 @@ export const CommandMenu = ({
       perform: openSnapshotModal,
     });
 
-    if (editorContent) {
-      list.push({
-        id: "save-snapshot",
-        name: "Save snapshot",
-        icon: <FloppyDiskIcon className="size-4" weight="light" />,
-        perform: handleSaveSnapshot,
-      });
-    }
+    list.push({
+      id: "save-snapshot",
+      name: "Save snapshot",
+      icon: <FloppyDiskIcon className="size-4" weight="light" />,
+      perform: handleSaveSnapshot,
+    });
     list.push({
       id: "github-repo",
       name: "Go to Ephe GitHub Repo",
