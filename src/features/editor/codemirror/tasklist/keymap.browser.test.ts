@@ -317,7 +317,7 @@ describe("taskKeyBindings - Delete Key", () => {
     expect(result.afterCursor).toBe(2);
   });
 
-  test("converts empty regular list line to plain text", () => {
+  test("deletes empty regular list line completely", () => {
     const result = testKeyBehavior("- ", 2, "Delete");
 
     expect(result.handled).toBe(true);
@@ -326,7 +326,7 @@ describe("taskKeyBindings - Delete Key", () => {
     expect(result.afterCursor).toBe(0);
   });
 
-  test("converts empty asterisk list line to plain text", () => {
+  test("deletes empty asterisk list line completely", () => {
     const result = testKeyBehavior("* ", 2, "Delete");
 
     expect(result.handled).toBe(true);
@@ -335,7 +335,7 @@ describe("taskKeyBindings - Delete Key", () => {
     expect(result.afterCursor).toBe(0);
   });
 
-  test("converts empty plus list line to plain text", () => {
+  test("deletes empty plus list line completely", () => {
     const result = testKeyBehavior("+ ", 2, "Delete");
 
     expect(result.handled).toBe(true);
@@ -344,13 +344,13 @@ describe("taskKeyBindings - Delete Key", () => {
     expect(result.afterCursor).toBe(0);
   });
 
-  test("preserves indentation when converting empty list to plain text", () => {
+  test("deletes indented empty list line completely", () => {
     const result = testKeyBehavior("  - ", 4, "Delete");
 
     expect(result.handled).toBe(true);
     expect(result.beforeText).toBe("  - ");
-    expect(result.afterText).toBe("  ");
-    expect(result.afterCursor).toBe(2);
+    expect(result.afterText).toBe("");
+    expect(result.afterCursor).toBe(0);
   });
 
   test("removes task when delete pressed after task with content", () => {

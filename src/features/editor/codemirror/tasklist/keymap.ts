@@ -299,21 +299,30 @@ export const taskKeyBindings: readonly KeyBinding[] = [
         }
       }
 
-      // Handle empty regular list lines - convert to plain text
+      // Handle empty regular list lines - delete entire line
       if (isEmptyListLine(line.text)) {
-        const parsed = parseEmptyListLine(line.text);
-        if (parsed) {
-          const { indent } = parsed;
-          const newPlainLine = indent;
+        // Delete the entire line including any newline
+        let from = line.from;
+        let to = line.to;
+        let newCursorPos = from;
 
-          view.dispatch({
-            changes: { from: line.from, to: line.to, insert: newPlainLine },
-            selection: { anchor: line.from + newPlainLine.length },
-            userEvent: "delete.list-to-text",
-          });
-
-          return true; // Suppress default Delete behavior
+        // Include the newline character in deletion if it exists
+        if (line.to < state.doc.length) {
+          to += 1; // Include newline character
+          newCursorPos = from;
+        } else if (line.from > 0) {
+          // If this is the last line, we might want to delete the preceding newline
+          from = Math.max(0, line.from - 1);
+          newCursorPos = from;
         }
+
+        view.dispatch({
+          changes: { from: from, to: to },
+          selection: { anchor: newCursorPos },
+          userEvent: "delete.empty-list",
+        });
+
+        return true; // Suppress default Delete behavior
       }
 
       // Use default Delete behavior if pattern doesn't match
