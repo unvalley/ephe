@@ -70,7 +70,9 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
       ".cm-scroller": {
         fontFamily: fontFamily,
         background: "transparent",
-        fontFeatureSettings: fontFamily.includes("Mynerve") ? '"calt" off, "salt" off, "liga" off, "dlig" off, "clig" off' : "normal",
+        fontFeatureSettings: fontFamily.includes("Mynerve")
+          ? '"calt" off, "salt" off, "liga" off, "dlig" off, "clig" off'
+          : "normal",
         fontVariantLigatures: fontFamily.includes("Mynerve") ? "none" : "normal",
       },
       ".cm-gutters": {
