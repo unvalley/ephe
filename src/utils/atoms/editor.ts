@@ -25,3 +25,28 @@ const crossTabStorage = {
 };
 
 export const editorContentAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "", crossTabStorage);
+
+// Multiple documents support
+export interface Document {
+  id: string;
+  content: string;
+  lastModified: number;
+}
+
+export const DEFAULT_DOCUMENTS: Document[] = Array.from({ length: 5 }, (_, i) => ({
+  id: `doc-${i}`,
+  content: "",
+  lastModified: Date.now(),
+}));
+
+export const documentsAtom = atomWithStorage<Document[]>(
+  LOCAL_STORAGE_KEYS.DOCUMENTS,
+  DEFAULT_DOCUMENTS,
+  crossTabStorage,
+);
+
+export const activeDocumentIndexAtom = atomWithStorage<number>(
+  LOCAL_STORAGE_KEYS.ACTIVE_DOCUMENT_INDEX,
+  0,
+  crossTabStorage,
+);

@@ -102,8 +102,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
   }, [menuOpen]);
 
   return (
-    <>
-      <Menu as="div" className="relative" ref={menuRef}>
+    <Menu as="div" className="relative" ref={menuRef}>
         {({ open }) => (
           <>
             <MenuButton
@@ -270,6 +269,5 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
           </>
         )}
       </Menu>
-    </>
   );
 };

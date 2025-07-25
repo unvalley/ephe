@@ -2,7 +2,8 @@ import "../globals.css";
 import { usePaperMode } from "../utils/hooks/use-paper-mode";
 import { Footer, FooterButton } from "../utils/components/footer";
 import { CommandMenu } from "../features/menu/command-menu";
-import { CodeMirrorEditor, type CodeMirrorEditorRef } from "../features/editor/codemirror/codemirror-editor";
+import { MultiDocumentEditor, type MultiDocumentEditorRef } from "../features/multi-document/multi-document-editor";
+import { DocumentDock } from "../features/multi-document/document-dock";
 import { SystemMenu } from "../features/menu/system-menu";
 import { HoursDisplay } from "../features/time-display/hours-display";
 import { Link } from "react-router-dom";
@@ -20,7 +21,7 @@ export const EditorPage = () => {
   // Track any modal being open
   const isAnyModalOpen = historyModalOpen;
   const { isCommandMenuOpen, closeCommandMenu } = useCommandK(isAnyModalOpen);
-  const editorRef = useRef<CodeMirrorEditorRef>(null);
+  const editorRef = useRef<MultiDocumentEditorRef>(null);
   const [editorContent] = useAtom(editorContentAtom);
 
   const handleCommandMenuClose = () => {
@@ -28,8 +29,8 @@ export const EditorPage = () => {
     // Return focus to editor after closing
     // Use requestAnimationFrame to ensure the menu is fully closed before focusing
     requestAnimationFrame(() => {
-      if (editorRef.current?.view) {
-        editorRef.current.view.focus();
+      if (editorRef.current?.currentView) {
+        editorRef.current.currentView.focus();
       }
     });
   };
@@ -43,13 +44,18 @@ export const EditorPage = () => {
     <div className={`flex h-screen flex-col overflow-hidden antialiased ${paperModeClass}`}>
       <div className="relative flex flex-1 overflow-hidden">
         <div className="z-0 flex-1">
-          <CodeMirrorEditor ref={editorRef} />
+          <MultiDocumentEditor ref={editorRef} />
         </div>
       </div>
 
       <Footer
         autoHide={true}
         leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} />}
+        centerContent={
+          <DocumentDock 
+            onNavigate={(index) => editorRef.current?.navigateToDocument(index)}
+          />
+        }
         rightContent={
           <>
             <HoursDisplay />
@@ -64,7 +70,7 @@ export const EditorPage = () => {
         open={isCommandMenuOpen}
         onClose={handleCommandMenuClose}
         editorContent={editorContent}
-        editorView={editorRef.current?.view ?? null}
+        editorView={editorRef.current?.currentView ?? null}
         onOpenHistoryModal={openHistoryModal}
       />
 
