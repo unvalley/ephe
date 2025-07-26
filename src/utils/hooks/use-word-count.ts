@@ -38,7 +38,7 @@ export const countWords = (text: string): number => {
         }
       }
       return wordCount;
-    } catch (e) {
+    } catch (_e) {
       // Fall through to regex approach
     }
   }
