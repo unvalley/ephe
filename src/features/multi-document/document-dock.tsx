@@ -13,7 +13,7 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
 
   return (
     <div
-      role="group"
+      role="toolbar"
       className="transition-all duration-400 ease-out"
       style={{
         padding: "32px 48px 48px 48px", // top, right, bottom, left - extra bottom padding
