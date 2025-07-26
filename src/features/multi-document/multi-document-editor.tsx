@@ -3,6 +3,7 @@ import { activeDocumentIndexAtom, documentsAtom } from "../../utils/atoms/editor
 import { CodeMirrorEditor, type CodeMirrorEditorRef } from "../editor/codemirror/codemirror-editor";
 import { useRef, useEffect, useState, useImperativeHandle, forwardRef, useCallback } from "react";
 import { DocumentNavigation } from "./document-navigation";
+import { MultiDocumentProvider } from "./multi-document-context";
 import type { EditorView } from "@codemirror/view";
 
 export type MultiDocumentEditorRef = {
@@ -55,15 +56,6 @@ export const MultiDocumentEditor = forwardRef<MultiDocumentEditorRef>((_, ref) =
     [navigateToDocument],
   );
 
-  // Expose navigation function to navigation cards
-  useEffect(() => {
-    const handleNavigate = (e: CustomEvent<{ index: number }>) => {
-      navigateToDocument(e.detail.index);
-    };
-    
-    window.addEventListener("navigate-to-document", handleNavigate as EventListener);
-    return () => window.removeEventListener("navigate-to-document", handleNavigate as EventListener);
-  }, [activeIndex]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -143,7 +135,9 @@ export const MultiDocumentEditor = forwardRef<MultiDocumentEditorRef>((_, ref) =
           />
         </div>
       
-      <DocumentNavigation />
+      <MultiDocumentProvider navigateToDocument={navigateToDocument}>
+        <DocumentNavigation />
+      </MultiDocumentProvider>
       </div>
   );
 });

@@ -2,6 +2,7 @@ import { useAtom } from "jotai";
 import { activeDocumentIndexAtom, documentsAtom } from "../../utils/atoms/editor";
 import { useState, useEffect } from "react";
 import { CaretLeftIcon, CaretRightIcon} from "@phosphor-icons/react";
+import { useMultiDocument } from "./multi-document-context";
 
 type NavigationCardProps = {
   direction: "left" | "right";
@@ -57,6 +58,8 @@ export const DocumentNavigation = () => {
   const canGoLeft = activeIndex > 0;
   const canGoRight = activeIndex < documents.length - 1;
 
+  const { navigateToDocument } = useMultiDocument();
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const threshold = 120; // pixels from edge - increased for better UX
@@ -79,10 +82,6 @@ export const DocumentNavigation = () => {
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [canGoLeft, canGoRight]);
-
-  const navigateToDocument = (newIndex: number) => {
-    window.dispatchEvent(new CustomEvent("navigate-to-document", { detail: { index: newIndex } }));
-  };
 
   return (
     <>

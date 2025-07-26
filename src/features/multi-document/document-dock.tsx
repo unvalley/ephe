@@ -13,6 +13,7 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
 
   return (
     <div
+      role="group"
       className="transition-all duration-400 ease-out"
       style={{
         padding: '32px 48px 48px 48px', // top, right, bottom, left - extra bottom padding
@@ -23,14 +24,13 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
     >
       <nav 
         aria-label="Document navigation"
-        className={`flex items-center rounded-md bg-white px-3 py-2 transition-all duration-400 ease-out
-                    dark:bg-neutral-900 ${
+        className={`flex items-center rounded-md bg-white px-3 py-2 transition-all duration-400 ease-out dark:bg-neutral-900 ${
           isDockHovered ? "scale-105 gap-3" : "scale-100 gap-2"
         }`}
       >
-        {documents.map((_, index) => (
+        {documents.map((doc, index) => (
           <button
-            key={documents[index].id}
+            key={doc.id}
             type="button"
             onClick={() => onNavigate(index)}
             className={`rounded-full transition-all duration-400 ease-out hover:scale-110 ${
