@@ -8,18 +8,20 @@ export type CodeMirrorEditorRef = {
   view: EditorView | null;
 };
 
-export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, { initialContent?: string; documentId?: string }>(({ initialContent, documentId }, ref) => {
-  const { editor, view: viewRef } = useMarkdownEditor(initialContent, documentId);
+export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, { initialContent?: string; documentId?: string }>(
+  ({ initialContent, documentId }, ref) => {
+    const { editor, view: viewRef } = useMarkdownEditor(initialContent, documentId);
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      get view() {
-        return viewRef.current;
-      },
-    }),
-    [],
-  );
+    useImperativeHandle(
+      ref,
+      () => ({
+        get view() {
+          return viewRef.current;
+        },
+      }),
+      [],
+    );
 
-  return <div data-testid="code-mirror-editor" ref={editor} className="mx-auto h-full w-full" />;
-});
+    return <div data-testid="code-mirror-editor" ref={editor} className="mx-auto h-full w-full" />;
+  },
+);

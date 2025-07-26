@@ -117,7 +117,7 @@ export const MultiDocumentEditor = forwardRef<MultiDocumentEditorRef>((_, ref) =
       // Force immediate scroll to top
       view.scrollDOM.scrollTop = 0;
       view.scrollDOM.scrollLeft = 0;
-      
+
       // Set cursor to beginning and focus
       view.dispatch({
         selection: { anchor: 0, head: 0 },

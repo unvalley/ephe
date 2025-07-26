@@ -51,11 +51,7 @@ export const EditorPage = () => {
       <Footer
         autoHide={true}
         leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} />}
-        centerContent={
-          <DocumentDock 
-            onNavigate={(index) => editorRef.current?.navigateToDocument(index)}
-          />
-        }
+        centerContent={<DocumentDock onNavigate={(index) => editorRef.current?.navigateToDocument(index)} />}
         rightContent={
           <>
             <HoursDisplay />
