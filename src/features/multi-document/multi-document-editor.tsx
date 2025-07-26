@@ -4,7 +4,7 @@ import { CodeMirrorEditor, type CodeMirrorEditorRef } from "../editor/codemirror
 import { useRef, useEffect, useState, useImperativeHandle, forwardRef, useCallback } from "react";
 import { DocumentNavigation } from "./document-navigation";
 import { MultiDocumentProvider } from "./multi-document-context";
-import { EditorView } from "@codemirror/view";
+import type { EditorView } from "@codemirror/view";
 
 export type MultiDocumentEditorRef = {
   currentView: EditorView | null;
