@@ -1,9 +1,9 @@
 import { useAtom } from "jotai";
-import { activeDocumentIndexAtom, documentsAtom } from "../../utils/atoms/editor";
-import { CodeMirrorEditor, type CodeMirrorEditorRef } from "../editor/codemirror/codemirror-editor";
+import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/multi-document";
+import { CodeMirrorEditor, type CodeMirrorEditorRef } from "../codemirror/codemirror-editor";
 import { useRef, useEffect, useState, useImperativeHandle, forwardRef, useCallback } from "react";
 import { DocumentNavigation } from "./document-navigation";
-import { MultiDocumentProvider } from "./multi-document-context";
+import { MultiDocumentProvider } from "./multi-context";
 import type { EditorView } from "@codemirror/view";
 
 export type MultiDocumentEditorRef = {

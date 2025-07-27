@@ -12,6 +12,6 @@ export const LOCAL_STORAGE_KEYS = {
   CURSOR_POSITION: "ephe:cursor-position",
   DOCUMENTS: "ephe:documents",
   ACTIVE_DOCUMENT_INDEX: "ephe:active-document-index",
-} as const;
+} as const satisfies Record<string, `ephe:${string}`>;
 
 export const EPHE_VERSION = "0.0.1";

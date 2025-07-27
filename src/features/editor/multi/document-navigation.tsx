@@ -1,8 +1,8 @@
 import { useAtom } from "jotai";
-import { activeDocumentIndexAtom, documentsAtom } from "../../utils/atoms/editor";
+import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/multi-document";
 import { useState, useEffect } from "react";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
-import { useMultiDocument } from "./multi-document-context";
+import { useMultiDocument } from "./multi-context";
 
 type NavigationCardProps = {
   direction: "left" | "right";
