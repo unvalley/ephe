@@ -70,7 +70,4 @@ export const documentsAtom = atomWithStorage<Document[]>(
   createCrossTabStorage<Document[]>(),
 );
 
-export const activeDocumentIndexAtom = atomWithStorage<number>(
-  LOCAL_STORAGE_KEYS.ACTIVE_DOCUMENT_INDEX,
-  0
-);
+export const activeDocumentIndexAtom = atomWithStorage<number>(LOCAL_STORAGE_KEYS.ACTIVE_DOCUMENT_INDEX, 0);
