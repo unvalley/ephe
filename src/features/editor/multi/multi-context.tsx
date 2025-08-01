@@ -1,6 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 
-interface MultiDocumentContextValue {
+type MultiDocumentContextValue = {
   navigateToDocument: (index: number) => void;
 }
 

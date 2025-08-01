@@ -10,7 +10,7 @@ import { StateEffect, StateField, RangeSetBuilder } from "@codemirror/state";
 import { findTaskSection } from "./task-section-utils";
 import type { OnTaskClosed } from ".";
 
-export interface TaskHandler {
+export type TaskHandler = {
   onTaskClosed: ({ taskContent, originalLine, section }: OnTaskClosed) => void;
   onTaskOpen: (taskContent: string) => void;
 }
@@ -42,7 +42,7 @@ const taskHoverStyle = Decoration.mark({
   inclusive: false,
 });
 
-interface TaskPluginValue extends PluginValue {
+type TaskPluginValue = PluginValue & {
   taskHandler?: TaskHandler;
 }
 

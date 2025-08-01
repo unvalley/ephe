@@ -9,7 +9,7 @@ import {
   type StorageProvider,
 } from "../../../utils/storage";
 
-export interface TaskStorage {
+export type TaskStorage = {
   getAll: () => CompletedTask[];
   getById: (id: string) => CompletedTask | null;
   save: (task: CompletedTask) => void;

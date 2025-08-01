@@ -51,7 +51,7 @@ const createCrossTabStorage = <T>() => {
 };
 
 // Document interface for multi-document support
-export interface Document {
+export type Document = {
   id: string;
   content: string;
   lastModified: number;

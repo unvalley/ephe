@@ -2,7 +2,7 @@ import { useAtom } from "jotai";
 import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/multi-document";
 import { useState } from "react";
 
-interface DocumentDockProps {
+type DocumentDockProps = {
   onNavigate: (index: number) => void;
 }
 

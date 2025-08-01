@@ -9,7 +9,7 @@ import {
   defaultStorageProvider,
 } from "../../utils/storage";
 
-interface SnapshotStorage {
+type SnapshotStorage = {
   getAll: () => Snapshot[];
   getById: (id: string) => Snapshot | null;
   save: (snapshot: Omit<Snapshot, "id" | "timestamp">) => void;
