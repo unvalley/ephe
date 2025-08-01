@@ -27,13 +27,13 @@ const NavigationCard = ({ direction, isVisible, onClick }: NavigationCardProps) 
       <button
         type="button"
         onClick={onClick}
-        className="group relative flex h-16 w-16 items-center justify-center rounded-xl bg-white shadow-xl transition-all duration-400 ease-out hover:scale-110 hover:bg-gray-50 hover:shadow-2xl dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-750"
+        className="group relative flex h-16 w-16 items-center justify-center rounded-xl bg-white shadow-xl transition-all duration-400 ease-out hover:scale-110 hover:bg-primary-50 hover:shadow-2xl dark:border-gray-700 dark:bg-primary-700 dark:hover:bg-primary-750"
         style={{
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
         }}
       >
-        <div className="text-gray-600 transition-colors duration-300 group-hover:text-gray-800 dark:text-gray-400 dark:group-hover:text-gray-200">
+        <div className="text-primary-600 transition-colors duration-300 group-hover:text-primary-800 dark:text-primary-400 dark:group-hover:text-primary-200">
           {direction === "left" ? (
             <CaretLeftIcon size={24} weight="bold" />
           ) : (
