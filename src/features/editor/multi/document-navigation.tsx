@@ -3,6 +3,7 @@ import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/mul
 import { useState, useEffect } from "react";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { useMultiDocument } from "./multi-context";
+import { Tooltip } from "../../../utils/components/tooltip";
 
 type NavigationCardProps = {
   direction: "left" | "right";
@@ -41,9 +42,9 @@ const NavigationCard = ({ direction, isVisible, onClick }: NavigationCardProps) 
         </div>
 
         {/* Floating indicator */}
-        <div className="-bottom-8 -translate-x-1/2 absolute left-1/2 rounded-md bg-gray-800 px-2 py-1 text-white text-xs opacity-0 transition-all delay-200 duration-300 group-hover:opacity-100 dark:bg-gray-200 dark:text-gray-800">
+        <Tooltip isVisible={false} position="bottom" className="group-hover:opacity-100">
           {direction === "left" ? "Previous" : "Next"}
-        </div>
+        </Tooltip>
       </button>
     </div>
   );

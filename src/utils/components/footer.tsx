@@ -3,8 +3,8 @@ import { useUserActivity } from "../hooks/use-user-activity";
 
 type FooterProps = {
   leftContent: React.ReactNode;
-  rightContent: React.ReactNode;
   centerContent?: React.ReactNode;
+  rightContent: React.ReactNode;
   autoHide?: boolean;
 };
 
@@ -22,10 +22,10 @@ export const Footer = ({ leftContent, rightContent, centerContent, autoHide = fa
       }`}
     >
       <div className="mx-auto flex items-center justify-between px-2 py-1 text-sm">
-        <div className="relative">{leftContent}</div>
-        {centerContent && (
+        <div>{leftContent}</div>
+        {centerContent ? (
           <div className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2">{centerContent}</div>
-        )}
+        ) : null}
         <div className="flex min-w-0 items-center gap-1">{rightContent}</div>
       </div>
     </footer>

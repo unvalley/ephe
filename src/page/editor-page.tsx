@@ -13,6 +13,7 @@ import { useRef, useState } from "react";
 import { useAtom } from "jotai";
 import { HistoryModal } from "../features/history/history-modal";
 import { editorContentAtom } from "../utils/atoms/editor";
+import { useMobileDetector } from "../utils/hooks/use-mobile-detector";
 
 export const EditorPage = () => {
   const { paperModeClass } = usePaperMode();
@@ -23,6 +24,7 @@ export const EditorPage = () => {
   const { isCommandMenuOpen, closeCommandMenu } = useCommandK(isAnyModalOpen);
   const editorRef = useRef<MultiDocumentEditorRef>(null);
   const [editorContent] = useAtom(editorContentAtom);
+  const { isMobile } = useMobileDetector();
 
   const handleCommandMenuClose = () => {
     closeCommandMenu();
@@ -51,7 +53,9 @@ export const EditorPage = () => {
       <Footer
         autoHide={true}
         leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} />}
-        centerContent={<DocumentDock onNavigate={(index) => editorRef.current?.navigateToDocument(index)} />}
+        centerContent={
+          isMobile ? null : <DocumentDock onNavigate={(index) => editorRef.current?.navigateToDocument(index)} />
+        }
         rightContent={
           <>
             <HoursDisplay />
