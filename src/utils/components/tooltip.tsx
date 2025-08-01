@@ -5,7 +5,7 @@ type TooltipProps = {
   isVisible: boolean;
   position?: "top" | "bottom" | "left" | "right";
   className?: string;
-}
+};
 
 export const Tooltip = ({ children, isVisible, position = "bottom", className = "" }: TooltipProps) => {
   const positionClasses = {
