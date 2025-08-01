@@ -41,7 +41,6 @@ const NavigationCard = ({ direction, isVisible, onClick }: NavigationCardProps) 
           )}
         </div>
 
-        {/* Floating indicator */}
         <Tooltip isVisible={false} position="bottom" className="group-hover:opacity-100">
           {direction === "left" ? "Previous" : "Next"}
         </Tooltip>
@@ -63,21 +62,13 @@ export const DocumentNavigation = () => {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const threshold = 120; // pixels from edge - increased for better UX
-      const { clientX } = e;
-      const windowWidth = window.innerWidth;
-
-      if (canGoLeft && clientX < threshold) {
-        setShowLeftCard(true);
-      } else {
-        setShowLeftCard(false);
-      }
-
-      if (canGoRight && clientX > windowWidth - threshold) {
-        setShowRightCard(true);
-      } else {
-        setShowRightCard(false);
-      }
+      const { clientX, clientY } = e;
+      const yThreshold = 80; // Vertical threshold for showing cards
+      const xThreshold = 100; // Horizontal threshold for showing cards
+      const inVerticalRange = clientY > yThreshold && clientY < window.innerHeight - yThreshold;
+      
+      setShowLeftCard(canGoLeft && clientX < xThreshold && inVerticalRange);
+      setShowRightCard(canGoRight && clientX > window.innerWidth - xThreshold && inVerticalRange);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
