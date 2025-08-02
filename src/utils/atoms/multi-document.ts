@@ -55,7 +55,7 @@ export type Document = {
   id: string;
   content: string;
   lastModified: number;
-}
+};
 
 // Default documents initialization
 export const DEFAULT_DOCUMENTS: Document[] = Array.from({ length: 5 }, (_, i) => ({

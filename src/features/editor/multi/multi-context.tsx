@@ -2,7 +2,7 @@ import { createContext, useContext, type ReactNode } from "react";
 
 type MultiDocumentContextValue = {
   navigateToDocument: (index: number) => void;
-}
+};
 
 const MultiDocumentContext = createContext<MultiDocumentContextValue | null>(null);
 

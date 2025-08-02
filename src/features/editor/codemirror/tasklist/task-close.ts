@@ -13,7 +13,7 @@ import type { OnTaskClosed } from ".";
 export type TaskHandler = {
   onTaskClosed: ({ taskContent, originalLine, section }: OnTaskClosed) => void;
   onTaskOpen: (taskContent: string) => void;
-}
+};
 
 // use utils
 const taskItemRegex = /^(\s*[-*]\s+)\[([ xX])\]/;
@@ -44,7 +44,7 @@ const taskHoverStyle = Decoration.mark({
 
 type TaskPluginValue = PluginValue & {
   taskHandler?: TaskHandler;
-}
+};
 
 // Single global task handler instance
 let globalTaskHandler: TaskHandler | undefined;

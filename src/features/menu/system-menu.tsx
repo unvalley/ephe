@@ -6,6 +6,7 @@ import { useEditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
 import { useWordCount } from "../../utils/hooks/use-word-count";
 import { useFontFamily, FONT_FAMILY_OPTIONS, FONT_FAMILIES } from "../../utils/hooks/use-font";
+import { useEditorMode } from "../../utils/hooks/use-editor-mode";
 import { useState, useEffect, useRef } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME } from "../../utils/theme-initializer";
@@ -20,6 +21,7 @@ import {
   TextAaIcon,
   NotebookIcon,
   FloppyDiskIcon,
+  SquaresFourIcon,
 } from "@phosphor-icons/react";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
@@ -75,6 +77,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
   const { theme, setTheme } = useTheme();
   const { paperMode, cyclePaperMode } = usePaperMode();
   const { fontFamily, setFontFamily } = useFontFamily();
+  const { editorMode, toggleEditorMode } = useEditorMode();
 
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
   const { charCount } = useCharCount();
@@ -243,6 +246,18 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                       <TextAaIcon className="size-4" weight="light" />
                     </span>
                     <span className="capitalize">{FONT_FAMILIES[fontFamily].displayValue}</span>
+                  </button>
+                </MenuItem>
+                <MenuItem as="div">
+                  <button
+                    type="button"
+                    onClick={toggleEditorMode}
+                    className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
+                  >
+                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                      <SquaresFourIcon className="size-4" weight="light" />
+                    </span>
+                    <span className="capitalize">{editorMode} Editor</span>
                   </button>
                 </MenuItem>
               </div>

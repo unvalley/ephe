@@ -16,7 +16,7 @@ type SnapshotStorage = {
   deleteById: (id: string) => void;
   deleteAll: () => void;
   getByDate: (filter?: DateFilter) => Record<string, Snapshot[]>;
-}
+};
 
 // Snapshot Storage factory function
 const createSnapshotStorage = (storage: StorageProvider = createBrowserLocalStorage()): SnapshotStorage => {

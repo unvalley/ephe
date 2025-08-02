@@ -17,7 +17,7 @@ export type TaskStorage = {
   deleteByIdentifier: (taskIdentifier: string) => void;
   deleteAll: () => void;
   getByDate: (filter?: DateFilter) => Record<string, CompletedTask[]>;
-}
+};
 /**
  * Generate a unique identifier for a task based on its content
  */

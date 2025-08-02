@@ -4,7 +4,7 @@ import { useState } from "react";
 
 type DocumentDockProps = {
   onNavigate: (index: number) => void;
-}
+};
 
 export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
   const [activeIndex] = useAtom(activeDocumentIndexAtom);

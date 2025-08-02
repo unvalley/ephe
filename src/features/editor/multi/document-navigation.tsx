@@ -66,7 +66,7 @@ export const DocumentNavigation = () => {
       const yThreshold = 80; // Vertical threshold for showing cards
       const xThreshold = 100; // Horizontal threshold for showing cards
       const inVerticalRange = clientY > yThreshold && clientY < window.innerHeight - yThreshold;
-      
+
       setShowLeftCard(canGoLeft && clientX < xThreshold && inVerticalRange);
       setShowRightCard(canGoRight && clientX > window.innerWidth - xThreshold && inVerticalRange);
     };
