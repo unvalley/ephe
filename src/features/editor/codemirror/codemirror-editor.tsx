@@ -8,9 +8,15 @@ export type CodeMirrorEditorRef = {
   view: EditorView | null;
 };
 
-export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, { initialContent?: string; documentId?: string }>(
-  ({ initialContent, documentId }, ref) => {
-    const { editor, view: viewRef } = useMarkdownEditor(initialContent, documentId);
+type CodeMirrorEditorProps = {
+  initialContent?: string;
+  documentId?: string;
+  onChange?: (content: string) => void;
+};
+
+export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditorProps>(
+  ({ initialContent, documentId, onChange }, ref) => {
+    const { editor, view: viewRef } = useMarkdownEditor(initialContent, documentId, onChange);
 
     useImperativeHandle(
       ref,

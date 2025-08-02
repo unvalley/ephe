@@ -17,6 +17,19 @@ export const MultiDocumentEditor = forwardRef<MultiDocumentEditorRef>((_, ref) =
   const [transitioning, setTransitioning] = useState(false);
   const editorRef = useRef<CodeMirrorEditorRef | null>(null);
 
+  // Save document content immediately when user types
+  const saveDocument = useCallback((content: string) => {
+    setDocuments((prev) => {
+      const updated = [...prev];
+      updated[activeIndex] = {
+        ...updated[activeIndex],
+        content,
+        lastModified: Date.now(),
+      };
+      return updated;
+    });
+  }, [activeIndex, setDocuments]);
+
   const navigateToDocument = useCallback(
     (newIndex: number) => {
       if (newIndex < 0 || newIndex >= documents.length || newIndex === activeIndex) return;
@@ -87,6 +100,7 @@ export const MultiDocumentEditor = forwardRef<MultiDocumentEditorRef>((_, ref) =
           key={documents[activeIndex].id}
           initialContent={documents[activeIndex].content}
           documentId={documents[activeIndex].id}
+          onChange={saveDocument}
         />
       </div>
 

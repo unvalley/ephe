@@ -53,7 +53,7 @@ const useTaskHandler = () => {
   return handlerRef;
 };
 
-export const useMarkdownEditor = (initialContent?: string, documentId?: string) => {
+export const useMarkdownEditor = (initialContent?: string, documentId?: string, onChange?: (content: string) => void) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   // Use initial content if provided, otherwise fall back to editorContentAtom for backwards compatibility
@@ -86,6 +86,10 @@ export const useMarkdownEditor = (initialContent?: string, documentId?: string) 
     const newContent = view.state.doc.toString();
     // Only update if content actually changed to prevent unnecessary updates
     setContent((prevContent) => (prevContent !== newContent ? newContent : prevContent));
+    // Call onChange callback if provided (for multi-editor)
+    if (onChange) {
+      onChange(newContent);
+    }
   }, 300);
 
   const onFormat = async () => {
