@@ -1,7 +1,7 @@
-export interface StorageProvider {
+export type StorageProvider = {
   getItem: (key: string) => string | null;
   setItem: (key: string, value: string) => void;
-}
+};
 
 // Define a DateFilter type to be reused
 export type DateFilter = {

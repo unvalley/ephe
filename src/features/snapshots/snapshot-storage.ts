@@ -9,14 +9,14 @@ import {
   defaultStorageProvider,
 } from "../../utils/storage";
 
-interface SnapshotStorage {
+type SnapshotStorage = {
   getAll: () => Snapshot[];
   getById: (id: string) => Snapshot | null;
   save: (snapshot: Omit<Snapshot, "id" | "timestamp">) => void;
   deleteById: (id: string) => void;
   deleteAll: () => void;
   getByDate: (filter?: DateFilter) => Record<string, Snapshot[]>;
-}
+};
 
 // Snapshot Storage factory function
 const createSnapshotStorage = (storage: StorageProvider = createBrowserLocalStorage()): SnapshotStorage => {
