@@ -16,17 +16,17 @@ type CodeMirrorEditorProps = {
 };
 
 export const CodeMirrorEditor = ({ initialContent, documentId, onChange, ref }: CodeMirrorEditorProps) => {
-    const { editor, view: viewRef } = useMarkdownEditor(initialContent, documentId, onChange);
+  const { editor, view: viewRef } = useMarkdownEditor(initialContent, documentId, onChange);
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        get view() {
-          return viewRef.current;
-        },
-      }),
-      [],
-    );
+  useImperativeHandle(
+    ref,
+    () => ({
+      get view() {
+        return viewRef.current;
+      },
+    }),
+    [],
+  );
 
-    return <div data-testid="code-mirror-editor" ref={editor} className="mx-auto h-full w-full" />;
+  return <div data-testid="code-mirror-editor" ref={editor} className="mx-auto h-full w-full" />;
 };

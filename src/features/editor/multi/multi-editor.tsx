@@ -22,17 +22,20 @@ export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
   const editorRef = useRef<CodeMirrorEditorRef | null>(null);
 
   // Save document content immediately when user types
-  const saveDocument = useCallback((content: string) => {
-    setDocuments((prev) => {
-      const updated = [...prev];
-      updated[activeIndex] = {
-        ...updated[activeIndex],
-        content,
-        lastModified: Date.now(),
-      };
-      return updated;
-    });
-  }, [activeIndex, setDocuments]);
+  const saveDocument = useCallback(
+    (content: string) => {
+      setDocuments((prev) => {
+        const updated = [...prev];
+        updated[activeIndex] = {
+          ...updated[activeIndex],
+          content,
+          lastModified: Date.now(),
+        };
+        return updated;
+      });
+    },
+    [activeIndex, setDocuments],
+  );
 
   const navigateToDocument = useCallback(
     (newIndex: number) => {

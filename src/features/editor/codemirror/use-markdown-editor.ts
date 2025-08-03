@@ -53,7 +53,11 @@ const useTaskHandler = () => {
   return handlerRef;
 };
 
-export const useMarkdownEditor = (initialContent?: string, documentId?: string, onChange?: (content: string) => void) => {
+export const useMarkdownEditor = (
+  initialContent?: string,
+  documentId?: string,
+  onChange?: (content: string) => void,
+) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
   // Use initial content if provided, otherwise fall back to editorContentAtom for backwards compatibility
