@@ -59,10 +59,14 @@ The codebase follows a feature-based structure under `src/features/`:
    - `.test.ts` files run in Node environment
    - `.browser.test.ts` files run in Playwright for DOM-dependent tests
    - E2E tests verify critical user workflows
+   
+### TypeScript
+
+- Use type alias instead of interface
 
 ### Development Guidelines
 
-1. **Performance Focus**: Minimize re-renders, use React.memo and useMemo appropriately
+1. **Performance Focus**: Minimize re-renders, we use React 19 and React Compiler
 2. **Functional Design**: Prefer immutable data structures and pure functions (inspired by Rich Hickey's principles)
 3. **Side Effects Isolation**: Keep side effects in custom hooks or effect handlers
 4. **Keyboard-First**: All features should be accessible via keyboard shortcuts

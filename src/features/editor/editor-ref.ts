@@ -1,13 +1,13 @@
 import type { EditorView } from "@codemirror/view";
 
-export interface BaseEditorRef {
+export type BaseEditorRef = {
   view: EditorView | null;
   getCurrentContent: () => string;
   setContent: (content: string) => void;
-}
+};
 
-export interface SingleEditorRef extends BaseEditorRef {}
+export type SingleEditorRef = BaseEditorRef;
 
-export interface MultiEditorRef extends BaseEditorRef {
+export type MultiEditorRef = BaseEditorRef & {
   navigateToDocument: (index: number) => void;
-}
+};

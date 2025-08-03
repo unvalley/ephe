@@ -2,7 +2,7 @@
 
 import { useMarkdownEditor } from "./use-markdown-editor";
 import { useImperativeHandle } from "react";
-import type { SingleEditorRef } from "../types/editor-ref";
+import type { SingleEditorRef } from "../editor-ref";
 
 type CodeMirrorEditorProps = {
   initialContent?: string;

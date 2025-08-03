@@ -4,7 +4,7 @@ import { CodeMirrorEditor } from "../codemirror/codemirror-editor";
 import { useRef, useEffect, useState, useImperativeHandle, useCallback } from "react";
 import { DocumentNavigation } from "./document-navigation";
 import { MultiDocumentProvider } from "./multi-context";
-import type { SingleEditorRef, MultiEditorRef } from "../types/editor-ref";
+import type { SingleEditorRef, MultiEditorRef } from "../editor-ref";
 
 type MultiDocumentEditorProps = {
   ref?: React.Ref<MultiEditorRef>;
@@ -83,7 +83,7 @@ export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
           };
           return updated;
         });
-        
+
         // Update editor view
         editorRef.current?.setContent(content);
       },

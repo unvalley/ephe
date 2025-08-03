@@ -4,7 +4,7 @@ import { Footer, FooterButton } from "../utils/components/footer";
 import { CommandMenu } from "../features/menu/command-menu";
 import { MultiDocumentEditor } from "../features/editor/multi/multi-editor";
 import { CodeMirrorEditor } from "../features/editor/codemirror/codemirror-editor";
-import type { MultiEditorRef, SingleEditorRef } from "../features/editor/types/editor-ref";
+import type { MultiEditorRef, SingleEditorRef } from "../features/editor/editor-ref";
 import { DocumentDock } from "../features/editor/multi/dock-menu";
 import { SystemMenu } from "../features/menu/system-menu";
 import { HoursDisplay } from "../features/time-display/hours-display";
@@ -33,7 +33,7 @@ export const EditorPage = () => {
 
   // Unified snapshot restore event handler
   useEffect(() => {
-    const handleContentRestored = (event: CustomEvent<{content: string}>) => {
+    const handleContentRestored = (event: CustomEvent<{ content: string }>) => {
       const customEvent = event;
       const restoredContent = customEvent.detail.content;
       // Route to appropriate editor based on mode
@@ -106,9 +106,7 @@ export const EditorPage = () => {
             : (singleEditorRef.current?.getCurrentContent() ?? editorContent)
         }
         editorView={
-          editorMode === "multi"
-            ? (multiEditorRef.current?.view ?? null)
-            : (singleEditorRef.current?.view ?? null)
+          editorMode === "multi" ? (multiEditorRef.current?.view ?? null) : (singleEditorRef.current?.view ?? null)
         }
         onOpenHistoryModal={openHistoryModal}
       />

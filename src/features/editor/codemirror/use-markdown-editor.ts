@@ -235,8 +235,6 @@ export const useMarkdownEditor = (
     };
   }, [documentId]); // Re-initialize when documentId changes
 
-
-
   // Update theme when dark mode changes
   useEffect(() => {
     const view = viewRef.current;
