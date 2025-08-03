@@ -69,7 +69,7 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
       // Load WASM buffer based on current environment
       const wasmBuffer = await this.loadWasmBuffer();
 
-      this.formatter = await createFromBuffer(wasmBuffer);
+      this.formatter = await createFromBuffer(wasmBuffer.slice());
 
       this.setConfig({
         indentWidth: this.config.indentWidth ?? 2,

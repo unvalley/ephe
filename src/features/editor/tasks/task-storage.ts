@@ -9,7 +9,7 @@ import {
   type StorageProvider,
 } from "../../../utils/storage";
 
-export interface TaskStorage {
+export type TaskStorage = {
   getAll: () => CompletedTask[];
   getById: (id: string) => CompletedTask | null;
   save: (task: CompletedTask) => void;
@@ -17,7 +17,7 @@ export interface TaskStorage {
   deleteByIdentifier: (taskIdentifier: string) => void;
   deleteAll: () => void;
   getByDate: (filter?: DateFilter) => Record<string, CompletedTask[]>;
-}
+};
 /**
  * Generate a unique identifier for a task based on its content
  */
