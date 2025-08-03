@@ -1,25 +1,20 @@
 import { useAtom } from "jotai";
 import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/multi-document";
-import { CodeMirrorEditor, type CodeMirrorEditorRef } from "../codemirror/codemirror-editor";
+import { CodeMirrorEditor } from "../codemirror/codemirror-editor";
 import { useRef, useEffect, useState, useImperativeHandle, useCallback } from "react";
 import { DocumentNavigation } from "./document-navigation";
 import { MultiDocumentProvider } from "./multi-context";
-import type { EditorView } from "@codemirror/view";
-
-export type MultiDocumentEditorRef = {
-  currentView: EditorView | null;
-  navigateToDocument: (index: number) => void;
-};
+import type { SingleEditorRef, MultiEditorRef } from "../editor-ref";
 
 type MultiDocumentEditorProps = {
-  ref?: React.Ref<MultiDocumentEditorRef>;
+  ref?: React.Ref<MultiEditorRef>;
 };
 
 export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
   const [activeIndex, setActiveIndex] = useAtom(activeDocumentIndexAtom);
   const [documents, setDocuments] = useAtom(documentsAtom);
   const [transitioning, setTransitioning] = useState(false);
-  const editorRef = useRef<CodeMirrorEditorRef | null>(null);
+  const editorRef = useRef<SingleEditorRef | null>(null);
 
   // Save document content immediately when user types
   const saveDocument = useCallback(
@@ -71,12 +66,30 @@ export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
   useImperativeHandle(
     ref,
     () => ({
-      get currentView() {
+      get view() {
         return editorRef.current?.view || null;
+      },
+      getCurrentContent: () => {
+        return editorRef.current?.getCurrentContent() ?? documents[activeIndex]?.content ?? "";
+      },
+      setContent: (content: string) => {
+        // Update document in state
+        setDocuments((prev) => {
+          const updated = [...prev];
+          updated[activeIndex] = {
+            ...updated[activeIndex],
+            content,
+            lastModified: Date.now(),
+          };
+          return updated;
+        });
+
+        // Update editor view
+        editorRef.current?.setContent(content);
       },
       navigateToDocument,
     }),
-    [navigateToDocument],
+    [navigateToDocument, documents, activeIndex, setDocuments],
   );
 
   // Reset scroll position immediately when document changes

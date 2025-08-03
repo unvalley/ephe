@@ -2,8 +2,9 @@ import "../globals.css";
 import { usePaperMode } from "../utils/hooks/use-paper-mode";
 import { Footer, FooterButton } from "../utils/components/footer";
 import { CommandMenu } from "../features/menu/command-menu";
-import { MultiDocumentEditor, type MultiDocumentEditorRef } from "../features/editor/multi/multi-editor";
-import { CodeMirrorEditor, type CodeMirrorEditorRef } from "../features/editor/codemirror/codemirror-editor";
+import { MultiDocumentEditor } from "../features/editor/multi/multi-editor";
+import { CodeMirrorEditor } from "../features/editor/codemirror/codemirror-editor";
+import type { MultiEditorRef, SingleEditorRef } from "../features/editor/editor-ref";
 import { DocumentDock } from "../features/editor/multi/dock-menu";
 import { SystemMenu } from "../features/menu/system-menu";
 import { HoursDisplay } from "../features/time-display/hours-display";
@@ -11,7 +12,7 @@ import { Link } from "react-router-dom";
 import { EPHE_VERSION } from "../utils/constants";
 import { useCommandK } from "../utils/hooks/use-command-k";
 import { useEditorMode } from "../utils/hooks/use-editor-mode";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useAtom } from "jotai";
 import { HistoryModal } from "../features/history/history-modal";
 import { editorContentAtom } from "../utils/atoms/editor";
@@ -25,18 +26,36 @@ export const EditorPage = () => {
   // Track any modal being open
   const isAnyModalOpen = historyModalOpen;
   const { isCommandMenuOpen, closeCommandMenu } = useCommandK(isAnyModalOpen);
-  const multiEditorRef = useRef<MultiDocumentEditorRef>(null);
-  const singleEditorRef = useRef<CodeMirrorEditorRef>(null);
+  const multiEditorRef = useRef<MultiEditorRef>(null);
+  const singleEditorRef = useRef<SingleEditorRef>(null);
   const [editorContent] = useAtom(editorContentAtom);
   const { isMobile } = useMobileDetector();
+
+  // Unified snapshot restore event handler
+  useEffect(() => {
+    const handleContentRestored = (event: CustomEvent<{ content: string }>) => {
+      const customEvent = event;
+      const restoredContent = customEvent.detail.content;
+      // Route to appropriate editor based on mode
+      if (editorMode === "multi" && multiEditorRef.current) {
+        multiEditorRef.current.setContent(restoredContent);
+      } else if (editorMode === "single" && singleEditorRef.current) {
+        singleEditorRef.current.setContent(restoredContent);
+      }
+    };
+    window.addEventListener("ephe:content-restored", handleContentRestored as EventListener);
+    return () => {
+      window.removeEventListener("ephe:content-restored", handleContentRestored as EventListener);
+    };
+  }, [editorMode]);
 
   const handleCommandMenuClose = () => {
     closeCommandMenu();
     // Return focus to editor after closing
     // Use requestAnimationFrame to ensure the menu is fully closed before focusing
     requestAnimationFrame(() => {
-      if (editorMode === "multi" && multiEditorRef.current?.currentView) {
-        multiEditorRef.current.currentView.focus();
+      if (editorMode === "multi" && multiEditorRef.current?.view) {
+        multiEditorRef.current.view.focus();
       } else if (editorMode === "single" && singleEditorRef.current?.view) {
         singleEditorRef.current.view.focus();
       }
@@ -81,11 +100,13 @@ export const EditorPage = () => {
         aria-modal="true"
         open={isCommandMenuOpen}
         onClose={handleCommandMenuClose}
-        editorContent={editorContent}
-        editorView={
+        editorContent={
           editorMode === "multi"
-            ? (multiEditorRef.current?.currentView ?? null)
-            : (singleEditorRef.current?.view ?? null)
+            ? (multiEditorRef.current?.getCurrentContent() ?? "")
+            : (singleEditorRef.current?.getCurrentContent() ?? editorContent)
+        }
+        editorView={
+          editorMode === "multi" ? (multiEditorRef.current?.view ?? null) : (singleEditorRef.current?.view ?? null)
         }
         onOpenHistoryModal={openHistoryModal}
       />

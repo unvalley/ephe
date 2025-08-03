@@ -20,7 +20,6 @@ import { useCharCount } from "../../../utils/hooks/use-char-count";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
-import { useCursorPosition } from "./use-cursor-position";
 import { useDebouncedCallback } from "use-debounce";
 import { editorContentAtom } from "../../../utils/atoms/editor";
 
@@ -235,31 +234,6 @@ export const useMarkdownEditor = (
       viewRef.current = null;
     };
   }, [documentId]); // Re-initialize when documentId changes
-
-  const { resetCursorPosition } = useCursorPosition(viewRef.current ?? undefined);
-
-  // Listen for content restore events
-  useEffect(() => {
-    const view = viewRef.current;
-    const handleContentRestored = (event: CustomEvent<{ content: string }>) => {
-      if (view && event.detail.content) {
-        // Update the editor content
-        view.dispatch({
-          changes: { from: 0, to: view.state.doc.length, insert: event.detail.content },
-        });
-        // Also update the atom value to keep them in sync
-        setContent(event.detail.content);
-        // Reset cursor position when content is restored
-        resetCursorPosition();
-      }
-    };
-    // Add event listener with type assertion
-    window.addEventListener("ephe:content-restored", handleContentRestored as EventListener);
-    return () => {
-      // Remove event listener on cleanup
-      window.removeEventListener("ephe:content-restored", handleContentRestored as EventListener);
-    };
-  }, [viewRef.current, setContent, resetCursorPosition]);
 
   // Update theme when dark mode changes
   useEffect(() => {
