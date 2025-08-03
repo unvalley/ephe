@@ -1,7 +1,7 @@
 "use client";
 
 import { useMarkdownEditor } from "./use-markdown-editor";
-import { useImperativeHandle, forwardRef } from "react";
+import { useImperativeHandle } from "react";
 import type { EditorView } from "@codemirror/view";
 
 export type CodeMirrorEditorRef = {
@@ -12,10 +12,10 @@ type CodeMirrorEditorProps = {
   initialContent?: string;
   documentId?: string;
   onChange?: (content: string) => void;
+  ref?: React.Ref<CodeMirrorEditorRef>;
 };
 
-export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditorProps>(
-  ({ initialContent, documentId, onChange }, ref) => {
+export const CodeMirrorEditor = ({ initialContent, documentId, onChange, ref }: CodeMirrorEditorProps) => {
     const { editor, view: viewRef } = useMarkdownEditor(initialContent, documentId, onChange);
 
     useImperativeHandle(
@@ -29,5 +29,4 @@ export const CodeMirrorEditor = forwardRef<CodeMirrorEditorRef, CodeMirrorEditor
     );
 
     return <div data-testid="code-mirror-editor" ref={editor} className="mx-auto h-full w-full" />;
-  },
-);
+};

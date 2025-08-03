@@ -1,7 +1,7 @@
 import { useAtom } from "jotai";
 import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/multi-document";
 import { CodeMirrorEditor, type CodeMirrorEditorRef } from "../codemirror/codemirror-editor";
-import { useRef, useEffect, useState, useImperativeHandle, forwardRef, useCallback } from "react";
+import { useRef, useEffect, useState, useImperativeHandle, useCallback } from "react";
 import { DocumentNavigation } from "./document-navigation";
 import { MultiDocumentProvider } from "./multi-context";
 import type { EditorView } from "@codemirror/view";
@@ -11,7 +11,11 @@ export type MultiDocumentEditorRef = {
   navigateToDocument: (index: number) => void;
 };
 
-export const MultiDocumentEditor = forwardRef<MultiDocumentEditorRef>((_, ref) => {
+type MultiDocumentEditorProps = {
+  ref?: React.Ref<MultiDocumentEditorRef>;
+};
+
+export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
   const [activeIndex, setActiveIndex] = useAtom(activeDocumentIndexAtom);
   const [documents, setDocuments] = useAtom(documentsAtom);
   const [transitioning, setTransitioning] = useState(false);
@@ -109,4 +113,4 @@ export const MultiDocumentEditor = forwardRef<MultiDocumentEditorRef>((_, ref) =
       </MultiDocumentProvider>
     </div>
   );
-});
+};
