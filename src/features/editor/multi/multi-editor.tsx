@@ -1,7 +1,7 @@
 import { useAtom } from "jotai";
 import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/multi-document";
 import { CodeMirrorEditor } from "../codemirror/codemirror-editor";
-import { useRef, useEffect, useState, useImperativeHandle, useCallback } from "react";
+import { useRef, useEffect, useImperativeHandle, useCallback } from "react";
 import { DocumentNavigation } from "./document-navigation";
 import { MultiDocumentProvider } from "./multi-context";
 import type { SingleEditorRef, MultiEditorRef } from "../editor-ref";
@@ -13,7 +13,6 @@ type MultiDocumentEditorProps = {
 export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
   const [activeIndex, setActiveIndex] = useAtom(activeDocumentIndexAtom);
   const [documents, setDocuments] = useAtom(documentsAtom);
-  const [transitioning, setTransitioning] = useState(false);
   const editorRef = useRef<SingleEditorRef | null>(null);
 
   // Save document content immediately when user types
@@ -36,8 +35,6 @@ export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
     (newIndex: number) => {
       if (newIndex < 0 || newIndex >= documents.length || newIndex === activeIndex) return;
 
-      setTransitioning(true);
-
       // Save current document content before switching
       const currentEditor = editorRef.current;
       if (currentEditor?.view) {
@@ -54,11 +51,6 @@ export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
       }
 
       setActiveIndex(newIndex);
-
-      // Smooth transition
-      setTimeout(() => {
-        setTransitioning(false);
-      }, 300);
     },
     [activeIndex, documents.length, setDocuments],
   );
@@ -110,11 +102,7 @@ export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      <div
-        className={`h-full w-full transition-opacity duration-300 ease-out ${
-          transitioning ? "opacity-0" : "opacity-100"
-        }`}
-      >
+      <div className="h-full w-full">
         <CodeMirrorEditor
           ref={editorRef}
           key={documents[activeIndex].id}
