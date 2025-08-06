@@ -63,14 +63,22 @@ const findUrlAtPos = (view: EditorView, pos: number): { url: string; from: numbe
   for (const match of text.matchAll(MARKDOWN_LINK_REGEX)) {
     const index = match.index;
     if (index !== undefined && offset >= index && offset < index + match[0].length) {
-      return { url: match[2], from: lineFrom + index, to: lineFrom + index + match[0].length };
+      return {
+        url: match[2],
+        from: lineFrom + index,
+        to: lineFrom + index + match[0].length,
+      };
     }
   }
 
   for (const match of text.matchAll(URL_REGEX)) {
     const index = match.index;
     if (index !== undefined && offset >= index && offset < index + match[0].length) {
-      return { url: match[0], from: lineFrom + index, to: lineFrom + index + match[0].length };
+      return {
+        url: match[0],
+        from: lineFrom + index,
+        to: lineFrom + index + match[0].length,
+      };
     }
   }
 
