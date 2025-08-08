@@ -1,19 +1,37 @@
-import { createFromBuffer, type GlobalConfiguration } from "@dprint/formatter";
-import { getPath } from "@dprint/markdown";
+import { createChannel } from "bidc";
 import type { MarkdownFormatter, FormatterConfig } from "./markdown-formatter";
+import FormatterWorker from "./formatter.worker?worker";
+
+type FormatterMessage = {
+  type: "format";
+  text: string;
+  config?: {
+    global?: {
+      indentWidth?: number;
+      lineWidth?: number;
+      newLineKind?: "auto" | "lf" | "crlf";
+    };
+    markdown?: any;
+  };
+};
+
+type FormatterResponse = {
+  type: "formatted";
+  text: string;
+} | {
+  type: "error";
+  message: string;
+};
 
 /**
- * Markdown formatter implementation using dprint's high-performance WASM
+ * Markdown formatter implementation using dprint's WASM in a web worker
  */
 export class DprintMarkdownFormatter implements MarkdownFormatter {
   private static instance: DprintMarkdownFormatter | null = null;
-  private formatter: {
-    formatText(params: { filePath: string; fileText: string }): string;
-    setConfig(globalConfig: GlobalConfiguration, specificConfig?: Record<string, unknown>): void;
-  } | null = null;
+  private worker: Worker | null = null;
+  private channel: ReturnType<typeof createChannel> | null = null;
   private isInitialized = false;
   private config: FormatterConfig;
-  private static readonly WASM_URL = "/wasm/dprint-markdown.wasm";
 
   /**
    * Private constructor to enforce singleton pattern
@@ -40,70 +58,66 @@ export class DprintMarkdownFormatter implements MarkdownFormatter {
     return typeof window !== "undefined" && typeof document !== "undefined";
   }
 
-  /**
-   * Load WASM buffer based on environment
-   */
-  private async loadWasmBuffer(): Promise<Uint8Array> {
-    if (this.isBrowser()) {
-      // In browser environment, fetch WASM from static assets
-      const response = await fetch(DprintMarkdownFormatter.WASM_URL);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch WASM: ${response.statusText}`);
-      }
-      const arrayBuffer = await response.arrayBuffer();
-      return new Uint8Array(arrayBuffer);
-    }
-
-    // In Node.js environment, load WASM directly from file
-    // Note: This code won't be executed when bundled with Vite
-    const fs = await import("node:fs");
-    const wasmPath = getPath();
-    const buffer = fs.readFileSync(wasmPath);
-    return new Uint8Array(buffer);
-  }
-
   private async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
     try {
-      // Load WASM buffer based on current environment
-      const wasmBuffer = await this.loadWasmBuffer();
+      // Only initialize worker in browser environment
+      if (!this.isBrowser()) {
+        throw new Error("Worker-based formatter only works in browser environment");
+      }
 
-      this.formatter = await createFromBuffer(wasmBuffer.slice());
-
-      this.setConfig({
-        indentWidth: this.config.indentWidth ?? 2,
-        lineWidth: this.config.lineWidth ?? 80,
-        useTabs: this.config.useTabs ?? false,
-        newLineKind: this.config.newLineKind ?? "auto",
-      });
+      // Create worker and establish bidc connection
+      this.worker = new FormatterWorker();
+      this.channel = createChannel(this.worker as Worker);
 
       this.isInitialized = true;
+      console.log("Formatter worker connection established");
     } catch (error) {
-      console.error("Failed to initialize dprint markdown formatter:", error);
+      console.error("Failed to initialize formatter worker:", error);
       throw error;
     }
   }
 
-  // should check dprint markdown config if you want to add more options
-  private setConfig(globalConfig: GlobalConfiguration, dprintMarkdownConfig: Record<string, unknown> = {}): void {
-    if (!this.formatter) {
-      throw new Error("Formatter not initialized. Call initialize() first.");
+  /**
+   * Clean up worker resources
+   */
+  public dispose(): void {
+    if (this.channel) {
+      this.channel.cleanup();
+      this.channel = null;
     }
-    this.formatter.setConfig(globalConfig, dprintMarkdownConfig);
+    if (this.worker) {
+      this.worker.terminate();
+      this.worker = null;
+      this.isInitialized = false;
+    }
   }
 
   /**
    * Format markdown text
    */
   public async formatMarkdown(text: string): Promise<string> {
-    if (!this.isInitialized || !this.formatter) {
+    if (!this.isInitialized || !this.channel) {
       throw new Error("Formatter not initialized properly");
     }
 
-    return this.formatter.formatText({
-      filePath: "ephe.md",
-      fileText: text,
-    });
+    const response = await this.channel.send({
+      type: "format",
+      text,
+      config: {
+        global: {
+          indentWidth: this.config.indentWidth ?? 2,
+          lineWidth: this.config.lineWidth ?? 100,
+          newLineKind: this.config.newLineKind ?? "lf",
+        },
+      },
+    } as FormatterMessage) as FormatterResponse;
+
+    if (response.type === "error") {
+      throw new Error(`Formatting failed: ${response.message}`);
+    }
+
+    return response.text;
   }
 }
