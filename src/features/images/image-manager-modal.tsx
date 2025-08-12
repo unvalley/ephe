@@ -21,9 +21,10 @@ export const ImageManagerModal = ({ isOpen, onClose, editorView }: ImageManagerM
   }, [isOpen]);
 
   const handleDelete = (imageId: string) => {
+    // TODO: Replace window.confirm with a custom modal for better UX and design consistency
     if (confirm("Are you sure you want to delete this image?")) {
       imageStorage.deleteById(imageId);
-      setImages(images.filter((img) => img.id !== imageId));
+      setImages((currentImages) => currentImages.filter((img) => img.id !== imageId));
       showToast("Image deleted", "default");
       if (selectedImage === imageId) {
         setSelectedImage(null);
@@ -83,6 +84,7 @@ export const ImageManagerModal = ({ isOpen, onClose, editorView }: ImageManagerM
               ) : (
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                   {images.map((image) => (
+                    // biome-ignore lint/a11y/useSemanticElements: Complex interactive element with hover states
                     <div
                       key={image.id}
                       role="button"
@@ -107,7 +109,7 @@ export const ImageManagerModal = ({ isOpen, onClose, editorView }: ImageManagerM
                       />
                       
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity group-hover:opacity-100">
-                        <div className="absolute bottom-0 left-0 right-0 p-2">
+                        <div className="absolute right-0 bottom-0 left-0 p-2">
                           <p className="truncate text-white text-xs">
                             {image.name}
                           </p>

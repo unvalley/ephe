@@ -29,12 +29,39 @@ const MAX_STORAGE_SIZE = 50 * 1024 * 1024; // 50MB limit
 
 // Image Storage factory function
 const createImageStorage = (storage: StorageProvider = createBrowserLocalStorage()): ImageStorage => {
-  const baseStorage = createStorage<StoredImage>(storage, LOCAL_STORAGE_KEYS.IMAGES);
+  // Use a map structure internally for O(1) lookups
+  const getImageMap = (): Record<string, StoredImage> => {
+    try {
+      const data = storage.getItem(LOCAL_STORAGE_KEYS.IMAGES);
+      return data ? JSON.parse(data) : {};
+    } catch (error) {
+      console.error('Error loading images:', error);
+      return {};
+    }
+  };
+
+  const saveImageMap = (imageMap: Record<string, StoredImage>): void => {
+    try {
+      storage.setItem(LOCAL_STORAGE_KEYS.IMAGES, JSON.stringify(imageMap));
+    } catch (error) {
+      console.error('Error saving images:', error);
+    }
+  };
+
+  const getAll = (): StoredImage[] => {
+    const imageMap = getImageMap();
+    return Object.values(imageMap);
+  };
+
+  const getById = (id: string): StoredImage | null => {
+    const imageMap = getImageMap();
+    return imageMap[id] || null;
+  };
 
   const save = async (file: File): Promise<StoredImage> => {
+    const reader = new FileReader();
+    
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
       reader.onload = () => {
         const dataUrl = reader.result as string;
         const now = new Date();
@@ -56,7 +83,9 @@ const createImageStorage = (storage: StorageProvider = createBrowserLocalStorage
           timestamp: now.toISOString(),
         };
         
-        baseStorage.save(image);
+        const imageMap = getImageMap();
+        imageMap[id] = image;
+        saveImageMap(imageMap);
         resolve(image);
       };
       
@@ -68,19 +97,33 @@ const createImageStorage = (storage: StorageProvider = createBrowserLocalStorage
     });
   };
 
+  const deleteById = (id: string): void => {
+    const imageMap = getImageMap();
+    delete imageMap[id];
+    saveImageMap(imageMap);
+  };
+
+  const deleteAll = (): void => {
+    saveImageMap({});
+  };
+
   const getTotalStorageSize = (): number => {
-    const images = baseStorage.getAll();
-    return images.reduce((total, img) => total + img.size, 0);
+    const imageMap = getImageMap();
+    return Object.values(imageMap).reduce((total, img) => total + img.size, 0);
   };
 
   const getImageUrl = (id: string): string | null => {
-    const image = baseStorage.getById(id);
+    const imageMap = getImageMap();
+    const image = imageMap[id];
     return image ? image.dataUrl : null;
   };
 
   return {
-    ...baseStorage,
+    getAll,
+    getById,
     save,
+    deleteById,
+    deleteAll,
     getTotalStorageSize,
     getImageUrl,
   };

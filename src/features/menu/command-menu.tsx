@@ -124,7 +124,9 @@ export const CommandMenu = ({
   const openTaskModal = () => {
     if (!onOpenHistoryModal) return;
     onClose(); // Close command menu first
-    // Use requestAnimationFrame to ensure command menu has completed its close animation
+    // Use double requestAnimationFrame to ensure command menu has completed its close animation
+    // First frame: React processes the state update and schedules DOM updates
+    // Second frame: Browser paints the changes and the closing animation completes
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         onOpenHistoryModal(0);
@@ -135,7 +137,9 @@ export const CommandMenu = ({
   const openSnapshotModal = () => {
     if (!onOpenHistoryModal) return;
     onClose(); // Close command menu first
-    // Use requestAnimationFrame to ensure command menu has completed its close animation
+    // Use double requestAnimationFrame to ensure command menu has completed its close animation
+    // First frame: React processes the state update and schedules DOM updates
+    // Second frame: Browser paints the changes and the closing animation completes
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         onOpenHistoryModal(1);
@@ -146,7 +150,9 @@ export const CommandMenu = ({
   const openImageManager = () => {
     if (!onOpenImageManager) return;
     onClose(); // Close command menu first
-    // Use requestAnimationFrame to ensure command menu has completed its close animation
+    // Use double requestAnimationFrame to ensure command menu has completed its close animation
+    // First frame: React processes the state update and schedules DOM updates
+    // Second frame: Browser paints the changes and the closing animation completes
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         onOpenImageManager();

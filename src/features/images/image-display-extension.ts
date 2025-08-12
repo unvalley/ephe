@@ -1,4 +1,5 @@
 import { type EditorView, Decoration, type DecorationSet, WidgetType, ViewPlugin, type ViewUpdate } from "@codemirror/view";
+import { type Range } from "@codemirror/state";
 import { imageStorage } from "./image-storage";
 
 class ImageWidget extends WidgetType {
@@ -40,7 +41,7 @@ class ImageWidget extends WidgetType {
 const imageRegex = /!\[([^\]]*)\]\(image:([^)]+)\)/g;
 
 function getImageDecorations(view: EditorView): DecorationSet {
-  const decorations: any[] = [];
+  const decorations: Range<Decoration>[] = [];
   const doc = view.state.doc;
   const text = doc.toString();
   
