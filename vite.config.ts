@@ -71,7 +71,7 @@ export default defineConfig({
         ],
       },
     }),
-    process.env.NODE_ENV === "development" && visualizer({
+    visualizer({
       filename: "bundle-size.html",
       open: true,
       template: "treemap",
