@@ -21,6 +21,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
+      injectRegister: "inline",
       includeAssets: ["ephe.svg", "ephe-192.png", "ephe-512.png"],
       manifest: {
         name: "Ephe - Ephemeral Markdown Paper",
@@ -37,11 +38,13 @@ export default defineConfig({
             src: "ephe-192.png",
             sizes: "192x192",
             type: "image/png",
+            purpose: "any maskable",
           },
           {
             src: "ephe-512.png",
             sizes: "512x512",
             type: "image/png",
+            purpose: "any maskable",
           },
           {
             src: "ephe.svg",
@@ -53,9 +56,18 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,wasm}"],
-        globIgnores: ["**/node_modules/**", "**/dist/**"],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MiB
+        navigateFallback: "index.html",
+        navigateFallbackDenylist: [/^\/_/, /\/[^/?]+\.[^/]+$/],
         runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "pages",
+              networkTimeoutSeconds: 3,
+            },
+          },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: "StaleWhileRevalidate",
@@ -64,6 +76,9 @@ export default defineConfig({
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
               },
             },
           },
@@ -75,6 +90,9 @@ export default defineConfig({
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 90, // 90 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
               },
             },
           },
