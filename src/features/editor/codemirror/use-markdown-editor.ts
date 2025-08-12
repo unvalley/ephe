@@ -22,6 +22,8 @@ import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
 import { useDebouncedCallback } from "use-debounce";
 import { editorContentAtom } from "../../../utils/atoms/editor";
+import { imageDisplayExtension } from "../../images/image-display-extension";
+import { createImageDropHandler } from "../../images/image-drop-handler";
 
 const useMarkdownFormatter = () => {
   const ref = useRef<DprintMarkdownFormatter | null>(null);
@@ -224,6 +226,8 @@ export const useMarkdownEditor = (
         ]),
         urlClickPlugin,
         urlHoverTooltip,
+        imageDisplayExtension,
+        createImageDropHandler(),
       ],
     });
     viewRef.current = new EditorView({ state, parent: editorRef.current });

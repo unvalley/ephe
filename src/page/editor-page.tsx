@@ -17,14 +17,16 @@ import { useAtom } from "jotai";
 import { HistoryModal } from "../features/history/history-modal";
 import { editorContentAtom } from "../utils/atoms/editor";
 import { useMobileDetector } from "../utils/hooks/use-mobile-detector";
+import { ImageManagerModal } from "../features/images/image-manager-modal";
 
 export const EditorPage = () => {
   const { paperModeClass } = usePaperMode();
   const { editorMode } = useEditorMode();
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [historyModalTabIndex, setHistoryModalTabIndex] = useState(0);
+  const [imageManagerOpen, setImageManagerOpen] = useState(false);
   // Track any modal being open
-  const isAnyModalOpen = historyModalOpen;
+  const isAnyModalOpen = historyModalOpen || imageManagerOpen;
   const { isCommandMenuOpen, closeCommandMenu } = useCommandK(isAnyModalOpen);
   const multiEditorRef = useRef<MultiEditorRef>(null);
   const singleEditorRef = useRef<SingleEditorRef>(null);
@@ -81,7 +83,11 @@ export const EditorPage = () => {
 
       <Footer
         autoHide={true}
-        leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} />}
+        leftContent={
+          <div className="flex items-center gap-1">
+            <SystemMenu onOpenHistoryModal={openHistoryModal} />
+          </div>
+        }
         centerContent={
           isMobile || editorMode === "single" ? null : (
             <DocumentDock onNavigate={(index) => multiEditorRef.current?.navigateToDocument(index)} />
@@ -109,12 +115,21 @@ export const EditorPage = () => {
           editorMode === "multi" ? (multiEditorRef.current?.view ?? null) : (singleEditorRef.current?.view ?? null)
         }
         onOpenHistoryModal={openHistoryModal}
+        onOpenImageManager={() => setImageManagerOpen(true)}
       />
 
       <HistoryModal
         isOpen={historyModalOpen}
         onClose={() => setHistoryModalOpen(false)}
         initialTabIndex={historyModalTabIndex}
+      />
+
+      <ImageManagerModal
+        isOpen={imageManagerOpen}
+        onClose={() => setImageManagerOpen(false)}
+        editorView={
+          editorMode === "multi" ? (multiEditorRef.current?.view ?? null) : (singleEditorRef.current?.view ?? null)
+        }
       />
     </div>
   );
