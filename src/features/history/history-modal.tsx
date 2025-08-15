@@ -49,6 +49,8 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
     handleRestoreSnapshot,
     handleDeleteSnapshot,
     handleDeleteAllSnapshots,
+    handleDeleteTask,
+    handleDeleteAllTasks,
     refresh,
   } = useHistoryData();
 
@@ -109,6 +111,15 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
     }
   };
 
+  const handleDeleteAllTasksClick = () => {
+    if (
+      tasks.length > 0 &&
+      confirm("Are you sure you want to delete all tasks? This action cannot be undone.")
+    ) {
+      handleDeleteAllTasks();
+    }
+  };
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
@@ -157,6 +168,14 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                     </TabList>
                     <TabPanels className="mt-2">
                       <TabPanel className="p-3">
+                        {tasks.length > 0 && (
+                          <div className="mb-4 flex items-center justify-between">
+                            <h3 className="font-medium text-lg">Tasks</h3>
+                            <button type="button" onClick={handleDeleteAllTasksClick} className={BUTTON_STYLES.danger}>
+                              Delete All
+                            </button>
+                          </div>
+                        )}
                         <div className="h-[60vh] overflow-y-auto">
                           {isLoading ? (
                             <div className="flex h-full items-center justify-center">
@@ -177,9 +196,22 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                                       </span>
                                     )}
                                   </div>
-                                  <span className="text-neutral-500 text-sm dark:text-neutral-400">
-                                    Closed at {formatDate(task.completedAt)}
-                                  </span>
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-neutral-500 text-sm dark:text-neutral-400">
+                                      Closed at {formatDate(task.completedAt)}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (confirm("Are you sure you want to delete this task?")) {
+                                          handleDeleteTask(task.id);
+                                        }
+                                      }}
+                                      className={BUTTON_STYLES.danger}
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
                                 </div>
                               ))}
                             </div>
