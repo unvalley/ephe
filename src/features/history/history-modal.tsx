@@ -112,10 +112,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
   };
 
   const handleDeleteAllTasksClick = () => {
-    if (
-      tasks.length > 0 &&
-      confirm("Are you sure you want to delete all tasks? This action cannot be undone.")
-    ) {
+    if (tasks.length > 0 && confirm("Are you sure you want to delete all tasks? This action cannot be undone.")) {
       handleDeleteAllTasks();
     }
   };
