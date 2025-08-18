@@ -61,8 +61,8 @@ export const HoursDisplay = () => {
         {formattedToday}
       </button>
 
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: tooltip needs mouse events */}
       <div
-        // biome-ignore lint/a11y/noStaticElementInteractions: tooltip needs mouse events
         ref={tooltipRef}
         className={`absolute bottom-full mb-2 rounded-xl bg-white p-6 shadow-xl transition-all duration-500 ease-out hover:bg-primary-50 hover:shadow-2xl dark:border-gray-700 dark:bg-primary-700 dark:hover:bg-primary-750 ${
           showTooltip
