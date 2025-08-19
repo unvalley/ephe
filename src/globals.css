@@ -166,11 +166,6 @@ body.dark {
   }
 }
 
-/* 3D Card Perspective */
-.perspective-1000 {
-  perspective: 1000px;
-}
-
 @font-face {
   font-family: "iA Writer Mono";
   font-style: normal;

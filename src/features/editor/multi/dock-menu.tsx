@@ -4,7 +4,6 @@ import { useState } from "react";
 import { motion } from "motion/react";
 
 const SPRING_CONFIG = {
-  type: "spring",
   stiffness: 200,
   damping: 30,
 };
