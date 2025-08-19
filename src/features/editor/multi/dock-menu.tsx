@@ -14,42 +14,39 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const getPreviewContent = (content: string) => {
-    const lines = content.split("\n").slice(0, 3);
-    return lines.join("\n").substring(0, 50) + (content.length > 50 ? "..." : "");
+    const lines = content.split("\n").slice(0, 5);
+    return lines.join("\n").substring(0, 100) + (content.length > 100 ? "..." : "");
   };
 
   const getCardStyle = (index: number, total: number) => {
     if (!isDockHovered) return {};
     
-    // Simple arc with golden ratio
-    const phi = 1.618033988749895; // Golden ratio
     const centerIndex = (total - 1) / 2;
     const offsetFromCenter = index - centerIndex;
     
-    // Simple arc angle
-    const angleRange = 80;
-    const angle = (offsetFromCenter / centerIndex) * (angleRange / 2);
-    const radians = (angle * Math.PI) / 180;
+    // Horizontal spacing - tighter distribution
+    const cardSpacing = 80; // Space between cards
+    const x = offsetFromCenter * cardSpacing;
     
-    // Simple radius with slight variation
-    const radius = 60;
-    const x = Math.sin(radians) * radius;
+    // No vertical offset - keep horizontal line
+    const y = 0;
     
-    // Gentle parabolic curve for vertical - much subtler
-    const yParabolic = -Math.pow(offsetFromCenter, 2) * 0.3 + 10;
+    // Subtle rotation - only slight tilt for outer cards
+    const maxRotation = 15; // Maximum rotation in degrees
+    const rotation = (offsetFromCenter / Math.max(centerIndex, 1)) * maxRotation;
     
-    // Simple rotation following the arc
-    const rotation = angle / phi;
+    // Uniform scale
+    const scale = hoveredIndex === index ? 1.1 : 1.0;
     
-    // Subtle scale variation using gaussian
-    const gaussian = Math.exp(-Math.pow(offsetFromCenter / 3, 2));
-    const baseScale = 0.95 + gaussian * 0.1;
+    // Z-index for stacking - left cards on top
+    const zIndex = 100 - offsetFromCenter;
     
     return {
       x,
-      y: yParabolic,
+      y,
       rotate: rotation,
-      scale: hoveredIndex === index ? baseScale * 1.15 : baseScale,
+      scale,
+      zIndex,
     };
   };
 
@@ -81,22 +78,23 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
             return (
               <motion.div
                 key={doc.id}
-                className="absolute will-change-transform"
+                className="absolute"
                 initial={false}
                 animate={{
-                  scale: isDockHovered ? (cardStyle.scale || 1) : 0.5,
+                  scale: isDockHovered ? (cardStyle.scale || 1) : 0.8,
                   opacity: 1,
-                  x: isDockHovered ? cardStyle.x : index * 16 - (documents.length - 1) * 8,
+                  x: isDockHovered ? cardStyle.x : index * 20 - (documents.length - 1) * 10,
                   y: isDockHovered ? cardStyle.y : 0,
                   rotate: isDockHovered ? cardStyle.rotate : 0,
-                  width: isDockHovered ? 80 : isActive ? 24 : 8,
-                  height: isDockHovered ? 100 : 8,
+                  width: isDockHovered ? 140 : isActive ? 32 : 12,
+                  height: isDockHovered ? 180 : 12,
+                  zIndex: isDockHovered ? cardStyle.zIndex : 1,
                 }}
                 transition={{
                   type: "spring",
-                  stiffness: 400,
-                  damping: 30,
-                  mass: 0.8,
+                  stiffness: 300,
+                  damping: 25,
+                  mass: 0.7,
                 }}
                 whileHover={{
                   scale: isDockHovered ? 1.15 : 1,
@@ -108,7 +106,7 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
                 <button
                   type="button"
                   onClick={() => onNavigate(index)}
-                  className={`relative overflow-hidden transition-colors duration-200 ${
+                  className={`relative overflow-hidden ${
                     isDockHovered
                       ? "rounded-lg border shadow-lg backdrop-blur-sm"
                       : "rounded-full"
@@ -127,18 +125,21 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
                   }}
                   aria-label={`Go to document ${index + 1}`}
                 >
-                  {isDockHovered && (
-                    <div className="flex h-full flex-col p-2">
-                      <div className="flex-1 overflow-hidden">
-                        <pre className="text-[8px] text-gray-500 leading-tight dark:text-gray-500">
-                          {getPreviewContent(doc.content) || "Empty"}
-                        </pre>
-                      </div>
-                      {isActive && (
-                        <div className="mt-1 h-1 w-full rounded-full bg-blue-500" />
-                      )}
+                  <motion.div 
+                    className="flex h-full flex-col p-3"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: isDockHovered ? 1 : 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex-1 overflow-hidden">
+                      <pre className="text-[10px] text-left text-gray-500 leading-tight dark:text-gray-500">
+                        {getPreviewContent(doc.content) || "Empty"}
+                      </pre>
                     </div>
-                  )}
+                    {isActive && (
+                      <div className="mt-1 h-1 w-full rounded-full bg-blue-500" />
+                    )}
+                  </motion.div>
                 </button>
               </motion.div>
             );
