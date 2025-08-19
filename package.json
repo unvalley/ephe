@@ -36,6 +36,7 @@
     "@phosphor-icons/react": "^2.1.10",
     "cmdk": "^1.1.1",
     "codemirror": "^6.0.2",
+    "framer-motion": "^12.23.12",
     "jotai": "^2.12.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
