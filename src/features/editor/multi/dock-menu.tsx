@@ -79,7 +79,7 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
       role="toolbar"
       className="relative"
       style={{
-        padding: isDockHovered ? "100px 150px" : "100px 120px",
+        padding: isDockHovered ? "100px 150px" : "60px 100px",
       }}
       onMouseEnter={() => setIsDockHovered(true)}
       onMouseLeave={() => {
