@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "pnpm lint:biome && pnpm lint:eslint",
     "lint:biome": "biome lint",
-    "lint:biome:write": "biome lint --write",
+    "lint:biome:write": "biome lint --write --unsafe",
     "lint:eslint": "eslint --ext .ts,.tsx src",
     "lint:eslint:fix": "eslint --fix --ext .ts,.tsx src",
     "format": "biome format --write",
