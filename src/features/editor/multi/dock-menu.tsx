@@ -1,13 +1,13 @@
 import { useAtom } from "jotai";
 import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/multi-document";
 import { useState } from "react";
-import { motion, type Transition } from "framer-motion";
+import { motion } from "motion/react";
 
 const SPRING_CONFIG = {
-  stiffness: 100,
+  type: "spring",
+  stiffness: 200,
   damping: 30,
-  mass: 1.2,
-} satisfies Transition;
+};
 
 type CardStyle = {
   x: number;
@@ -25,17 +25,26 @@ export const generatePreviewContent = (content: string): string => {
   return lines.length > 100 ? `${lines.substring(0, 100)}...` : lines;
 };
 
-export const calculateCardStyle = (index: number, total: number, hoveredIndex: number | undefined): CardStyle => {
+export const calculateCardStyle = (
+  index: number,
+  total: number,
+  hoveredIndex: number | null,
+  isDockHovered: boolean
+): CardStyle => {
+  if (!isDockHovered) {
+    return { x: 0, y: 0, rotate: 0, scale: 0, zIndex: 1 };
+  }
+
   const centerIndex = (total - 1) / 2;
   const offsetFromCenter = index - centerIndex;
+  
+  const x = offsetFromCenter * 80;
+  const y = 0;
+  const rotation = (offsetFromCenter / Math.max(centerIndex, 1)) * 15;
+  const scale = hoveredIndex === index ? 1.15 : 1.0;
+  const zIndex = 100 - offsetFromCenter;
 
-  return {
-    x: offsetFromCenter * 80,
-    y: 0,
-    rotate: (offsetFromCenter / Math.max(centerIndex, 1)) * 15,
-    scale: hoveredIndex === index ? 1.15 : 1.0,
-    zIndex: total - index,
-  };
+  return { x, y, rotate: rotation, scale, zIndex };
 };
 
 export const getCardButtonClasses = (isActive: boolean, isDockHovered: boolean): string => {
@@ -58,11 +67,13 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
   const [activeIndex] = useAtom(activeDocumentIndexAtom);
   const [documents] = useAtom(documentsAtom);
   const [isDockHovered, setIsDockHovered] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState<number | undefined>(undefined);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const documentPreviews = documents.map((doc) => generatePreviewContent(doc.content) || "Empty");
 
-  const cardStyles = documents.map((_, index) => calculateCardStyle(index, documents.length, hoveredIndex));
+  const cardStyles = documents.map((_, index) => 
+    calculateCardStyle(index, documents.length, hoveredIndex, isDockHovered)
+  );
 
   return (
     <div
@@ -74,7 +85,7 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
       onMouseEnter={() => setIsDockHovered(true)}
       onMouseLeave={() => {
         setIsDockHovered(false);
-        setHoveredIndex(undefined);
+        setHoveredIndex(null);
       }}
     >
       <nav aria-label="Document navigation" className="relative flex items-center justify-center">
@@ -98,7 +109,7 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
               }}
               transition={SPRING_CONFIG}
               onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(undefined)}
+              onMouseLeave={() => setHoveredIndex(null)}
             >
               <button
                 type="button"
