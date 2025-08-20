@@ -5,6 +5,7 @@ import { useRef, useEffect, useImperativeHandle, useCallback } from "react";
 import { DocumentNavigation } from "./document-navigation";
 import { MultiDocumentProvider } from "./multi-context";
 import type { SingleEditorRef, MultiEditorRef } from "../editor-ref";
+import { motion, AnimatePresence } from "motion/react";
 
 type MultiDocumentEditorProps = {
   ref?: React.Ref<MultiEditorRef>;
@@ -102,15 +103,23 @@ export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      <div className="h-full w-full">
-        <CodeMirrorEditor
-          ref={editorRef}
+      <AnimatePresence mode="wait">
+        <motion.div
           key={documents[activeIndex].id}
-          initialContent={documents[activeIndex].content}
-          documentId={documents[activeIndex].id}
-          onChange={saveDocument}
-        />
-      </div>
+          className="h-full w-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          <CodeMirrorEditor
+            ref={editorRef}
+            initialContent={documents[activeIndex].content}
+            documentId={documents[activeIndex].id}
+            onChange={saveDocument}
+          />
+        </motion.div>
+      </AnimatePresence>
 
       <MultiDocumentProvider navigateToDocument={navigateToDocument}>
         <DocumentNavigation />
