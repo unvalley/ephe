@@ -38,7 +38,7 @@ export const calculateCardStyle = (
   const offsetFromCenter = index - centerIndex;
 
   const x = offsetFromCenter * 80;
-  const y = 0;
+  const y = hoveredIndex === index ? -30 : 0;
   const rotation = (offsetFromCenter / Math.max(centerIndex, 1)) * 15;
   const scale = hoveredIndex === index ? 1.15 : 1.0;
   const zIndex = 100 - offsetFromCenter;
@@ -68,7 +68,7 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
   const [isDockHovered, setIsDockHovered] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  const documentPreviews = documents.map((doc) => generatePreviewContent(doc.content) || "Empty");
+  const documentPreviews = documents.map((doc) => generatePreviewContent(doc.content) || "");
 
   const cardStyles = documents.map((_, index) =>
     calculateCardStyle(index, documents.length, hoveredIndex, isDockHovered),
