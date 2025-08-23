@@ -166,8 +166,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                     <TabPanels className="mt-2">
                       <TabPanel className="p-3">
                         {tasks.length > 0 && (
-                          <div className="mb-4 flex items-center justify-between">
-                            <h3 className="font-medium text-lg">Tasks</h3>
+                          <div className="mb-4 flex items-center justify-end">
                             <button type="button" onClick={handleDeleteAllTasksClick} className={BUTTON_STYLES.danger}>
                               Delete All
                             </button>
@@ -185,7 +184,6 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                               {tasks.map((task) => (
                                 <div key={task.id} className="flex items-center justify-between py-3">
                                   <div className="flex items-center">
-                                    <span className="mr-2 text-neutral-500 dark:text-neutral-400">[x]</span>
                                     <span className="mr-1">{task.content}</span>
                                     {task.section && (
                                       <span className="text-neutral-500 text-sm dark:text-neutral-400">
@@ -195,7 +193,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                                   </div>
                                   <div className="flex items-center gap-3">
                                     <span className="text-neutral-500 text-sm dark:text-neutral-400">
-                                      Closed at {formatDate(task.completedAt)}
+                                      {formatDate(task.completedAt)}
                                     </span>
                                     <button
                                       type="button"
@@ -224,8 +222,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                       </TabPanel>
                       <TabPanel className="p-3">
                         {snapshots.length > 0 && (
-                          <div className="mb-4 flex items-center justify-between">
-                            <h3 className="font-medium text-lg">Snapshots</h3>
+                          <div className="mb-4 flex justify-end">
                             <button type="button" onClick={handleDeleteAll} className={BUTTON_STYLES.danger}>
                               Delete All
                             </button>
