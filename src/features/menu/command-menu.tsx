@@ -25,6 +25,7 @@ import {
   TextAaIcon,
   NotebookIcon,
   GithubLogoIcon,
+  ImageIcon,
 } from "@phosphor-icons/react";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
 
@@ -53,6 +54,7 @@ type CommandMenuProps = {
   editorContent?: string;
   editorView: EditorView | null;
   onOpenHistoryModal?: (tabIndex: number) => void;
+  onOpenImageManager?: () => void;
 };
 
 type CommandItem = {
@@ -69,6 +71,7 @@ export const CommandMenu = ({
   editorContent = "",
   editorView,
   onOpenHistoryModal,
+  onOpenImageManager,
 }: CommandMenuProps) => {
   const { nextTheme, cycleTheme } = useTheme();
   const { paperMode: currentPaperMode, cyclePaperMode } = usePaperMode();
@@ -121,7 +124,9 @@ export const CommandMenu = ({
   const openTaskModal = () => {
     if (!onOpenHistoryModal) return;
     onClose(); // Close command menu first
-    // Use requestAnimationFrame to ensure command menu has completed its close animation
+    // Use double requestAnimationFrame to ensure command menu has completed its close animation
+    // First frame: React processes the state update and schedules DOM updates
+    // Second frame: Browser paints the changes and the closing animation completes
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         onOpenHistoryModal(0);
@@ -132,10 +137,25 @@ export const CommandMenu = ({
   const openSnapshotModal = () => {
     if (!onOpenHistoryModal) return;
     onClose(); // Close command menu first
-    // Use requestAnimationFrame to ensure command menu has completed its close animation
+    // Use double requestAnimationFrame to ensure command menu has completed its close animation
+    // First frame: React processes the state update and schedules DOM updates
+    // Second frame: Browser paints the changes and the closing animation completes
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         onOpenHistoryModal(1);
+      });
+    });
+  };
+
+  const openImageManager = () => {
+    if (!onOpenImageManager) return;
+    onClose(); // Close command menu first
+    // Use double requestAnimationFrame to ensure command menu has completed its close animation
+    // First frame: React processes the state update and schedules DOM updates
+    // Second frame: Browser paints the changes and the closing animation completes
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        onOpenImageManager();
       });
     });
   };
@@ -360,6 +380,14 @@ export const CommandMenu = ({
       icon: <FloppyDiskIcon className="size-4" weight="light" />,
       perform: handleSaveSnapshot,
     });
+
+    list.push({
+      id: "open-image-manager",
+      name: "Open image manager",
+      icon: <ImageIcon className="size-4" weight="light" />,
+      perform: openImageManager,
+    });
+
     list.push({
       id: "github-repo",
       name: "Go to Ephe GitHub Repo",
