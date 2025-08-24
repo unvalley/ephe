@@ -22,6 +22,7 @@ type HistoryData = {
   handleDeleteSnapshot: (id: string) => void;
   handleDeleteAllSnapshots: () => void;
   handleDeleteTask: (id: string) => void;
+  handleDeleteAllTasks: () => void;
   refresh: () => void;
 };
 
@@ -226,6 +227,18 @@ export const useHistoryData = (): HistoryData => {
     }
   };
 
+  // Handle delete all tasks
+  const handleDeleteAllTasks = () => {
+    try {
+      taskStorage.deleteAll();
+      setTasks([]);
+      showToast("All tasks deleted", "success");
+    } catch (error) {
+      console.error("Error deleting all tasks:", error);
+      showToast("Failed to delete all tasks", "error");
+    }
+  };
+
   return {
     snapshots,
     tasks,
@@ -236,6 +249,7 @@ export const useHistoryData = (): HistoryData => {
     handleDeleteSnapshot,
     handleDeleteAllSnapshots,
     handleDeleteTask,
+    handleDeleteAllTasks,
     refresh: loadData,
   };
 };

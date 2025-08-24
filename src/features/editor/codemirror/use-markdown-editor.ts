@@ -4,7 +4,7 @@ import { languages } from "@codemirror/language-data";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
 import { EditorView, keymap, placeholder } from "@codemirror/view";
 import { useAtom } from "jotai";
-import { useRef, useEffect, useLayoutEffect } from "react";
+import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { showToast } from "../../../utils/components/toast";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 import { useTheme } from "../../../utils/hooks/use-theme";
@@ -20,7 +20,6 @@ import { useCharCount } from "../../../utils/hooks/use-char-count";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
-import { useCursorPosition } from "./use-cursor-position";
 import { useDebouncedCallback } from "use-debounce";
 import { editorContentAtom } from "../../../utils/atoms/editor";
 
@@ -53,10 +52,25 @@ const useTaskHandler = () => {
   return handlerRef;
 };
 
-export const useMarkdownEditor = () => {
+export const useMarkdownEditor = (
+  initialContent?: string,
+  documentId?: string,
+  onChange?: (content: string) => void,
+) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const [content, setContent] = useAtom(editorContentAtom);
+  // Use initial content if provided, otherwise fall back to editorContentAtom for backwards compatibility
+  const [globalContent, setGlobalContent] = useAtom(editorContentAtom);
+  const [localContent, setLocalContent] = useState(initialContent ?? globalContent);
+  const content = documentId ? localContent : globalContent;
+  const setContent = documentId ? setLocalContent : setGlobalContent;
+
+  // Update local content when initialContent changes (when switching documents)
+  useEffect(() => {
+    if (documentId && initialContent !== undefined) {
+      setLocalContent(initialContent);
+    }
+  }, [initialContent, documentId]);
 
   const formatterRef = useMarkdownFormatter();
   const taskHandlerRef = useTaskHandler();
@@ -75,6 +89,10 @@ export const useMarkdownEditor = () => {
     const newContent = view.state.doc.toString();
     // Only update if content actually changed to prevent unnecessary updates
     setContent((prevContent) => (prevContent !== newContent ? newContent : prevContent));
+    // Call onChange callback if provided (for multi-editor)
+    if (onChange) {
+      onChange(newContent);
+    }
   }, 300);
 
   const onFormat = async () => {
@@ -108,8 +126,7 @@ export const useMarkdownEditor = () => {
             const newPos = newLine.from + newColumn;
             view.dispatch({ selection: { anchor: newPos, head: newPos } });
           }
-        } catch (error) {
-          console.error("Error restoring cursor position", error);
+        } catch (_selectionError) {
           view.dispatch({ selection: { anchor: 0, head: 0 } });
         }
         view.scrollDOM.scrollTop = Math.min(scrollTop, view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight);
@@ -217,32 +234,7 @@ export const useMarkdownEditor = () => {
       viewRef.current?.destroy();
       viewRef.current = null;
     };
-  }, []); // Remove editorRef.current dependency to prevent re-initialization
-
-  const { resetCursorPosition } = useCursorPosition(viewRef.current ?? undefined);
-
-  // Listen for content restore events
-  useEffect(() => {
-    const view = viewRef.current;
-    const handleContentRestored = (event: CustomEvent<{ content: string }>) => {
-      if (view && event.detail.content) {
-        // Update the editor content
-        view.dispatch({
-          changes: { from: 0, to: view.state.doc.length, insert: event.detail.content },
-        });
-        // Also update the atom value to keep them in sync
-        setContent(event.detail.content);
-        // Reset cursor position when content is restored
-        resetCursorPosition();
-      }
-    };
-    // Add event listener with type assertion
-    window.addEventListener("ephe:content-restored", handleContentRestored as EventListener);
-    return () => {
-      // Remove event listener on cleanup
-      window.removeEventListener("ephe:content-restored", handleContentRestored as EventListener);
-    };
-  }, [viewRef.current, setContent, resetCursorPosition]);
+  }, [documentId]); // Re-initialize when documentId changes
 
   // Update theme when dark mode changes
   useEffect(() => {

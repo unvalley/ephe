@@ -31,8 +31,7 @@ export type TaskStorage = {
   addTask: (content: string) => Task;
   toggleTask: (id: string) => boolean;
   getCompletedTasks: () => CompletedTask[];
-}
-
+};
 /**
  * Generate a unique identifier for a task based on its content
  */

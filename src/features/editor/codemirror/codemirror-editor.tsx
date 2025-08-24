@@ -2,20 +2,38 @@
 
 import { useMarkdownEditor } from "./use-markdown-editor";
 import { useImperativeHandle } from "react";
-import type { EditorView } from "@codemirror/view";
+import type { SingleEditorRef } from "../editor-ref";
 
-export type CodeMirrorEditorRef = {
-  view: EditorView | null;
+type CodeMirrorEditorProps = {
+  initialContent?: string;
+  documentId?: string;
+  onChange?: (content: string) => void;
+  ref?: React.Ref<SingleEditorRef>;
 };
 
-export const CodeMirrorEditor = ({ ref }: { ref: React.Ref<CodeMirrorEditorRef> }) => {
-  const { editor, view: viewRef } = useMarkdownEditor();
+export const CodeMirrorEditor = ({ initialContent, documentId, onChange, ref }: CodeMirrorEditorProps) => {
+  const { editor, view: viewRef } = useMarkdownEditor(initialContent, documentId, onChange);
 
   useImperativeHandle(
     ref,
     () => ({
       get view() {
         return viewRef.current;
+      },
+      getCurrentContent: () => {
+        return viewRef.current?.state.doc.toString() ?? "";
+      },
+      setContent: (content: string) => {
+        const view = viewRef.current;
+        if (view) {
+          view.dispatch({
+            changes: {
+              from: 0,
+              to: view.state.doc.length,
+              insert: content,
+            },
+          });
+        }
       },
     }),
     [],
