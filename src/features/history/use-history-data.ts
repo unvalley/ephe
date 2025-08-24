@@ -34,8 +34,9 @@ const getDateString = (date: Date): string => {
   const time = date.getTime();
   const cacheKey = `date_${time}`;
 
-  if (dateStringCache.has(cacheKey)) {
-    return dateStringCache.get(cacheKey)!;
+  const cached = dateStringCache.get(cacheKey);
+  if (cached) {
+    return cached;
   }
 
   const dateStr = date.toISOString().split("T")[0]; // YYYY-MM-DD
@@ -138,7 +139,7 @@ export const useHistoryData = (): HistoryData => {
       new Promise<void>((resolve) => {
         try {
           const allTasks = taskStorage
-            .getAll()
+            .getCompletedTasks()
             .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
           setTasks(allTasks);
         } catch (taskError) {
