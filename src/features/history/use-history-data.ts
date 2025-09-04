@@ -45,7 +45,9 @@ const getDateString = (date: Date): string => {
   if (dateStringCache.size > 100) {
     // Get the oldest keys and remove them
     const keys = Array.from(dateStringCache.keys()).slice(0, 50);
-    keys.forEach((key) => dateStringCache.delete(key));
+    keys.forEach((key) => {
+      dateStringCache.delete(key);
+    });
   }
 
   return dateStr;
