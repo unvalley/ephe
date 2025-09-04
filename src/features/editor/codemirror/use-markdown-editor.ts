@@ -116,6 +116,12 @@ export const useMarkdownEditor = (
         view.dispatch({
           changes: { from: 0, to: state.doc.length, insert: formattedText },
         });
+        // Persist formatted content to state/storage and notify listeners
+        setContent((prevContent) => (prevContent !== formattedText ? formattedText : prevContent));
+        if (onChange) {
+          onChange(formattedText);
+        }
+        setCharCount(formattedText.length);
         // Restore cursor position after formatting
         try {
           const newState = view.state;
