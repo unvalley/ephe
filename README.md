@@ -1,11 +1,7 @@
 <div align="center">
   <p>Ephe</p>
   <a href="https://ephe.app/landing">
-    <img
-      src="https://github.com/user-attachments/assets/2e2f6053-284b-4d61-a4c6-0a0dfaf6acf0"
-      alt="Ephe screenshot"
-      width="65%"
-    />
+    <img width="80%" alt="ephe-readme" src="https://github.com/user-attachments/assets/ea0c44f0-9fad-42f8-add8-611a0e394e19" />
   </a>
   <p>
     <a href="https://ephe.app/landing">Ephe</a> is an ephemeral markdown paper  
