@@ -12,7 +12,7 @@ import { useFontFamily } from "../../../utils/hooks/use-font";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
-import { createDefaultTaskHandler, createChecklistPlugin } from "./tasklist";
+import { createDefaultTaskHandler, createChecklistPlugin, taskAgingPlugin } from "./tasklist";
 import { registerTaskHandler } from "./tasklist/task-close";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
 import { useEditorTheme } from "./use-editor-theme";
@@ -228,6 +228,7 @@ export const useMarkdownEditor = (
             preventDefault: true,
           },
         ]),
+        taskAgingPlugin,
         urlClickPlugin,
         urlHoverTooltip,
       ],
