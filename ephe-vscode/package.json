@@ -1,0 +1,100 @@
+{
+  "name": "ephe-vscode",
+  "displayName": "Ephe - Markdown Editor",
+  "description": "Enhanced markdown editing with task list auto-completion and keyboard shortcuts",
+  "version": "0.1.0",
+  "publisher": "unvalley",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unvalley/ephe"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": ["Programming Languages", "Formatters", "Other"],
+  "keywords": ["markdown", "task", "todo", "checklist"],
+  "icon": "icon.png",
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "ephe.toggleTask",
+        "title": "Toggle Task",
+        "category": "Ephe"
+      },
+      {
+        "command": "ephe.moveTaskUp",
+        "title": "Move Task Up",
+        "category": "Ephe"
+      },
+      {
+        "command": "ephe.moveTaskDown",
+        "title": "Move Task Down",
+        "category": "Ephe"
+      },
+      {
+        "command": "ephe.formatDocument",
+        "title": "Format Markdown",
+        "category": "Ephe"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "ephe.toggleTask",
+        "key": "cmd+enter",
+        "mac": "cmd+enter",
+        "when": "editorTextFocus && editorLangId == markdown"
+      },
+      {
+        "command": "ephe.moveTaskUp",
+        "key": "cmd+up",
+        "mac": "cmd+up",
+        "when": "editorTextFocus && editorLangId == markdown"
+      },
+      {
+        "command": "ephe.moveTaskDown",
+        "key": "cmd+down",
+        "mac": "cmd+down",
+        "when": "editorTextFocus && editorLangId == markdown"
+      }
+    ],
+    "configuration": {
+      "title": "Ephe",
+      "properties": {
+        "ephe.autoFlushCompletedTasks": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically remove completed tasks"
+        },
+        "ephe.enableTaskAutoComplete": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable task list auto-completion (- [ ] syntax)"
+        },
+        "ephe.enableFormatOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Format markdown on save using dprint"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "vitest",
+    "lint": "biome check --write ."
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "@types/vscode": "^1.80.0",
+    "@vscode/test-electron": "^2.3.8",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "dependencies": {}
+}
