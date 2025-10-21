@@ -208,7 +208,7 @@ export const CommandMenu = ({
         );
       }
 
-      showToast("Document formatted", "default");
+      showToast("Document formatted", "default", { duration: 1800 });
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown";
       showToast(`Error formatting document: ${message}`, "error");
