@@ -77,6 +77,7 @@ export const HoursDisplay = () => {
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
         }}
+        role="tooltip"
         onMouseLeave={() => setShowTooltip(false)}
       >
         <div className="mb-2 text-center text-primary-500 text-sm dark:text-primary-400">
