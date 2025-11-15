@@ -1,6 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap");
 @import "tailwindcss";
-/* biome-ignore lint/suspicious/noUnknownAtRules: tailwind */
 @config "../tailwind.config.js";
 
 @layer base {
