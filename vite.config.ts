@@ -1,25 +1,20 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import preact from "@preact/preset-vite";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
 import tailwindcss from "@tailwindcss/vite";
 import { visualizer } from "rollup-plugin-visualizer";
 import { VitePWA } from "vite-plugin-pwa";
 
-const ReactCompilerConfig = {};
-
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
-      },
-    }),
+    preact(),
     wasm(),
     topLevelAwait(),
     tailwindcss(),
     VitePWA({
+      minify: false,
       registerType: "autoUpdate",
       injectRegister: "inline",
       includeAssets: ["ephe.svg", "ephe-192.png", "ephe-512.png"],
@@ -107,6 +102,15 @@ export default defineConfig({
   ],
   server: {
     port: 3000,
+  },
+  resolve: {
+    alias: {
+      react: "preact/compat",
+      "react-dom": "preact/compat",
+      "react-dom/test-utils": "preact/test-utils",
+      "react/jsx-runtime": "preact/jsx-runtime",
+      "react/jsx-dev-runtime": "preact/jsx-dev-runtime",
+    },
   },
   build: {
     outDir: "dist",

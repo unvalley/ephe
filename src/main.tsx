@@ -1,7 +1,7 @@
 import "./utils/theme-initializer";
 import "./globals.css";
-import React from "react";
-import ReactDOM from "react-dom/client";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { LandingPage } from "./page/landing-page";
 import { ToastContainer } from "./utils/components/toast";
@@ -13,8 +13,8 @@ if (!root) {
   throw new Error("Root element not found");
 }
 
-ReactDOM.createRoot(root).render(
-  <React.StrictMode>
+createRoot(root).render(
+  <StrictMode>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<EditorPage />} />
@@ -23,5 +23,5 @@ ReactDOM.createRoot(root).render(
       </Routes>
       <ToastContainer />
     </BrowserRouter>
-  </React.StrictMode>,
+  </StrictMode>,
 );
