@@ -2,6 +2,7 @@ export const LOCAL_STORAGE_KEYS = {
   EDITOR_CONTENT: "ephe:editor-content",
   COMPLETED_TASKS: "ephe:completed-tasks",
   SNAPSHOTS: "ephe:snapshots",
+  IMAGES: "ephe:images",
   THEME: "ephe:theme",
   EDITOR_WIDTH: "ephe:editor-width",
   PAPER_MODE: "ephe:paper-mode",
