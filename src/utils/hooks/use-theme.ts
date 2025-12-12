@@ -2,32 +2,30 @@
 
 import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 import { COLOR_THEME, type ColorTheme, applyTheme } from "../theme-initializer";
 
 const themeAtom = atomWithStorage<ColorTheme>(LOCAL_STORAGE_KEYS.THEME, COLOR_THEME.SYSTEM);
 
+const getMediaQuery = () => window.matchMedia("(prefers-color-scheme: dark)");
+const getSystemPrefersDark = () => getMediaQuery().matches;
+
+const subscribeToSystemTheme = (callback: () => void) => {
+  const mediaQuery = getMediaQuery();
+  mediaQuery.addEventListener("change", callback);
+  return () => mediaQuery.removeEventListener("change", callback);
+};
+
 export const useTheme = () => {
   const [theme, setTheme] = useAtom(themeAtom);
+  const systemPrefersDark = useSyncExternalStore(subscribeToSystemTheme, getSystemPrefersDark, () => false);
+
+  const isDarkMode = theme === COLOR_THEME.DARK || (theme === COLOR_THEME.SYSTEM && systemPrefersDark);
 
   useEffect(() => {
     applyTheme(theme);
-  }, [theme]);
-
-  // Listen for system theme changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleThemeChange = () => {
-      if (theme === COLOR_THEME.SYSTEM) {
-        applyTheme(theme);
-      }
-    };
-    mediaQuery.addEventListener("change", handleThemeChange);
-    return () => {
-      mediaQuery.removeEventListener("change", handleThemeChange);
-    };
-  }, [theme]);
+  }, [theme, systemPrefersDark]);
 
   // Light -> Dark -> System
   const nextTheme =
@@ -36,10 +34,6 @@ export const useTheme = () => {
       : theme === COLOR_THEME.LIGHT
         ? COLOR_THEME.DARK
         : COLOR_THEME.SYSTEM;
-
-  const isDarkMode =
-    theme === COLOR_THEME.DARK ||
-    (theme === COLOR_THEME.SYSTEM && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   const cycleTheme = () => {
     setTheme(nextTheme);
