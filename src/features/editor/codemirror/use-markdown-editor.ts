@@ -22,6 +22,8 @@ import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
 import { useDebouncedCallback } from "use-debounce";
 import { editorContentAtom } from "../../../utils/atoms/editor";
+import { useCursorPosition } from "./use-cursor-position";
+import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 
 const useMarkdownFormatter = () => {
   const ref = useRef<DprintMarkdownFormatter | null>(null);
@@ -59,6 +61,7 @@ export const useMarkdownEditor = (
 ) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
+  const [view, setView] = useState<EditorView | null>(null);
   // Use initial content if provided, otherwise fall back to editorContentAtom for backwards compatibility
   const [globalContent, setGlobalContent] = useAtom(editorContentAtom);
   const [localContent, setLocalContent] = useState(initialContent ?? globalContent);
@@ -81,6 +84,7 @@ export const useMarkdownEditor = (
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue);
   const { setCharCount } = useCharCount();
   const { isMobile } = useMobileDetector();
+  const cursorStorageKey = documentId ? `${LOCAL_STORAGE_KEYS.CURSOR_POSITION}:${documentId}` : undefined;
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
@@ -232,14 +236,19 @@ export const useMarkdownEditor = (
         urlHoverTooltip,
       ],
     });
-    viewRef.current = new EditorView({ state, parent: editorRef.current });
-    viewRef.current.focus();
+    const createdView = new EditorView({ state, parent: editorRef.current });
+    viewRef.current = createdView;
+    setView(createdView);
+    createdView.focus();
 
     return () => {
       viewRef.current?.destroy();
       viewRef.current = null;
+      setView(null);
     };
   }, [documentId]); // Re-initialize when documentId changes
+
+  useCursorPosition(view ?? undefined, cursorStorageKey);
 
   // Update theme when dark mode changes
   useEffect(() => {

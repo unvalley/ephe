@@ -15,6 +15,7 @@ export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
   const [activeIndex, setActiveIndex] = useAtom(activeDocumentIndexAtom);
   const [documents, setDocuments] = useAtom(documentsAtom);
   const editorRef = useRef<SingleEditorRef | null>(null);
+  const hasMountedRef = useRef(false);
 
   // Save document content immediately when user types
   const saveDocument = useCallback(
@@ -87,6 +88,10 @@ export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
 
   // Reset scroll position immediately when document changes
   useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true;
+      return;
+    }
     const view = editorRef.current?.view;
     if (view) {
       // Force immediate scroll to top

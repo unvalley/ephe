@@ -1,16 +1,16 @@
 import type { EditorView } from "@codemirror/view";
 import { atomWithStorage } from "jotai/utils";
 import { useAtom } from "jotai";
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useMemo } from "react";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 
 const INITIAL_CURSOR_POSITION = { from: 0, to: 0 };
-const cursorAtom = atomWithStorage<{ from: number; to: number }>(
-  LOCAL_STORAGE_KEYS.CURSOR_POSITION,
-  INITIAL_CURSOR_POSITION,
-);
-
-export const useCursorPosition = (view?: EditorView) => {
+export const useCursorPosition = (view?: EditorView, storageKey?: string) => {
+  const key = storageKey ?? LOCAL_STORAGE_KEYS.CURSOR_POSITION;
+  const cursorAtom = useMemo(
+    () => atomWithStorage<{ from: number; to: number }>(key, INITIAL_CURSOR_POSITION),
+    [key],
+  );
   const [cursorPosition, setCursorPosition] = useAtom(cursorAtom);
 
   useLayoutEffect(() => {
@@ -32,9 +32,22 @@ export const useCursorPosition = (view?: EditorView) => {
       setCursorPosition((prev) => (prev.from === from && prev.to === to ? prev : { from, to }));
     };
 
-    // only save cursor position when the page is hidden
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        save();
+      }
+    };
+
+    // Save cursor position on page lifecycle events
     window.addEventListener("pagehide", save);
-    return () => window.removeEventListener("pagehide", save);
+    window.addEventListener("beforeunload", save);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      save();
+      window.removeEventListener("pagehide", save);
+      window.removeEventListener("beforeunload", save);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [view, cursorPosition, setCursorPosition]);
 
   const resetCursorPosition = () => setCursorPosition(INITIAL_CURSOR_POSITION);
