@@ -59,6 +59,8 @@ export const taskKeyBindings: readonly KeyBinding[] = [
   {
     key: "Enter",
     run: (view: EditorView): boolean => {
+      if (view.composing) return false;
+
       const { state } = view;
       const { selection } = state;
 
@@ -155,6 +157,8 @@ export const taskKeyBindings: readonly KeyBinding[] = [
   {
     key: "Tab",
     run: (view: EditorView): boolean => {
+      if (view.composing) return false;
+
       const { state } = view;
       if (state.readOnly || state.selection.ranges.length > 1) return false;
       if (!state.selection.main.empty) {
@@ -219,6 +223,8 @@ export const taskKeyBindings: readonly KeyBinding[] = [
   {
     key: "Shift-Tab",
     run: (view: EditorView): boolean => {
+      if (view.composing) return false;
+
       const { state } = view;
       if (state.readOnly) return false;
       const { head, empty } = state.selection.main;
@@ -249,6 +255,8 @@ export const taskKeyBindings: readonly KeyBinding[] = [
     key: "Delete",
     mac: "Backspace",
     run: (view: EditorView): boolean => {
+      if (view.composing) return false;
+
       const { state } = view;
       const { selection } = state;
 

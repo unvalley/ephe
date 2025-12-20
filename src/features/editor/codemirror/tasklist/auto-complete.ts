@@ -2,6 +2,8 @@ import type { Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 
 export const taskAutoComplete: Extension = EditorView.inputHandler.of((view, from, to, text) => {
+  if (view.composing) return false;
+
   const isValidInput = text === " " && from === to && from >= 2;
   if (!isValidInput) return false;
 
