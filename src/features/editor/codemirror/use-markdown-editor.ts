@@ -61,7 +61,6 @@ export const useMarkdownEditor = (
 ) => {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const [view, setView] = useState<EditorView | null>(null);
   // Use initial content if provided, otherwise fall back to editorContentAtom for backwards compatibility
   const [globalContent, setGlobalContent] = useAtom(editorContentAtom);
   const [localContent, setLocalContent] = useState(initialContent ?? globalContent);
@@ -236,19 +235,16 @@ export const useMarkdownEditor = (
         urlHoverTooltip,
       ],
     });
-    const createdView = new EditorView({ state, parent: editorRef.current });
-    viewRef.current = createdView;
-    setView(createdView);
-    createdView.focus();
+    viewRef.current = new EditorView({ state, parent: editorRef.current });
+    viewRef.current.focus();
 
     return () => {
       viewRef.current?.destroy();
       viewRef.current = null;
-      setView(null);
     };
   }, [documentId]); // Re-initialize when documentId changes
 
-  useCursorPosition(view ?? undefined, cursorStorageKey);
+  useCursorPosition(viewRef, cursorStorageKey, [documentId]);
 
   // Update theme when dark mode changes
   useEffect(() => {

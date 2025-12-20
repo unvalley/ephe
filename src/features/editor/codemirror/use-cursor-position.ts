@@ -1,11 +1,15 @@
 import type { EditorView } from "@codemirror/view";
 import { atomWithStorage } from "jotai/utils";
 import { useAtom } from "jotai";
-import { useLayoutEffect, useMemo } from "react";
+import { useLayoutEffect, useMemo, type DependencyList, type MutableRefObject } from "react";
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
 
 const INITIAL_CURSOR_POSITION = { from: 0, to: 0 };
-export const useCursorPosition = (view?: EditorView, storageKey?: string) => {
+export const useCursorPosition = (
+  viewRef: MutableRefObject<EditorView | null>,
+  storageKey?: string,
+  deps: DependencyList = [],
+) => {
   const key = storageKey ?? LOCAL_STORAGE_KEYS.CURSOR_POSITION;
   const cursorAtom = useMemo(
     () => atomWithStorage<{ from: number; to: number }>(key, INITIAL_CURSOR_POSITION),
@@ -14,7 +18,9 @@ export const useCursorPosition = (view?: EditorView, storageKey?: string) => {
   const [cursorPosition, setCursorPosition] = useAtom(cursorAtom);
 
   useLayoutEffect(() => {
-    if (typeof window === "undefined" || !view) return;
+    if (typeof window === "undefined") return;
+    const view = viewRef.current;
+    if (!view) return;
 
     if (cursorPosition.from || cursorPosition.to) {
       const len = view.state.doc.length;
@@ -48,7 +54,7 @@ export const useCursorPosition = (view?: EditorView, storageKey?: string) => {
       window.removeEventListener("beforeunload", save);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [view, cursorPosition, setCursorPosition]);
+  }, [viewRef, cursorPosition, setCursorPosition, ...deps]);
 
   const resetCursorPosition = () => setCursorPosition(INITIAL_CURSOR_POSITION);
 
