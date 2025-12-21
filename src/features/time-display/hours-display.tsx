@@ -56,7 +56,7 @@ export const HoursDisplay = () => {
         type="button"
         onClick={() => setShowTooltip(!showTooltip)}
         onMouseEnter={() => setShowTooltip(true)}
-        className="whitespace-nowrap rounded-md bg-white px-2 py-1 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+        className="select-none whitespace-nowrap rounded-md bg-white px-2 py-1 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:hover:bg-neutral-800"
       >
         {formattedToday}
       </button>
@@ -64,7 +64,7 @@ export const HoursDisplay = () => {
       {/* biome-ignore lint/a11y/noStaticElementInteractions: tooltip needs mouse events */}
       <div
         ref={tooltipRef}
-        className={`absolute bottom-full mb-2 rounded-xl bg-white p-6 shadow-xl transition-all duration-500 ease-out hover:bg-primary-50 hover:shadow-2xl dark:border-gray-700 dark:bg-primary-700 dark:hover:bg-primary-750 ${
+        className={`absolute bottom-full mb-2 select-none rounded-xl bg-white p-6 shadow-xl transition-all duration-500 ease-out hover:bg-primary-50 hover:shadow-2xl dark:border-gray-700 dark:bg-primary-700 dark:hover:bg-primary-750 ${
           showTooltip
             ? "pointer-events-auto translate-y-0 scale-100 opacity-100"
             : "pointer-events-none translate-y-4 scale-95 opacity-0"

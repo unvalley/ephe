@@ -109,7 +109,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
       {({ open }) => (
         <>
           <MenuButton
-            className="rounded-md bg-white px-2 py-1 text-neutral-900 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
+            className="select-none rounded-md bg-white px-2 py-1 text-neutral-900 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
             onClick={() => setMenuOpen(!menuOpen)}
           >
             System
@@ -117,7 +117,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
 
           {(open || menuOpen) && (
             <MenuItems
-              className="absolute bottom-full left-0 z-10 mb-2 w-48 overflow-hidden rounded-md bg-white text-neutral-900 shadow-md focus:outline-none dark:bg-primary-700 dark:text-neutral-100"
+              className="absolute bottom-full left-0 z-10 mb-2 w-48 select-none overflow-hidden rounded-md bg-white text-neutral-900 shadow-md focus:outline-none dark:bg-primary-700 dark:text-neutral-100"
               portal={false}
               static
             >
