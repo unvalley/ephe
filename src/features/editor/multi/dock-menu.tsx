@@ -1,11 +1,11 @@
 import { useAtom } from "jotai";
 import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/multi-document";
-import { useCallback, useMemo, useState, type DragEvent } from "react";
+import { useCallback, useMemo, useRef, useState, type DragEvent } from "react";
 import { motion } from "motion/react";
 
 const SPRING_CONFIG = {
-  stiffness: 200,
-  damping: 30,
+  stiffness: 180,
+  damping: 40,
 };
 
 const CARD_SIZE = { width: 140, height: 180 } as const;
@@ -34,9 +34,9 @@ export const calculateCardStyle = (
   index: number,
   total: number,
   hoveredIndex: number | null,
-  isDockHovered: boolean,
+  dockActive: boolean,
 ): CardStyle => {
-  if (!isDockHovered) {
+  if (!dockActive) {
     return { x: 0, y: 0, rotate: 0, scale: 0, zIndex: 1 };
   }
 
@@ -68,67 +68,38 @@ export const getCardButtonClasses = (isActive: boolean, isDockHovered: boolean):
   return `${baseClasses} ${shapeClasses} ${stateClasses}`;
 };
 
-export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
-  const [activeIndex, setActiveIndex] = useAtom(activeDocumentIndexAtom);
-  const [documents, setDocuments] = useAtom(documentsAtom);
-  const [isDockHovered, setIsDockHovered] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-
-  const documentPreviews = useMemo(
-    () => documents.map((doc) => generatePreviewContent(doc.content) || ""),
-    [documents],
+const useCardStyles = (total: number, hoveredIndex: number | null, dockActive: boolean) => {
+  return useMemo(
+    () => Array.from({ length: total }, (_, index) => calculateCardStyle(index, total, hoveredIndex, dockActive)),
+    [total, hoveredIndex, dockActive],
   );
+};
 
-  const isDragging = draggedIndex !== null;
-  const dockActive = isDockHovered || isDragging;
+type DockDragState = {
+  isDockHovered: boolean;
+  hoveredIndex: number | null;
+  draggedIndex: number | null;
+};
 
-  const cardStyles = useMemo(
-    () => documents.map((_, index) => calculateCardStyle(index, documents.length, hoveredIndex, dockActive)),
-    [documents.length, hoveredIndex, dockActive],
-  );
+const DEFAULT_DOCK_STATE: DockDragState = {
+  isDockHovered: false,
+  hoveredIndex: null,
+  draggedIndex: null,
+};
 
-  const reorderDocuments = useCallback(
-    (items: typeof documents, fromIndex: number, toIndex: number) => {
-      const moved = items[fromIndex];
-      if (!moved) return items;
+const useDockDragState = () => {
+  const [dockState, setDockState] = useState<DockDragState>(DEFAULT_DOCK_STATE);
 
-      const withoutMoved = items.filter((_, index) => index !== fromIndex);
-      return [...withoutMoved.slice(0, toIndex), moved, ...withoutMoved.slice(toIndex)];
-    },
-    [],
-  );
-
-  const getNextActiveIndex = useCallback((current: number, fromIndex: number, toIndex: number) => {
-    if (current === fromIndex) return toIndex;
-    if (fromIndex < toIndex && current > fromIndex && current <= toIndex) return current - 1;
-    if (fromIndex > toIndex && current < fromIndex && current >= toIndex) return current + 1;
-    return current;
-  }, []);
-
-  const moveDocument = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0) return;
-      if (fromIndex >= documents.length || toIndex >= documents.length) return;
-
-      setDocuments((prev) => reorderDocuments(prev, fromIndex, toIndex));
-      setActiveIndex((current) => getNextActiveIndex(current, fromIndex, toIndex));
-    },
-    [documents.length, getNextActiveIndex, reorderDocuments, setActiveIndex, setDocuments],
-  );
-
-  const handleDrop = useCallback(
-    (targetIndex: number) => {
-      if (draggedIndex === null || draggedIndex === targetIndex) return;
-      moveDocument(draggedIndex, targetIndex);
-    },
-    [draggedIndex, moveDocument],
-  );
+  const isDragging = dockState.draggedIndex !== null;
+  const dockActive = dockState.isDockHovered || isDragging;
 
   const handleDockMouseLeave = useCallback(() => {
     if (isDragging) return;
-    setIsDockHovered(false);
-    setHoveredIndex(null);
+    setDockState((prev) => ({
+      ...prev,
+      isDockHovered: false,
+      hoveredIndex: null,
+    }));
   }, [isDragging]);
 
   const handleDragStart = useCallback(
@@ -136,35 +107,88 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData("text/plain", `${index}`);
 
-      setIsDockHovered(true);
-      setDraggedIndex(index);
-      setHoveredIndex(null);
+      setDockState((prev) => ({
+        ...prev,
+        isDockHovered: true,
+        draggedIndex: index,
+        hoveredIndex: null,
+      }));
     },
     [],
   );
 
-  const handleDragEnd = useCallback(() => {
-    setDraggedIndex(null);
-    setHoveredIndex(null);
-    setIsDockHovered(false);
+  const handleDragEnd = useCallback((keepOpen: boolean) => {
+    setDockState({
+      isDockHovered: keepOpen,
+      hoveredIndex: null,
+      draggedIndex: null,
+    });
   }, []);
+
+  return {
+    dockActive,
+    dockState,
+    handleDockMouseLeave,
+    handleDragEnd,
+    handleDragStart,
+    isDragging,
+    setDockState,
+  };
+};
+
+export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
+  const dockRef = useRef<HTMLDivElement | null>(null);
+  const [activeIndex, setActiveIndex] = useAtom(activeDocumentIndexAtom);
+  const [documents, setDocuments] = useAtom(documentsAtom);
+  const { dockActive, handleDockMouseLeave, handleDragEnd, handleDragStart, isDragging, dockState, setDockState } =
+    useDockDragState();
+
+  const documentPreviews = useMemo(() => documents.map((doc) => generatePreviewContent(doc.content)), [documents]);
+  const cardStyles = useCardStyles(documents.length, dockState.hoveredIndex, dockActive);
+
+  const handleDrop = useCallback(
+    (targetIndex: number) => {
+      if (dockState.draggedIndex === null || dockState.draggedIndex === targetIndex) return;
+
+      const fromIndex = dockState.draggedIndex;
+      const toIndex = targetIndex;
+      if (fromIndex < 0 || toIndex < 0) return;
+      if (fromIndex >= documents.length || toIndex >= documents.length) return;
+
+      setDocuments((prev) => {
+        const moved = prev[fromIndex];
+        if (!moved) return prev;
+        const withoutMoved = prev.filter((_, index) => index !== fromIndex);
+        return [...withoutMoved.slice(0, toIndex), moved, ...withoutMoved.slice(toIndex)];
+      });
+
+      setActiveIndex((current) => {
+        if (current === fromIndex) return toIndex;
+        if (fromIndex < toIndex && current > fromIndex && current <= toIndex) return current - 1;
+        if (fromIndex > toIndex && current < fromIndex && current >= toIndex) return current + 1;
+        return current;
+      });
+    },
+    [dockState.draggedIndex, documents.length, setActiveIndex, setDocuments],
+  );
 
   return (
     <div
+      ref={dockRef}
       role="toolbar"
       className="relative"
       style={{
         padding: dockActive ? DOCK_PADDING.active : DOCK_PADDING.idle,
       }}
-      onMouseEnter={() => setIsDockHovered(true)}
+      onMouseEnter={() => setDockState((prev) => ({ ...prev, isDockHovered: true }))}
       onMouseLeave={handleDockMouseLeave}
     >
       <nav aria-label="Document navigation" className="relative flex items-center justify-center">
         {documents.map((doc, index) => {
           const isActive = index === activeIndex;
           const cardStyle = cardStyles[index];
-          const isDragged = draggedIndex === index;
-          const isDropTarget = isDragging && hoveredIndex === index && draggedIndex !== index;
+          const isDragged = dockState.draggedIndex === index;
+          const isDropTarget = isDragging && dockState.hoveredIndex === index && dockState.draggedIndex !== index;
           const cardOpacity = isDragged ? 0 : dockActive ? 1 : 0;
 
           return (
@@ -182,28 +206,39 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
                 zIndex: cardStyle.zIndex,
               }}
               transition={SPRING_CONFIG}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
+              onMouseEnter={() =>
+                setDockState((prev) => ({
+                  ...prev,
+                  hoveredIndex: index,
+                }))
+              }
+              onMouseLeave={() =>
+                setDockState((prev) => ({
+                  ...prev,
+                  hoveredIndex: null,
+                }))
+              }
               onDragOver={(event) => {
-                if (draggedIndex === null) return;
+                if (dockState.draggedIndex === null) return;
                 event.preventDefault();
-                if (hoveredIndex !== index) {
-                  setHoveredIndex(index);
-                }
+                setDockState((prev) => (prev.hoveredIndex === index ? prev : { ...prev, hoveredIndex: index }));
               }}
               onDrop={(event) => {
                 event.preventDefault();
                 handleDrop(index);
-                setDraggedIndex(null);
-                setHoveredIndex(null);
-                setIsDockHovered(false);
+                const keepOpen = dockRef.current?.matches(":hover") ?? true;
+                setDockState({
+                  isDockHovered: keepOpen,
+                  hoveredIndex: null,
+                  draggedIndex: null,
+                });
               }}
             >
               <button
                 type="button"
                 draggable={dockActive}
                 onDragStart={handleDragStart(index)}
-                onDragEnd={handleDragEnd}
+                onDragEnd={() => handleDragEnd(dockRef.current?.matches(":hover") ?? false)}
                 onClick={() => {
                   if (isDragging) return;
                   onNavigate(index);
