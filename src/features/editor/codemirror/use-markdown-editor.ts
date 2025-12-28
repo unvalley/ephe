@@ -16,7 +16,6 @@ import { createDefaultTaskHandler, createChecklistPlugin } from "./tasklist";
 import { registerTaskHandler } from "./tasklist/task-close";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
 import { useEditorTheme } from "./use-editor-theme";
-import { useCharCount } from "../../../utils/hooks/use-char-count";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
@@ -79,7 +78,6 @@ export const useMarkdownEditor = (
   const { isWideMode } = useEditorWidth();
   const { currentFontValue } = useFontFamily();
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue);
-  const { setCharCount } = useCharCount();
   const { isMobile } = useMobileDetector();
 
   const themeCompartment = useRef(new Compartment()).current;
@@ -126,7 +124,6 @@ export const useMarkdownEditor = (
         if (onChange) {
           onChange(formattedText);
         }
-        setCharCount(formattedText.length);
         // Restore cursor position after formatting
         try {
           const newState = view.state;
@@ -203,7 +200,6 @@ export const useMarkdownEditor = (
             if (isUserInput) {
               const updatedContent = update.state.doc.toString();
               debouncedSetContent(updatedContent);
-              setCharCount(updatedContent.length);
             }
           }
         }),
@@ -266,7 +262,6 @@ export const useMarkdownEditor = (
     // Skip if content is exactly the same as current editor content
     // This prevents cyclic updates when our own changes come back through the state
     if (content === currentDocContent) {
-      setCharCount(content.length);
       return;
     }
 
@@ -282,9 +277,7 @@ export const useMarkdownEditor = (
         head: Math.min(currentHead, content.length),
       },
     });
-
-    setCharCount(content.length);
-  }, [content, setCharCount]);
+  }, [content]);
 
   return {
     editor: editorRef,
