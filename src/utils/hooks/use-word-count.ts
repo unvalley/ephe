@@ -1,10 +1,10 @@
 import { useAtomValue } from "jotai";
 import { atom } from "jotai";
-import { editorContentAtom } from "../atoms/editor";
+import { editorStatsContentAtom } from "../atoms/editor";
 
 // Derive word count from editor content
 export const wordCountAtom = atom((get) => {
-  const content = get(editorContentAtom);
+  const content = get(editorStatsContentAtom);
   return countWords(content);
 });
 

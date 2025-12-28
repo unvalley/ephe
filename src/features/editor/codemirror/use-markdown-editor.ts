@@ -21,7 +21,7 @@ import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
 import { useDebouncedCallback } from "use-debounce";
-import { editorContentAtom } from "../../../utils/atoms/editor";
+import { editorContentAtom, editorStatsContentAtom } from "../../../utils/atoms/editor";
 
 const useMarkdownFormatter = () => {
   const ref = useRef<DprintMarkdownFormatter | null>(null);
@@ -61,6 +61,7 @@ export const useMarkdownEditor = (
   const viewRef = useRef<EditorView | null>(null);
   // Use initial content if provided, otherwise fall back to editorContentAtom for backwards compatibility
   const [globalContent, setGlobalContent] = useAtom(editorContentAtom);
+  const [, setStatsContent] = useAtom(editorStatsContentAtom);
   const [localContent, setLocalContent] = useState(initialContent ?? globalContent);
   const content = documentId ? localContent : globalContent;
   const setContent = documentId ? setLocalContent : setGlobalContent;
@@ -197,13 +198,15 @@ export const useMarkdownEditor = (
         EditorView.lineWrapping,
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
+            const updatedContent = update.state.doc.toString();
+            setStatsContent((prevContent) => (prevContent !== updatedContent ? updatedContent : prevContent));
+            setCharCount(updatedContent.length);
+
             // Skip updates from programmatic changes (formatting, restore, etc.)
-            // Only update for user input
+            // Only update stored content for user input
             const isUserInput = update.transactions.some((tr) => tr.isUserEvent("input") || tr.isUserEvent("delete"));
             if (isUserInput) {
-              const updatedContent = update.state.doc.toString();
               debouncedSetContent(updatedContent);
-              setCharCount(updatedContent.length);
             }
           }
         }),
@@ -236,6 +239,9 @@ export const useMarkdownEditor = (
       ],
     });
     viewRef.current = new EditorView({ state, parent: editorRef.current });
+    const initialDoc = viewRef.current.state.doc.toString();
+    setStatsContent((prevContent) => (prevContent !== initialDoc ? initialDoc : prevContent));
+    setCharCount(initialDoc.length);
     viewRef.current.focus();
 
     return () => {
@@ -266,6 +272,7 @@ export const useMarkdownEditor = (
     // Skip if content is exactly the same as current editor content
     // This prevents cyclic updates when our own changes come back through the state
     if (content === currentDocContent) {
+      setStatsContent((prevContent) => (prevContent !== content ? content : prevContent));
       setCharCount(content.length);
       return;
     }
@@ -283,6 +290,7 @@ export const useMarkdownEditor = (
       },
     });
 
+    setStatsContent((prevContent) => (prevContent !== content ? content : prevContent));
     setCharCount(content.length);
   }, [content, setCharCount]);
 

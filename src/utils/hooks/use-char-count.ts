@@ -1,25 +1,21 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { atom } from "jotai";
-import { LOCAL_STORAGE_KEYS } from "../constants";
 import { useEffect } from "react";
+import { editorStatsContentAtom } from "../atoms/editor";
 
 export const charCountAtom = atom<number>(0);
 
 export const useCharCount = () => {
   const [charCount, setCharCount] = useAtom(charCountAtom);
+  const statsContent = useAtomValue(editorStatsContentAtom);
 
-  // Initialize character count from editor content if not already set
+  // Keep character count in sync with current editor content.
   useEffect(() => {
-    if (charCount === 0) {
-      const editorContent = localStorage.getItem(LOCAL_STORAGE_KEYS.EDITOR_CONTENT);
-      const DOUBLE_QUOTE_SIZE = 2;
-      if (editorContent == null) {
-        setCharCount(0);
-      } else {
-        setCharCount(editorContent.length - DOUBLE_QUOTE_SIZE);
-      }
+    const nextCount = statsContent.length;
+    if (charCount !== nextCount) {
+      setCharCount(nextCount);
     }
-  }, [charCount, setCharCount]);
+  }, [charCount, setCharCount, statsContent]);
 
   return { charCount, setCharCount };
 };

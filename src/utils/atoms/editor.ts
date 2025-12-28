@@ -1,3 +1,4 @@
+import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
 import { LOCAL_STORAGE_KEYS } from "../constants";
 
@@ -25,3 +26,7 @@ const crossTabStorage = {
 };
 
 export const editorContentAtom = atomWithStorage<string>(LOCAL_STORAGE_KEYS.EDITOR_CONTENT, "", crossTabStorage);
+
+// Ephemeral editor content used for stats (word/char count).
+// Do not persist to storage to avoid clobbering multi-document data.
+export const editorStatsContentAtom = atom<string>("");
