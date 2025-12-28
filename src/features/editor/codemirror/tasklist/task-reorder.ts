@@ -5,11 +5,6 @@ import { isTaskLine, isRegularListLine, parseTaskLine, parseRegularListLine } fr
 const MARKDOWN_HEADING = /^#{1,6}\s+\S/;
 const EMPTY_LINE = /^\s*$/u;
 
-type LineRange = {
-  startLine: number;
-  endLine: number;
-};
-
 type BlockRange = {
   start: number;
   end: number;
@@ -34,29 +29,19 @@ const getIndentLevel = (text: string): number => {
   return 0;
 };
 
-const findSectionBoundaries = (doc: Text, lineNumber: number): LineRange => {
-  const findSectionStart = (lineNum: number): number => {
-    for (let i = lineNum - 1; i >= 1; i--) {
-      if (isHeadingLine(doc.line(i).text)) {
-        return i; // Include the heading line itself
-      }
+const isEmptyLineAdjacentToHeading = (doc: Text, lineNumber: number): boolean => {
+  const findNearestNonEmptyLineText = (start: number, step: number): string | undefined => {
+    for (let i = start; i >= 1 && i <= doc.lines; i += step) {
+      const text = doc.line(i).text;
+      if (!isEmptyLine(text)) return text;
     }
-    return 1;
+    return undefined;
   };
 
-  const findSectionEnd = (lineNum: number): number => {
-    for (let i = lineNum + 1; i <= doc.lines; i++) {
-      if (isHeadingLine(doc.line(i).text)) {
-        return i - 1;
-      }
-    }
-    return doc.lines;
-  };
+  const before = findNearestNonEmptyLineText(lineNumber - 1, -1);
+  const after = findNearestNonEmptyLineText(lineNumber + 1, 1);
 
-  return {
-    startLine: findSectionStart(lineNumber),
-    endLine: findSectionEnd(lineNumber),
-  };
+  return (before ? isHeadingLine(before) : false) || (after ? isHeadingLine(after) : false);
 };
 
 const findTaskBlockWithChildren = (doc: Text, lineNumber: number): TaskBlock | undefined => {
@@ -127,7 +112,11 @@ const findTarget = (
     const checkLine = doc.line(i);
     const text = checkLine.text;
 
-    if (isEmptyLine(text) || isHeadingLine(text)) return undefined;
+    if (isEmptyLine(text)) {
+      if (isEmptyLineAdjacentToHeading(doc, i)) continue;
+      return undefined;
+    }
+    if (isHeadingLine(text)) continue;
     if (!isListLine(text)) continue;
 
     const checkIndent = getIndentLevel(text);
@@ -238,10 +227,6 @@ const moveTask = (view: EditorView, direction: "up" | "down"): boolean => {
 
   const targetLine = findTarget(doc, searchFromLine, currentIndent, parentLine, direction, maxLine);
   if (!targetLine) return false;
-
-  // Validate section boundaries
-  const currentSection = findSectionBoundaries(doc, line.number);
-  if (targetLine < currentSection.startLine || targetLine > currentSection.endLine) return false;
 
   const targetBlockRange = findTaskBlockWithChildren(doc, targetLine);
   if (!targetBlockRange) return false;
