@@ -4,8 +4,8 @@ import { useCallback, useMemo, useRef, useState, type DragEvent } from "react";
 import { motion } from "motion/react";
 
 const SPRING_CONFIG = {
-  stiffness: 180,
-  damping: 40,
+  stiffness: 200,
+  damping: 30,
 };
 
 const CARD_SIZE = { width: 140, height: 180 } as const;
@@ -22,9 +22,6 @@ type CardStyle = {
   zIndex: number;
 };
 
-type DocumentDockProps = {
-  onNavigate: (index: number) => void;
-};
 export const generatePreviewContent = (content: string): string => {
   const lines = content.split("\n").slice(0, 5).join("\n");
   return lines.length > 100 ? `${lines.substring(0, 100)}...` : lines;
@@ -81,14 +78,12 @@ type DockDragState = {
   draggedIndex: number | null;
 };
 
-const DEFAULT_DOCK_STATE: DockDragState = {
-  isDockHovered: false,
-  hoveredIndex: null,
-  draggedIndex: null,
-};
-
 const useDockDragState = () => {
-  const [dockState, setDockState] = useState<DockDragState>(DEFAULT_DOCK_STATE);
+  const [dockState, setDockState] = useState<DockDragState>({
+    isDockHovered: false,
+    hoveredIndex: null,
+    draggedIndex: null,
+  });
 
   const isDragging = dockState.draggedIndex !== null;
   const dockActive = dockState.isDockHovered || isDragging;
@@ -134,6 +129,10 @@ const useDockDragState = () => {
     isDragging,
     setDockState,
   };
+};
+
+type DocumentDockProps = {
+  onNavigate: (index: number) => void;
 };
 
 export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
