@@ -74,8 +74,8 @@ describe("Task Reorder - Empty Line Separation", () => {
   });
 });
 
-describe("Task Reorder - Section Boundaries", () => {
-  test("cannot move task up across heading", () => {
+describe("Task Reorder - Heading Boundaries", () => {
+  test("can move task up across heading", () => {
     const doc = `# Section 1
 - [ ] Task A
 
@@ -87,10 +87,17 @@ describe("Task Reorder - Section Boundaries", () => {
 
     const result = moveTaskUp(view);
     expect(result).toBe(true); // Returns true to prevent default behavior
-    expect(view.dispatch).not.toHaveBeenCalled();
+    expect(view.dispatch).toHaveBeenCalled();
+
+    const newDoc = view.state.doc.toString();
+    expect(newDoc).toBe(`# Section 1
+- [ ] Task B
+
+# Section 2
+- [ ] Task A`);
   });
 
-  test("cannot move task down across heading", () => {
+  test("can move task down across heading", () => {
     const doc = `# Section 1
 - [ ] Task A
 - [ ] Task B
@@ -103,7 +110,15 @@ describe("Task Reorder - Section Boundaries", () => {
 
     const result = moveTaskDown(view);
     expect(result).toBe(true); // Returns true to prevent default behavior
-    expect(view.dispatch).not.toHaveBeenCalled();
+    expect(view.dispatch).toHaveBeenCalled();
+
+    const newDoc = view.state.doc.toString();
+    expect(newDoc).toBe(`# Section 1
+- [ ] Task A
+- [ ] Task C
+
+# Section 2
+- [ ] Task B`);
   });
 
   test("tasks can move within same section", () => {
@@ -126,7 +141,7 @@ describe("Task Reorder - Section Boundaries", () => {
 - [ ] Task C`);
   });
 
-  test("respects different heading levels", () => {
+  test("can move across different heading levels", () => {
     const doc = `# Main Section
 ## Subsection 1
 - [ ] Task A
@@ -134,12 +149,20 @@ describe("Task Reorder - Section Boundaries", () => {
 ## Subsection 2
 - [ ] Task B`;
 
-    const state = createEditorState(doc, 50); // Cursor on Task B
+    const state = createEditorState(doc, 62); // Cursor on Task B
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
-    expect(result).toBe(false);
-    expect(view.dispatch).not.toHaveBeenCalled();
+    expect(result).toBe(true);
+    expect(view.dispatch).toHaveBeenCalled();
+
+    const newDoc = view.state.doc.toString();
+    expect(newDoc).toBe(`# Main Section
+## Subsection 1
+- [ ] Task B
+
+## Subsection 2
+- [ ] Task A`);
   });
 });
 
