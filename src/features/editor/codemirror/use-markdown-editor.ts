@@ -3,12 +3,11 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
 import { EditorView, keymap, placeholder } from "@codemirror/view";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { showToast } from "../../../utils/components/toast";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 import { useTheme } from "../../../utils/hooks/use-theme";
-import { useFontFamily } from "../../../utils/hooks/use-font";
 import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
 import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
@@ -21,6 +20,7 @@ import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
 import { urlClickPlugin, urlHoverTooltip } from "./url-click";
 import { useDebouncedCallback } from "use-debounce";
 import { editorContentAtom } from "../../../utils/atoms/editor";
+import { currentFontValueAtom } from "../../../utils/hooks/use-font";
 
 const useMarkdownFormatter = () => {
   const ref = useRef<DprintMarkdownFormatter | null>(null);
@@ -76,7 +76,8 @@ export const useMarkdownEditor = (
 
   const { isDarkMode } = useTheme();
   const { isWideMode } = useEditorWidth();
-  const { currentFontValue } = useFontFamily();
+  const currentFontValue = useAtomValue(currentFontValueAtom);
+
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue);
   const { isMobile } = useMobileDetector();
 
