@@ -85,8 +85,7 @@ export const useMarkdownEditor = (
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
 
-  const debouncedSetContent = useDebouncedCallback((view: EditorView) => {
-    const newContent = view.state.doc.toString();
+  const debouncedSetContent = useDebouncedCallback((newContent: string) => {
     // Only update if content actually changed to prevent unnecessary updates
     setContent((prevContent) => (prevContent !== newContent ? newContent : prevContent));
     // Call onChange callback if provided (for multi-editor)
@@ -94,6 +93,12 @@ export const useMarkdownEditor = (
       onChange(newContent);
     }
   }, 300);
+
+  useEffect(() => {
+    return () => {
+      debouncedSetContent.cancel();
+    };
+  }, [debouncedSetContent]);
 
   const onFormat = async () => {
     const view = viewRef.current;
@@ -198,8 +203,8 @@ export const useMarkdownEditor = (
             // Only update for user input
             const isUserInput = update.transactions.some((tr) => tr.isUserEvent("input") || tr.isUserEvent("delete"));
             if (isUserInput) {
-              debouncedSetContent(update.view);
               const updatedContent = update.state.doc.toString();
+              debouncedSetContent(updatedContent);
               setCharCount(updatedContent.length);
             }
           }
