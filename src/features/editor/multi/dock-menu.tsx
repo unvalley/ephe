@@ -1,12 +1,18 @@
 import { useAtom } from "jotai";
 import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/multi-document";
-import { useState } from "react";
+import { useCallback, useMemo, useRef, useState, type DragEvent } from "react";
 import { motion } from "motion/react";
 
 const SPRING_CONFIG = {
   stiffness: 200,
   damping: 30,
 };
+
+const CARD_SIZE = { width: 140, height: 180 } as const;
+const DOCK_PADDING = {
+  idle: "60px 100px",
+  active: "100px 150px",
+} as const;
 
 type CardStyle = {
   x: number;
@@ -16,9 +22,6 @@ type CardStyle = {
   zIndex: number;
 };
 
-type DocumentDockProps = {
-  onNavigate: (index: number) => void;
-};
 export const generatePreviewContent = (content: string): string => {
   const lines = content.split("\n").slice(0, 5).join("\n");
   return lines.length > 100 ? `${lines.substring(0, 100)}...` : lines;
@@ -28,9 +31,9 @@ export const calculateCardStyle = (
   index: number,
   total: number,
   hoveredIndex: number | null,
-  isDockHovered: boolean,
+  dockActive: boolean,
 ): CardStyle => {
-  if (!isDockHovered) {
+  if (!dockActive) {
     return { x: 0, y: 0, rotate: 0, scale: 0, zIndex: 1 };
   }
 
@@ -62,35 +65,130 @@ export const getCardButtonClasses = (isActive: boolean, isDockHovered: boolean):
   return `${baseClasses} ${shapeClasses} ${stateClasses}`;
 };
 
+const useCardStyles = (total: number, hoveredIndex: number | null, dockActive: boolean) => {
+  return useMemo(
+    () => Array.from({ length: total }, (_, index) => calculateCardStyle(index, total, hoveredIndex, dockActive)),
+    [total, hoveredIndex, dockActive],
+  );
+};
+
+type DockDragState = {
+  isDockHovered: boolean;
+  hoveredIndex: number | null;
+  draggedIndex: number | null;
+};
+
+const useDockDragState = () => {
+  const [dockState, setDockState] = useState<DockDragState>({
+    isDockHovered: false,
+    hoveredIndex: null,
+    draggedIndex: null,
+  });
+
+  const isDragging = dockState.draggedIndex !== null;
+  const dockActive = dockState.isDockHovered || isDragging;
+
+  const handleDockMouseLeave = useCallback(() => {
+    if (isDragging) return;
+    setDockState((prev) => ({
+      ...prev,
+      isDockHovered: false,
+      hoveredIndex: null,
+    }));
+  }, [isDragging]);
+
+  const handleDragStart = useCallback(
+    (index: number) => (event: DragEvent<HTMLButtonElement>) => {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", `${index}`);
+
+      setDockState((prev) => ({
+        ...prev,
+        isDockHovered: true,
+        draggedIndex: index,
+        hoveredIndex: null,
+      }));
+    },
+    [],
+  );
+
+  const handleDragEnd = useCallback((keepOpen: boolean) => {
+    setDockState({
+      isDockHovered: keepOpen,
+      hoveredIndex: null,
+      draggedIndex: null,
+    });
+  }, []);
+
+  return {
+    dockActive,
+    dockState,
+    handleDockMouseLeave,
+    handleDragEnd,
+    handleDragStart,
+    isDragging,
+    setDockState,
+  };
+};
+
+type DocumentDockProps = {
+  onNavigate: (index: number) => void;
+};
+
 export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
-  const [activeIndex] = useAtom(activeDocumentIndexAtom);
-  const [documents] = useAtom(documentsAtom);
-  const [isDockHovered, setIsDockHovered] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const dockRef = useRef<HTMLDivElement | null>(null);
+  const [activeIndex, setActiveIndex] = useAtom(activeDocumentIndexAtom);
+  const [documents, setDocuments] = useAtom(documentsAtom);
+  const { dockActive, handleDockMouseLeave, handleDragEnd, handleDragStart, isDragging, dockState, setDockState } =
+    useDockDragState();
 
-  const documentPreviews = documents.map((doc) => generatePreviewContent(doc.content) || "");
+  const documentPreviews = useMemo(() => documents.map((doc) => generatePreviewContent(doc.content)), [documents]);
+  const cardStyles = useCardStyles(documents.length, dockState.hoveredIndex, dockActive);
 
-  const cardStyles = documents.map((_, index) =>
-    calculateCardStyle(index, documents.length, hoveredIndex, isDockHovered),
+  const handleDrop = useCallback(
+    (targetIndex: number) => {
+      if (dockState.draggedIndex === null || dockState.draggedIndex === targetIndex) return;
+
+      const fromIndex = dockState.draggedIndex;
+      const toIndex = targetIndex;
+      if (fromIndex < 0 || toIndex < 0) return;
+      if (fromIndex >= documents.length || toIndex >= documents.length) return;
+
+      setDocuments((prev) => {
+        const moved = prev[fromIndex];
+        if (!moved) return prev;
+        const withoutMoved = prev.filter((_, index) => index !== fromIndex);
+        return [...withoutMoved.slice(0, toIndex), moved, ...withoutMoved.slice(toIndex)];
+      });
+
+      setActiveIndex((current) => {
+        if (current === fromIndex) return toIndex;
+        if (fromIndex < toIndex && current > fromIndex && current <= toIndex) return current - 1;
+        if (fromIndex > toIndex && current < fromIndex && current >= toIndex) return current + 1;
+        return current;
+      });
+    },
+    [dockState.draggedIndex, documents.length, setActiveIndex, setDocuments],
   );
 
   return (
     <div
+      ref={dockRef}
       role="toolbar"
       className="relative"
       style={{
-        padding: isDockHovered ? "100px 150px" : "60px 100px",
+        padding: dockActive ? DOCK_PADDING.active : DOCK_PADDING.idle,
       }}
-      onMouseEnter={() => setIsDockHovered(true)}
-      onMouseLeave={() => {
-        setIsDockHovered(false);
-        setHoveredIndex(null);
-      }}
+      onMouseEnter={() => setDockState((prev) => ({ ...prev, isDockHovered: true }))}
+      onMouseLeave={handleDockMouseLeave}
     >
       <nav aria-label="Document navigation" className="relative flex items-center justify-center">
         {documents.map((doc, index) => {
           const isActive = index === activeIndex;
           const cardStyle = cardStyles[index];
+          const isDragged = dockState.draggedIndex === index;
+          const isDropTarget = isDragging && dockState.hoveredIndex === index && dockState.draggedIndex !== index;
+          const cardOpacity = isDragged ? 0 : dockActive ? 1 : 0;
 
           return (
             <motion.div
@@ -98,25 +196,58 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
               className="absolute"
               animate={{
                 scale: cardStyle.scale,
-                opacity: isDockHovered ? 1 : 0,
+                opacity: cardOpacity,
                 x: cardStyle.x,
                 y: cardStyle.y,
                 rotate: cardStyle.rotate,
-                width: isDockHovered ? 140 : 0,
-                height: isDockHovered ? 180 : 0,
+                width: dockActive ? CARD_SIZE.width : 0,
+                height: dockActive ? CARD_SIZE.height : 0,
                 zIndex: cardStyle.zIndex,
               }}
               transition={SPRING_CONFIG}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
+              onMouseEnter={() =>
+                setDockState((prev) => ({
+                  ...prev,
+                  hoveredIndex: index,
+                }))
+              }
+              onMouseLeave={() =>
+                setDockState((prev) => ({
+                  ...prev,
+                  hoveredIndex: null,
+                }))
+              }
+              onDragOver={(event) => {
+                if (dockState.draggedIndex === null) return;
+                event.preventDefault();
+                setDockState((prev) => (prev.hoveredIndex === index ? prev : { ...prev, hoveredIndex: index }));
+              }}
+              onDrop={(event) => {
+                event.preventDefault();
+                handleDrop(index);
+                const keepOpen = dockRef.current?.matches(":hover") ?? true;
+                setDockState({
+                  isDockHovered: keepOpen,
+                  hoveredIndex: null,
+                  draggedIndex: null,
+                });
+              }}
             >
               <button
                 type="button"
-                onClick={() => onNavigate(index)}
-                className={getCardButtonClasses(isActive, isDockHovered)}
+                draggable={dockActive}
+                onDragStart={handleDragStart(index)}
+                onDragEnd={() => handleDragEnd(dockRef.current?.matches(":hover") ?? false)}
+                onClick={() => {
+                  if (isDragging) return;
+                  onNavigate(index);
+                }}
+                className={`${getCardButtonClasses(isActive, dockActive)} ${
+                  isDragged ? "cursor-grabbing opacity-60" : "cursor-grab"
+                } ${isDropTarget ? "ring-2 ring-blue-400 ring-offset-2 ring-offset-white dark:ring-offset-neutral-900" : ""}`}
                 aria-label={`Go to document ${index + 1}`}
               >
-                {isDockHovered && (
+                {dockActive && (
                   <div className="flex h-full flex-col p-3">
                     <div className="flex-1 overflow-hidden">
                       <pre className="text-left text-[10px] text-gray-500 leading-tight dark:text-gray-300">
