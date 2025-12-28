@@ -142,8 +142,6 @@ export const useMarkdownEditor = (
         }
         view.scrollDOM.scrollTop = Math.min(scrollTop, view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight);
       }
-
-      showToast("Document formatted", "default", { duration: 1800 });
       return true;
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown";

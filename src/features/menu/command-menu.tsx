@@ -207,8 +207,6 @@ export const CommandMenu = ({
           editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight,
         );
       }
-
-      showToast("Document formatted", "default", { duration: 1800 });
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown";
       showToast(`Error formatting document: ${message}`, "error");
