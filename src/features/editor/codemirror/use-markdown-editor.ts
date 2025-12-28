@@ -203,8 +203,8 @@ export const useMarkdownEditor = (
             // Only update for user input
             const isUserInput = update.transactions.some((tr) => tr.isUserEvent("input") || tr.isUserEvent("delete"));
             if (isUserInput) {
-              debouncedSetContent(updatedContent);
               const updatedContent = update.state.doc.toString();
+              debouncedSetContent(updatedContent);
               setCharCount(updatedContent.length);
             }
           }
