@@ -149,7 +149,7 @@ describe("Task Reorder - Heading Boundaries", () => {
 ## Subsection 2
 - [ ] Task B`;
 
-    const state = createEditorState(doc, 50); // Cursor on Task B
+    const state = createEditorState(doc, 62); // Cursor on Task B
     const view = createMockView(state);
 
     const result = moveTaskUp(view);
