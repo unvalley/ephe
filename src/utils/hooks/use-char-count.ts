@@ -1,25 +1,21 @@
-import { useAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { atom } from "jotai";
-import { LOCAL_STORAGE_KEYS } from "../constants";
-import { useEffect } from "react";
+import { editorModeAtom } from "./use-editor-mode";
+import { activeDocumentIndexAtom, documentsAtom } from "../atoms/multi-document";
+import { editorContentAtom } from "../atoms/editor";
 
-export const charCountAtom = atom<number>(0);
+const charCountAtom = atom((get) => {
+  const mode = get(editorModeAtom);
+
+  if (mode === "multi") {
+    const docs = get(documentsAtom);
+    const idx = get(activeDocumentIndexAtom);
+    return (docs[idx]?.content ?? "").length;
+  }
+  return get(editorContentAtom).length;
+});
 
 export const useCharCount = () => {
-  const [charCount, setCharCount] = useAtom(charCountAtom);
-
-  // Initialize character count from editor content if not already set
-  useEffect(() => {
-    if (charCount === 0) {
-      const editorContent = localStorage.getItem(LOCAL_STORAGE_KEYS.EDITOR_CONTENT);
-      const DOUBLE_QUOTE_SIZE = 2;
-      if (editorContent == null) {
-        setCharCount(0);
-      } else {
-        setCharCount(editorContent.length - DOUBLE_QUOTE_SIZE);
-      }
-    }
-  }, [charCount, setCharCount]);
-
-  return { charCount, setCharCount };
+  const charCount = useAtomValue(charCountAtom);
+  return { charCount };
 };

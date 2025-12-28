@@ -4,7 +4,7 @@ import { useAtom } from "jotai";
 
 export type EditorMode = "single" | "multi";
 
-const editorModeAtom = atomWithStorage<EditorMode>(LOCAL_STORAGE_KEYS.EDITOR_MODE, "single");
+export const editorModeAtom = atomWithStorage<EditorMode>(LOCAL_STORAGE_KEYS.EDITOR_MODE, "single");
 
 export const useEditorMode = () => {
   const [editorMode, setEditorMode] = useAtom(editorModeAtom);
