@@ -7,7 +7,7 @@ import { showToast } from "../../utils/components/toast";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { COLOR_THEME } from "../../utils/theme-initializer";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
-import { useFontFamily, FONT_FAMILIES, FONT_FAMILY_OPTIONS } from "../../utils/hooks/use-font";
+import { FONT_FAMILIES, FONT_FAMILY_OPTIONS, fontFamilyAtom } from "../../utils/hooks/use-font";
 import type { EditorView } from "@codemirror/view";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
 import { DprintMarkdownFormatter } from "../editor/markdown/formatter/dprint-markdown-formatter";
@@ -28,6 +28,7 @@ import {
   GithubLogoIcon,
 } from "@phosphor-icons/react";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
+import { useAtom } from "jotai";
 
 // Custom hook for markdown formatter
 const useMarkdownFormatter = () => {
@@ -74,11 +75,11 @@ export const CommandMenu = ({
   const { nextTheme, cycleTheme } = useTheme();
   const { paperMode: currentPaperMode, cyclePaperMode } = usePaperMode();
   const { editorWidth: currentEditorWidth, toggleEditorWidth } = useEditorWidth();
-  const { fontFamily, setFontFamily } = useFontFamily();
   const formatterRef = useMarkdownFormatter();
   const [inputValue, setInputValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const [fontFamily, setFontFamily] = useAtom(fontFamilyAtom);
 
   useEffect(() => {
     if (!open) {
