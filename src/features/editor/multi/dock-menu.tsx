@@ -4,8 +4,8 @@ import { useCallback, useMemo, useRef, useState, type DragEvent } from "react";
 import { motion } from "motion/react";
 
 const SPRING_CONFIG = {
-  stiffness: 200,
-  damping: 30,
+  stiffness: 180,
+  damping: 40,
 };
 
 const CARD_SIZE = { width: 140, height: 180 } as const;
@@ -143,7 +143,8 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
     useDockDragState();
 
   const documentPreviews = useMemo(() => documents.map((doc) => generatePreviewContent(doc.content)), [documents]);
-  const cardStyles = useCardStyles(documents.length, dockState.hoveredIndex, dockActive);
+  const hoveredIndexForStyle = isDragging ? null : dockState.hoveredIndex;
+  const cardStyles = useCardStyles(documents.length, hoveredIndexForStyle, dockActive);
 
   const handleDrop = useCallback(
     (targetIndex: number) => {
@@ -171,6 +172,14 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
     [dockState.draggedIndex, documents.length, setActiveIndex, setDocuments],
   );
 
+  const insertionIndex =
+    isDragging &&
+    dockState.hoveredIndex !== null &&
+    dockState.draggedIndex !== null &&
+    dockState.hoveredIndex !== dockState.draggedIndex
+      ? dockState.hoveredIndex
+      : null;
+
   return (
     <div
       ref={dockRef}
@@ -187,8 +196,16 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
           const isActive = index === activeIndex;
           const cardStyle = cardStyles[index];
           const isDragged = dockState.draggedIndex === index;
-          const isDropTarget = isDragging && dockState.hoveredIndex === index && dockState.draggedIndex !== index;
           const cardOpacity = isDragged ? 0 : dockActive ? 1 : 0;
+          const insertionGap = insertionIndex !== null ? 26 : 0;
+          const insertionGapOffset =
+            insertionIndex === null
+              ? 0
+              : index === insertionIndex
+                ? insertionGap
+                : index === insertionIndex - 1
+                  ? -insertionGap
+                  : 0;
 
           return (
             <motion.div
@@ -197,7 +214,7 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
               animate={{
                 scale: cardStyle.scale,
                 opacity: cardOpacity,
-                x: cardStyle.x,
+                x: cardStyle.x + insertionGapOffset,
                 y: cardStyle.y,
                 rotate: cardStyle.rotate,
                 width: dockActive ? CARD_SIZE.width : 0,
@@ -205,32 +222,28 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
                 zIndex: cardStyle.zIndex,
               }}
               transition={SPRING_CONFIG}
-              onMouseEnter={() =>
+              onMouseEnter={() => {
+                if (isDragging) return;
                 setDockState((prev) => ({
                   ...prev,
                   hoveredIndex: index,
-                }))
-              }
-              onMouseLeave={() =>
+                }));
+              }}
+              onMouseLeave={() => {
+                if (isDragging) return;
                 setDockState((prev) => ({
                   ...prev,
                   hoveredIndex: null,
-                }))
-              }
+                }));
+              }}
               onDragOver={(event) => {
-                if (dockState.draggedIndex === null) return;
+                if (dockState.draggedIndex === null || dockState.draggedIndex === index) return;
                 event.preventDefault();
                 setDockState((prev) => (prev.hoveredIndex === index ? prev : { ...prev, hoveredIndex: index }));
               }}
               onDrop={(event) => {
                 event.preventDefault();
                 handleDrop(index);
-                const keepOpen = dockRef.current?.matches(":hover") ?? true;
-                setDockState({
-                  isDockHovered: keepOpen,
-                  hoveredIndex: null,
-                  draggedIndex: null,
-                });
               }}
             >
               <button
@@ -244,7 +257,7 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
                 }}
                 className={`${getCardButtonClasses(isActive, dockActive)} ${
                   isDragged ? "cursor-grabbing opacity-60" : "cursor-grab"
-                } ${isDropTarget ? "ring-2 ring-blue-400 ring-offset-2 ring-offset-white dark:ring-offset-neutral-900" : ""}`}
+                }`}
                 aria-label={`Go to document ${index + 1}`}
               >
                 {dockActive && (
