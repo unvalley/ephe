@@ -196,7 +196,6 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
           const isActive = index === activeIndex;
           const cardStyle = cardStyles[index];
           const isDragged = dockState.draggedIndex === index;
-          const isDropTarget = isDragging && dockState.hoveredIndex === index && dockState.draggedIndex !== index;
           const cardOpacity = isDragged ? 0 : dockActive ? 1 : 0;
           const insertionGap = insertionIndex !== null ? 26 : 0;
           const insertionGapOffset =
