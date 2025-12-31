@@ -91,6 +91,7 @@ export const taskKeyBindings: readonly KeyBinding[] = [
             view.dispatch({
               changes: { from: from, to: to },
               selection: { anchor: newCursorPos },
+              userEvent: "delete.task-enter",
             });
             return true;
           }
@@ -104,6 +105,7 @@ export const taskKeyBindings: readonly KeyBinding[] = [
             view.dispatch({
               changes: { from: pos, insert: newTaskLine },
               selection: { anchor: pos + newTaskLine.length },
+              userEvent: "input.task-enter",
             });
             return true;
           }
@@ -128,6 +130,7 @@ export const taskKeyBindings: readonly KeyBinding[] = [
             view.dispatch({
               changes: { from: from, to: to },
               selection: { anchor: newCursorPos },
+              userEvent: "delete.list-enter",
             });
             return true;
           }
@@ -142,6 +145,7 @@ export const taskKeyBindings: readonly KeyBinding[] = [
             view.dispatch({
               changes: { from: pos, insert: newListLine },
               selection: { anchor: pos + newListLine.length },
+              userEvent: "input.list-enter",
             });
             return true;
           }
