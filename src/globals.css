@@ -137,22 +137,22 @@ body.dark {
 
 /* URL Tooltip styles for CodeMirror */
 .cm-tooltip {
-  background-color: white !important;
-  border: none !important;
-  outline: none !important;
-  border-radius: var(--radius-md) !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-  padding: 6px 8px !important;
-  font-size: 12px !important;
-  animation: tooltip-show 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  line-height: 1 !important;
-  align-items: center !important;
-  transform-origin: center bottom !important;
+  background-color: white;
+  border: none;
+  outline: none;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 6px 8px;
+  font-size: 12px;
+  animation: tooltip-show 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  line-height: 1;
+  align-items: center;
+  transform-origin: center bottom;
 }
 
 .dark .cm-tooltip {
-  background-color: oklch(0.205 0 0) !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+  background-color: oklch(0.205 0 0);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes tooltip-show {

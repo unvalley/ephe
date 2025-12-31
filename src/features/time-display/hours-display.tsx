@@ -111,7 +111,7 @@ export const HoursDisplay = () => {
               onMouseLeave={() => setHoveredHour(null)}
             >
               <div
-                className={`-translate-x-1/2 absolute bottom-full left-1/2 mb-1 transform whitespace-nowrap rounded bg-primary-50 px-1 py-1 text-[12px] transition-all duration-300 ease-out dark:bg-primary-700 ${
+                className={`absolute bottom-full left-1/2 mb-1 -translate-x-1/2 transform whitespace-nowrap rounded bg-primary-50 px-1 py-1 text-[12px] transition-all duration-300 ease-out dark:bg-primary-700 ${
                   hoveredHour === formatHour(hour.hour)
                     ? "translate-y-0 scale-100 opacity-100"
                     : "pointer-events-none translate-y-2 scale-95 opacity-0"

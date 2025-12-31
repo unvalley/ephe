@@ -16,7 +16,7 @@ type NavigationCardProps = {
 const NavigationCard = ({ direction, isVisible, onClick }: NavigationCardProps) => {
   return (
     <div
-      className={`-translate-y-1/2 absolute top-1/2 z-50 transition-all duration-500 ease-out ${
+      className={`absolute top-1/2 z-50 -translate-y-1/2 transition-all duration-500 ease-out ${
         direction === "left" ? "left-6" : "right-6"
       } ${
         isVisible

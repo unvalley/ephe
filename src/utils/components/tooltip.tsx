@@ -17,7 +17,7 @@ export const Tooltip = ({ children, isVisible, position = "bottom", className = 
 
   return (
     <div
-      className={`-translate-x-1/2 absolute left-1/2 whitespace-nowrap rounded-md bg-gray-800 px-2 py-1 text-white text-xs transition-all delay-200 duration-300 dark:bg-gray-200 dark:text-primary-800 ${
+      className={`absolute left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-gray-800 px-2 py-1 text-white text-xs transition-all delay-200 duration-300 dark:bg-gray-200 dark:text-primary-800 ${
         positionClasses[position]
       } ${isVisible ? "opacity-100" : "opacity-0"} ${className}`}
     >

@@ -392,7 +392,7 @@ export const CommandMenu = ({
             role="dialog"
             label="Command Menu"
             className={
-              "-translate-x-1/2 fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] scale-100 transform overflow-hidden rounded-xl border border-neutral-200 bg-white opacity-100 shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900"
+              "fixed top-[20%] left-1/2 z-50 w-[90vw] max-w-[640px] -translate-x-1/2 scale-100 transform overflow-hidden rounded-xl border border-neutral-200 bg-white opacity-100 shadow-2xl transition-all duration-100 dark:border-zinc-800 dark:bg-zinc-900"
             }
             onClick={(e) => {
               // Prevent clicks inside the command menu from closing it
