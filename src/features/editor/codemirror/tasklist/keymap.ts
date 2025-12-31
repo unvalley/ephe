@@ -224,17 +224,6 @@ export const taskKeyBindings: readonly KeyBinding[] = [
       const { head, empty } = state.selection.main;
       // For range selection or single cursor with indent unit at line start
       const line = state.doc.lineAt(head);
-
-      // Handle both task lines and regular list lines that start with indent
-      if (empty && line.text.startsWith(INDENT_SPACE) && (isTaskLine(line.text) || isRegularListLine(line.text))) {
-        view.dispatch({
-          changes: { from: line.from, to: line.from + INDENT_SPACE.length, insert: "" },
-          userEvent: "delete.dedent",
-        });
-        return true;
-      }
-
-      // Fall back to default behavior for non-list lines or lines without indent
       if (empty && line.text.startsWith(INDENT_SPACE)) {
         view.dispatch({
           changes: { from: line.from, to: line.from + INDENT_SPACE.length, insert: "" },
