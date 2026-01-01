@@ -110,7 +110,7 @@ export const urlClickPlugin = ViewPlugin.fromClass(
     }
 
     update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged) {
+      if (update.docChanged) {
         this.decorations = createUrlDecorations(update.view);
       }
     }
