@@ -11,14 +11,14 @@ type BlockRange = {
   content: string;
 };
 
-type TaskBlock = readonly [number, number];
-
 const isListLine = (text: string): boolean => isTaskLine(text) || isRegularListLine(text);
-
 const isHeadingLine = (text: string): boolean => MARKDOWN_HEADING.test(text);
-
 const isEmptyLine = (text: string): boolean => EMPTY_LINE.test(text);
 
+/**
+ * Parse a list-like line once and return indent length.
+ * This avoids parsing twice (task->list) on hot paths.
+ */
 const getIndentLevel = (text: string): number => {
   const taskParsed = parseTaskLine(text);
   if (taskParsed) return taskParsed.indent.length;
@@ -29,22 +29,27 @@ const getIndentLevel = (text: string): number => {
   return 0;
 };
 
-const isEmptyLineAdjacentToHeading = (doc: Text, lineNumber: number): boolean => {
-  const findNearestNonEmptyLineText = (start: number, step: number): string | undefined => {
-    for (let i = start; i >= 1 && i <= doc.lines; i += step) {
-      const text = doc.line(i).text;
-      if (!isEmptyLine(text)) return text;
-    }
-    return undefined;
-  };
-
-  const before = findNearestNonEmptyLineText(lineNumber - 1, -1);
-  const after = findNearestNonEmptyLineText(lineNumber + 1, 1);
-
-  return (before ? isHeadingLine(before) : false) || (after ? isHeadingLine(after) : false);
+/**
+ * Find nearest non-empty line in given direction and check if it's a heading.
+ * This keeps the old behavior but moves repeated logic into a single helper.
+ */
+const nearestNonEmptyIsHeading = (doc: Text, start: number, step: 1 | -1): boolean => {
+  for (let i = start; i >= 1 && i <= doc.lines; i += step) {
+    const text = doc.line(i).text;
+    if (!isEmptyLine(text)) return isHeadingLine(text);
+  }
+  return false;
 };
 
-const findTaskBlockWithChildren = (doc: Text, lineNumber: number): TaskBlock | undefined => {
+const isEmptyLineAdjacentToHeading = (doc: Text, lineNumber: number): boolean => {
+  // nearest non-empty above or below is a heading
+  return nearestNonEmptyIsHeading(doc, lineNumber - 1, -1) || nearestNonEmptyIsHeading(doc, lineNumber + 1, 1);
+};
+
+/**
+ * Returns [startLine, endLine] where endLine includes nested list children.
+ */
+const findTaskBlockWithChildren = (doc: Text, lineNumber: number): readonly [number, number] | undefined => {
   if (lineNumber < 1 || lineNumber > doc.lines) return undefined;
 
   const line = doc.line(lineNumber);
@@ -52,43 +57,39 @@ const findTaskBlockWithChildren = (doc: Text, lineNumber: number): TaskBlock | u
 
   const baseIndent = getIndentLevel(line.text);
 
-  const findEndLine = (startLine: number): number => {
-    let lastValidLine = startLine;
+  let lastValidLine = lineNumber;
 
-    for (let i = startLine + 1; i <= doc.lines; i++) {
-      const nextLine = doc.line(i);
+  for (let i = lineNumber + 1; i <= doc.lines; i++) {
+    const nextText = doc.line(i).text;
 
-      if (isEmptyLine(nextLine.text)) break;
-      if (!isListLine(nextLine.text)) break;
+    if (isEmptyLine(nextText)) break;
+    if (!isListLine(nextText)) break;
 
-      const nextIndent = getIndentLevel(nextLine.text);
-      if (nextIndent <= baseIndent) break;
+    const nextIndent = getIndentLevel(nextText);
+    if (nextIndent <= baseIndent) break;
 
-      lastValidLine = i;
-    }
+    lastValidLine = i;
+  }
 
-    return lastValidLine;
-  };
-
-  return [lineNumber, findEndLine(lineNumber)] as const;
+  return [lineNumber, lastValidLine] as const;
 };
 
 const findParentTask = (doc: Text, lineNumber: number): number | undefined => {
   if (lineNumber < 1 || lineNumber > doc.lines) return undefined;
 
-  const line = doc.line(lineNumber);
-  if (!isListLine(line.text)) return undefined;
+  const lineText = doc.line(lineNumber).text;
+  if (!isListLine(lineText)) return undefined;
 
-  const currentIndent = getIndentLevel(line.text);
+  const currentIndent = getIndentLevel(lineText);
   if (currentIndent === 0) return undefined;
 
   for (let i = lineNumber - 1; i >= 1; i--) {
-    const checkLine = doc.line(i);
+    const checkText = doc.line(i).text;
 
-    if (isEmptyLine(checkLine.text)) return undefined;
+    if (isEmptyLine(checkText)) return undefined;
 
-    if (isListLine(checkLine.text)) {
-      const checkIndent = getIndentLevel(checkLine.text);
+    if (isListLine(checkText)) {
+      const checkIndent = getIndentLevel(checkText);
       if (checkIndent < currentIndent) return i;
     }
   }
@@ -104,13 +105,34 @@ const findTarget = (
   direction: "up" | "down",
   maxLine?: number,
 ): number | undefined => {
-  const step = direction === "up" ? -1 : 1;
-  const lowerBound = direction === "up" ? 1 : startLine + step;
-  const upperBound = direction === "up" ? startLine - step : (maxLine ?? doc.lines);
+  if (direction === "up") {
+    for (let i = startLine - 1; i >= 1; i--) {
+      const text = doc.line(i).text;
 
-  for (let i = startLine + step; direction === "up" ? i >= lowerBound : i <= upperBound; i += step) {
-    const checkLine = doc.line(i);
-    const text = checkLine.text;
+      if (isEmptyLine(text)) {
+        if (isEmptyLineAdjacentToHeading(doc, i)) continue;
+        return undefined;
+      }
+      if (isHeadingLine(text)) continue;
+      if (!isListLine(text)) continue;
+
+      const checkIndent = getIndentLevel(text);
+
+      if (parentLine !== undefined) {
+        if (checkIndent === currentIndent) return i;
+        if (checkIndent < currentIndent) return undefined;
+      } else {
+        if (checkIndent <= currentIndent) return i;
+      }
+    }
+
+    return undefined;
+  }
+
+  // direction === "down"
+  const upper = maxLine ?? doc.lines;
+  for (let i = startLine + 1; i <= upper; i++) {
+    const text = doc.line(i).text;
 
     if (isEmptyLine(text)) {
       if (isEmptyLineAdjacentToHeading(doc, i)) continue;
@@ -146,26 +168,15 @@ const calculateNewCursorPosition = (
   targetBlock: BlockRange,
   isMovingDown: boolean,
 ): number => {
-  // Step 1: Calculate cursor offset within the current line
-  // Example: If cursor is at pos 25 and line starts at pos 20, offset is 5
   const cursorOffsetInLine = cursorPos - currentLineStart;
-
-  // Step 2: Calculate the line's offset within its block
-  // Example: If line starts at pos 20 and block starts at pos 10, line offset is 10
   const currentLineOffset = currentLineStart - currentBlock.start;
 
-  // Step 3: Calculate new position based on movement direction
   if (isMovingDown) {
-    // When moving down, the current block will be placed after the target block
-    // We need to account for the size difference between blocks
-    // Example: If target is longer, cursor needs to shift further
     const sizeDiff = targetBlock.content.length - currentBlock.content.length;
     return targetBlock.start + currentLineOffset + cursorOffsetInLine + sizeDiff;
-  } else {
-    // When moving up, the current block will be placed where the target block is
-    // The cursor maintains its relative position within the moved block
-    return targetBlock.start + currentLineOffset + cursorOffsetInLine;
   }
+
+  return targetBlock.start + currentLineOffset + cursorOffsetInLine;
 };
 
 const swapBlocks = (
@@ -177,12 +188,8 @@ const swapBlocks = (
   userEvent: string,
 ): boolean => {
   const isMovingDown = currentBlock.start < targetBlock.start;
-
-  // Calculate where the cursor should be after the swap
   const newCursorPos = calculateNewCursorPosition(cursorPos, currentLineStart, currentBlock, targetBlock, isMovingDown);
 
-  // Always swap in document order to avoid position conflicts
-  // This ensures the first change doesn't affect the position of the second
   const [first, second] = isMovingDown ? [currentBlock, targetBlock] : [targetBlock, currentBlock];
 
   view.dispatch({
@@ -206,7 +213,6 @@ const moveTask = (view: EditorView, direction: "up" | "down"): boolean => {
   const pos = selection.main.head;
   const line = state.doc.lineAt(pos);
 
-  // Early validation
   if (!isListLine(line.text)) return false;
 
   const blockRange = findTaskBlockWithChildren(state.doc, line.number);
@@ -221,11 +227,11 @@ const moveTask = (view: EditorView, direction: "up" | "down"): boolean => {
   const currentIndent = getIndentLevel(doc.line(blockStartLine).text);
   const parentLine = findParentTask(doc, line.number);
 
-  // Find target based on direction
   const searchFromLine = direction === "up" ? line.number : blockEndLine;
-  const maxLine = parentLine !== undefined ? (findTaskBlockWithChildren(doc, parentLine)?.[1] ?? doc.lines) : doc.lines;
+  const maxLineForScope =
+    parentLine !== undefined ? (findTaskBlockWithChildren(doc, parentLine)?.[1] ?? doc.lines) : doc.lines;
 
-  const targetLine = findTarget(doc, searchFromLine, currentIndent, parentLine, direction, maxLine);
+  const targetLine = findTarget(doc, searchFromLine, currentIndent, parentLine, direction, maxLineForScope);
   if (!targetLine) return false;
 
   const targetBlockRange = findTaskBlockWithChildren(doc, targetLine);
@@ -234,51 +240,23 @@ const moveTask = (view: EditorView, direction: "up" | "down"): boolean => {
   const targetBlock = getBlockContent(doc, targetBlockRange[0], targetBlockRange[1]);
   if (!targetBlock) return false;
 
-  // Pass the current cursor position and line start for proper cursor positioning
   const currentLineStart = line.from;
   return swapBlocks(view, currentBlock, targetBlock, pos, currentLineStart, `move.task.${direction}`);
 };
 
-export const moveTaskUp = (view: EditorView): boolean => {
-  const { state } = view;
-  const { selection } = state;
+const moveTaskWrapper =
+  (direction: "up" | "down") =>
+  (view: EditorView): boolean => {
+    const { selection } = view.state;
+    if (selection.ranges.length > 1) return false;
 
-  // Multiple selections - return false
-  if (selection.ranges.length > 1) {
-    return false;
-  }
+    const line = view.state.doc.lineAt(selection.main.head);
+    if (!isListLine(line.text)) return false;
 
-  // Check if we're on a task/list line
-  const line = state.doc.lineAt(selection.main.head);
-  if (isListLine(line.text)) {
-    // Try to move the task
-    moveTask(view, "up");
-    // Always return true for task lines to prevent default behavior
+    // attempt move; regardless of success, suppress default behavior (same as original)
+    void moveTask(view, direction);
     return true;
-  }
+  };
 
-  // Not on a task line, use default behavior
-  return false;
-};
-
-export const moveTaskDown = (view: EditorView): boolean => {
-  const { state } = view;
-  const { selection } = state;
-
-  // Multiple selections - return false
-  if (selection.ranges.length > 1) {
-    return false;
-  }
-
-  // Check if we're on a task/list line
-  const line = state.doc.lineAt(selection.main.head);
-  if (isListLine(line.text)) {
-    // Try to move the task
-    moveTask(view, "down");
-    // Always return true for task lines to prevent default behavior
-    return true;
-  }
-
-  // Not on a task line, use default behavior
-  return false;
-};
+export const moveTaskUp = moveTaskWrapper("up");
+export const moveTaskDown = moveTaskWrapper("down");
