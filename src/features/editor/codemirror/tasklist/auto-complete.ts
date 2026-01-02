@@ -8,24 +8,20 @@ export const taskAutoComplete: Extension = EditorView.inputHandler.of((view, fro
   const doc = view.state.doc;
   const line = doc.lineAt(from);
   const linePrefix = doc.sliceString(line.from, from);
+  const match = linePrefix.match(/-\s?\[$/);
+  if (!match) return false;
 
-  const patterns = [
-    { suffix: "- [", offset: 3 },
-    { suffix: "-[", offset: 2 },
-  ];
-
-  const matchedPattern = patterns.find(({ suffix }) => linePrefix.endsWith(suffix));
-  if (!matchedPattern) return false;
-
-  const insertFrom = from - matchedPattern.offset;
+  const insertFrom = from - match[0].length;
   if (insertFrom < line.from) return false;
 
   const replacement = "- [ ] ";
+  // don't add waste `]`
+  const replaceTo = from < line.to && doc.sliceString(from, from + 1) === "]" ? from + 1 : from;
 
   view.dispatch({
     changes: {
       from: insertFrom,
-      to: from,
+      to: replaceTo,
       insert: replacement,
     },
     selection: { anchor: insertFrom + replacement.length },

@@ -82,6 +82,14 @@ describe("taskAutoComplete", () => {
     expect(result.cursorPosition).toBe(6);
   });
 
+  test("auto-complete removes existing closing bracket for '-[]' pattern", () => {
+    const result = testAutoComplete("-[]", 2, " ");
+
+    expect(result.before).toBe("-[]");
+    expect(result.after).toBe("- [ ] ");
+    expect(result.cursorPosition).toBe(6);
+  });
+
   test("auto-complete with indented '- [ ' pattern", () => {
     const result = testAutoComplete("  - [", 5, " ");
 
