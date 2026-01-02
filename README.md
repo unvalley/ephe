@@ -1,6 +1,6 @@
 <div align="center">
   <p>Ephe</p>
-  <a href="https://ephe.app/landing">
+  <a href="https://ephe.app">
     <img width="80%" alt="ephe-readme" src="https://github.com/user-attachments/assets/ea0c44f0-9fad-42f8-add8-611a0e394e19" />
   </a>
   <p>
