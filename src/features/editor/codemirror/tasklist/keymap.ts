@@ -9,7 +9,6 @@ import {
   isEmptyListLine,
   parseTaskLine,
   parseEmptyListLine,
-  parseRegularListLine,
 } from "./task-list-utils";
 import { moveTaskUp, moveTaskDown } from "./task-reorder";
 
