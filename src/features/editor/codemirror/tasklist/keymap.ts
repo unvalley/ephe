@@ -9,7 +9,6 @@ import {
   isEmptyListLine,
   parseTaskLine,
   parseEmptyListLine,
-  parseRegularListLine,
 } from "./task-list-utils";
 import { moveTaskUp, moveTaskDown } from "./task-reorder";
 
@@ -55,102 +54,6 @@ export const taskKeyBindings: readonly KeyBinding[] = [
   {
     key: "Mod-ArrowDown",
     run: moveTaskDown,
-  },
-  {
-    key: "Enter",
-    run: (view: EditorView): boolean => {
-      const { state } = view;
-      const { selection } = state;
-
-      // Handle only single cursor with no selection
-      if (!selection.main.empty || selection.ranges.length > 1) {
-        return false;
-      }
-
-      const pos = selection.main.head;
-      const line = state.doc.lineAt(pos);
-
-      // Check if cursor is at the end of line
-      if (pos === line.to) {
-        // Handle task lists
-        if (isTaskLine(line.text)) {
-          // If it's an empty task line (ends with space), delete it
-          if (isTaskLineEndsWithSpace(line.text)) {
-            const from = line.from;
-            let to = line.to;
-            let newCursorPos = from;
-
-            // Include the newline character in deletion if it exists
-            if (line.to < state.doc.length) {
-              to += 1; // Include newline character
-              newCursorPos = from;
-            } else if (line.from > 0) {
-              newCursorPos = from;
-            }
-
-            view.dispatch({
-              changes: { from: from, to: to },
-              selection: { anchor: newCursorPos },
-            });
-            return true;
-          }
-
-          // If it's a task line with content, create a new task item
-          const parsed = parseTaskLine(line.text);
-          if (parsed) {
-            const { indent, bullet } = parsed;
-            const newTaskLine = `\n${indent}${bullet} [ ] `;
-
-            view.dispatch({
-              changes: { from: pos, insert: newTaskLine },
-              selection: { anchor: pos + newTaskLine.length },
-            });
-            return true;
-          }
-        }
-
-        // Handle regular lists (non-task lists)
-        if (isRegularListLine(line.text)) {
-          // If it's an empty list line, delete it
-          if (isEmptyListLine(line.text)) {
-            const from = line.from;
-            let to = line.to;
-            let newCursorPos = from;
-
-            // Include the newline character in deletion if it exists
-            if (line.to < state.doc.length) {
-              to += 1; // Include newline character
-              newCursorPos = from;
-            } else if (line.from > 0) {
-              newCursorPos = from;
-            }
-
-            view.dispatch({
-              changes: { from: from, to: to },
-              selection: { anchor: newCursorPos },
-            });
-            return true;
-          }
-
-          // If it's a list line with content, create a new list item
-          const parsed = parseRegularListLine(line.text);
-          if (parsed?.content && parsed.content.trim() !== "") {
-            // Only if there's actual content
-            const { indent, bullet } = parsed;
-            const newListLine = `\n${indent}${bullet} `;
-
-            view.dispatch({
-              changes: { from: pos, insert: newListLine },
-              selection: { anchor: pos + newListLine.length },
-            });
-            return true;
-          }
-        }
-      }
-
-      // Fall back to default behavior (Markdown list continuation, etc.)
-      return false;
-    },
   },
   {
     key: "Tab",
