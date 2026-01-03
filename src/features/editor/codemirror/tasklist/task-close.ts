@@ -24,11 +24,13 @@ type TaskInfo = {
   contentPos: number; // position of the task content ('[' next)
   checked: boolean; // task state
   line: number; // Line number containing the task
-  key: string; // Unique identifier for the task
 };
 
 // Effect to track the task being hovered over
 const hoverTask = StateEffect.define<TaskInfo | null>();
+
+// Effect emitted when a task is toggled via mouse interaction.
+const toggleTaskEffect = StateEffect.define<{ pos: number; checked: boolean }>();
 
 // Decoration for the pointer style applied to all tasks
 const taskBaseStyle = Decoration.mark({
@@ -57,31 +59,14 @@ export const getRegisteredTaskHandler = (): TaskHandler | undefined => {
   return globalTaskHandler;
 };
 
-// Utility to generate a unique key for a task
-const getTaskKey = (lineNumber: number, content: string): string => {
-  return `${lineNumber}:${content.trim()}`;
-};
-
-// Performance optimization: create a set to track tasks that have already triggered events
-// to avoid duplicate processing
-const processedTaskChanges = new Set<string>();
-
 export const taskDecoration = ViewPlugin.fromClass(
   class {
     taskes: TaskInfo[] = [];
     decorations: DecorationSet;
-    prevTaskStates: Map<string, boolean> = new Map(); // Track previous task states by key
-    pendingChanges = false;
-    changeTimer: number | null = null;
 
     constructor(view: EditorView) {
       this.taskes = this.findAllTaskes(view);
       this.decorations = this.createBaseDecorations(this.taskes);
-
-      // Initialize previous states
-      for (const task of this.taskes) {
-        this.prevTaskStates.set(task.key, task.checked);
-      }
     }
 
     // Detect all tasks in the document
@@ -107,7 +92,6 @@ export const taskDecoration = ViewPlugin.fromClass(
           const to = from + 3; // '[' + content + ']' = 3 chars
 
           const checkChar = match[2];
-          const taskContent = line.text.substring(matchIndex + prefixLength + 3).trim();
 
           result.push({
             from,
@@ -115,7 +99,6 @@ export const taskDecoration = ViewPlugin.fromClass(
             contentPos,
             checked: checkChar === "x" || checkChar === "X",
             line: i,
-            key: getTaskKey(i, taskContent),
           });
         }
       }
@@ -131,86 +114,48 @@ export const taskDecoration = ViewPlugin.fromClass(
       return builder.finish();
     }
 
-    // Process changes in a batched, debounced way
-    processTaskChanges(update: ViewUpdate) {
-      const changedTasks: TaskInfo[] = [];
+    // Detect tasks when the document changes
+    update(update: ViewUpdate) {
+      const handler = getRegisteredTaskHandler();
 
-      // Collect tasks that have changed state
-      for (const task of this.taskes) {
-        const prevState = this.prevTaskStates.get(task.key);
+      // Handle explicit toggle events (e.g., click on checkbox)
+      if (handler) {
+        for (const tr of update.transactions) {
+          for (const effect of tr.effects) {
+            if (!effect.is(toggleTaskEffect)) continue;
 
-        // If we have a previous state and it changed
-        if (prevState !== undefined && prevState !== task.checked && !processedTaskChanges.has(task.key)) {
-          changedTasks.push(task);
-          // Mark this task as processed to avoid duplicate events
-          processedTaskChanges.add(task.key);
-
-          // Cleanup processed tasks after a delay to prevent memory leaks
-          setTimeout(() => {
-            processedTaskChanges.delete(task.key);
-          }, 1000);
-        }
-
-        // Update the previous state
-        this.prevTaskStates.set(task.key, task.checked);
-      }
-
-      // Process changed tasks
-      if (changedTasks.length > 0) {
-        for (const task of changedTasks) {
-          try {
-            const line = update.view.state.doc.line(task.line);
+            const { pos, checked } = effect.value;
+            const line = update.view.state.doc.lineAt(pos);
             const match = line.text.match(taskItemRegex);
+            if (!match) continue;
 
-            if (match) {
-              const matchIndex = match.index || 0;
-              const prefixLength = match[1].length;
-              const taskEndIndex = matchIndex + prefixLength + 3; // '[ ]' or '[x]' is 3 chars
-              const taskContent = line.text.substring(taskEndIndex).trim();
-              const section = findTaskSection(update.view, task.line);
+            const matchIndex = match.index || 0;
+            const prefixLength = match[1].length;
+            const taskStartPos = matchIndex + prefixLength;
+            const taskEndIndex = taskStartPos + 3; // '[ ]' or '[x]' is 3 chars
+            const taskContent = line.text.substring(taskEndIndex).trim();
+            const section = findTaskSection(update.view, line.number);
+            const taskPos = line.from + taskStartPos;
 
-              // Use the global task handler
-              const handler = getRegisteredTaskHandler();
-
-              // Dispatch the appropriate event based on the task state change
-              if (task.checked && handler) {
-                // If task is being checked, call the handler
-                handler.onTaskClosed({
-                  taskContent,
-                  originalLine: line.text,
-                  section,
-                  pos: task.from,
-                  view: update.view,
-                });
-              } else if (!task.checked && handler) {
-                // If task is being unchecked, call the handler
-                handler.onTaskOpen(taskContent);
-              }
+            if (checked) {
+              handler.onTaskClosed({
+                taskContent,
+                originalLine: line.text,
+                section,
+                pos: taskPos,
+                view: update.view,
+              });
+            } else {
+              handler.onTaskOpen(taskContent);
             }
-          } catch (e) {
-            console.warn("Error processing task change:", e);
           }
         }
       }
-    }
 
-    // Detect tasks when the document changes
-    update(update: ViewUpdate) {
       if (update.docChanged) {
         // Performance optimization: only re-detect tasks if the document has changed
         this.taskes = this.findAllTaskes(update.view);
         this.decorations = this.createBaseDecorations(this.taskes);
-
-        // Performance optimization: Debounce task state change processing to avoid
-        // excessive processing during rapid edits
-        if (this.changeTimer !== null) {
-          window.clearTimeout(this.changeTimer);
-        }
-
-        this.changeTimer = window.setTimeout(() => {
-          this.processTaskChanges(update);
-          this.changeTimer = null;
-        }, 50); // 50ms debounce
       }
     }
   },
@@ -280,7 +225,6 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
 
         if (pos >= from && pos < to) {
           const checkChar = match[2];
-          const taskContent = line.text.substring(matchIndex + prefixLength + 3).trim();
 
           return {
             from,
@@ -288,7 +232,6 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
             contentPos,
             checked: checkChar === "x" || checkChar === "X",
             line: line.number,
-            key: getTaskKey(line.number, taskContent),
           };
         }
         return null;
@@ -331,6 +274,7 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
             to: task.contentPos + 1,
             insert: newChar,
           },
+          effects: toggleTaskEffect.of({ pos: task.from, checked: !task.checked }),
           userEvent: "input.toggleTask",
         });
       }
