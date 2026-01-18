@@ -4,7 +4,7 @@ Give me just one quiet minute.
 
 
 Every morning, my head feels noisy.  
-Ideas, todos, worries—all tangled.  
+Ideas, todos, worries.  
 So I built Ephe to help organize my mind.
 
 Just one page.  
