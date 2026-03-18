@@ -7,7 +7,6 @@ import {
   type PluginValue,
 } from "@codemirror/view";
 import { StateEffect, StateField, RangeSetBuilder } from "@codemirror/state";
-import { findTaskSection } from "./task-section-utils";
 import type { OnTaskClosed } from ".";
 
 export type TaskHandler = {
@@ -62,26 +61,14 @@ const getTaskKey = (lineNumber: number, content: string): string => {
   return `${lineNumber}:${content.trim()}`;
 };
 
-// Performance optimization: create a set to track tasks that have already triggered events
-// to avoid duplicate processing
-const processedTaskChanges = new Set<string>();
-
 export const taskDecoration = ViewPlugin.fromClass(
   class {
     taskes: TaskInfo[] = [];
     decorations: DecorationSet;
-    prevTaskStates: Map<string, boolean> = new Map(); // Track previous task states by key
-    pendingChanges = false;
-    changeTimer: number | null = null;
 
     constructor(view: EditorView) {
       this.taskes = this.findAllTaskes(view);
       this.decorations = this.createBaseDecorations(this.taskes);
-
-      // Initialize previous states
-      for (const task of this.taskes) {
-        this.prevTaskStates.set(task.key, task.checked);
-      }
     }
 
     // Detect all tasks in the document
@@ -131,86 +118,12 @@ export const taskDecoration = ViewPlugin.fromClass(
       return builder.finish();
     }
 
-    // Process changes in a batched, debounced way
-    processTaskChanges(update: ViewUpdate) {
-      const changedTasks: TaskInfo[] = [];
-
-      // Collect tasks that have changed state
-      for (const task of this.taskes) {
-        const prevState = this.prevTaskStates.get(task.key);
-
-        // If we have a previous state and it changed
-        if (prevState !== undefined && prevState !== task.checked && !processedTaskChanges.has(task.key)) {
-          changedTasks.push(task);
-          // Mark this task as processed to avoid duplicate events
-          processedTaskChanges.add(task.key);
-
-          // Cleanup processed tasks after a delay to prevent memory leaks
-          setTimeout(() => {
-            processedTaskChanges.delete(task.key);
-          }, 1000);
-        }
-
-        // Update the previous state
-        this.prevTaskStates.set(task.key, task.checked);
-      }
-
-      // Process changed tasks
-      if (changedTasks.length > 0) {
-        for (const task of changedTasks) {
-          try {
-            const line = update.view.state.doc.line(task.line);
-            const match = line.text.match(taskItemRegex);
-
-            if (match) {
-              const matchIndex = match.index || 0;
-              const prefixLength = match[1].length;
-              const taskEndIndex = matchIndex + prefixLength + 3; // '[ ]' or '[x]' is 3 chars
-              const taskContent = line.text.substring(taskEndIndex).trim();
-              const section = findTaskSection(update.view, task.line);
-
-              // Use the global task handler
-              const handler = getRegisteredTaskHandler();
-
-              // Dispatch the appropriate event based on the task state change
-              if (task.checked && handler) {
-                // If task is being checked, call the handler
-                handler.onTaskClosed({
-                  taskContent,
-                  originalLine: line.text,
-                  section,
-                  pos: task.from,
-                  view: update.view,
-                });
-              } else if (!task.checked && handler) {
-                // If task is being unchecked, call the handler
-                handler.onTaskOpen(taskContent);
-              }
-            }
-          } catch (e) {
-            console.warn("Error processing task change:", e);
-          }
-        }
-      }
-    }
-
     // Detect tasks when the document changes
     update(update: ViewUpdate) {
       if (update.docChanged) {
-        // Performance optimization: only re-detect tasks if the document has changed
+        // Keep task decorations in sync with document edits.
         this.taskes = this.findAllTaskes(update.view);
         this.decorations = this.createBaseDecorations(this.taskes);
-
-        // Performance optimization: Debounce task state change processing to avoid
-        // excessive processing during rapid edits
-        if (this.changeTimer !== null) {
-          window.clearTimeout(this.changeTimer);
-        }
-
-        this.changeTimer = window.setTimeout(() => {
-          this.processTaskChanges(update);
-          this.changeTimer = null;
-        }, 50); // 50ms debounce
       }
     }
   },
