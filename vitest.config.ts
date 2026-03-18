@@ -1,5 +1,6 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
+import { playwright } from "@vitest/browser-playwright";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -9,7 +10,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
     },
-    workspace: [
+    projects: [
       {
         test: {
           name: "node",
@@ -24,7 +25,7 @@ export default defineConfig({
           include: ["src/**/*.browser.test.ts"],
           browser: {
             enabled: true,
-            provider: "playwright",
+            provider: playwright(),
             instances: [{ browser: "chromium" }],
           },
         },
