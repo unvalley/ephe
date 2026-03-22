@@ -30,6 +30,20 @@ const formatDate = (dateString: string) => {
   }).format(date);
 };
 
+const getSnapshotLineEntries = (content: string) => {
+  const lineOccurrences = new Map<string, number>();
+
+  return content.split("\n").map((line) => {
+    const occurrenceCount = (lineOccurrences.get(line) ?? 0) + 1;
+    lineOccurrences.set(line, occurrenceCount);
+
+    return {
+      key: `${line}-${occurrenceCount}`,
+      line,
+    };
+  });
+};
+
 const BUTTON_STYLES = {
   primary:
     "rounded border border-transparent bg-neutral-100 px-4 py-2 text-sm transition-colors hover:bg-neutral-200 focus-visible:ring-offset-2 dark:bg-neutral-700/50 dark:hover:bg-neutral-600",
@@ -262,9 +276,9 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                                   </div>
                                 </div>
                                 <div className="prose prose-sm dark:prose-invert max-w-none flex-1 overflow-y-auto rounded border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-600 dark:bg-primary-600">
-                                  {selectedSnapshot.content.split("\n").map((line, i) => (
+                                  {getSnapshotLineEntries(selectedSnapshot.content).map(({ key, line }) => (
                                     <div
-                                      key={`line-${selectedSnapshot.id}-${i}`}
+                                      key={`${selectedSnapshot.id}-${key}`}
                                       className={line.trim() === "" ? "h-4" : ""}
                                     >
                                       {line}

@@ -1,7 +1,25 @@
 import { describe, expect, test, vi } from "vitest";
-import { EditorState, EditorSelection } from "@codemirror/state";
+import { EditorState, EditorSelection, type TransactionSpec } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import { moveTaskUp, moveTaskDown } from "./task-reorder";
+
+type MockEditorView = EditorView & {
+  getLastTransaction: () => TransactionSpec | undefined;
+};
+
+const getLastSelectionAnchor = (view: MockEditorView): number => {
+  const transaction = view.getLastTransaction();
+
+  if (!transaction?.selection) {
+    throw new Error("Expected a dispatched transaction with selection");
+  }
+
+  if (transaction.selection instanceof EditorSelection) {
+    return transaction.selection.main.anchor;
+  }
+
+  return transaction.selection.anchor;
+};
 
 // Helper to create an editor state with content
 function createEditorState(doc: string, cursorPos?: number) {
@@ -14,18 +32,21 @@ function createEditorState(doc: string, cursorPos?: number) {
 // Helper to create a mock editor view
 function createMockView(initialState: EditorState) {
   let currentState = initialState;
+  let lastTransaction: TransactionSpec | undefined;
 
   const view = {
     get state() {
       return currentState;
     },
-    dispatch: vi.fn((transaction: any) => {
+    dispatch: vi.fn((transaction: TransactionSpec) => {
+      lastTransaction = transaction;
       // Apply changes to get new state
       if (transaction.changes) {
         currentState = currentState.update(transaction).state;
       }
     }),
-  } as unknown as EditorView;
+    getLastTransaction: () => lastTransaction,
+  } as unknown as MockEditorView;
 
   return view;
 }
@@ -381,9 +402,7 @@ Regular text line
     expect(view.dispatch).toHaveBeenCalled();
 
     // Check cursor position was preserved
-    const call = (view.dispatch as any).mock.calls[0][0];
-    expect(call.selection).toBeDefined();
-    expect(call.selection.anchor).toBe(7); // Same offset in moved task
+    expect(getLastSelectionAnchor(view)).toBe(7); // Same offset in moved task
   });
 
   test("handles tasks at different indent levels correctly", () => {
@@ -761,8 +780,7 @@ describe("Task Reorder - Different Block Sizes", () => {
 - [ ] Short task`);
 
     // Check cursor position is maintained correctly
-    const call = (view.dispatch as any).mock.calls[0][0];
-    expect(call.selection.anchor).toBe(0); // Cursor at start of moved block
+    expect(getLastSelectionAnchor(view)).toBe(0); // Cursor at start of moved block
   });
 
   test("swaps blocks of different lengths downward correctly", () => {
@@ -780,11 +798,10 @@ describe("Task Reorder - Different Block Sizes", () => {
 - [ ] Short task`);
 
     // Check cursor position accounts for size difference
-    const call = (view.dispatch as any).mock.calls[0][0];
     // Moving down: cursor should be at target.start + offset + sizeDiff
     // sizeDiff = deltaTarget - deltaCurrent = 44 - 16 = 28
     const expectedPos = 17 + 0 + 28 - 1; // Start of target + offset + size diff - 1 = 44
-    expect(call.selection.anchor).toBe(expectedPos);
+    expect(getLastSelectionAnchor(view)).toBe(expectedPos);
   });
 
   test("handles blocks with children of different sizes", () => {
