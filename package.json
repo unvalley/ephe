@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.28.0",
   "scripts": {
     "dev": "pnpm run copy:wasm && vite",
     "build": "pnpm run copy:wasm && tsc && vite build",
@@ -66,6 +67,7 @@
     "globals": "^16.5.0",
     "postcss": "^8.5.8",
     "rollup-plugin-visualizer": "^5.14.0",
+    "esbuild": "^0.27.4",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
     "vite": "^8.0.0",
