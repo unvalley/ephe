@@ -1,0 +1,2 @@
+# Require packages to have been published for at least 3 days before installation
+minimumReleaseAge: 4320
