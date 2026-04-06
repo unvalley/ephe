@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import wasm from "vite-plugin-wasm";
-import topLevelAwait from "vite-plugin-top-level-await";
 import tailwindcss from "@tailwindcss/vite";
 import { visualizer } from "rollup-plugin-visualizer";
 import { VitePWA } from "vite-plugin-pwa";
@@ -17,7 +16,6 @@ export default defineConfig({
       },
     }),
     wasm(),
-    topLevelAwait(),
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
@@ -109,6 +107,7 @@ export default defineConfig({
     port: 3000,
   },
   build: {
+    target: "es2022",
     outDir: "dist",
     sourcemap: true,
   },
