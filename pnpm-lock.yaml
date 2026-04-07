@@ -153,12 +153,6 @@ importers:
       vitest:
         specifier: ^4.1.2
         version: 4.1.2(@edge-runtime/vm@3.2.0)(@types/node@24.12.2)(@vitest/browser-playwright@4.1.2)(@vitest/ui@4.1.0)(msw@2.7.4(@types/node@24.12.2)(typescript@5.9.3))(vite@8.0.5(@emnapi/core@1.9.0)(@emnapi/runtime@1.9.0)(@types/node@24.12.2)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.1))
-      workbox-build:
-        specifier: ^7.4.0
-        version: 7.4.0(@types/babel__core@7.20.5)
-      workbox-window:
-        specifier: ^7.4.0
-        version: 7.4.0
 
 packages:
 

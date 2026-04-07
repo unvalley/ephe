@@ -73,8 +73,6 @@
     "vite": "^8.0.5",
     "vite-plugin-pwa": "^1.2.0",
     "vite-plugin-wasm": "^3.6.0",
-    "vitest": "^4.1.2",
-    "workbox-build": "^7.4.0",
-    "workbox-window": "^7.4.0"
+    "vitest": "^4.1.2"
   }
 }
