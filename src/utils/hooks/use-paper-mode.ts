@@ -23,24 +23,9 @@ export const usePaperMode = () => {
     return modes[nextIndex];
   };
 
-  const toggleNormalMode = () => {
-    setPaperMode((prev) => (prev === "normal" ? "normal" : "normal"));
-  };
-
-  const toggleGraphMode = () => {
-    setPaperMode((prev) => (prev === "graph" ? "normal" : "graph"));
-  };
-
-  const toggleDotsMode = () => {
-    setPaperMode((prev) => (prev === "dots" ? "normal" : "dots"));
-  };
-
   return {
     paperMode,
     paperModeClass: PAPER_MODE_CLASSES[paperMode],
     cyclePaperMode,
-    toggleNormalMode,
-    toggleGraphMode,
-    toggleDotsMode,
   };
 };
