@@ -63,11 +63,8 @@ export const useUserActivity = (options: UseUserActivityOptions = {}) => {
     };
   }, []);
 
-  const isActive = isTyping || isScrolling;
-
   return {
-    isActive,
-    isHidden: isActive,
+    isHidden: isTyping || isScrolling,
     isTyping,
     isScrolling,
   };

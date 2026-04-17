@@ -1,6 +1,6 @@
 import { useAtom } from "jotai";
 import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/multi-document";
-import { useCallback, useMemo, useRef, useState, type DragEvent } from "react";
+import { useCallback, useRef, useState, type DragEvent } from "react";
 import { motion } from "motion/react";
 
 const SPRING_CONFIG = {
@@ -63,13 +63,6 @@ export const getCardButtonClasses = (isActive: boolean, isDockHovered: boolean):
       : "bg-gray-100 dark:bg-gray-600";
 
   return `${baseClasses} ${shapeClasses} ${stateClasses}`;
-};
-
-const useCardStyles = (total: number, hoveredIndex: number | null, dockActive: boolean) => {
-  return useMemo(
-    () => Array.from({ length: total }, (_, index) => calculateCardStyle(index, total, hoveredIndex, dockActive)),
-    [total, hoveredIndex, dockActive],
-  );
 };
 
 type DockDragState = {
@@ -142,9 +135,11 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
   const { dockActive, handleDockMouseLeave, handleDragEnd, handleDragStart, isDragging, dockState, setDockState } =
     useDockDragState();
 
-  const documentPreviews = useMemo(() => documents.map((doc) => generatePreviewContent(doc.content)), [documents]);
+  const documentPreviews = documents.map((doc) => generatePreviewContent(doc.content));
   const hoveredIndexForStyle = isDragging ? null : dockState.hoveredIndex;
-  const cardStyles = useCardStyles(documents.length, hoveredIndexForStyle, dockActive);
+  const cardStyles = Array.from({ length: documents.length }, (_, index) =>
+    calculateCardStyle(index, documents.length, hoveredIndexForStyle, dockActive),
+  );
 
   const handleDrop = useCallback(
     (targetIndex: number) => {
