@@ -84,7 +84,14 @@ export const useMarkdownEditor = (
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
 
+  // Tracks the last value the editor itself pushed into `content`. When the
+  // sync effect below sees `content` equal this ref, it knows the value is its
+  // own debounced echo (possibly already stale because the user kept typing)
+  // and must not roll the editor back.
+  const lastWroteFromEditorRef = useRef<string | null>(null);
+
   const debouncedSetContent = useDebouncedCallback((newContent: string) => {
+    lastWroteFromEditorRef.current = newContent;
     // Only update if content actually changed to prevent unnecessary updates
     setContent((prevContent) => (prevContent !== newContent ? newContent : prevContent));
     // Call onChange callback if provided (for multi-editor)
@@ -121,6 +128,7 @@ export const useMarkdownEditor = (
           changes: { from: 0, to: state.doc.length, insert: formattedText },
         });
         // Persist formatted content to state/storage and notify listeners
+        lastWroteFromEditorRef.current = formattedText;
         setContent((prevContent) => (prevContent !== formattedText ? formattedText : prevContent));
         if (onChange) {
           onChange(formattedText);
@@ -263,6 +271,14 @@ export const useMarkdownEditor = (
     // Skip if content is exactly the same as current editor content
     // This prevents cyclic updates when our own changes come back through the state
     if (content === currentDocContent) {
+      return;
+    }
+
+    // Skip if `content` is just our own debounced write echoing back. The
+    // editor may already hold newer characters typed during the React render
+    // cycle; rolling back to the older atom value would drop them and cause
+    // visible flicker / cursor jumps during long typing sessions.
+    if (content === lastWroteFromEditorRef.current) {
       return;
     }
 
