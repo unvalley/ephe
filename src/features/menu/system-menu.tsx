@@ -128,7 +128,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                 <div className="px-3 py-2 text-primary-400 text-xs dark:text-primary-300">Document Stats</div>
                 <MenuItem disabled>
                   <div className="flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30">
-                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                    <span className="mr-3 flex size-5 items-center justify-center">
                       <HashIcon className="size-4" weight="light" />
                     </span>
                     <span>{charCount > 0 ? `${charCount.toLocaleString()} chars` : "No content"}</span>
@@ -137,7 +137,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
 
                 <MenuItem disabled>
                   <div className="flex items-center px-4 py-2.5 text-sm data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30">
-                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                    <span className="mr-3 flex size-5 items-center justify-center">
                       <HashIcon className="size-4" weight="light" />
                     </span>
                     <span>{wordCount > 0 ? `${wordCount.toLocaleString()} words` : "No content"}</span>
@@ -150,7 +150,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                     className="flex w-full items-center px-4 py-2.5 text-sm hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     onClick={() => openTaskSnapshotModal(0)}
                   >
-                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                    <span className="mr-3 flex size-5 items-center justify-center">
                       {todayCompletedTasks > 0 ? (
                         <CheckCircleIcon className="size-4 text-green-600" weight="light" />
                       ) : (
@@ -169,7 +169,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                     className="flex w-full items-center px-4 py-2.5 text-sm hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                     onClick={() => openTaskSnapshotModal(1)}
                   >
-                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                    <span className="mr-3 flex size-5 items-center justify-center">
                       <FloppyDiskIcon className="size-4" weight="light" />
                     </span>
                     <span>{snapshotCount > 0 ? `${snapshotCount} snapshots` : "No snapshots"}</span>
@@ -194,7 +194,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                     }}
                     className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                   >
-                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                    <span className="mr-3 flex size-5 items-center justify-center">
                       {theme === COLOR_THEME.LIGHT ? (
                         <SunIcon className="size-4" weight="light" />
                       ) : theme === COLOR_THEME.DARK ? (
@@ -213,7 +213,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                     onClick={cyclePaperMode}
                     className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                   >
-                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                    <span className="mr-3 flex size-5 items-center justify-center">
                       <NotebookIcon className="size-4" weight="light" />
                     </span>
                     <span className="capitalize">{paperMode} Paper</span>
@@ -227,7 +227,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                     }}
                     className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                   >
-                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                    <span className="mr-3 flex size-5 items-center justify-center">
                       <ArrowsHorizontalIcon className="size-4" weight="light" />
                     </span>
                     <span className="capitalize">{editorWidth} Width</span>
@@ -245,7 +245,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                     }}
                     className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                   >
-                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                    <span className="mr-3 flex size-5 items-center justify-center">
                       <TextAaIcon className="size-4" weight="light" />
                     </span>
                     <span className="capitalize">{currentFontDisplayValue}</span>
@@ -257,7 +257,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                     onClick={toggleEditorMode}
                     className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                   >
-                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                    <span className="mr-3 flex size-5 items-center justify-center">
                       <SquaresFourIcon className="size-4" weight="light" />
                     </span>
                     <span className="capitalize">{editorMode} Editor</span>
@@ -275,7 +275,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                     }}
                     className="flex w-full items-center px-4 py-2.5 text-left text-sm transition-colors duration-150 hover:bg-neutral-50 data-[focus]:bg-primary-50 dark:data-[focus]:bg-primary-900/30 dark:hover:bg-neutral-700/70"
                   >
-                    <span className="mr-3 flex h-5 w-5 items-center justify-center">
+                    <span className="mr-3 flex size-5 items-center justify-center">
                       <LightningIcon className={"size-4"} weight="light" />
                     </span>
                     <span className={"capitalize"}>Task Flush: {taskAutoFlushMode}</span>
