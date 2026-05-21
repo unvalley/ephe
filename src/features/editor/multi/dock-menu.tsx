@@ -1,7 +1,7 @@
 import { useAtom } from "jotai";
 import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/multi-document";
 import { useCallback, useRef, useState, type DragEvent } from "react";
-import { motion } from "motion/react";
+import { m } from "motion/react";
 
 const SPRING_CONFIG = {
   stiffness: 180,
@@ -203,7 +203,7 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
                   : 0;
 
           return (
-            <motion.div
+            <m.div
               key={doc.id}
               className="absolute"
               animate={{
@@ -266,7 +266,7 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
                   </div>
                 )}
               </button>
-            </motion.div>
+            </m.div>
           );
         })}
       </nav>

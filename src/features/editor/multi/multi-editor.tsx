@@ -5,7 +5,7 @@ import { useRef, useEffect, useImperativeHandle, useCallback } from "react";
 import { DocumentNavigation } from "./document-navigation";
 import { MultiDocumentProvider } from "./multi-context";
 import type { SingleEditorRef, MultiEditorRef } from "../editor-ref";
-import { motion, AnimatePresence } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 
 type MultiDocumentEditorProps = {
   ref?: React.Ref<MultiEditorRef>;
@@ -104,7 +104,7 @@ export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
   return (
     <div className="relative h-full w-full overflow-hidden">
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={documents[activeIndex].id}
           className="h-full w-full"
           initial={{ opacity: 0 }}
@@ -118,7 +118,7 @@ export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
             documentId={documents[activeIndex].id}
             onChange={saveDocument}
           />
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       <MultiDocumentProvider navigateToDocument={navigateToDocument}>
