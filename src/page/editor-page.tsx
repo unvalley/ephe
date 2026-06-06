@@ -1,4 +1,5 @@
 import "../globals.css";
+import { LazyMotion, domAnimation } from "motion/react";
 import { usePaperMode } from "../utils/hooks/use-paper-mode";
 import { Footer, FooterButton } from "../utils/components/footer";
 import { CommandMenu } from "../features/menu/command-menu";
@@ -68,54 +69,56 @@ export const EditorPage = () => {
   };
 
   return (
-    <div className={`flex h-screen flex-col overflow-hidden antialiased ${paperModeClass}`}>
-      <div className="relative flex flex-1 overflow-hidden">
-        <div className="z-0 flex-1">
-          {editorMode === "multi" ? (
-            <MultiDocumentEditor ref={multiEditorRef} />
-          ) : (
-            <CodeMirrorEditor ref={singleEditorRef} />
-          )}
+    <LazyMotion features={domAnimation} strict>
+      <div className={`flex h-screen flex-col overflow-hidden antialiased ${paperModeClass}`}>
+        <div className="relative flex flex-1 overflow-hidden">
+          <div className="z-0 flex-1">
+            {editorMode === "multi" ? (
+              <MultiDocumentEditor ref={multiEditorRef} />
+            ) : (
+              <CodeMirrorEditor ref={singleEditorRef} />
+            )}
+          </div>
         </div>
+
+        <Footer
+          autoHide={true}
+          leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} />}
+          centerContent={
+            isMobile || editorMode === "single" ? null : (
+              <DocumentDock onNavigate={(index) => multiEditorRef.current?.navigateToDocument(index)} />
+            )
+          }
+          rightContent={
+            <>
+              <HoursDisplay />
+              <FooterButton>
+                <Link to="/landing">Ephe v{EPHE_VERSION}</Link>
+              </FooterButton>
+            </>
+          }
+        />
+        <CommandMenu
+          aria-modal="true"
+          open={isCommandMenuOpen}
+          onClose={handleCommandMenuClose}
+          editorContent={
+            editorMode === "multi"
+              ? (multiEditorRef.current?.getCurrentContent() ?? "")
+              : (singleEditorRef.current?.getCurrentContent() ?? editorContent)
+          }
+          editorView={
+            editorMode === "multi" ? (multiEditorRef.current?.view ?? null) : (singleEditorRef.current?.view ?? null)
+          }
+          onOpenHistoryModal={openHistoryModal}
+        />
+
+        <HistoryModal
+          isOpen={historyModalOpen}
+          onClose={() => setHistoryModalOpen(false)}
+          initialTabIndex={historyModalTabIndex}
+        />
       </div>
-
-      <Footer
-        autoHide={true}
-        leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} />}
-        centerContent={
-          isMobile || editorMode === "single" ? null : (
-            <DocumentDock onNavigate={(index) => multiEditorRef.current?.navigateToDocument(index)} />
-          )
-        }
-        rightContent={
-          <>
-            <HoursDisplay />
-            <FooterButton>
-              <Link to="/landing">Ephe v{EPHE_VERSION}</Link>
-            </FooterButton>
-          </>
-        }
-      />
-      <CommandMenu
-        aria-modal="true"
-        open={isCommandMenuOpen}
-        onClose={handleCommandMenuClose}
-        editorContent={
-          editorMode === "multi"
-            ? (multiEditorRef.current?.getCurrentContent() ?? "")
-            : (singleEditorRef.current?.getCurrentContent() ?? editorContent)
-        }
-        editorView={
-          editorMode === "multi" ? (multiEditorRef.current?.view ?? null) : (singleEditorRef.current?.view ?? null)
-        }
-        onOpenHistoryModal={openHistoryModal}
-      />
-
-      <HistoryModal
-        isOpen={historyModalOpen}
-        onClose={() => setHistoryModalOpen(false)}
-        initialTabIndex={historyModalTabIndex}
-      />
-    </div>
+    </LazyMotion>
   );
 };

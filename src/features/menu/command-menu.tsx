@@ -65,6 +65,17 @@ type CommandItem = {
   perform: () => void;
 };
 
+const INTERFACE_IDS = new Set(["theme-toggle", "paper-mode", "editor-width", "font-family"]);
+const OPERATION_IDS = new Set([
+  "export-markdown",
+  "format-document",
+  "insert-github-issues",
+  "open-tasks",
+  "open-snapshots",
+  "save-snapshot",
+]);
+const NAVIGATION_IDS = new Set(["github-repo", "history"]);
+
 export const CommandMenu = ({
   open,
   onClose = () => {},
@@ -87,6 +98,9 @@ export const CommandMenu = ({
       setInputValue("");
       return;
     }
+    // Focus the input after the menu mounts. Replaces the autoFocus attribute,
+    // which trips jsx-a11y/no-autofocus.
+    const raf = requestAnimationFrame(() => inputRef.current?.focus());
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -99,7 +113,10 @@ export const CommandMenu = ({
       }
     };
     document.addEventListener("keydown", handleKeyDown, true); // Use capture phase
-    return () => document.removeEventListener("keydown", handleKeyDown, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener("keydown", handleKeyDown, true);
+    };
   }, [open, onClose]);
 
   const cyclePaperModeThenClose = () => {
@@ -409,7 +426,6 @@ export const CommandMenu = ({
                 onValueChange={setInputValue}
                 placeholder="Type a command or search..."
                 className="w-full border-none bg-transparent py-2.5 pr-3 pl-9 text-neutral-900 text-sm outline-none placeholder:text-neutral-400 focus:ring-0 dark:text-neutral-100 dark:placeholder:text-neutral-500" // focus:ring-0 でフォーカス時のリングを消去
-                autoFocus
               />
             </div>
 
@@ -425,111 +441,108 @@ export const CommandMenu = ({
                 heading="Interface"
                 className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
               >
-                {commandsList()
-                  .filter((cmd) => ["theme-toggle", "paper-mode", "editor-width", "font-family"].includes(cmd.id))
-                  .map((command) => (
-                    <Command.Item
-                      key={command.id}
-                      value={command.name}
-                      onSelect={command.perform}
-                      className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                          {command.icon}
-                        </div>
-                        <span className="flex-grow truncate">
-                          {" "}
-                          {command.name}
-                          {command.id === "paper-mode" && currentPaperMode && (
-                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
-                              ({currentPaperMode})
+                {commandsList().flatMap((command) =>
+                  INTERFACE_IDS.has(command.id)
+                    ? [
+                        <Command.Item
+                          key={command.id}
+                          value={command.name}
+                          onSelect={command.perform}
+                          className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="flex size-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                              {command.icon}
+                            </div>
+                            <span className="flex-grow truncate">
+                              {" "}
+                              {command.name}
+                              {command.id === "paper-mode" && currentPaperMode && (
+                                <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                                  ({currentPaperMode})
+                                </span>
+                              )}
+                              {command.id === "editor-width" && currentEditorWidth && (
+                                <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                                  ({currentEditorWidth})
+                                </span>
+                              )}
+                              {command.id === "font-family" && (
+                                <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                                  ({FONT_FAMILIES[fontFamily].displayValue})
+                                </span>
+                              )}
                             </span>
+                          </div>
+                          {command.shortcut && (
+                            <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                              {command.shortcut}
+                            </kbd>
                           )}
-                          {command.id === "editor-width" && currentEditorWidth && (
-                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
-                              ({currentEditorWidth})
-                            </span>
-                          )}
-                          {command.id === "font-family" && (
-                            <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
-                              ({FONT_FAMILIES[fontFamily].displayValue})
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                      {command.shortcut && (
-                        <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-                          {command.shortcut}
-                        </kbd>
-                      )}
-                    </Command.Item>
-                  ))}
+                        </Command.Item>,
+                      ]
+                    : [],
+                )}
               </Command.Group>
 
               <Command.Group
                 heading="Operations"
                 className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
               >
-                {commandsList()
-                  .filter((cmd) =>
-                    [
-                      "export-markdown",
-                      "format-document",
-                      "insert-github-issues",
-                      "open-tasks",
-                      "open-snapshots",
-                      "save-snapshot",
-                    ].includes(cmd.id),
-                  )
-                  .map((command) => (
-                    <Command.Item
-                      key={command.id}
-                      value={command.name}
-                      onSelect={command.perform}
-                      className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                          {command.icon}
-                        </div>
-                        <span className="flex-grow truncate">{command.name}</span>
-                      </div>
-                      {command.shortcut && (
-                        <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-                          {command.shortcut}
-                        </kbd>
-                      )}
-                    </Command.Item>
-                  ))}
+                {commandsList().flatMap((command) =>
+                  OPERATION_IDS.has(command.id)
+                    ? [
+                        <Command.Item
+                          key={command.id}
+                          value={command.name}
+                          onSelect={command.perform}
+                          className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="flex size-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                              {command.icon}
+                            </div>
+                            <span className="flex-grow truncate">{command.name}</span>
+                          </div>
+                          {command.shortcut && (
+                            <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                              {command.shortcut}
+                            </kbd>
+                          )}
+                        </Command.Item>,
+                      ]
+                    : [],
+                )}
               </Command.Group>
 
               <Command.Group
                 heading="Navigation"
                 className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
               >
-                {commandsList()
-                  .filter((cmd) => ["github-repo", "history"].includes(cmd.id))
-                  .map((command) => (
-                    <Command.Item
-                      key={command.id}
-                      value={command.name}
-                      onSelect={command.perform}
-                      className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
-                          {command.icon}
-                        </div>
-                        <span className="flex-grow truncate">{command.name}</span>
-                      </div>
-                      {command.shortcut && (
-                        <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
-                          {command.shortcut}
-                        </kbd>
-                      )}
-                    </Command.Item>
-                  ))}
+                {commandsList().flatMap((command) =>
+                  NAVIGATION_IDS.has(command.id)
+                    ? [
+                        <Command.Item
+                          key={command.id}
+                          value={command.name}
+                          onSelect={command.perform}
+                          className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className="flex size-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                              {command.icon}
+                            </div>
+                            <span className="flex-grow truncate">{command.name}</span>
+                          </div>
+                          {command.shortcut && (
+                            <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                              {command.shortcut}
+                            </kbd>
+                          )}
+                        </Command.Item>,
+                      ]
+                    : [],
+                )}
               </Command.Group>
             </Command.List>
 

@@ -54,7 +54,6 @@ const BUTTON_STYLES = {
 } as const;
 
 export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryModalProps) => {
-  const [selectedTabIndex, setSelectedTabIndex] = useState(initialTabIndex);
   const [selectedSnapshot, setSelectedSnapshot] = useState<Snapshot | null>(null);
   const {
     snapshots,
@@ -67,10 +66,6 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
     handleDeleteAllTasks,
     refresh,
   } = useHistoryData();
-
-  useEffect(() => {
-    setSelectedTabIndex(initialTabIndex);
-  }, [initialTabIndex]);
 
   useEffect(() => {
     if (isOpen) {
@@ -159,8 +154,8 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
             >
               <DialogPanel className="w-full max-w-5xl transform overflow-hidden rounded-md bg-white p-6 text-left align-middle shadow-xl transition-all dark:bg-neutral-800">
                 <div className="mt-4">
-                  <TabGroup selectedIndex={selectedTabIndex} onChange={setSelectedTabIndex}>
-                    <TabList className="flex space-x-1">
+                  <TabGroup key={initialTabIndex} defaultIndex={initialTabIndex}>
+                    <TabList className="flex gap-x-1">
                       <Tab
                         className={({ selected }) =>
                           `rounded-md px-2 py-1 transition-colors ${selected ? "" : "text-neutral-300 dark:text-neutral-500"}`
@@ -190,7 +185,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                           {isLoading ? (
                             <div className="flex h-full items-center justify-center">
                               <div className="py-10 text-center text-neutral-500 dark:text-neutral-400">
-                                Loading tasks...
+                                Loading tasks…
                               </div>
                             </div>
                           ) : tasks.length > 0 ? (
@@ -259,14 +254,14 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                             ) : isLoading ? (
                               <div className="flex h-full items-center justify-center">
                                 <div className="text-center text-neutral-500 dark:text-neutral-400">
-                                  Loading snapshots...
+                                  Loading snapshots…
                                 </div>
                               </div>
                             ) : selectedSnapshot ? (
                               <div className="flex h-full flex-col">
                                 <div className="mb-4 flex items-center justify-between">
                                   <h4 className="text-md">{formatDate(selectedSnapshot.timestamp)}</h4>
-                                  <div className="flex space-x-2">
+                                  <div className="flex gap-x-2">
                                     <button type="button" onClick={handleRestore} className={BUTTON_STYLES.primary}>
                                       Restore
                                     </button>
@@ -298,7 +293,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                             <div className="w-1/4 overflow-y-auto pl-4">
                               {isLoading ? (
                                 <div className="py-10 text-center text-neutral-500 dark:text-neutral-400">
-                                  Loading...
+                                  Loading…
                                 </div>
                               ) : (
                                 <div className="divide-y divide-neutral-200 dark:divide-neutral-600">
