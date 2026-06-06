@@ -27,5 +27,6 @@ export const usePaperMode = () => {
     paperMode,
     paperModeClass: PAPER_MODE_CLASSES[paperMode],
     cyclePaperMode,
+    setPaperMode,
   };
 };

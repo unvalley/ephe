@@ -36,7 +36,7 @@ export const FooterButton = ({ children, ...props }: ButtonProps) => {
   return (
     <Button
       as={props.as}
-      className="select-none whitespace-nowrap rounded-md bg-white px-2 py-1 transition-colors hover:bg-neutral-100 dark:bg-neutral-900 dark:hover:bg-neutral-800"
+      className="inline-flex h-9 select-none items-center whitespace-nowrap rounded-md bg-white/90 px-3 text-[13px] text-neutral-950 backdrop-blur-xl transition-[background-color,transform] duration-150 ease-out hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 active:translate-y-px dark:bg-neutral-950/85 dark:text-neutral-50 dark:focus-visible:ring-neutral-600 dark:hover:bg-neutral-900"
       {...props}
     >
       {children}
