@@ -74,8 +74,8 @@ export const HoursDisplay = () => {
           maxHeight: "650px",
           overflow: "hidden",
           transform: "translateX(-30%)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
         }}
         onMouseLeave={() => setShowTooltip(false)}
       >
