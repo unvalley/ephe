@@ -10,6 +10,20 @@
   }
 }
 
+/* WCAG 2.3.3 — collapse animations for users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore-start lint/complexity/noImportantStyles: a11y override must beat library/inline styles */
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+    /* biome-ignore-end lint/complexity/noImportantStyles: a11y override must beat library/inline styles */
+  }
+}
+
 body {
   font-family: "Inter", "Noto Sans JP", sans-serif;
 }
