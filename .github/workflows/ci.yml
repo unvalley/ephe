@@ -26,7 +26,6 @@ jobs:
       - uses: pnpm/action-setup@v3
         with:
           version: ${{ env.PNPM_VERSION }}
-          run_install: true
 
       - uses: actions/setup-node@v4
         with:
@@ -57,7 +56,6 @@ jobs:
       - uses: pnpm/action-setup@v3
         with:
           version: ${{ env.PNPM_VERSION }}
-          run_install: true
 
       - uses: actions/setup-node@v4
         with:
@@ -87,7 +85,6 @@ jobs:
       - uses: pnpm/action-setup@v3
         with:
           version: ${{ env.PNPM_VERSION }}
-          run_install: true
 
       - uses: actions/setup-node@v4
         with:
@@ -108,9 +105,19 @@ jobs:
           key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vitest-${{ hashFiles('**/*.ts', '**/*.tsx') }}
           restore-keys: |
             ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-vitest-
+
+      - name: Restore Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ env.CACHE_KEY_PREFIX }}-${{ runner.os }}-playwright-
     
       - name: Install Playwright Browsers
-        run: npx playwright install chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install chromium
 
       - name: Run Vitest
         run: pnpm test

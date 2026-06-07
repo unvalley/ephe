@@ -9,6 +9,7 @@ export const LOCAL_STORAGE_KEYS = {
   TOC_MODE: "ephe:toc-mode",
   TASK_AUTO_FLUSH_MODE: "ephe:task-auto-flush-mode",
   FONT_FAMILY: "ephe:font-family",
+  CURSOR_COLOR: "ephe:cursor-color",
   CURSOR_POSITION: "ephe:cursor-position",
   DOCUMENTS: "ephe:documents",
   ACTIVE_DOCUMENT_INDEX: "ephe:active-document-index",

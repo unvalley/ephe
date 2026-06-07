@@ -6,6 +6,7 @@ import { useEditorWidth, type EditorWidth } from "../../utils/hooks/use-editor-w
 import { useCharCount } from "../../utils/hooks/use-char-count";
 import { useWordCount } from "../../utils/hooks/use-word-count";
 import { FONT_FAMILY_OPTIONS, fontFamilyAtom, currentFontDisplayValueAtom } from "../../utils/hooks/use-font";
+import { CURSOR_COLORS, CURSOR_COLOR_OPTIONS, useCursorColor, type CursorColor } from "../../utils/hooks/use-cursor-color";
 import { useEditorMode, type EditorMode } from "../../utils/hooks/use-editor-mode";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
@@ -171,16 +172,59 @@ const SegmentedControl = <T extends string>({
   </span>
 );
 
+const CursorColorControl = ({
+  value,
+  isDarkMode,
+  onChange,
+}: {
+  value: CursorColor;
+  isDarkMode: boolean;
+  onChange: (value: CursorColor) => void;
+}) => (
+  <span
+    className="inline-flex h-8 shrink-0 items-center gap-0.5 rounded-md bg-neutral-100 p-0.5 dark:bg-white/10"
+    title="Cursor color"
+  >
+    {CURSOR_COLOR_OPTIONS.map((option) => {
+      const active = option === value;
+      const color = CURSOR_COLORS[option];
+
+      return (
+        <button
+          type="button"
+          key={option}
+          aria-label={color.label}
+          aria-pressed={active}
+          className={cx(
+            "flex size-7 items-center justify-center rounded transition-[background-color,transform,box-shadow] duration-150 ease-out hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 active:scale-95 dark:focus-visible:ring-neutral-600",
+            active ? "bg-neutral-200 dark:bg-white/20" : "hover:bg-white/80 dark:hover:bg-white/10",
+          )}
+          onClick={(event) => {
+            event.stopPropagation();
+            onChange(option);
+          }}
+        >
+          <span
+            className="size-3.5 rounded-full border border-black/10 dark:border-white/20"
+            style={{ backgroundColor: isDarkMode ? color.valueDark : color.valueLight }}
+          />
+        </button>
+      );
+    })}
+  </span>
+);
+
 export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, isDarkMode } = useTheme();
   const { paperMode, setPaperMode } = usePaperMode();
   const [fontFamily, setFontFamily] = useAtom(fontFamilyAtom);
   const currentFontDisplayValue = useAtomValue(currentFontDisplayValueAtom);
   const { editorMode, setSingleMode, setMultiMode } = useEditorMode();
   const { editorWidth, setNormalWidth, setWideWidth } = useEditorWidth();
+  const { cursorColor, setCursorColor } = useCursorColor();
   const { charCount } = useCharCount();
   const { wordCount } = useWordCount();
   const { todayCompletedTasks } = useTodayCompletedTasks(menuOpen);
@@ -300,6 +344,9 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
               <ActionMenuRow label="Font" onClick={cycleFont} icon={<TextAaIcon className="size-5" weight="regular" />}>
                 <ValuePill>{currentFontDisplayValue}</ValuePill>
               </ActionMenuRow>
+              <StaticMenuRow label="Cursor">
+                <CursorColorControl value={cursorColor} isDarkMode={isDarkMode} onChange={setCursorColor} />
+              </StaticMenuRow>
               <StaticMenuRow label="Editor">
                 <SegmentedControl
                   ariaLabel="Editor mode"

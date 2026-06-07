@@ -2,7 +2,7 @@ import { defaultKeymap, historyKeymap, history } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
-import { EditorView, keymap, placeholder } from "@codemirror/view";
+import { EditorView, drawSelection, keymap, placeholder } from "@codemirror/view";
 import { useAtom, useAtomValue } from "jotai";
 import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { showToast } from "../../../utils/components/toast";
@@ -21,6 +21,7 @@ import { urlClickPlugin, urlHoverTooltip } from "./url-click";
 import { useDebouncedCallback } from "use-debounce";
 import { editorContentAtom } from "../../../utils/atoms/editor";
 import { currentFontValueAtom } from "../../../utils/hooks/use-font";
+import { cursorColorAtom, resolveCursorColor } from "../../../utils/hooks/use-cursor-color";
 
 const useMarkdownFormatter = () => {
   const ref = useRef<DprintMarkdownFormatter | null>(null);
@@ -77,8 +78,9 @@ export const useMarkdownEditor = (
   const { isDarkMode } = useTheme();
   const { isWideMode } = useEditorWidth();
   const currentFontValue = useAtomValue(currentFontValueAtom);
+  const cursorColor = resolveCursorColor(useAtomValue(cursorColorAtom));
 
-  const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue);
+  const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue, cursorColor);
   const { isMobile } = useMobileDetector();
 
   const themeCompartment = useRef(new Compartment()).current;
@@ -201,6 +203,7 @@ export const useMarkdownEditor = (
         }),
 
         EditorView.lineWrapping,
+        drawSelection(),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             // Skip updates from programmatic changes (formatting, restore, etc.)
