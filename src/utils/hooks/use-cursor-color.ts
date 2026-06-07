@@ -23,7 +23,7 @@ export const CURSOR_COLORS = {
 
 export type CursorColor = keyof typeof CURSOR_COLORS;
 
-export const CURSOR_COLOR_OPTIONS = Object.keys(CURSOR_COLORS) as CursorColor[];
+export const CURSOR_COLOR_OPTIONS = ["ink", "cyan"] satisfies CursorColor[];
 
 type StoredCursorColor = CursorColor | "gray" | "amber";
 
