@@ -62,7 +62,6 @@
     "@vitest/ui": "4.1.0",
     "autoprefixer": "^10.5.0",
     "babel-plugin-react-compiler": "1.0.0",
-    "esbuild": "^0.27.7",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "6.0.0-rc1",
     "globals": "^16.5.0",
