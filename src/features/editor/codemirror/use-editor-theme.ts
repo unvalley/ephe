@@ -2,14 +2,16 @@ import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { EditorView } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 import { useMemo } from "react";
+import { getCursorColor, type CursorColor } from "../../../utils/hooks/use-cursor-color";
 
 /**
  * Manages the CodeMirror theme and highlight style based on dark mode, editor width, and font family.
  */
-export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFamily: string) => {
+export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFamily: string, cursorColor: CursorColor) => {
   return useMemo(() => {
     const COLORS = isDarkMode ? EPHE_COLORS.dark : EPHE_COLORS.light;
     const CODE_SYNTAX_HIGHLIGHT = isDarkMode ? SYNTAX_HIGHLIGHT_STYLES.dark : SYNTAX_HIGHLIGHT_STYLES.light;
+    const CURSOR = getCursorColor(cursorColor);
 
     const epheHighlightStyle = HighlightStyle.define([
       ...CODE_SYNTAX_HIGHLIGHT,
@@ -52,13 +54,35 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
         lineHeight: "1.6",
         maxWidth: isWideMode ? "100%" : "680px",
         margin: "0 auto",
-        caretColor: COLORS.foreground,
+        caretColor: "transparent",
         fontFeatureSettings: fontFamily.includes("Mynerve") ? '"calt" off, "salt" off' : "normal",
         fontVariantLigatures: fontFamily.includes("Mynerve") ? "none" : "normal",
       },
       ".cm-cursor": {
-        borderLeftColor: COLORS.foreground,
-        borderLeftWidth: "2px",
+        borderLeft: "none",
+        width: "2.5px",
+        height: "1.8em !important",
+        marginTop: "-0.28em",
+        borderRadius: "2px",
+        backgroundColor: isDarkMode ? CURSOR.valueDark : CURSOR.valueLight,
+        transition: "transform 80ms ease",
+      },
+      ".cm-cursorLayer": {
+        animationDuration: "1.2s !important",
+        animationTimingFunction: "ease-in-out !important",
+      },
+      "@keyframes cm-blink": {
+        "0%, 18%": { opacity: 1 },
+        "50%": { opacity: 0 },
+        "82%, 100%": { opacity: 1 },
+      },
+      "@keyframes cm-blink2": {
+        "0%, 18%": { opacity: 1 },
+        "50%": { opacity: 0 },
+        "82%, 100%": { opacity: 1 },
+      },
+      ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": {
+        backgroundColor: isDarkMode ? CURSOR.selectionDark : CURSOR.selectionLight,
       },
       "&.cm-editor": {
         outline: "none",
@@ -92,7 +116,7 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
       editorTheme: EditorView.theme(theme),
       editorHighlightStyle: syntaxHighlighting(epheHighlightStyle, { fallback: true }),
     };
-  }, [isDarkMode, isWideMode, fontFamily]);
+  }, [isDarkMode, isWideMode, fontFamily, cursorColor]);
 };
 
 const EPHE_COLORS = {
