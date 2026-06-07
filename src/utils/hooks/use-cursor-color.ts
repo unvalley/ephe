@@ -7,7 +7,6 @@ export const CURSOR_COLORS = {
     label: "Ink",
     valueLight: "#262626",
     valueDark: "#D4D4D4",
-    swatch: "#262626",
     selectionLight: "rgba(38, 38, 38, 0.16)",
     selectionDark: "rgba(212, 212, 212, 0.22)",
   },
@@ -15,7 +14,6 @@ export const CURSOR_COLORS = {
     label: "Cyan",
     valueLight: "#00C1FA",
     valueDark: "#00C1FA",
-    swatch: "#00C1FA",
     selectionLight: "rgba(0, 52, 73, 0.24)",
     selectionDark: "rgba(0, 52, 73, 1)",
   },
@@ -29,8 +27,10 @@ type StoredCursorColor = CursorColor | "gray" | "amber";
 
 export const cursorColorAtom = atomWithStorage<StoredCursorColor>(LOCAL_STORAGE_KEYS.CURSOR_COLOR, "ink");
 
-export const resolveCursorColor = (cursorColor: StoredCursorColor): CursorColor =>
-  cursorColor in CURSOR_COLORS ? (cursorColor as CursorColor) : "ink";
+export const resolveCursorColor = (cursorColor: StoredCursorColor): CursorColor => {
+  if (cursorColor === "cyan") return "cyan";
+  return "ink";
+};
 
 export const getCursorColor = (cursorColor: StoredCursorColor) => CURSOR_COLORS[resolveCursorColor(cursorColor)];
 
@@ -40,7 +40,6 @@ export const useCursorColor = () => {
 
   return {
     cursorColor: resolvedCursorColor,
-    cursorColorValue: getCursorColor(resolvedCursorColor).swatch,
     setCursorColor,
   };
 };

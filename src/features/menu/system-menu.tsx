@@ -196,10 +196,8 @@ const CursorColorControl = ({
           aria-label={color.label}
           aria-pressed={active}
           className={cx(
-            "flex size-7 items-center justify-center rounded transition-[background-color,color,transform,box-shadow] duration-150 ease-out hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 active:scale-95 dark:focus-visible:ring-neutral-600",
-            active
-              ? "bg-neutral-200 text-neutral-950 dark:bg-white/20 dark:text-neutral-50"
-              : "hover:bg-white/80 hover:text-neutral-900 dark:hover:bg-white/10 dark:hover:text-neutral-50",
+            "flex size-7 items-center justify-center rounded transition-[background-color,transform,box-shadow] duration-150 ease-out hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 active:scale-95 dark:focus-visible:ring-neutral-600",
+            active ? "bg-neutral-200 dark:bg-white/20" : "hover:bg-white/80 dark:hover:bg-white/10",
           )}
           onClick={(event) => {
             event.stopPropagation();
