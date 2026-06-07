@@ -6,9 +6,21 @@ import { useEditorWidth, type EditorWidth } from "../../utils/hooks/use-editor-w
 import { useCharCount } from "../../utils/hooks/use-char-count";
 import { useWordCount } from "../../utils/hooks/use-word-count";
 import { FONT_FAMILY_OPTIONS, fontFamilyAtom, currentFontDisplayValueAtom } from "../../utils/hooks/use-font";
-import { CURSOR_COLORS, CURSOR_COLOR_OPTIONS, useCursorColor, type CursorColor } from "../../utils/hooks/use-cursor-color";
+import {
+  CURSOR_COLORS,
+  CURSOR_COLOR_OPTIONS,
+  useCursorColor,
+  type CursorColor,
+} from "../../utils/hooks/use-cursor-color";
 import { useEditorMode, type EditorMode } from "../../utils/hooks/use-editor-mode";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME, type ColorTheme } from "../../utils/theme-initializer";
 import {
@@ -42,8 +54,19 @@ const staticRowClassName = cx(rowBaseClassName, "hover:bg-neutral-50/80 dark:hov
 
 const dividerClassName = "my-1 h-px bg-neutral-200/60 dark:bg-white/10";
 
+const preserveEditorFocusOnMouseDown = (event: ReactMouseEvent<HTMLElement>) => {
+  if (event.button !== 0) return;
+  event.preventDefault();
+};
+
+const preserveEditorFocusOnPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
+  if (event.button !== 0) return;
+  event.preventDefault();
+};
+
 type SystemMenuProps = {
   onOpenHistoryModal?: (tabIndex: number) => void;
+  onRestoreEditorFocus?: () => void;
 };
 
 type SegmentOption<T extends string> = {
@@ -119,7 +142,7 @@ const StaticMenuRow = ({ label, children, icon }: Omit<MenuRowProps, "onClick">)
 
 const ActionMenuRow = ({ label, children, icon, onClick }: MenuRowProps) => (
   <MenuItem as="div">
-    <button type="button" className={actionRowClassName} onClick={onClick}>
+    <button type="button" className={actionRowClassName} onMouseDown={preserveEditorFocusOnMouseDown} onClick={onClick}>
       <MenuRowContent label={label} icon={icon}>
         {children}
       </MenuRowContent>
@@ -140,8 +163,9 @@ const SegmentedControl = <T extends string>({
   onChange: (value: T) => void;
   variant?: "icon" | "text";
 }) => (
-  <span
-    className="inline-flex h-8 shrink-0 items-center gap-0.5 rounded-md bg-neutral-100 p-0.5 text-neutral-500 dark:bg-white/10 dark:text-neutral-400"
+  <fieldset
+    aria-label={ariaLabel}
+    className="m-0 inline-flex h-8 shrink-0 items-center gap-0.5 rounded-md border-0 bg-neutral-100 p-0.5 text-neutral-500 dark:bg-white/10 dark:text-neutral-400"
     title={ariaLabel}
   >
     {options.map((option) => {
@@ -160,6 +184,7 @@ const SegmentedControl = <T extends string>({
               ? "bg-neutral-200 text-neutral-950 dark:bg-white/20 dark:text-neutral-50"
               : "hover:bg-white/80 hover:text-neutral-900 dark:hover:bg-white/10 dark:hover:text-neutral-50",
           )}
+          onMouseDown={preserveEditorFocusOnMouseDown}
           onClick={(event) => {
             event.stopPropagation();
             onChange(option.value);
@@ -169,7 +194,7 @@ const SegmentedControl = <T extends string>({
         </button>
       );
     })}
-  </span>
+  </fieldset>
 );
 
 const CursorColorControl = ({
@@ -181,8 +206,9 @@ const CursorColorControl = ({
   isDarkMode: boolean;
   onChange: (value: CursorColor) => void;
 }) => (
-  <span
-    className="inline-flex h-8 shrink-0 items-center gap-0.5 rounded-md bg-neutral-100 p-0.5 dark:bg-white/10"
+  <fieldset
+    aria-label="Cursor color"
+    className="m-0 inline-flex h-8 shrink-0 items-center gap-0.5 rounded-md border-0 bg-neutral-100 p-0.5 dark:bg-white/10"
     title="Cursor color"
   >
     {CURSOR_COLOR_OPTIONS.map((option) => {
@@ -199,6 +225,7 @@ const CursorColorControl = ({
             "flex size-7 items-center justify-center rounded transition-[background-color,transform,box-shadow] duration-150 ease-out hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 active:scale-95 dark:focus-visible:ring-neutral-600",
             active ? "bg-neutral-200 dark:bg-white/20" : "hover:bg-white/80 dark:hover:bg-white/10",
           )}
+          onMouseDown={preserveEditorFocusOnMouseDown}
           onClick={(event) => {
             event.stopPropagation();
             onChange(option);
@@ -211,11 +238,12 @@ const CursorColorControl = ({
         </button>
       );
     })}
-  </span>
+  </fieldset>
 );
 
-export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
+export const SystemMenu = ({ onOpenHistoryModal, onRestoreEditorFocus }: SystemMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const shouldRestoreEditorFocusRef = useRef(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const { theme, setTheme, isDarkMode } = useTheme();
@@ -273,6 +301,9 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node) && menuOpen) {
         setMenuOpen(false);
+        requestAnimationFrame(() => {
+          window.setTimeout(() => onRestoreEditorFocus?.(), 0);
+        });
       }
     };
 
@@ -280,101 +311,140 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [menuOpen]);
+  }, [menuOpen, onRestoreEditorFocus]);
+
+  const handleMenuPointerDownCapture = (event: ReactPointerEvent<HTMLDivElement>) => {
+    shouldRestoreEditorFocusRef.current = true;
+    preserveEditorFocusOnPointerDown(event);
+  };
+
+  const restoreEditorFocusAfterMenuOpen = () => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        onRestoreEditorFocus?.();
+        shouldRestoreEditorFocusRef.current = false;
+      });
+    });
+  };
+
+  const handleMenuClickCapture = (event: ReactMouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (!target.closest("[data-system-menu-button]")) return;
+
+    const nextMenuOpen = !menuOpen;
+    setMenuOpen(nextMenuOpen);
+
+    if (nextMenuOpen && shouldRestoreEditorFocusRef.current) {
+      restoreEditorFocusAfterMenuOpen();
+    } else if (!nextMenuOpen) {
+      shouldRestoreEditorFocusRef.current = false;
+    }
+  };
 
   return (
-    <Menu as="div" className="relative" ref={menuRef}>
-      {({ open }) => (
-        <>
-          <MenuButton
-            className="inline-flex h-9 select-none items-center rounded-md bg-white/90 px-3 text-[13px] text-neutral-950 backdrop-blur-xl transition-[background-color,transform] duration-150 ease-out hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 active:translate-y-px dark:bg-neutral-950/85 dark:text-neutral-50 dark:focus-visible:ring-neutral-600 dark:hover:bg-neutral-900"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            System
-          </MenuButton>
+    <div
+      className="relative"
+      ref={menuRef}
+      onPointerDownCapture={handleMenuPointerDownCapture}
+      onClickCapture={handleMenuClickCapture}
+    >
+      <Menu as="div">
+        {({ open }) => (
+          <>
+            <MenuButton
+              data-system-menu-button
+              className="inline-flex h-9 select-none items-center rounded-md bg-white/90 px-3 text-[13px] text-neutral-950 backdrop-blur-xl transition-[background-color,transform] duration-150 ease-out hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 active:translate-y-px dark:bg-neutral-950/85 dark:text-neutral-50 dark:focus-visible:ring-neutral-600 dark:hover:bg-neutral-900"
+            >
+              System
+            </MenuButton>
 
-          {(open || menuOpen) && (
-            <MenuItems className={panelClassName} portal={false} static>
-              <StaticMenuRow label="Characters">
-                <ValuePill>{charCount > 0 ? charCount.toLocaleString() : "None"}</ValuePill>
-              </StaticMenuRow>
-              <StaticMenuRow label="Words">
-                <ValuePill>{wordCount > 0 ? wordCount.toLocaleString() : "None"}</ValuePill>
-              </StaticMenuRow>
-              <ActionMenuRow
-                label="Closed today"
-                onClick={() => openTaskSnapshotModal(0)}
-                icon={
-                  <CheckCircleIcon
-                    className={cx("size-5", todayCompletedTasks > 0 && "text-green-600 dark:text-green-400")}
-                    weight="regular"
+            {(open || menuOpen) && (
+              <MenuItems className={panelClassName} modal={false} portal={false} static>
+                <StaticMenuRow label="Characters">
+                  <ValuePill>{charCount > 0 ? charCount.toLocaleString() : "None"}</ValuePill>
+                </StaticMenuRow>
+                <StaticMenuRow label="Words">
+                  <ValuePill>{wordCount > 0 ? wordCount.toLocaleString() : "None"}</ValuePill>
+                </StaticMenuRow>
+                <ActionMenuRow
+                  label="Closed today"
+                  onClick={() => openTaskSnapshotModal(0)}
+                  icon={
+                    <CheckCircleIcon
+                      className={cx("size-5", todayCompletedTasks > 0 && "text-green-600 dark:text-green-400")}
+                      weight="regular"
+                    />
+                  }
+                >
+                  <ValuePill>{todayCompletedTasks > 0 ? todayCompletedTasks : "None"}</ValuePill>
+                </ActionMenuRow>
+                <ActionMenuRow label="Snapshots" onClick={() => openTaskSnapshotModal(1)}>
+                  <ValuePill>{snapshotCount > 0 ? snapshotCount : "None"}</ValuePill>
+                </ActionMenuRow>
+
+                <div className={dividerClassName} />
+
+                <StaticMenuRow label="Theme">
+                  <SegmentedControl ariaLabel="Theme" value={theme} options={themeOptions} onChange={setTheme} />
+                </StaticMenuRow>
+                <StaticMenuRow label="Paper">
+                  <SegmentedControl
+                    ariaLabel="Paper"
+                    value={paperMode}
+                    options={paperOptions}
+                    onChange={setPaperMode}
+                    variant="text"
                   />
-                }
-              >
-                <ValuePill>{todayCompletedTasks > 0 ? todayCompletedTasks : "None"}</ValuePill>
-              </ActionMenuRow>
-              <ActionMenuRow label="Snapshots" onClick={() => openTaskSnapshotModal(1)}>
-                <ValuePill>{snapshotCount > 0 ? snapshotCount : "None"}</ValuePill>
-              </ActionMenuRow>
+                </StaticMenuRow>
+                <StaticMenuRow label="Width">
+                  <SegmentedControl
+                    ariaLabel="Editor width"
+                    value={editorWidth}
+                    options={widthOptions}
+                    onChange={(next) => {
+                      next === "normal" ? setNormalWidth() : setWideWidth();
+                    }}
+                  />
+                </StaticMenuRow>
+                <ActionMenuRow
+                  label="Font"
+                  onClick={cycleFont}
+                  icon={<TextAaIcon className="size-5" weight="regular" />}
+                >
+                  <ValuePill>{currentFontDisplayValue}</ValuePill>
+                </ActionMenuRow>
+                <StaticMenuRow label="Cursor">
+                  <CursorColorControl value={cursorColor} isDarkMode={isDarkMode} onChange={setCursorColor} />
+                </StaticMenuRow>
+                <StaticMenuRow label="Editor">
+                  <SegmentedControl
+                    ariaLabel="Editor mode"
+                    value={editorMode}
+                    options={editorOptions}
+                    onChange={(next) => {
+                      if (next === editorMode) return;
+                      next === "single" ? setSingleMode() : setMultiMode();
+                    }}
+                    variant="text"
+                  />
+                </StaticMenuRow>
 
-              <div className={dividerClassName} />
+                <div className={dividerClassName} />
 
-              <StaticMenuRow label="Theme">
-                <SegmentedControl ariaLabel="Theme" value={theme} options={themeOptions} onChange={setTheme} />
-              </StaticMenuRow>
-              <StaticMenuRow label="Paper">
-                <SegmentedControl
-                  ariaLabel="Paper"
-                  value={paperMode}
-                  options={paperOptions}
-                  onChange={setPaperMode}
-                  variant="text"
-                />
-              </StaticMenuRow>
-              <StaticMenuRow label="Width">
-                <SegmentedControl
-                  ariaLabel="Editor width"
-                  value={editorWidth}
-                  options={widthOptions}
-                  onChange={(next) => {
-                    next === "normal" ? setNormalWidth() : setWideWidth();
-                  }}
-                />
-              </StaticMenuRow>
-              <ActionMenuRow label="Font" onClick={cycleFont} icon={<TextAaIcon className="size-5" weight="regular" />}>
-                <ValuePill>{currentFontDisplayValue}</ValuePill>
-              </ActionMenuRow>
-              <StaticMenuRow label="Cursor">
-                <CursorColorControl value={cursorColor} isDarkMode={isDarkMode} onChange={setCursorColor} />
-              </StaticMenuRow>
-              <StaticMenuRow label="Editor">
-                <SegmentedControl
-                  ariaLabel="Editor mode"
-                  value={editorMode}
-                  options={editorOptions}
-                  onChange={(next) => {
-                    if (next === editorMode) return;
-                    next === "single" ? setSingleMode() : setMultiMode();
-                  }}
-                  variant="text"
-                />
-              </StaticMenuRow>
-
-              <div className={dividerClassName} />
-
-              <StaticMenuRow label="Task flush">
-                <SegmentedControl
-                  ariaLabel="Task flush"
-                  value={taskAutoFlushMode}
-                  options={taskFlushOptions}
-                  onChange={setTaskAutoFlushMode}
-                  variant="text"
-                />
-              </StaticMenuRow>
-            </MenuItems>
-          )}
-        </>
-      )}
-    </Menu>
+                <StaticMenuRow label="Task flush">
+                  <SegmentedControl
+                    ariaLabel="Task flush"
+                    value={taskAutoFlushMode}
+                    options={taskFlushOptions}
+                    onChange={setTaskAutoFlushMode}
+                    variant="text"
+                  />
+                </StaticMenuRow>
+              </MenuItems>
+            )}
+          </>
+        )}
+      </Menu>
+    </div>
   );
 };
