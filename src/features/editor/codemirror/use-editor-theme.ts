@@ -58,20 +58,20 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
         fontFeatureSettings: fontFamily.includes("Mynerve") ? '"calt" off, "salt" off' : "normal",
         fontVariantLigatures: fontFamily.includes("Mynerve") ? "none" : "normal",
       },
-      ".cm-cursor": {
-        display: "block",
+      ".cm-epheCursor": {
         borderLeft: "none",
         width: "2.5px",
         borderRadius: "2px",
         backgroundColor: isDarkMode ? CURSOR.valueDark : CURSOR.valueLight,
+        pointerEvents: "none",
         transition: "transform 80ms ease",
       },
-      ".cm-cursorLayer": {
+      ".cm-epheCursorLayer": {
         animationDuration: "1.2s !important",
         animationTimingFunction: "ease-in-out !important",
         pointerEvents: "none",
       },
-      "&.cm-focused > .cm-scroller > .cm-cursorLayer": {
+      "&.cm-focused > .cm-scroller > .cm-epheCursorLayer": {
         animation: "steps(1) cm-blink 1.2s infinite",
       },
       "@keyframes cm-blink": {

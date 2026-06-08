@@ -204,7 +204,7 @@ export const useMarkdownEditor = (
         }),
 
         EditorView.lineWrapping,
-        customCursorLayer(),
+        customCursorLayer,
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             // Skip updates from programmatic changes (formatting, restore, etc.)
