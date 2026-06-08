@@ -54,11 +54,12 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
         lineHeight: "1.6",
         maxWidth: isWideMode ? "100%" : "680px",
         margin: "0 auto",
-        caretColor: isDarkMode ? CURSOR.valueDark : CURSOR.valueLight,
+        caretColor: "transparent",
         fontFeatureSettings: fontFamily.includes("Mynerve") ? '"calt" off, "salt" off' : "normal",
         fontVariantLigatures: fontFamily.includes("Mynerve") ? "none" : "normal",
       },
       ".cm-cursor": {
+        display: "block",
         borderLeft: "none",
         width: "2.5px",
         borderRadius: "2px",
@@ -68,6 +69,10 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
       ".cm-cursorLayer": {
         animationDuration: "1.2s !important",
         animationTimingFunction: "ease-in-out !important",
+        pointerEvents: "none",
+      },
+      "&.cm-focused > .cm-scroller > .cm-cursorLayer": {
+        animation: "steps(1) cm-blink 1.2s infinite",
       },
       "@keyframes cm-blink": {
         "0%, 18%": { opacity: 1 },

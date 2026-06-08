@@ -22,6 +22,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { editorContentAtom } from "../../../utils/atoms/editor";
 import { currentFontValueAtom } from "../../../utils/hooks/use-font";
 import { cursorColorAtom, resolveCursorColor } from "../../../utils/hooks/use-cursor-color";
+import { customCursorLayer } from "./cursor-layer";
 
 const useMarkdownFormatter = () => {
   const ref = useRef<DprintMarkdownFormatter | null>(null);
@@ -203,6 +204,7 @@ export const useMarkdownEditor = (
         }),
 
         EditorView.lineWrapping,
+        customCursorLayer(),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             // Skip updates from programmatic changes (formatting, restore, etc.)
