@@ -61,8 +61,6 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
       ".cm-cursor": {
         borderLeft: "none",
         width: "2.5px",
-        height: "1.8em !important",
-        marginTop: "-0.28em",
         borderRadius: "2px",
         backgroundColor: isDarkMode ? CURSOR.valueDark : CURSOR.valueLight,
         transition: "transform 80ms ease",
