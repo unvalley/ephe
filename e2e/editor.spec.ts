@@ -66,6 +66,120 @@ test.describe("Editor Page", () => {
     await expect(dialog).not.toBeVisible();
   });
 
+  test("opening system menu by mouse keeps editor focus", async ({ page }) => {
+    await page.goto("/");
+
+    const editor = page.getByTestId("code-mirror-editor");
+    await editor.focus();
+    await expect(page.locator(".cm-editor")).toHaveClass(/cm-focused/);
+
+    await page.getByRole("button", { name: "System" }).click();
+
+    await expect(page.getByText("Characters")).toBeVisible();
+    await expect(page.locator(".cm-editor")).toHaveClass(/cm-focused/);
+    await expect(page.locator(".cm-content")).toBeFocused();
+  });
+
+  test("opening system menu by keyboard focuses the menu", async ({ page }) => {
+    await page.goto("/");
+
+    const systemButton = page.getByRole("button", { name: "System" });
+    await systemButton.focus();
+    await page.keyboard.press("Enter");
+
+    const systemMenu = page.getByRole("menu", { name: "System" });
+    await expect(systemMenu).toBeVisible();
+    await expect(systemMenu).toBeFocused();
+  });
+
+  test("clicking outside the editor restores editor focus", async ({ page }) => {
+    await page.goto("/");
+
+    const systemButton = page.getByRole("button", { name: "System" });
+    await systemButton.focus();
+    await expect(systemButton).toBeFocused();
+
+    const footerBox = await page.locator("footer").boundingBox();
+    expect(footerBox).not.toBeNull();
+
+    if (!footerBox) return;
+
+    await page.mouse.click(footerBox.x + 140, footerBox.y + footerBox.height / 2);
+
+    await expect(page.locator(".cm-editor")).toHaveClass(/cm-focused/);
+    await expect(page.locator(".cm-content")).toBeFocused();
+  });
+
+  test("clicking the left edge places the cursor on the nearest editor line", async ({ page }) => {
+    await page.goto("/");
+
+    const editor = page.getByTestId("code-mirror-editor");
+    await editor.focus();
+    await page.keyboard.type("aaaaaaaaaa");
+
+    const firstLine = page.locator(".cm-line").first();
+    await expect(firstLine).toContainText("aaaaaaaaaa");
+
+    const firstLineBox = await firstLine.boundingBox();
+    expect(firstLineBox).not.toBeNull();
+
+    if (!firstLineBox) return;
+
+    await page.mouse.click(10, firstLineBox.y + firstLineBox.height / 2);
+    await page.keyboard.type("b");
+
+    await expect(page.locator(".cm-content")).toContainText("baaaaaaaaaa");
+    await expect(page.locator(".cm-content")).toBeFocused();
+  });
+
+  test("cursor height follows heading font size", async ({ page }) => {
+    await page.goto("/");
+
+    const editor = page.getByTestId("code-mirror-editor");
+    await editor.focus();
+    await page.keyboard.type("# Heading\nbody");
+
+    const headingLine = page.locator(".cm-line").first();
+    const bodyLine = page.locator(".cm-line").nth(1);
+    const headingBox = await headingLine.boundingBox();
+    const bodyBox = await bodyLine.boundingBox();
+
+    expect(headingBox).not.toBeNull();
+    expect(bodyBox).not.toBeNull();
+
+    if (!headingBox || !bodyBox) return;
+
+    await page.mouse.click(headingBox.x + 80, headingBox.y + headingBox.height / 2);
+    await page.waitForTimeout(50);
+    const headingCursorBox = await page.locator(".cm-cursor").first().boundingBox();
+
+    await page.mouse.click(bodyBox.x + 40, bodyBox.y + bodyBox.height / 2);
+    await page.waitForTimeout(50);
+    const bodyCursorBox = await page.locator(".cm-cursor").first().boundingBox();
+
+    expect(headingCursorBox).not.toBeNull();
+    expect(bodyCursorBox).not.toBeNull();
+
+    if (!headingCursorBox || !bodyCursorBox) return;
+
+    expect(headingCursorBox.height).toBeGreaterThan(bodyCursorBox.height);
+  });
+
+  test("clicking outside an open system menu keeps editor focus", async ({ page }) => {
+    await page.goto("/");
+
+    const editor = page.getByTestId("code-mirror-editor");
+    await editor.focus();
+    await page.getByRole("button", { name: "System" }).click();
+    await expect(page.getByRole("menu", { name: "System" })).toBeVisible();
+
+    await page.mouse.click(300, 780);
+
+    await expect(page.getByRole("menu", { name: "System" })).not.toBeVisible();
+    await expect(page.locator(".cm-editor")).toHaveClass(/cm-focused/);
+    await expect(page.locator(".cm-content")).toBeFocused();
+  });
+
   test("URL link styling and tooltip", async ({ page }) => {
     await page.goto("/");
 
