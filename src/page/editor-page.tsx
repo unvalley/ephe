@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 import { EPHE_VERSION } from "../utils/constants";
 import { useCommandK } from "../utils/hooks/use-command-k";
 import { useEditorMode } from "../utils/hooks/use-editor-mode";
-import { type PointerEvent as ReactPointerEvent, useCallback, useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useAtom } from "jotai";
 import { HistoryModal } from "../features/history/history-modal";
 import { editorContentAtom } from "../utils/atoms/editor";
@@ -29,80 +29,8 @@ export const EditorPage = () => {
   const { isCommandMenuOpen, closeCommandMenu } = useCommandK(isAnyModalOpen);
   const multiEditorRef = useRef<MultiEditorRef>(null);
   const singleEditorRef = useRef<SingleEditorRef>(null);
-  const lastPointerPositionRef = useRef<{ x: number; y: number } | null>(null);
   const [editorContent] = useAtom(editorContentAtom);
   const { isMobile } = useMobileDetector();
-  const isFocusTrapOpen = historyModalOpen || isCommandMenuOpen;
-
-  const getEditorView = useCallback(() => {
-    return editorMode === "multi" ? multiEditorRef.current?.view : singleEditorRef.current?.view;
-  }, [editorMode]);
-
-  const restoreEditorFocus = useCallback(
-    (position?: { x: number; y: number } | null) => {
-      const view = getEditorView();
-      if (!view) return;
-
-      if (position) {
-        const contentRect = view.contentDOM.getBoundingClientRect();
-        const docPosition =
-          position.x < contentRect.left
-            ? view.lineBlockAtHeight(position.y - view.documentTop).from
-            : view.posAtCoords(position, false);
-
-        if (docPosition !== null) {
-          view.dispatch({ selection: { anchor: docPosition, head: docPosition } });
-        }
-      }
-
-      view.focus();
-    },
-    [getEditorView],
-  );
-
-  const queueEditorFocusRestore = useCallback(
-    (position?: { x: number; y: number } | null) => {
-      if (isFocusTrapOpen) return;
-
-      const pointerPosition = position ?? lastPointerPositionRef.current;
-      const restore = () => {
-        if (!isFocusTrapOpen) {
-          restoreEditorFocus(pointerPosition);
-        }
-      };
-
-      restore();
-      window.setTimeout(restore, 0);
-    },
-    [isFocusTrapOpen, restoreEditorFocus],
-  );
-
-  const restoreEditorFocusAfterPointer = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (event.button !== 0 || !event.isPrimary || isFocusTrapOpen) return;
-
-      const pointerPosition = { x: event.clientX, y: event.clientY };
-      lastPointerPositionRef.current = pointerPosition;
-
-      if (!(event.target as HTMLElement | null)?.closest(".cm-content")) {
-        event.preventDefault();
-        restoreEditorFocus(pointerPosition);
-      }
-    },
-    [isFocusTrapOpen, restoreEditorFocus],
-  );
-
-  const queueEditorFocusAfterPointer = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
-      if (event.button !== 0 || !event.isPrimary || isFocusTrapOpen) return;
-
-      const pointerPosition = lastPointerPositionRef.current ?? { x: event.clientX, y: event.clientY };
-      requestAnimationFrame(() => {
-        queueEditorFocusRestore(pointerPosition);
-      });
-    },
-    [isFocusTrapOpen, queueEditorFocusRestore],
-  );
 
   // Unified snapshot restore event handler
   useEffect(() => {
@@ -127,7 +55,11 @@ export const EditorPage = () => {
     // Return focus to editor after closing
     // Use requestAnimationFrame to ensure the menu is fully closed before focusing
     requestAnimationFrame(() => {
-      restoreEditorFocus();
+      if (editorMode === "multi" && multiEditorRef.current?.view) {
+        multiEditorRef.current.view.focus();
+      } else if (editorMode === "single" && singleEditorRef.current?.view) {
+        singleEditorRef.current.view.focus();
+      }
     });
   };
 
@@ -138,11 +70,7 @@ export const EditorPage = () => {
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <div
-        className={`flex h-screen flex-col overflow-hidden antialiased ${paperModeClass}`}
-        onPointerDownCapture={restoreEditorFocusAfterPointer}
-        onPointerUpCapture={queueEditorFocusAfterPointer}
-      >
+      <div className={`flex h-screen flex-col overflow-hidden antialiased ${paperModeClass}`}>
         <div className="relative flex flex-1 overflow-hidden">
           <div className="z-0 flex-1">
             {editorMode === "multi" ? (
@@ -155,7 +83,7 @@ export const EditorPage = () => {
 
         <Footer
           autoHide={true}
-          leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} onRestoreEditorFocus={restoreEditorFocus} />}
+          leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} />}
           centerContent={
             isMobile || editorMode === "single" ? null : (
               <DocumentDock onNavigate={(index) => multiEditorRef.current?.navigateToDocument(index)} />
