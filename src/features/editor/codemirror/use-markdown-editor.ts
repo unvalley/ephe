@@ -2,7 +2,7 @@ import { defaultKeymap, historyKeymap, history } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
-import { EditorView, drawSelection, keymap, placeholder } from "@codemirror/view";
+import { EditorView, keymap, placeholder } from "@codemirror/view";
 import { useAtom, useAtomValue } from "jotai";
 import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { showToast } from "../../../utils/components/toast";
@@ -203,7 +203,6 @@ export const useMarkdownEditor = (
         }),
 
         EditorView.lineWrapping,
-        drawSelection(),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             // Skip updates from programmatic changes (formatting, restore, etc.)

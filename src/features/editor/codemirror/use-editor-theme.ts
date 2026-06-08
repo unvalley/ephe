@@ -54,7 +54,7 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
         lineHeight: "1.6",
         maxWidth: isWideMode ? "100%" : "680px",
         margin: "0 auto",
-        caretColor: "transparent",
+        caretColor: isDarkMode ? CURSOR.valueDark : CURSOR.valueLight,
         fontFeatureSettings: fontFamily.includes("Mynerve") ? '"calt" off, "salt" off' : "normal",
         fontVariantLigatures: fontFamily.includes("Mynerve") ? "none" : "normal",
       },
@@ -78,9 +78,6 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
         "0%, 18%": { opacity: 1 },
         "50%": { opacity: 0 },
         "82%, 100%": { opacity: 1 },
-      },
-      ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": {
-        display: "none",
       },
       ".cm-content::selection, .cm-content ::selection, .cm-line::selection, .cm-line ::selection": {
         backgroundColor: `${isDarkMode ? CURSOR.selectionDark : CURSOR.selectionLight} !important`,
