@@ -80,7 +80,10 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
         "82%, 100%": { opacity: 1 },
       },
       ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": {
-        backgroundColor: isDarkMode ? CURSOR.selectionDark : CURSOR.selectionLight,
+        display: "none",
+      },
+      ".cm-content::selection, .cm-content ::selection, .cm-line::selection, .cm-line ::selection": {
+        backgroundColor: `${isDarkMode ? CURSOR.selectionDark : CURSOR.selectionLight} !important`,
       },
       "&.cm-editor": {
         outline: "none",
