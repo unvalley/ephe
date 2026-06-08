@@ -7,12 +7,7 @@ import { getCursorColor, type CursorColor } from "../../../utils/hooks/use-curso
 /**
  * Manages the CodeMirror theme and highlight style based on dark mode, editor width, and font family.
  */
-export const useEditorTheme = (
-  isDarkMode: boolean,
-  isWideMode: boolean,
-  fontFamily: string,
-  cursorColor: CursorColor,
-) => {
+export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFamily: string, cursorColor: CursorColor) => {
   return useMemo(() => {
     const COLORS = isDarkMode ? EPHE_COLORS.dark : EPHE_COLORS.light;
     const CODE_SYNTAX_HIGHLIGHT = isDarkMode ? SYNTAX_HIGHLIGHT_STYLES.dark : SYNTAX_HIGHLIGHT_STYLES.light;
@@ -66,6 +61,8 @@ export const useEditorTheme = (
       ".cm-cursor": {
         borderLeft: "none",
         width: "2.5px",
+        height: "1.8em !important",
+        marginTop: "-0.28em",
         borderRadius: "2px",
         backgroundColor: isDarkMode ? CURSOR.valueDark : CURSOR.valueLight,
         transition: "transform 80ms ease",
