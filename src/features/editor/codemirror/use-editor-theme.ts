@@ -58,16 +58,21 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
         fontFeatureSettings: fontFamily.includes("Mynerve") ? '"calt" off, "salt" off' : "normal",
         fontVariantLigatures: fontFamily.includes("Mynerve") ? "none" : "normal",
       },
-      ".cm-cursor": {
+      ".cm-epheCursor": {
         borderLeft: "none",
         width: "2.5px",
         borderRadius: "2px",
         backgroundColor: isDarkMode ? CURSOR.valueDark : CURSOR.valueLight,
+        pointerEvents: "none",
         transition: "transform 80ms ease",
       },
-      ".cm-cursorLayer": {
+      ".cm-epheCursorLayer": {
         animationDuration: "1.2s !important",
         animationTimingFunction: "ease-in-out !important",
+        pointerEvents: "none",
+      },
+      "&.cm-focused > .cm-scroller > .cm-epheCursorLayer": {
+        animation: "steps(1) cm-blink 1.2s infinite",
       },
       "@keyframes cm-blink": {
         "0%, 18%": { opacity: 1 },
@@ -79,8 +84,8 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
         "50%": { opacity: 0 },
         "82%, 100%": { opacity: 1 },
       },
-      ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": {
-        backgroundColor: isDarkMode ? CURSOR.selectionDark : CURSOR.selectionLight,
+      ".cm-content::selection, .cm-content ::selection, .cm-line::selection, .cm-line ::selection": {
+        backgroundColor: `${isDarkMode ? CURSOR.selectionDark : CURSOR.selectionLight} !important`,
       },
       "&.cm-editor": {
         outline: "none",

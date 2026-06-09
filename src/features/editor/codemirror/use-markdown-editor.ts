@@ -2,7 +2,7 @@ import { defaultKeymap, historyKeymap, history } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
-import { EditorView, drawSelection, keymap, placeholder } from "@codemirror/view";
+import { EditorView, keymap, placeholder } from "@codemirror/view";
 import { useAtom, useAtomValue } from "jotai";
 import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { showToast } from "../../../utils/components/toast";
@@ -22,6 +22,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { editorContentAtom } from "../../../utils/atoms/editor";
 import { currentFontValueAtom } from "../../../utils/hooks/use-font";
 import { cursorColorAtom, resolveCursorColor } from "../../../utils/hooks/use-cursor-color";
+import { customCursorLayer } from "./cursor-layer";
 
 const useMarkdownFormatter = () => {
   const ref = useRef<DprintMarkdownFormatter | null>(null);
@@ -203,7 +204,7 @@ export const useMarkdownEditor = (
         }),
 
         EditorView.lineWrapping,
-        drawSelection(),
+        customCursorLayer,
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             // Skip updates from programmatic changes (formatting, restore, etc.)
