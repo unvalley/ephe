@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 import { EPHE_VERSION } from "../utils/constants";
 import { useCommandK } from "../utils/hooks/use-command-k";
 import { useEditorMode } from "../utils/hooks/use-editor-mode";
-import { useRef, useState, useEffect } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { useAtom } from "jotai";
 import { HistoryModal } from "../features/history/history-modal";
 import { editorContentAtom } from "../utils/atoms/editor";
@@ -31,6 +31,11 @@ export const EditorPage = () => {
   const singleEditorRef = useRef<SingleEditorRef>(null);
   const [editorContent] = useAtom(editorContentAtom);
   const { isMobile } = useMobileDetector();
+
+  const restoreEditorFocus = useCallback(() => {
+    const view = editorMode === "multi" ? multiEditorRef.current?.view : singleEditorRef.current?.view;
+    view?.focus();
+  }, [editorMode]);
 
   // Unified snapshot restore event handler
   useEffect(() => {
@@ -55,11 +60,7 @@ export const EditorPage = () => {
     // Return focus to editor after closing
     // Use requestAnimationFrame to ensure the menu is fully closed before focusing
     requestAnimationFrame(() => {
-      if (editorMode === "multi" && multiEditorRef.current?.view) {
-        multiEditorRef.current.view.focus();
-      } else if (editorMode === "single" && singleEditorRef.current?.view) {
-        singleEditorRef.current.view.focus();
-      }
+      restoreEditorFocus();
     });
   };
 
@@ -83,7 +84,7 @@ export const EditorPage = () => {
 
         <Footer
           autoHide={true}
-          leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} />}
+          leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} onRestoreEditorFocus={restoreEditorFocus} />}
           centerContent={
             isMobile || editorMode === "single" ? null : (
               <DocumentDock onNavigate={(index) => multiEditorRef.current?.navigateToDocument(index)} />
