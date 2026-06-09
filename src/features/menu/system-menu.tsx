@@ -6,9 +6,14 @@ import { useEditorWidth, type EditorWidth } from "../../utils/hooks/use-editor-w
 import { useCharCount } from "../../utils/hooks/use-char-count";
 import { useWordCount } from "../../utils/hooks/use-word-count";
 import { FONT_FAMILY_OPTIONS, fontFamilyAtom, currentFontDisplayValueAtom } from "../../utils/hooks/use-font";
-import { CURSOR_COLORS, CURSOR_COLOR_OPTIONS, useCursorColor, type CursorColor } from "../../utils/hooks/use-cursor-color";
+import {
+  CURSOR_COLORS,
+  CURSOR_COLOR_OPTIONS,
+  useCursorColor,
+  type CursorColor,
+} from "../../utils/hooks/use-cursor-color";
 import { useEditorMode, type EditorMode } from "../../utils/hooks/use-editor-mode";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type MouseEvent as ReactMouseEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { COLOR_THEME, type ColorTheme } from "../../utils/theme-initializer";
 import {
@@ -44,6 +49,7 @@ const dividerClassName = "my-1 h-px bg-neutral-200/60 dark:bg-white/10";
 
 type SystemMenuProps = {
   onOpenHistoryModal?: (tabIndex: number) => void;
+  onRestoreEditorFocus?: () => void;
 };
 
 type SegmentOption<T extends string> = {
@@ -57,6 +63,11 @@ type MenuRowProps = {
   children?: ReactNode;
   icon?: ReactNode;
   onClick?: () => void;
+};
+
+const preserveEditorFocusOnMouseDown = (event: ReactMouseEvent<HTMLElement>) => {
+  if (event.button !== 0) return;
+  event.preventDefault();
 };
 
 const useTodayCompletedTasks = (menuOpen: boolean) => {
@@ -119,7 +130,7 @@ const StaticMenuRow = ({ label, children, icon }: Omit<MenuRowProps, "onClick">)
 
 const ActionMenuRow = ({ label, children, icon, onClick }: MenuRowProps) => (
   <MenuItem as="div">
-    <button type="button" className={actionRowClassName} onClick={onClick}>
+    <button type="button" className={actionRowClassName} onMouseDown={preserveEditorFocusOnMouseDown} onClick={onClick}>
       <MenuRowContent label={label} icon={icon}>
         {children}
       </MenuRowContent>
@@ -160,6 +171,7 @@ const SegmentedControl = <T extends string>({
               ? "bg-neutral-200 text-neutral-950 dark:bg-white/20 dark:text-neutral-50"
               : "hover:bg-white/80 hover:text-neutral-900 dark:hover:bg-white/10 dark:hover:text-neutral-50",
           )}
+          onMouseDown={preserveEditorFocusOnMouseDown}
           onClick={(event) => {
             event.stopPropagation();
             onChange(option.value);
@@ -199,6 +211,7 @@ const CursorColorControl = ({
             "flex size-7 items-center justify-center rounded transition-[background-color,transform,box-shadow] duration-150 ease-out hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 active:scale-95 dark:focus-visible:ring-neutral-600",
             active ? "bg-neutral-200 dark:bg-white/20" : "hover:bg-white/80 dark:hover:bg-white/10",
           )}
+          onMouseDown={preserveEditorFocusOnMouseDown}
           onClick={(event) => {
             event.stopPropagation();
             onChange(option);
@@ -214,7 +227,7 @@ const CursorColorControl = ({
   </span>
 );
 
-export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
+export const SystemMenu = ({ onOpenHistoryModal, onRestoreEditorFocus }: SystemMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -264,9 +277,16 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
     onOpenHistoryModal(tabIndex);
   };
 
+  const restoreEditorFocusSoon = () => {
+    requestAnimationFrame(() => {
+      onRestoreEditorFocus?.();
+    });
+  };
+
   const cycleFont = () => {
     const currentIndex = FONT_FAMILY_OPTIONS.indexOf(fontFamily);
     setFontFamily(FONT_FAMILY_OPTIONS[(currentIndex + 1) % FONT_FAMILY_OPTIONS.length]);
+    restoreEditorFocusSoon();
   };
 
   useEffect(() => {
@@ -288,13 +308,14 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
         <>
           <MenuButton
             className="inline-flex h-9 select-none items-center rounded-md bg-white/90 px-3 text-[13px] text-neutral-950 backdrop-blur-xl transition-[background-color,transform] duration-150 ease-out hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 active:translate-y-px dark:bg-neutral-950/85 dark:text-neutral-50 dark:focus-visible:ring-neutral-600 dark:hover:bg-neutral-900"
+            onMouseDown={preserveEditorFocusOnMouseDown}
             onClick={() => setMenuOpen(!menuOpen)}
           >
             System
           </MenuButton>
 
           {(open || menuOpen) && (
-            <MenuItems className={panelClassName} portal={false} static>
+            <MenuItems className={panelClassName} modal={false} portal={false} static>
               <StaticMenuRow label="Characters">
                 <ValuePill>{charCount > 0 ? charCount.toLocaleString() : "None"}</ValuePill>
               </StaticMenuRow>
@@ -320,14 +341,25 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
               <div className={dividerClassName} />
 
               <StaticMenuRow label="Theme">
-                <SegmentedControl ariaLabel="Theme" value={theme} options={themeOptions} onChange={setTheme} />
+                <SegmentedControl
+                  ariaLabel="Theme"
+                  value={theme}
+                  options={themeOptions}
+                  onChange={(next) => {
+                    setTheme(next);
+                    restoreEditorFocusSoon();
+                  }}
+                />
               </StaticMenuRow>
               <StaticMenuRow label="Paper">
                 <SegmentedControl
                   ariaLabel="Paper"
                   value={paperMode}
                   options={paperOptions}
-                  onChange={setPaperMode}
+                  onChange={(next) => {
+                    setPaperMode(next);
+                    restoreEditorFocusSoon();
+                  }}
                   variant="text"
                 />
               </StaticMenuRow>
@@ -338,6 +370,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                   options={widthOptions}
                   onChange={(next) => {
                     next === "normal" ? setNormalWidth() : setWideWidth();
+                    restoreEditorFocusSoon();
                   }}
                 />
               </StaticMenuRow>
@@ -345,7 +378,14 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                 <ValuePill>{currentFontDisplayValue}</ValuePill>
               </ActionMenuRow>
               <StaticMenuRow label="Cursor">
-                <CursorColorControl value={cursorColor} isDarkMode={isDarkMode} onChange={setCursorColor} />
+                <CursorColorControl
+                  value={cursorColor}
+                  isDarkMode={isDarkMode}
+                  onChange={(next) => {
+                    setCursorColor(next);
+                    restoreEditorFocusSoon();
+                  }}
+                />
               </StaticMenuRow>
               <StaticMenuRow label="Editor">
                 <SegmentedControl
@@ -355,6 +395,7 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                   onChange={(next) => {
                     if (next === editorMode) return;
                     next === "single" ? setSingleMode() : setMultiMode();
+                    restoreEditorFocusSoon();
                   }}
                   variant="text"
                 />
@@ -367,7 +408,10 @@ export const SystemMenu = ({ onOpenHistoryModal }: SystemMenuProps) => {
                   ariaLabel="Task flush"
                   value={taskAutoFlushMode}
                   options={taskFlushOptions}
-                  onChange={setTaskAutoFlushMode}
+                  onChange={(next) => {
+                    setTaskAutoFlushMode(next);
+                    restoreEditorFocusSoon();
+                  }}
                   variant="text"
                 />
               </StaticMenuRow>

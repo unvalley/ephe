@@ -24,6 +24,23 @@ test.describe("Editor Page", () => {
     await expect(editorContent).toContainText("Hello World");
   });
 
+  test("keeps editor input active after changing system menu controls", async ({ page }) => {
+    await page.goto("/");
+
+    await page.waitForSelector(".cm-editor");
+    const editor = page.getByTestId("code-mirror-editor");
+    await editor.focus();
+    await page.keyboard.type("before ");
+
+    await page.locator("footer").getByRole("button", { name: "System" }).first().click();
+    await page.locator(".cosmos-menu-panel").getByRole("button", { name: "System" }).click();
+
+    await expect(page.locator(".cm-editor")).toHaveClass(/cm-focused/);
+    await page.keyboard.type("after");
+
+    await expect(page.locator(".cm-content")).toContainText("before after");
+  });
+
   test("open and close command menu", async ({ page }) => {
     await page.goto("/");
 
