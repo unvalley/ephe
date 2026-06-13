@@ -28,6 +28,7 @@ import {
 import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
 import { useTaskAutoFlush, type TaskAutoFlushMode } from "../../utils/hooks/use-task-auto-flush";
+import { useFocusMode, type FocusMode } from "../../utils/hooks/use-focus-mode";
 import { useAtom, useAtomValue } from "jotai";
 
 const cx = (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" ");
@@ -243,6 +244,7 @@ export const SystemMenu = ({ onOpenHistoryModal, onRestoreEditorFocus }: SystemM
   const { todayCompletedTasks } = useTodayCompletedTasks(menuOpen);
   const { snapshotCount } = useSnapshotCount(menuOpen);
   const { taskAutoFlushMode, setTaskAutoFlushMode } = useTaskAutoFlush();
+  const { focusMode, setFocusMode } = useFocusMode();
 
   const themeOptions: Array<SegmentOption<ColorTheme>> = [
     { value: COLOR_THEME.LIGHT, label: "Light", icon: <SunIcon className="size-4" weight="regular" /> },
@@ -269,6 +271,11 @@ export const SystemMenu = ({ onOpenHistoryModal, onRestoreEditorFocus }: SystemM
   const taskFlushOptions: Array<SegmentOption<TaskAutoFlushMode>> = [
     { value: "off", label: "Off" },
     { value: "instant", label: "On" },
+  ];
+
+  const focusModeOptions: Array<SegmentOption<FocusMode>> = [
+    { value: "off", label: "Off" },
+    { value: "on", label: "On" },
   ];
 
   const openTaskSnapshotModal = (tabIndex: number) => {
@@ -385,6 +392,18 @@ export const SystemMenu = ({ onOpenHistoryModal, onRestoreEditorFocus }: SystemM
                     setCursorColor(next);
                     restoreEditorFocusSoon();
                   }}
+                />
+              </StaticMenuRow>
+              <StaticMenuRow label="Focus">
+                <SegmentedControl
+                  ariaLabel="Focus mode"
+                  value={focusMode}
+                  options={focusModeOptions}
+                  onChange={(next) => {
+                    setFocusMode(next);
+                    restoreEditorFocusSoon();
+                  }}
+                  variant="text"
                 />
               </StaticMenuRow>
               <StaticMenuRow label="Editor">

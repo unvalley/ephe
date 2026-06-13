@@ -26,8 +26,10 @@ import {
   TextAaIcon,
   NotebookIcon,
   GithubLogoIcon,
+  CrosshairSimpleIcon,
 } from "@phosphor-icons/react";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
+import { useFocusMode } from "../../utils/hooks/use-focus-mode";
 import { useAtom } from "jotai";
 
 // Custom hook for markdown formatter
@@ -65,7 +67,7 @@ type CommandItem = {
   perform: () => void;
 };
 
-const INTERFACE_IDS = new Set(["theme-toggle", "paper-mode", "editor-width", "font-family"]);
+const INTERFACE_IDS = new Set(["theme-toggle", "paper-mode", "editor-width", "font-family", "focus-mode"]);
 const OPERATION_IDS = new Set([
   "export-markdown",
   "format-document",
@@ -91,6 +93,7 @@ export const CommandMenu = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const [fontFamily, setFontFamily] = useAtom(fontFamilyAtom);
+  const { focusMode, toggleFocusMode } = useFocusMode();
 
   useEffect(() => {
     if (!open) {
@@ -126,6 +129,11 @@ export const CommandMenu = ({
 
   const toggleEditorWidthThenClose = () => {
     toggleEditorWidth();
+    onClose();
+  };
+
+  const toggleFocusModeThenClose = () => {
+    toggleFocusMode();
     onClose();
   };
 
@@ -332,6 +340,13 @@ export const CommandMenu = ({
       icon: <TextAaIcon className="size-4" weight="light" />, // changed from FileText
       perform: cycleFont,
     });
+
+    list.push({
+      id: "focus-mode",
+      name: "Toggle focus mode",
+      icon: <CrosshairSimpleIcon className="size-4" weight="light" />,
+      perform: toggleFocusModeThenClose,
+    });
     list.push({
       id: "export-markdown",
       name: "Export markdown",
@@ -470,6 +485,11 @@ export const CommandMenu = ({
                               {command.id === "font-family" && (
                                 <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
                                   ({FONT_FAMILIES[fontFamily].displayValue})
+                                </span>
+                              )}
+                              {command.id === "focus-mode" && (
+                                <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                                  ({focusMode})
                                 </span>
                               )}
                             </span>

@@ -23,6 +23,8 @@ import { editorContentAtom } from "../../../utils/atoms/editor";
 import { currentFontValueAtom } from "../../../utils/hooks/use-font";
 import { cursorColorAtom, resolveCursorColor } from "../../../utils/hooks/use-cursor-color";
 import { customCursorLayer } from "./cursor-layer";
+import { useFocusMode } from "../../../utils/hooks/use-focus-mode";
+import { focusModeExtension } from "./focus-mode";
 
 const useMarkdownFormatter = () => {
   const ref = useRef<DprintMarkdownFormatter | null>(null);
@@ -84,8 +86,11 @@ export const useMarkdownEditor = (
   const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue, cursorColor);
   const { isMobile } = useMobileDetector();
 
+  const { isFocusMode } = useFocusMode();
+
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
+  const focusModeCompartment = useRef(new Compartment()).current;
 
   // Tracks the last value the editor itself pushed into `content`. When the
   // sync effect below sees `content` equal this ref, it knows the value is its
@@ -219,6 +224,7 @@ export const useMarkdownEditor = (
 
         themeCompartment.of(editorTheme),
         highlightCompartment.of(editorHighlightStyle),
+        focusModeCompartment.of(isFocusMode ? focusModeExtension : []),
         // Only show placeholder on non-mobile devices
         ...(isMobile ? [] : [placeholder(getRandomQuote())]),
 
@@ -261,6 +267,15 @@ export const useMarkdownEditor = (
       effects: [themeCompartment.reconfigure(editorTheme), highlightCompartment.reconfigure(editorHighlightStyle)],
     });
   }, [highlightCompartment.reconfigure, themeCompartment.reconfigure, editorTheme, editorHighlightStyle]);
+
+  // Toggle focus mode (paragraph dimming)
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    view.dispatch({
+      effects: focusModeCompartment.reconfigure(isFocusMode ? focusModeExtension : []),
+    });
+  }, [focusModeCompartment.reconfigure, isFocusMode]);
 
   // Listen for external content updates
   // - text edit emits storage event
