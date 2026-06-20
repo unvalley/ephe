@@ -3,11 +3,14 @@ import SwiftUI
 @main
 struct EpheMacApp: App {
     @StateObject private var session = EditorSession()
+    @AppStorage(AppPreferenceKeys.theme) private var themeRawValue = EpheTheme.system.rawValue
+    @AppStorage(AppPreferenceKeys.editorFont) private var editorFontRawValue = EditorFontChoice.iaWriterMono.rawValue
 
     var body: some Scene {
         WindowGroup("") {
             ContentView()
                 .environmentObject(session)
+                .preferredColorScheme(selectedTheme.colorScheme)
                 .task {
                     if let vaultPath = ProcessInfo.processInfo.value(after: "--uitest-vault") {
                         try? session.openVault(at: URL(fileURLWithPath: vaultPath, isDirectory: true))
@@ -31,7 +34,7 @@ struct EpheMacApp: App {
 
             CommandMenu("Editor") {
                 Button("Save") {
-                    try? session.saveSelectedNote()
+                    try? session.formatAndSaveSelectedNote()
                 }
                 .keyboardShortcut("s", modifiers: [.command])
 
@@ -40,6 +43,34 @@ struct EpheMacApp: App {
                 }
                 .keyboardShortcut("k", modifiers: [.command])
             }
+
+            CommandMenu("Appearance") {
+                Picker("Theme", selection: $themeRawValue) {
+                    ForEach(EpheTheme.allCases) { theme in
+                        Text(theme.title).tag(theme.rawValue)
+                    }
+                }
+
+                Picker("Editor Font", selection: $editorFontRawValue) {
+                    ForEach(EditorFontChoice.allCases) { font in
+                        Text(font.title).tag(font.rawValue)
+                    }
+                }
+            }
+        }
+    }
+
+    private var selectedTheme: EpheTheme {
+        EpheTheme(rawValue: themeRawValue) ?? .system
+    }
+}
+
+private extension EpheTheme {
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
         }
     }
 }

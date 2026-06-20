@@ -90,9 +90,15 @@ final class VaultStore: @unchecked Sendable {
         guard fileManager.fileExists(atPath: url.path(percentEncoded: false)) else {
             throw VaultStoreError.noteNotFound(noteID)
         }
-        let values = try url.resourceValues(forKeys: [.contentModificationDateKey])
+        let values = try url.resourceValues(forKeys: [.creationDateKey, .contentModificationDateKey])
         let content = try MarkdownFileReader.readString(from: url)
-        return NoteDocument(id: noteID, content: content, modifiedAt: values.contentModificationDate ?? Date(), isDirty: false)
+        return NoteDocument(
+            id: noteID,
+            content: content,
+            createdAt: values.creationDate,
+            modifiedAt: values.contentModificationDate ?? Date(),
+            isDirty: false
+        )
     }
 
     func writeNote(_ document: NoteDocument, in vault: Vault) throws -> NoteDocument {
@@ -104,6 +110,7 @@ final class VaultStore: @unchecked Sendable {
         let url = noteID.fileURL(in: vault)
         try ensureInsideVault(url, vault: vault)
         try fileManager.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let existingCreationDate = try? url.resourceValues(forKeys: [.creationDateKey]).creationDate
 
         let tempURL = url.deletingLastPathComponent().appending(path: ".\(url.lastPathComponent).tmp-\(UUID().uuidString)")
         try content.write(to: tempURL, atomically: true, encoding: .utf8)
@@ -111,6 +118,9 @@ final class VaultStore: @unchecked Sendable {
             _ = try fileManager.replaceItemAt(url, withItemAt: tempURL, backupItemName: nil, options: [.usingNewMetadataOnly])
         } else {
             try fileManager.moveItem(at: tempURL, to: url)
+        }
+        if let existingCreationDate {
+            try? fileManager.setAttributes([.creationDate: existingCreationDate], ofItemAtPath: url.path(percentEncoded: false))
         }
     }
 

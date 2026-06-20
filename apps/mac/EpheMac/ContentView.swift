@@ -3,58 +3,43 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var session: EditorSession
-    @State private var sidebarVisible = true
+    @State private var sidebarVisibility: NavigationSplitViewVisibility = .all
     @State private var inspectorVisible = false
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            HStack(spacing: 0) {
-                if sidebarVisible {
-                    VaultSidebar()
-                    .frame(width: 224)
-                    .background(Color.epheSidebar)
-                    .overlay(alignment: .trailing) {
-                        Rectangle()
-                            .fill(Color.black.opacity(0.06))
-                            .frame(width: 1)
-                    }
-                    .transition(.move(edge: .leading).combined(with: .opacity))
-                }
-
+        NavigationSplitView(columnVisibility: $sidebarVisibility) {
+            VaultSidebar()
+                .navigationSplitViewColumnWidth(min: 200, ideal: 224, max: 320)
+        } detail: {
+            ZStack(alignment: .topTrailing) {
                 EditorPane()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                if inspectorVisible {
+                    InspectorFloatingPanel()
+                        .frame(width: 300)
+                        .frame(maxHeight: 420)
+                        .padding(.top, 10)
+                        .padding(.trailing, 16)
+                        .transition(.scale(scale: 0.98, anchor: .topTrailing).combined(with: .opacity))
+                        .zIndex(10)
+                }
             }
             .background(Color.epheCanvas)
-            
-            if inspectorVisible {
-                InspectorFloatingPanel()
-                    .frame(width: 300)
-                    .frame(maxHeight: 420)
-                    .padding(.top, 10)
-                    .padding(.trailing, 16)
-                    .transition(.scale(scale: 0.98, anchor: .topTrailing).combined(with: .opacity))
-                    .zIndex(10)
-            }
         }
+        .navigationSplitViewStyle(.balanced)
         .background(Color.epheCanvas)
         .background(WindowTitleHider())
         .frame(minWidth: 1040, minHeight: 660)
-        .background {
-            SidebarKeyboardNavigationHandler(
-                isEnabled: sidebarVisible && !session.commandPalettePresented
-            ) { delta in
-                session.moveSidebarSelection(delta: delta)
-            }
-        }
         .toolbar {
             EpheWindowToolbar(
-                sidebarVisible: sidebarVisible,
-                inspectorVisible: inspectorVisible,
+                sidebarVisible: sidebarVisibility != .detailOnly,
                 toggleSidebar: {
-                    withAnimation(.snappy(duration: 0.18)) {
-                        sidebarVisible.toggle()
+                    withAnimation(.snappy(duration: 0.16)) {
+                        sidebarVisibility = sidebarVisibility == .detailOnly ? .all : .detailOnly
                     }
                 },
+                inspectorVisible: inspectorVisible,
                 toggleInspector: {
                     withAnimation(.snappy(duration: 0.16)) {
                         inspectorVisible.toggle()
@@ -96,74 +81,11 @@ private struct WindowTitleHider: NSViewRepresentable {
     }
 }
 
-private struct SidebarKeyboardNavigationHandler: NSViewRepresentable {
-    var isEnabled: Bool
-    var moveSelection: (Int) -> Void
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(isEnabled: isEnabled, moveSelection: moveSelection)
-    }
-
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView(frame: .zero)
-        context.coordinator.install()
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        context.coordinator.isEnabled = isEnabled
-        context.coordinator.moveSelection = moveSelection
-    }
-
-    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
-        coordinator.uninstall()
-    }
-
-    @MainActor
-    final class Coordinator {
-        var isEnabled: Bool
-        var moveSelection: (Int) -> Void
-        private var monitor: Any?
-
-        init(isEnabled: Bool, moveSelection: @escaping (Int) -> Void) {
-            self.isEnabled = isEnabled
-            self.moveSelection = moveSelection
-        }
-
-        func install() {
-            guard monitor == nil else { return }
-            monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-                guard let self, self.isEnabled else { return event }
-                let blockedModifiers: NSEvent.ModifierFlags = [.command, .control, .option]
-                guard event.modifierFlags.intersection(blockedModifiers).isEmpty else { return event }
-                guard !EpheMarkdownTextView.isUserEditingActive else { return event }
-
-                switch event.keyCode {
-                case 125:
-                    self.moveSelection(1)
-                    return nil
-                case 126:
-                    self.moveSelection(-1)
-                    return nil
-                default:
-                    return event
-                }
-            }
-        }
-
-        func uninstall() {
-            if let monitor {
-                NSEvent.removeMonitor(monitor)
-            }
-            monitor = nil
-        }
-
-    }
-}
-
 private struct VaultSidebar: View {
     @EnvironmentObject private var session: EditorSession
-    @FocusState private var focusedNoteID: NoteID?
+    @FocusState private var listFocused: Bool
+    @State private var renameTarget: NoteID?
+    @State private var renameText = ""
 
     var body: some View {
         VStack(spacing: 0) {
@@ -180,149 +102,144 @@ private struct VaultSidebar: View {
                 .padding(.bottom, 8)
             }
 
-            VStack(alignment: .leading, spacing: 4) {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: SidebarMetrics.rowSpacing) {
-                            if session.vault == nil {
-                                SidebarActionRow(title: "Open Vault", systemImage: "folder") {
-                                    session.openVaultWithPanel()
-                                }
-                            } else {
-                                let notes = session.sidebarNotes
-                                SidebarFolderRow(title: session.vault?.displayName ?? "Ephe")
+            ScrollViewReader { proxy in
+                List(selection: selectedNoteBinding) {
+                    if session.vault == nil {
+                        Button {
+                            session.openVaultWithPanel()
+                        } label: {
+                            Label("Open Vault", systemImage: "folder")
+                        }
+                        .accessibilityIdentifier("open-vault-row")
+                    } else {
+                        Section {
+                            SidebarVaultLabel(title: session.vault?.displayName ?? "Ephe")
 
-                                if notes.isEmpty {
-                                    SidebarMutedRow(title: "No notes", systemImage: "doc")
-                                } else {
-                                    ForEach(notes) { entry in
-                                        SidebarNoteRow(
-                                            entry: entry,
-                                            isSelected: entry.id == session.selectedNoteID
-                                        ) {
-                                            focusedNoteID = entry.id
-                                            session.selectNote(entry.id)
-                                            Task { @MainActor in
-                                                focusedNoteID = entry.id
+                            let notes = session.sidebarNotes
+                            if notes.isEmpty {
+                                Label("No notes", systemImage: "doc")
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                ForEach(notes) { entry in
+                                    SidebarFileLabel(entry: entry, isPinned: session.isPinned(entry.id))
+                                        .tag(entry.id)
+                                        .id(entry.id)
+                                        .contextMenu {
+                                            Button(session.isPinned(entry.id) ? "Unpin" : "Pin") {
+                                                session.togglePin(entry.id)
+                                            }
+
+                                            Button("Rename...") {
+                                                renameTarget = entry.id
+                                                renameText = entry.title
                                             }
                                         }
-                                        .focusable(true)
-                                        .focused($focusedNoteID, equals: entry.id)
-                                        .focusEffectDisabled()
-                                        .id(entry.id)
                                         .accessibilityIdentifier("note-row-\(entry.id.rawValue)")
-                                    }
                                 }
                             }
                         }
-                        .padding(.horizontal, 8)
-                    }
-                    .onChange(of: session.selectedNoteID) { _, selectedNoteID in
-                        guard let selectedNoteID else { return }
-                        proxy.scrollTo(selectedNoteID, anchor: .center)
-                        focusedNoteID = selectedNoteID
                     }
                 }
+                .listStyle(.sidebar)
+                .focused($listFocused)
+                .onAppear {
+                    listFocused = true
+                    scrollToSelectedNote(with: proxy)
+                }
+                .onChange(of: session.selectedNoteID) { _, selectedNoteID in
+                    if selectedNoteID != nil {
+                        listFocused = true
+                        scrollToSelectedNote(with: proxy)
+                    }
+                }
+                .onChange(of: session.sidebarNotes.map(\.id)) { _, _ in
+                    scrollToSelectedNote(with: proxy)
+                }
             }
-
-            Spacer(minLength: 0)
         }
+        .alert("Rename File", isPresented: renameAlertPresented) {
+            TextField("Title", text: $renameText)
+            Button("Rename") {
+                if let renameTarget {
+                    session.renameNote(renameTarget, to: renameText)
+                }
+                renameTarget = nil
+            }
+            Button("Cancel", role: .cancel) {
+                renameTarget = nil
+            }
+        } message: {
+            Text("Rename this Markdown file.")
+        }
+    }
+
+    private func scrollToSelectedNote(with proxy: ScrollViewProxy) {
+        guard let selectedNoteID = session.selectedNoteID else { return }
+        Task { @MainActor in
+            guard session.sidebarNotes.contains(where: { $0.id == selectedNoteID }) else { return }
+            withAnimation(.snappy(duration: 0.16)) {
+                proxy.scrollTo(selectedNoteID, anchor: .center)
+            }
+        }
+    }
+
+    private var selectedNoteBinding: Binding<NoteID?> {
+        Binding(
+            get: { session.selectedNoteID },
+            set: { noteID in
+                guard let noteID, noteID != session.selectedNoteID else { return }
+                listFocused = true
+                session.selectNote(noteID)
+            }
+        )
+    }
+
+    private var renameAlertPresented: Binding<Bool> {
+        Binding(
+            get: { renameTarget != nil },
+            set: { isPresented in
+                if !isPresented {
+                    renameTarget = nil
+                }
+            }
+        )
     }
 }
 
-private enum SidebarMetrics {
-    static let rowHeight: CGFloat = 24
-    static let rowSpacing: CGFloat = 1
-    static let rowHorizontalPadding: CGFloat = 6
-    static let rowVerticalPadding: CGFloat = 2
-}
-
-private struct SidebarNoteRow: View {
+private struct SidebarFileLabel: View {
     var entry: NoteIndexEntry
-    var isSelected: Bool
-    var action: () -> Void
+    var isPinned: Bool
 
     var body: some View {
-        Button(action: action) {
-            SidebarIconLabel(
-                title: entry.title,
-                systemImage: "doc.text",
-                iconColor: isSelected ? .white : Color.epheAccent.opacity(0.72)
-            )
-            .foregroundStyle(isSelected ? .white : .primary)
-            .frame(maxWidth: .infinity, minHeight: SidebarMetrics.rowHeight, alignment: .leading)
-            .contentShape(Rectangle())
-            .background {
-                RoundedRectangle(cornerRadius: 7)
-                    .fill(isSelected ? Color.accentColor : Color.clear)
+        HStack(spacing: 0) {
+            Label {
+                Text(entry.title)
+                    .lineLimit(1)
+            } icon: {
+                Image(systemName: "doc.text")
+            }
+
+            Spacer(minLength: 8)
+
+            if isPinned {
+                Image(systemName: "pin.fill")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
             }
         }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity, minHeight: SidebarMetrics.rowHeight, alignment: .leading)
-        .contentShape(Rectangle())
     }
 }
 
-private struct SidebarFolderRow: View {
+private struct SidebarVaultLabel: View {
     var title: String
 
     var body: some View {
-        SidebarIconLabel(title: title, systemImage: "folder.fill", iconColor: Color.epheAccent)
-            .foregroundStyle(.primary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(height: SidebarMetrics.rowHeight)
-    }
-}
-
-private struct SidebarActionRow: View {
-    var title: String
-    var systemImage: String
-    var action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            SidebarIconLabel(title: title, systemImage: systemImage, iconColor: Color.epheAccent)
-                .foregroundStyle(.primary)
-                .frame(maxWidth: .infinity, minHeight: SidebarMetrics.rowHeight, alignment: .leading)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity, minHeight: SidebarMetrics.rowHeight, alignment: .leading)
-        .contentShape(Rectangle())
-    }
-}
-
-private struct SidebarMutedRow: View {
-    var title: String
-    var systemImage: String
-
-    var body: some View {
-        SidebarIconLabel(title: title, systemImage: systemImage, iconColor: .secondary)
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(height: SidebarMetrics.rowHeight)
-    }
-}
-
-private struct SidebarIconLabel: View {
-    var title: String
-    var systemImage: String
-    var iconColor: Color
-
-    var body: some View {
-        HStack(spacing: 7) {
-            Image(systemName: systemImage)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(iconColor)
-                .frame(width: 15)
-
+        Label {
             Text(title)
-                .font(.system(size: 13))
                 .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
+        } icon: {
+            Image(systemName: "folder.fill")
         }
-        .padding(.horizontal, SidebarMetrics.rowHorizontalPadding)
-        .padding(.vertical, SidebarMetrics.rowVerticalPadding)
     }
 }
 
@@ -362,67 +279,133 @@ private struct EditorPane: View {
 private struct EpheWindowToolbar: ToolbarContent {
     @EnvironmentObject private var session: EditorSession
     var sidebarVisible: Bool
-    var inspectorVisible: Bool
     var toggleSidebar: () -> Void
+    var inspectorVisible: Bool
     var toggleInspector: () -> Void
 
     var body: some ToolbarContent {
-        ToolbarItemGroup(placement: .navigation) {
-            Button(action: toggleSidebar) {
-                Image(systemName: "sidebar.left")
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("toggle-sidebar-button")
-            .help(sidebarVisible ? "Hide Sidebar" : "Show Sidebar")
+        ToolbarItem(placement: .navigation) {
+            HStack(spacing: 8) {
+                BorderlessToolbarButton(
+                    systemName: "sidebar.left",
+                    help: sidebarVisible ? "Hide Sidebar" : "Show Sidebar",
+                    accessibilityIdentifier: "toggle-sidebar-button",
+                    action: toggleSidebar
+                )
+                .frame(width: 24, height: 24)
 
-            Button {
-                session.createNote()
-            } label: {
-                Image(systemName: "plus")
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("new-note-button")
-            .help("New Note")
-            .disabled(session.vault == nil)
+                BorderlessToolbarButton(
+                    systemName: "chevron.left",
+                    help: "Back",
+                    accessibilityIdentifier: "navigate-back-button",
+                    isEnabled: session.canNavigateBack,
+                    action: {
+                        session.navigateBack()
+                    }
+                )
+                .frame(width: 24, height: 24)
 
-            Button {
-                session.openVaultWithPanel()
-            } label: {
-                Image(systemName: "folder")
+                BorderlessToolbarButton(
+                    systemName: "chevron.right",
+                    help: "Forward",
+                    accessibilityIdentifier: "navigate-forward-button",
+                    isEnabled: session.canNavigateForward,
+                    action: {
+                        session.navigateForward()
+                    }
+                )
+                .frame(width: 24, height: 24)
             }
-            .buttonStyle(.plain)
-            .help("Open Vault")
+            .frame(width: 88, height: 28, alignment: .leading)
         }
 
         ToolbarItem(placement: .principal) {
             HeaderTitle(title: session.document?.title)
         }
 
-        ToolbarItemGroup(placement: .primaryAction) {
-            Button(action: toggleInspector) {
-                Image(systemName: "list.bullet.rectangle")
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("toggle-inspector-button")
-            .help(inspectorVisible ? "Hide Details" : "Show Details")
+        ToolbarItem(placement: .primaryAction) {
+            BorderlessToolbarButton(
+                systemName: "list.bullet.rectangle",
+                help: inspectorVisible ? "Hide Details" : "Show Details",
+                accessibilityIdentifier: "toggle-inspector-button",
+                isEnabled: true,
+                action: toggleInspector
+            )
+            .frame(width: 24, height: 24)
         }
     }
 }
 
-private struct HeaderTitle: View {
+private struct HeaderTitle: NSViewRepresentable {
     var title: String?
 
-    var body: some View {
-        if let title, !title.isEmpty {
-            Text(title)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .frame(maxWidth: 520, alignment: .center)
-                .help(title)
-        } else {
-            Color.clear
-                .frame(width: 1, height: 1)
+    func makeNSView(context: Context) -> NSTextField {
+        let field = NSTextField(labelWithString: title ?? "")
+        field.font = .systemFont(ofSize: 14, weight: .semibold)
+        field.textColor = .labelColor
+        field.alignment = .center
+        field.lineBreakMode = .byTruncatingMiddle
+        field.maximumNumberOfLines = 1
+        field.isSelectable = false
+        field.drawsBackground = false
+        field.isBezeled = false
+        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return field
+    }
+
+    func updateNSView(_ field: NSTextField, context: Context) {
+        let text = title ?? ""
+        field.stringValue = text
+        field.toolTip = text.isEmpty ? nil : text
+    }
+}
+
+private struct BorderlessToolbarButton: NSViewRepresentable {
+    var systemName: String
+    var help: String
+    var accessibilityIdentifier: String
+    var isEnabled = true
+    var action: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(action: action)
+    }
+
+    func makeNSView(context: Context) -> NSButton {
+        let button = NSButton()
+        button.isBordered = false
+        button.bezelStyle = .regularSquare
+        button.imagePosition = .imageOnly
+        button.imageScaling = .scaleProportionallyDown
+        button.setButtonType(.momentaryChange)
+        button.contentTintColor = .secondaryLabelColor
+        button.isEnabled = isEnabled
+        button.target = context.coordinator
+        button.action = #selector(Coordinator.performAction)
+        button.toolTip = help
+        button.setAccessibilityIdentifier(accessibilityIdentifier)
+        return button
+    }
+
+    func updateNSView(_ button: NSButton, context: Context) {
+        context.coordinator.action = action
+        button.image = NSImage(systemSymbolName: systemName, accessibilityDescription: help)
+        button.toolTip = help
+        button.isEnabled = isEnabled
+        button.contentTintColor = isEnabled ? .secondaryLabelColor : .disabledControlTextColor
+        button.setAccessibilityIdentifier(accessibilityIdentifier)
+    }
+
+    @MainActor
+    final class Coordinator: NSObject {
+        var action: () -> Void
+
+        init(action: @escaping () -> Void) {
+            self.action = action
+        }
+
+        @objc func performAction() {
+            action()
         }
     }
 }
@@ -549,16 +532,21 @@ private struct ShortcutRow: View {
 
 private struct MarkdownTextEditor: View {
     @EnvironmentObject private var session: EditorSession
+    @AppStorage(AppPreferenceKeys.editorFont) private var editorFontRawValue = EditorFontChoice.iaWriterMono.rawValue
 
     var body: some View {
         MarkdownDecoratedTextEditor(text: Binding(
             get: { session.document?.content ?? "" },
             set: { session.updateContent($0) }
-        ), onWikiLink: { link in
+        ), fontChoice: selectedFont, onWikiLink: { link in
             session.openWikiLink(link)
         })
         .padding(.horizontal, 28)
         .padding(.bottom, 22)
+    }
+
+    private var selectedFont: EditorFontChoice {
+        EditorFontChoice(rawValue: editorFontRawValue) ?? .iaWriterMono
     }
 }
 
@@ -568,6 +556,17 @@ private struct InspectorFloatingPanel: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                InspectorSection(title: "Info") {
+                    if let document = session.document {
+                        VStack(alignment: .leading, spacing: 4) {
+                            InspectorKeyValueRow(title: "Created", value: formattedDate(document.createdAt))
+                            InspectorKeyValueRow(title: "Updated", value: formattedDate(document.modifiedAt))
+                        }
+                    } else {
+                        InspectorEmptyText("No file selected")
+                    }
+                }
+
                 InspectorSection(title: "Outline") {
                     if let entry = session.selectedEntry, !entry.headings.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
@@ -661,6 +660,11 @@ private struct InspectorFloatingPanel: View {
         guard let selectedNoteID = session.selectedNoteID else { return [] }
         return session.index.ambiguousLinks[selectedNoteID, default: []]
     }
+
+    private func formattedDate(_ date: Date?) -> String {
+        guard let date else { return "Unknown" }
+        return date.formatted(date: .abbreviated, time: .shortened)
+    }
 }
 
 private struct InspectorSection<Content: View>: View {
@@ -699,6 +703,26 @@ private struct InspectorTextRow: View {
         }
         .frame(height: 22)
         .contentShape(Rectangle())
+    }
+}
+
+private struct InspectorKeyValueRow: View {
+    var title: String
+    var value: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(title)
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .frame(width: 58, alignment: .leading)
+
+            Text(value)
+                .font(.system(size: 12))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+        }
+        .frame(height: 22, alignment: .leading)
     }
 }
 
@@ -744,7 +768,7 @@ private struct CommandPaletteView: View {
                         session.selectNote(entry.id)
                         session.commandPalettePresented = false
                     } label: {
-                        SidebarIconLabel(title: entry.title, systemImage: "doc.text", iconColor: Color.epheAccent.opacity(0.72))
+                        Label(entry.title, systemImage: "doc.text")
                     }
                 }
             }

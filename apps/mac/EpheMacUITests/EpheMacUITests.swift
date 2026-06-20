@@ -40,12 +40,39 @@ final class EpheMacUITests: XCTestCase {
         app.launchArguments = ["--uitest-vault", vaultURL.path(percentEncoded: false)]
         app.launch()
 
-        let newButton = app.descendants(matching: .any)["new-note-button"].firstMatch
-        XCTAssertTrue(newButton.waitForExistence(timeout: 5))
-        newButton.click()
+        app.typeKey("n", modifierFlags: [.command])
 
         XCTAssertTrue(app.descendants(matching: .any)["note-row-Untitled.md"].firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(FileManager.default.fileExists(atPath: vaultURL.appending(path: "Untitled.md").path(percentEncoded: false)))
+    }
+
+    @MainActor
+    func testToolbarNavigationButtonsMoveThroughOpenedFileHistory() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--uitest-vault", vaultURL.path(percentEncoded: false)]
+        app.launch()
+
+        let homeRow = app.descendants(matching: .any)["note-row-Home.md"].firstMatch
+        let projectRow = app.descendants(matching: .any)["note-row-Project.md"].firstMatch
+        XCTAssertTrue(homeRow.waitForExistence(timeout: 5))
+        XCTAssertTrue(projectRow.waitForExistence(timeout: 5))
+
+        homeRow.click()
+        let editor = app.textViews["markdown-editor"].firstMatch
+        XCTAssertTrue(waitUntilTextViewContains(editor, text: "# Home", timeout: 5))
+
+        projectRow.click()
+        XCTAssertTrue(waitUntilTextViewContains(editor, text: "# Project", timeout: 5))
+
+        let backButton = app.descendants(matching: .any)["navigate-back-button"].firstMatch
+        XCTAssertTrue(backButton.waitForExistence(timeout: 2))
+        backButton.click()
+        XCTAssertTrue(waitUntilTextViewContains(editor, text: "# Home", timeout: 5))
+
+        let forwardButton = app.descendants(matching: .any)["navigate-forward-button"].firstMatch
+        XCTAssertTrue(forwardButton.waitForExistence(timeout: 2))
+        forwardButton.click()
+        XCTAssertTrue(waitUntilTextViewContains(editor, text: "# Project", timeout: 5))
     }
 
     @MainActor
@@ -110,6 +137,7 @@ final class EpheMacUITests: XCTestCase {
         String(format: "%.2f", value)
     }
 
+    @MainActor
     private func waitUntilExists(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
@@ -121,6 +149,7 @@ final class EpheMacUITests: XCTestCase {
         return element.exists
     }
 
+    @MainActor
     private func waitUntilTextViewHasContent(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
@@ -132,6 +161,7 @@ final class EpheMacUITests: XCTestCase {
         return (element.value as? String)?.isEmpty == false
     }
 
+    @MainActor
     private func waitUntilTextViewContains(_ element: XCUIElement, text: String, timeout: TimeInterval) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {

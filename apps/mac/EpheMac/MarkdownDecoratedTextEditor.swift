@@ -3,10 +3,11 @@ import SwiftUI
 
 struct MarkdownDecoratedTextEditor: NSViewRepresentable {
     @Binding var text: String
+    var fontChoice: EditorFontChoice = .iaWriterMono
     var onWikiLink: (WikiLink) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text, onWikiLink: onWikiLink)
+        Coordinator(text: $text, fontChoice: fontChoice, onWikiLink: onWikiLink)
     }
 
     func makeNSView(context: Context) -> MarkdownEditorScrollView {
@@ -25,6 +26,8 @@ struct MarkdownDecoratedTextEditor: NSViewRepresentable {
 
     func updateNSView(_ scrollView: MarkdownEditorScrollView, context: Context) {
         context.coordinator.text = $text
+        let fontChanged = context.coordinator.fontChoice != fontChoice
+        context.coordinator.fontChoice = fontChoice
         context.coordinator.onWikiLink = onWikiLink
 
         let textView = scrollView.textView
@@ -37,6 +40,11 @@ struct MarkdownDecoratedTextEditor: NSViewRepresentable {
             if !context.coordinator.applyCachedHighlightingIfAvailable(to: textView) {
                 context.coordinator.scheduleHighlighting(to: textView, delay: .milliseconds(16))
             }
+        } else if fontChanged {
+            context.coordinator.applyBaseAttributes(to: textView)
+            if !context.coordinator.applyCachedHighlightingIfAvailable(to: textView) {
+                context.coordinator.scheduleHighlighting(to: textView, delay: .zero)
+            }
         } else {
             context.coordinator.scheduleHighlightingIfNeeded(to: textView)
         }
@@ -47,19 +55,23 @@ struct MarkdownDecoratedTextEditor: NSViewRepresentable {
         private static let highlightCache = MarkdownHighlightCache()
 
         var text: Binding<String>
+        var fontChoice: EditorFontChoice
         var onWikiLink: (WikiLink) -> Void
         var isApplyingProgrammaticChange = false
 
-        private let baseFont = NSFont.monospacedSystemFont(ofSize: 15, weight: .regular)
-        private let codeFont = NSFont.monospacedSystemFont(ofSize: 14, weight: .regular)
         private let decoratedCharacterLimit = 120_000
         private var highlightTask: Task<Void, Never>?
         private var lastHighlightedString: String?
         private var pendingHighlightString: String?
         private var editedRange: NSRange?
 
-        init(text: Binding<String>, onWikiLink: @escaping (WikiLink) -> Void) {
+        init(
+            text: Binding<String>,
+            fontChoice: EditorFontChoice = .iaWriterMono,
+            onWikiLink: @escaping (WikiLink) -> Void
+        ) {
             self.text = text
+            self.fontChoice = fontChoice
             self.onWikiLink = onWikiLink
         }
 
@@ -106,7 +118,7 @@ struct MarkdownDecoratedTextEditor: NSViewRepresentable {
 
         func applyCachedHighlightingIfAvailable(to textView: NSTextView) -> Bool {
             let string = textView.string
-            guard let attributedString = Self.highlightCache.attributedString(for: string) else {
+            guard let attributedString = Self.highlightCache.attributedString(for: string, fontChoice: fontChoice) else {
                 return false
             }
             guard let storage = textView.textStorage else { return false }
@@ -262,7 +274,7 @@ struct MarkdownDecoratedTextEditor: NSViewRepresentable {
 
             storage.endEditing()
             if requestedRange == nil {
-                Self.highlightCache.store(storage.attributedSubstring(from: fullRange), for: string)
+                Self.highlightCache.store(storage.attributedSubstring(from: fullRange), for: string, fontChoice: fontChoice)
             }
             lastHighlightedString = string
             textView.selectedRanges = selectedRanges
@@ -292,7 +304,7 @@ struct MarkdownDecoratedTextEditor: NSViewRepresentable {
             case 3: size = 17
             default: size = 15
             }
-            return NSFont.monospacedSystemFont(ofSize: size, weight: .bold)
+            return fontChoice.font(size: size, weight: .bold)
         }
 
         private func addFontTrait(_ trait: NSFontTraitMask, storage: NSTextStorage, range: NSRange) {
@@ -307,6 +319,14 @@ struct MarkdownDecoratedTextEditor: NSViewRepresentable {
                 .font: baseFont,
                 .foregroundColor: NSColor.textColor,
             ]
+        }
+
+        private var baseFont: NSFont {
+            fontChoice.font(size: 15, weight: .regular)
+        }
+
+        private var codeFont: NSFont {
+            fontChoice.font(size: 14, weight: .regular)
         }
     }
 }
@@ -333,14 +353,49 @@ private struct HighlightFeatures {
     }
 }
 
+private extension EditorFontChoice {
+    func font(size: CGFloat, weight: NSFont.Weight) -> NSFont {
+        if self == .monospace {
+            return NSFont.monospacedSystemFont(ofSize: size, weight: weight)
+        }
+        for name in fontNames(for: weight) {
+            if let font = NSFont(name: name, size: size) {
+                return font
+            }
+        }
+        return NSFont.monospacedSystemFont(ofSize: size, weight: weight)
+    }
+
+    private func fontNames(for weight: NSFont.Weight) -> [String] {
+        switch self {
+        case .iaWriterMono:
+            if weight >= .semibold {
+                return ["iAWriterMonoS-Bold", "iA Writer Mono S Bold", "iAWriterMono-Bold", "iA Writer Mono Bold"]
+            }
+            return ["iAWriterMonoS-Regular", "iA Writer Mono S", "iAWriterMono-Regular", "iA Writer Mono"]
+        case .monospace:
+            return []
+        case .ibmPlexMono:
+            if weight >= .semibold {
+                return ["IBMPlexMono-Bold", "IBM Plex Mono Bold"]
+            }
+            return ["IBMPlexMono-Regular", "IBM Plex Mono"]
+        case .mynerve:
+            return ["Mynerve-Regular", "Mynerve"]
+        }
+    }
+}
+
 @MainActor
 private final class MarkdownHighlightCache {
     private struct Key: Hashable {
         let length: Int
         let hash: UInt64
+        let fontChoice: EditorFontChoice
 
-        init(_ string: String) {
+        init(_ string: String, fontChoice: EditorFontChoice) {
             length = (string as NSString).length
+            self.fontChoice = fontChoice
             var hash: UInt64 = 14_695_981_039_346_656_037
             for byte in string.utf8 {
                 hash ^= UInt64(byte)
@@ -362,15 +417,15 @@ private final class MarkdownHighlightCache {
     private var mostRecentKeys: [Key] = []
     private var totalCost = 0
 
-    func attributedString(for string: String) -> NSAttributedString? {
-        let key = Key(string)
+    func attributedString(for string: String, fontChoice: EditorFontChoice) -> NSAttributedString? {
+        let key = Key(string, fontChoice: fontChoice)
         guard let entry = entries[key] else { return nil }
         promote(key)
         return entry.attributedString.copy() as? NSAttributedString
     }
 
-    func store(_ attributedString: NSAttributedString, for string: String) {
-        let key = Key(string)
+    func store(_ attributedString: NSAttributedString, for string: String, fontChoice: EditorFontChoice) {
+        let key = Key(string, fontChoice: fontChoice)
         let cost = key.length
         guard cost > 0, cost <= entryCharacterLimit else { return }
         if let existing = entries[key] {

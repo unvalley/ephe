@@ -18,6 +18,9 @@ final class EditorSession: ObservableObject {
     @Published var conflictMessage: String?
     @Published private(set) var isIndexing = false
     @Published private(set) var isLoadingDocument = false
+    @Published private(set) var canNavigateBack = false
+    @Published private(set) var canNavigateForward = false
+    @Published private(set) var pinnedNoteIDs: Set<NoteID> = []
     @Published private var sortedNotesCache: [NoteIndexEntry] = []
     @Published private var sqliteBacklinks: [Backlink] = []
     @Published private var sqliteSearchResults: [NoteIndexEntry]?
@@ -26,6 +29,7 @@ final class EditorSession: ObservableObject {
     private let indexer: MarkdownIndexer
     private let watcher: DirectoryWatcher
     private let makeIndexStore: (Vault) throws -> VaultIndexStore
+    private let userDefaults: UserDefaults
     private var indexStore: VaultIndexStore?
     private var vaultIndexer: VaultIndexer?
     private var autosaveTask: Task<Void, Never>?
@@ -39,11 +43,15 @@ final class EditorSession: ObservableObject {
     private var reloadGeneration = 0
     private var selectionGeneration = 0
     private var hasSecurityScopeAccess = false
+    private var backHistory: [NoteID] = []
+    private var forwardHistory: [NoteID] = []
+    private let maxNavigationHistory = 100
 
     init(
         store: VaultStore = VaultStore(),
         indexer: MarkdownIndexer? = nil,
         watcher: DirectoryWatcher = DirectoryWatcher(),
+        userDefaults: UserDefaults = .standard,
         makeIndexStore: @escaping (Vault) throws -> VaultIndexStore = { vault in
             VaultIndexStore(databaseURL: try VaultIndexStore.defaultDatabaseURL(for: vault))
         }
@@ -51,6 +59,7 @@ final class EditorSession: ObservableObject {
         self.store = store
         self.indexer = indexer ?? MarkdownIndexer(store: store)
         self.watcher = watcher
+        self.userDefaults = userDefaults
         self.makeIndexStore = makeIndexStore
     }
 
@@ -66,7 +75,14 @@ final class EditorSession: ObservableObject {
     }
 
     var sidebarNotes: [NoteIndexEntry] {
-        filteredNotes
+        filteredNotes.sorted { lhs, rhs in
+            let lhsPinned = pinnedNoteIDs.contains(lhs.id)
+            let rhsPinned = pinnedNoteIDs.contains(rhs.id)
+            if lhsPinned != rhsPinned {
+                return lhsPinned
+            }
+            return lhs.id < rhs.id
+        }
     }
 
     func searchNotes(_ query: String) -> [NoteIndexEntry] {
@@ -106,6 +122,8 @@ final class EditorSession: ObservableObject {
         let vault = try store.openVault(at: url)
         hasSecurityScopeAccess = vault.rootURL.startAccessingSecurityScopedResource()
         self.vault = vault
+        resetNavigationHistory()
+        loadPinnedNotes(for: vault)
         configureDerivedIndex(for: vault)
         scheduleBookmarkPersistence(for: vault)
         scheduleReloadIndex(selectFirstIfNeeded: false)
@@ -117,12 +135,14 @@ final class EditorSession: ObservableObject {
     }
 
     func reopenLastVaultIfAvailable() {
-        guard let bookmark = UserDefaults.standard.data(forKey: "ephe.mac.lastVaultBookmark") else { return }
+        guard let bookmark = userDefaults.data(forKey: "ephe.mac.lastVaultBookmark") else { return }
         do {
             releaseSecurityScope()
             let vault = try store.reopenVault(from: bookmark)
             hasSecurityScopeAccess = vault.rootURL.startAccessingSecurityScopedResource()
             self.vault = vault
+            resetNavigationHistory()
+            loadPinnedNotes(for: vault)
             configureDerivedIndex(for: vault)
             scheduleBookmarkPersistence(for: vault)
             scheduleReloadIndex(selectFirstIfNeeded: false)
@@ -194,8 +214,88 @@ final class EditorSession: ObservableObject {
             noteID,
             loadDelay: .zero,
             clearsDocumentBeforeLoad: true,
-            showsLoadingDuringDelay: true
+            showsLoadingDuringDelay: true,
+            recordsHistory: true
         )
+    }
+
+    func navigateBack() {
+        guard let current = selectedNoteID, let previous = backHistory.popLast() else {
+            updateNavigationAvailability()
+            return
+        }
+        forwardHistory.append(current)
+        updateNavigationAvailability()
+        selectNote(
+            previous,
+            loadDelay: .zero,
+            clearsDocumentBeforeLoad: true,
+            showsLoadingDuringDelay: true,
+            recordsHistory: false
+        )
+    }
+
+    func navigateForward() {
+        guard let current = selectedNoteID, let next = forwardHistory.popLast() else {
+            updateNavigationAvailability()
+            return
+        }
+        backHistory.append(current)
+        trimNavigationHistory()
+        updateNavigationAvailability()
+        selectNote(
+            next,
+            loadDelay: .zero,
+            clearsDocumentBeforeLoad: true,
+            showsLoadingDuringDelay: true,
+            recordsHistory: false
+        )
+    }
+
+    func isPinned(_ noteID: NoteID) -> Bool {
+        pinnedNoteIDs.contains(noteID)
+    }
+
+    func togglePin(_ noteID: NoteID) {
+        if pinnedNoteIDs.contains(noteID) {
+            pinnedNoteIDs.remove(noteID)
+        } else {
+            pinnedNoteIDs.insert(noteID)
+        }
+        persistPinnedNotes()
+    }
+
+    private func recordNavigationHistory(beforeSelecting noteID: NoteID) {
+        guard selectedNoteID != noteID else {
+            updateNavigationAvailability()
+            return
+        }
+        if let selectedNoteID, backHistory.last != selectedNoteID {
+            backHistory.append(selectedNoteID)
+            trimNavigationHistory()
+        }
+        forwardHistory.removeAll()
+        updateNavigationAvailability()
+    }
+
+    private func resetNavigationHistory() {
+        backHistory.removeAll()
+        forwardHistory.removeAll()
+        updateNavigationAvailability()
+    }
+
+    private func trimNavigationHistory() {
+        if backHistory.count > maxNavigationHistory {
+            backHistory.removeFirst(backHistory.count - maxNavigationHistory)
+        }
+        if forwardHistory.count > maxNavigationHistory {
+            forwardHistory.removeFirst(forwardHistory.count - maxNavigationHistory)
+        }
+    }
+
+    private func updateNavigationAvailability() {
+        canNavigateBack = !backHistory.isEmpty
+        canNavigateForward = !forwardHistory.isEmpty
     }
 
     func moveSidebarSelection(delta: Int) {
@@ -216,7 +316,8 @@ final class EditorSession: ObservableObject {
             notes[boundedIndex].id,
             loadDelay: shouldDebounceLoad ? .milliseconds(90) : .zero,
             clearsDocumentBeforeLoad: false,
-            showsLoadingDuringDelay: !shouldDebounceLoad
+            showsLoadingDuringDelay: !shouldDebounceLoad,
+            recordsHistory: true
         )
     }
 
@@ -224,7 +325,8 @@ final class EditorSession: ObservableObject {
         _ noteID: NoteID,
         loadDelay: Duration,
         clearsDocumentBeforeLoad: Bool,
-        showsLoadingDuringDelay: Bool
+        showsLoadingDuringDelay: Bool,
+        recordsHistory: Bool
     ) {
         guard let vault else { return }
         autosaveTask?.cancel()
@@ -234,6 +336,9 @@ final class EditorSession: ObservableObject {
         let generation = selectionGeneration
         let store = store
 
+        if recordsHistory {
+            recordNavigationHistory(beforeSelecting: noteID)
+        }
         selectedNoteID = noteID
         isLoadingDocument = showsLoadingDuringDelay && document?.id != noteID
         if clearsDocumentBeforeLoad, document?.id != noteID {
@@ -309,14 +414,64 @@ final class EditorSession: ObservableObject {
     }
 
     func saveSelectedNote() throws {
+        try saveSelectedNote(formatMarkdown: false)
+    }
+
+    func formatAndSaveSelectedNote() throws {
+        try saveSelectedNote(formatMarkdown: true)
+    }
+
+    private func saveSelectedNote(formatMarkdown: Bool) throws {
         guard let vault, let document else { return }
         autosaveTask?.cancel()
-        let saved = try store.writeNote(document, in: vault)
+        let documentToSave: NoteDocument
+        if formatMarkdown {
+            var formattedDocument = document
+            formattedDocument.content = MarkdownFormatter.format(document.content)
+            formattedDocument.isDirty = true
+            self.document = formattedDocument
+            documentToSave = formattedDocument
+        } else {
+            documentToSave = document
+        }
+        let saved = try store.writeNote(documentToSave, in: vault)
         self.document = saved
         conflictMessage = nil
         insertDocumentIntoIndex(saved)
         scheduleDerivedIndexUpdate(for: saved.id)
-        statusMessage = "Saved \(saved.id.rawValue)"
+        statusMessage = formatMarkdown ? "Formatted \(saved.id.rawValue)" : "Saved \(saved.id.rawValue)"
+    }
+
+    func renameNote(_ noteID: NoteID, to rawName: String) {
+        guard let vault else { return }
+        let trimmedName = rawName.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        guard let trimmedName else { return }
+
+        do {
+            if noteID == document?.id, document?.isDirty == true {
+                try saveSelectedNote()
+            }
+            let destinationName = relativeRenamePath(for: noteID, rawName: trimmedName)
+            let renamedID = try store.renameNote(noteID, to: destinationName, in: vault)
+            if pinnedNoteIDs.remove(noteID) != nil {
+                pinnedNoteIDs.insert(renamedID)
+                persistPinnedNotes()
+            }
+            index.notes.removeValue(forKey: noteID)
+            if selectedNoteID == noteID {
+                selectedNoteID = renamedID
+                let renamedDocument = try store.readNote(renamedID, in: vault)
+                document = renamedDocument
+                insertDocumentIntoIndex(renamedDocument)
+                scheduleDocumentIndexRefresh(for: renamedDocument)
+                scheduleBacklinkQuery(for: renamedID)
+            }
+            scheduleReloadIndex(selectFirstIfNeeded: false)
+            scheduleDerivedIndexUpdate(for: renamedID)
+            statusMessage = "Renamed \(noteID.rawValue) to \(renamedID.rawValue)"
+        } catch {
+            statusMessage = error.localizedDescription
+        }
     }
 
     func createNote(named name: String? = nil) {
@@ -337,6 +492,7 @@ final class EditorSession: ObservableObject {
                 autosaveTask?.cancel()
                 noteLoadTask?.cancel()
                 selectionGeneration += 1
+                recordNavigationHistory(beforeSelecting: newDocument.id)
                 selectedNoteID = newDocument.id
                 isLoadingDocument = false
                 document = newDocument
@@ -380,6 +536,7 @@ final class EditorSession: ObservableObject {
         sortedNotesCache = []
         sqliteBacklinks = []
         sqliteSearchResults = nil
+        pinnedNoteIDs = []
         if hasSecurityScopeAccess {
             vault?.rootURL.stopAccessingSecurityScopedResource()
             hasSecurityScopeAccess = false
@@ -511,7 +668,7 @@ final class EditorSession: ObservableObject {
                 }.value
                 await MainActor.run {
                     guard self?.vault?.rootURL == vaultRootURL else { return }
-                    UserDefaults.standard.set(bookmark, forKey: "ephe.mac.lastVaultBookmark")
+                    self?.userDefaults.set(bookmark, forKey: "ephe.mac.lastVaultBookmark")
                 }
             } catch is CancellationError {
             } catch {
@@ -625,6 +782,30 @@ final class EditorSession: ObservableObject {
                 }
             }
         }
+    }
+
+    private func relativeRenamePath(for noteID: NoteID, rawName: String) -> String {
+        if rawName.contains("/") {
+            return rawName
+        }
+        let parent = noteID.rawValue.split(separator: "/").dropLast().joined(separator: "/")
+        return parent.isEmpty ? rawName : "\(parent)/\(rawName)"
+    }
+
+    private func loadPinnedNotes(for vault: Vault) {
+        let byVault = userDefaults.object(forKey: AppPreferenceKeys.pinnedNotesByVault) as? [String: [String]] ?? [:]
+        pinnedNoteIDs = Set(byVault[pinnedStorageKey(for: vault), default: []].map(NoteID.init))
+    }
+
+    private func persistPinnedNotes() {
+        guard let vault else { return }
+        var byVault = userDefaults.object(forKey: AppPreferenceKeys.pinnedNotesByVault) as? [String: [String]] ?? [:]
+        byVault[pinnedStorageKey(for: vault)] = pinnedNoteIDs.map(\.rawValue).sorted()
+        userDefaults.set(byVault, forKey: AppPreferenceKeys.pinnedNotesByVault)
+    }
+
+    private func pinnedStorageKey(for vault: Vault) -> String {
+        vault.rootURL.resolvingSymlinksInPath().standardizedFileURL.path(percentEncoded: false)
     }
 
     deinit {

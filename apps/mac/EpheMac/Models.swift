@@ -1,5 +1,45 @@
 import Foundation
 
+enum AppPreferenceKeys {
+    static let theme = "ephe.mac.theme"
+    static let editorFont = "ephe.mac.editorFont"
+    static let pinnedNotesByVault = "ephe.mac.pinnedNotesByVault"
+}
+
+enum EpheTheme: String, CaseIterable, Identifiable {
+    case system
+    case light
+    case dark
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .system: "System"
+        case .light: "Light"
+        case .dark: "Dark"
+        }
+    }
+}
+
+enum EditorFontChoice: String, CaseIterable, Identifiable {
+    case iaWriterMono
+    case monospace
+    case ibmPlexMono
+    case mynerve
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .iaWriterMono: "iA Writer Mono"
+        case .monospace: "Monospace"
+        case .ibmPlexMono: "IBM Plex Mono"
+        case .mynerve: "Mynerve"
+        }
+    }
+}
+
 struct Vault: Equatable, Sendable {
     var rootURL: URL
     var displayName: String
@@ -71,6 +111,7 @@ private extension String {
 struct NoteDocument: Identifiable, Equatable, Sendable {
     var id: NoteID
     var content: String
+    var createdAt: Date?
     var modifiedAt: Date
     var isDirty: Bool
 
