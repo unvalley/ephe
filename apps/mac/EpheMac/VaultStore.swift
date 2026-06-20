@@ -64,7 +64,7 @@ final class VaultStore: @unchecked Sendable {
     func listNoteFiles(in vault: Vault) throws -> [NoteFileInfo] {
         guard let enumerator = fileManager.enumerator(
             at: vault.rootURL,
-            includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey],
+            includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey, .fileSizeKey],
             options: [.skipsHiddenFiles, .skipsPackageDescendants]
         ) else {
             return []
@@ -79,7 +79,8 @@ final class VaultStore: @unchecked Sendable {
             guard url.pathExtension.lowercased() == "md" else { continue }
             notes.append(NoteFileInfo(
                 id: NoteID(rootURL: vault.rootURL, fileURL: url),
-                modifiedAt: resourceValues.contentModificationDate ?? Date.distantPast
+                modifiedAt: resourceValues.contentModificationDate ?? Date.distantPast,
+                size: Int64(resourceValues.fileSize ?? 0)
             ))
         }
         return notes.sorted { $0.id < $1.id }

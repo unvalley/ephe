@@ -223,10 +223,8 @@ final class VaultPerformanceBenchmarks: XCTestCase {
     private func largestNote(in noteFiles: [NoteFileInfo], vault: Vault) throws -> (id: NoteID, size: Int64) {
         var largest: (id: NoteID, size: Int64)?
         for noteFile in noteFiles {
-            let values = try noteFile.id.fileURL(in: vault).resourceValues(forKeys: [.fileSizeKey])
-            let size = Int64(values.fileSize ?? 0)
-            if largest == nil || size > largest!.size {
-                largest = (noteFile.id, size)
+            if largest == nil || noteFile.size > largest!.size {
+                largest = (noteFile.id, noteFile.size)
             }
         }
         return try XCTUnwrap(largest)

@@ -211,7 +211,7 @@ final class EditorSession: ObservableObject {
     func selectSidebarNote(_ noteID: NoteID) {
         selectNote(
             noteID,
-            loadDelay: .milliseconds(20),
+            loadDelay: .milliseconds(90),
             clearsDocumentBeforeLoad: false,
             showsLoadingDuringDelay: false,
             recordsHistory: true,
@@ -361,7 +361,7 @@ final class EditorSession: ObservableObject {
         selectionGeneration += 1
         let generation = selectionGeneration
         let store = store
-        let previousNoteID = selectedNoteID
+        let previousNoteID = document?.id ?? selectedNoteID
 
         if recordsHistory, loadDelay == .zero {
             recordNavigationHistory(beforeSelecting: noteID)
@@ -724,7 +724,7 @@ final class EditorSession: ObservableObject {
         derivedIndexTask?.cancel()
         derivedIndexTask = Task(priority: .background) { [weak self] in
             do {
-                try await Task.sleep(for: .milliseconds(1_200))
+                try await Task.sleep(for: .milliseconds(3_000))
                 guard !Task.isCancelled else { return }
                 let existingNoteIDs = try await vaultIndexer.reindexChangedNotes(in: vault)
                 try await vaultIndexer.removeDeletedNotes(existingNoteIDs: existingNoteIDs)

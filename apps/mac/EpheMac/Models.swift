@@ -125,6 +125,7 @@ struct NoteDocument: Identifiable, Equatable, Sendable {
 struct NoteFileInfo: Equatable, Sendable {
     var id: NoteID
     var modifiedAt: Date
+    var size: Int64
 }
 
 struct NoteIndexMetadata: Equatable, Sendable {

@@ -35,7 +35,7 @@ actor VaultIndexer {
         }
         for noteFile in noteFiles {
             try Task.checkCancellation()
-            if try shouldIndex(noteID: noteFile.id, fallbackModifiedAt: noteFile.modifiedAt, in: vault, indexedMetadata: indexedMetadata) {
+            if shouldIndex(noteFile: noteFile, indexedMetadata: indexedMetadata) {
                 try await index(noteID: noteFile.id, in: vault)
             }
             await Task.yield()
@@ -68,18 +68,9 @@ actor VaultIndexer {
         try await indexStore.replaceAll(with: notes)
     }
 
-    private func shouldIndex(
-        noteID: NoteID,
-        fallbackModifiedAt: Date,
-        in vault: Vault,
-        indexedMetadata: [NoteID: NoteIndexMetadata]
-    ) throws -> Bool {
-        guard let indexed = indexedMetadata[noteID] else { return true }
-        let url = noteID.fileURL(in: vault)
-        let values = try url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey])
-        let modifiedAt = values.contentModificationDate ?? fallbackModifiedAt
-        let size = Int64(values.fileSize ?? 0)
-        return indexed.size != size || abs(indexed.modifiedAt.timeIntervalSince(modifiedAt)) > 0.001
+    private func shouldIndex(noteFile: NoteFileInfo, indexedMetadata: [NoteID: NoteIndexMetadata]) -> Bool {
+        guard let indexed = indexedMetadata[noteFile.id] else { return true }
+        return indexed.size != noteFile.size || abs(indexed.modifiedAt.timeIntervalSince(noteFile.modifiedAt)) > 0.001
     }
 
     private func extract(noteID: NoteID, in vault: Vault) throws -> NoteIndex {

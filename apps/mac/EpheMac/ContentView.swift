@@ -86,6 +86,7 @@ private struct VaultSidebar: View {
     @FocusState private var listFocused: Bool
     @State private var renameTarget: NoteID?
     @State private var renameText = ""
+    @State private var scrollTask: Task<Void, Never>?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -122,6 +123,11 @@ private struct VaultSidebar: View {
                             } else {
                                 ForEach(notes) { entry in
                                     SidebarFileLabel(entry: entry, isPinned: session.isPinned(entry.id))
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            listFocused = true
+                                            session.selectNote(entry.id)
+                                        }
                                         .tag(entry.id)
                                         .id(entry.id)
                                         .contextMenu {
@@ -157,6 +163,9 @@ private struct VaultSidebar: View {
                 }
             }
         }
+        .onDisappear {
+            scrollTask?.cancel()
+        }
         .alert("Rename File", isPresented: renameAlertPresented) {
             TextField("Title", text: $renameText)
             Button("Rename") {
@@ -175,11 +184,12 @@ private struct VaultSidebar: View {
 
     private func scrollToSelectedNote(with proxy: ScrollViewProxy) {
         guard let selectedNoteID = session.selectedNoteID else { return }
-        Task { @MainActor in
+        scrollTask?.cancel()
+        scrollTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(90))
+            guard !Task.isCancelled else { return }
             guard session.containsSidebarNote(selectedNoteID) else { return }
-            withAnimation(.snappy(duration: 0.16)) {
-                proxy.scrollTo(selectedNoteID, anchor: .center)
-            }
+            proxy.scrollTo(selectedNoteID, anchor: .center)
         }
     }
 
