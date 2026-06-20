@@ -198,7 +198,7 @@ actor VaultIndexStore {
             [.text(noteID.rawValue)]
         ) { statement in
             Backlink(
-                source: NoteID(columnText(statement, 0)),
+                source: NoteID(indexedPath: columnText(statement, 0)),
                 link: WikiLink(
                     target: columnText(statement, 1),
                     heading: columnOptionalText(statement, 2),
@@ -236,7 +236,7 @@ actor VaultIndexStore {
             [.text(escaped), .int(Int64(limit))]
         ) { statement in
             NoteIndexEntry(
-                id: NoteID(columnText(statement, 0)),
+                id: NoteID(indexedPath: columnText(statement, 0)),
                 title: columnText(statement, 1),
                 modifiedAt: Date(timeIntervalSince1970: sqlite3_column_double(statement, 2)),
                 headings: [],
@@ -248,18 +248,28 @@ actor VaultIndexStore {
 
     func allNotes() throws -> [NoteIndexEntry] {
         try open()
-        return try query(
-            "SELECT path, title, modified_at FROM notes ORDER BY path",
-            []
-        ) { statement in
-            NoteIndexEntry(
-                id: NoteID(columnText(statement, 0)),
-                title: columnText(statement, 1),
-                modifiedAt: Date(timeIntervalSince1970: sqlite3_column_double(statement, 2)),
-                headings: [],
-                outgoingLinks: [],
-                searchableText: ""
-            )
+        return try withStatement("SELECT path, title, modified_at FROM notes ORDER BY path", []) { statement in
+            var rows: [NoteIndexEntry] = []
+            rows.reserveCapacity(8_192)
+            while true {
+                let result = sqlite3_step(statement)
+                if result == SQLITE_ROW {
+                    rows.append(
+                        NoteIndexEntry(
+                            id: NoteID(indexedPath: columnText(statement, 0)),
+                            title: columnText(statement, 1),
+                            modifiedAt: Date(timeIntervalSince1970: sqlite3_column_double(statement, 2)),
+                            headings: [],
+                            outgoingLinks: [],
+                            searchableText: ""
+                        )
+                    )
+                } else if result == SQLITE_DONE {
+                    return rows
+                } else {
+                    throw VaultIndexStoreError.stepFailed(errorMessage)
+                }
+            }
         }
     }
 
@@ -269,7 +279,7 @@ actor VaultIndexStore {
             "SELECT path, modified_at, size FROM notes",
             []
         ) { statement in
-            let id = NoteID(columnText(statement, 0))
+            let id = NoteID(indexedPath: columnText(statement, 0))
             return NoteIndexMetadata(
                 id: id,
                 modifiedAt: Date(timeIntervalSince1970: sqlite3_column_double(statement, 1)),
@@ -368,7 +378,7 @@ actor VaultIndexStore {
         ) { statement in
             (
                 rowID: sqlite3_column_int64(statement, 0),
-                source: NoteID(columnText(statement, 1)),
+                source: NoteID(indexedPath: columnText(statement, 1)),
                 kind: columnText(statement, 2),
                 target: columnText(statement, 3)
             )

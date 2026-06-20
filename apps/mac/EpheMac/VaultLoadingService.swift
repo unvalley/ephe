@@ -36,8 +36,13 @@ struct VaultLoadingService: Sendable {
     }
 
     func snapshot(from entries: [NoteIndexEntry], source: VaultIndexSnapshotSource) -> VaultIndexSnapshot {
+        var notes: [NoteID: NoteIndexEntry] = [:]
+        notes.reserveCapacity(entries.count)
+        for entry in entries {
+            notes[entry.id] = entry
+        }
         let index = VaultIndex(
-            notes: Dictionary(uniqueKeysWithValues: entries.map { ($0.id, $0) }),
+            notes: notes,
             backlinks: [:],
             unresolvedLinks: [:],
             ambiguousLinks: [:]

@@ -59,6 +59,10 @@ struct NoteID: Hashable, Identifiable, Comparable, Sendable {
         self.rawValue = NoteID.normalize(rawValue)
     }
 
+    init(indexedPath rawValue: String) {
+        self.rawValue = rawValue
+    }
+
     init(rootURL: URL, fileURL: URL) {
         let rootPath = rootURL.resolvingSymlinksInPath().standardizedFileURL.path(percentEncoded: false).removingTrailingSlash
         let filePath = fileURL.resolvingSymlinksInPath().standardizedFileURL.path(percentEncoded: false).removingTrailingSlash

@@ -21,7 +21,9 @@ final class EditorSession: ObservableObject {
     @Published private(set) var canNavigateBack = false
     @Published private(set) var canNavigateForward = false
     @Published private(set) var pinnedNoteIDs: Set<NoteID> = []
+    @Published private(set) var sidebarRevision = 0
     @Published private var sortedNotesCache: [NoteIndexEntry] = []
+    @Published private var sidebarNotesCache: [NoteIndexEntry] = []
     @Published private var sqliteBacklinks: [Backlink] = []
     @Published private var sqliteSearchResults: [NoteIndexEntry]?
 
@@ -45,6 +47,7 @@ final class EditorSession: ObservableObject {
     private var hasSecurityScopeAccess = false
     private var backHistory: [NoteID] = []
     private var forwardHistory: [NoteID] = []
+    private var sidebarNoteIndexByID: [NoteID: Int] = [:]
     private let maxNavigationHistory = 100
 
     init(
@@ -64,25 +67,11 @@ final class EditorSession: ObservableObject {
     }
 
     var filteredNotes: [NoteIndexEntry] {
-        let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedQuery.isEmpty else {
-            return sortedNotesCache
-        }
-        if let sqliteSearchResults {
-            return sqliteSearchResults
-        }
-        return indexer.search(trimmedQuery, in: index)
+        sidebarNotesCache
     }
 
     var sidebarNotes: [NoteIndexEntry] {
-        filteredNotes.sorted { lhs, rhs in
-            let lhsPinned = pinnedNoteIDs.contains(lhs.id)
-            let rhsPinned = pinnedNoteIDs.contains(rhs.id)
-            if lhsPinned != rhsPinned {
-                return lhsPinned
-            }
-            return lhs.id < rhs.id
-        }
+        sidebarNotesCache
     }
 
     func searchNotes(_ query: String) -> [NoteIndexEntry] {
@@ -219,6 +208,17 @@ final class EditorSession: ObservableObject {
         )
     }
 
+    func selectSidebarNote(_ noteID: NoteID) {
+        selectNote(
+            noteID,
+            loadDelay: .milliseconds(20),
+            clearsDocumentBeforeLoad: false,
+            showsLoadingDuringDelay: false,
+            recordsHistory: true,
+            schedulesBacklinksImmediately: false
+        )
+    }
+
     func navigateBack() {
         guard let current = selectedNoteID, let previous = backHistory.popLast() else {
             updateNavigationAvailability()
@@ -262,6 +262,7 @@ final class EditorSession: ObservableObject {
         } else {
             pinnedNoteIDs.insert(noteID)
         }
+        updateSidebarNotesCache()
         persistPinnedNotes()
     }
 
@@ -270,8 +271,16 @@ final class EditorSession: ObservableObject {
             updateNavigationAvailability()
             return
         }
-        if let selectedNoteID, backHistory.last != selectedNoteID {
-            backHistory.append(selectedNoteID)
+        recordNavigationHistory(previous: selectedNoteID, selecting: noteID)
+    }
+
+    private func recordNavigationHistory(previous: NoteID?, selecting noteID: NoteID) {
+        guard previous != noteID else {
+            updateNavigationAvailability()
+            return
+        }
+        if let previous, backHistory.last != previous {
+            backHistory.append(previous)
             trimNavigationHistory()
         }
         forwardHistory.removeAll()
@@ -301,9 +310,7 @@ final class EditorSession: ObservableObject {
     func moveSidebarSelection(delta: Int) {
         let notes = sidebarNotes
         guard !notes.isEmpty else { return }
-        let currentIndex = selectedNoteID.flatMap { selectedNoteID in
-            notes.firstIndex { $0.id == selectedNoteID }
-        }
+        let currentIndex = selectedNoteID.flatMap { sidebarNoteIndexByID[$0] }
         let proposedIndex: Int
         if let currentIndex {
             proposedIndex = currentIndex + delta
@@ -314,10 +321,11 @@ final class EditorSession: ObservableObject {
         let shouldDebounceLoad = document != nil
         selectNote(
             notes[boundedIndex].id,
-            loadDelay: shouldDebounceLoad ? .milliseconds(90) : .zero,
+            loadDelay: shouldDebounceLoad ? .milliseconds(90) : .milliseconds(45),
             clearsDocumentBeforeLoad: false,
             showsLoadingDuringDelay: !shouldDebounceLoad,
-            recordsHistory: true
+            recordsHistory: false,
+            schedulesBacklinksImmediately: false
         )
     }
 
@@ -328,6 +336,24 @@ final class EditorSession: ObservableObject {
         showsLoadingDuringDelay: Bool,
         recordsHistory: Bool
     ) {
+        selectNote(
+            noteID,
+            loadDelay: loadDelay,
+            clearsDocumentBeforeLoad: clearsDocumentBeforeLoad,
+            showsLoadingDuringDelay: showsLoadingDuringDelay,
+            recordsHistory: recordsHistory,
+            schedulesBacklinksImmediately: true
+        )
+    }
+
+    private func selectNote(
+        _ noteID: NoteID,
+        loadDelay: Duration,
+        clearsDocumentBeforeLoad: Bool,
+        showsLoadingDuringDelay: Bool,
+        recordsHistory: Bool,
+        schedulesBacklinksImmediately: Bool
+    ) {
         guard let vault else { return }
         autosaveTask?.cancel()
         noteLoadTask?.cancel()
@@ -335,8 +361,9 @@ final class EditorSession: ObservableObject {
         selectionGeneration += 1
         let generation = selectionGeneration
         let store = store
+        let previousNoteID = selectedNoteID
 
-        if recordsHistory {
+        if recordsHistory, loadDelay == .zero {
             recordNavigationHistory(beforeSelecting: noteID)
         }
         selectedNoteID = noteID
@@ -345,7 +372,9 @@ final class EditorSession: ObservableObject {
             document = nil
         }
         conflictMessage = nil
-        scheduleBacklinkQuery(for: noteID)
+        if schedulesBacklinksImmediately {
+            scheduleBacklinkQuery(for: noteID)
+        }
 
         noteLoadTask = Task { [weak self] in
             do {
@@ -363,6 +392,9 @@ final class EditorSession: ObservableObject {
                     guard self?.document?.id != noteID else {
                         self?.isLoadingDocument = false
                         return false
+                    }
+                    if recordsHistory, loadDelay != .zero {
+                        self?.recordNavigationHistory(previous: previousNoteID, selecting: noteID)
                     }
                     self?.isLoadingDocument = true
                     return true
@@ -534,6 +566,9 @@ final class EditorSession: ObservableObject {
         isIndexing = false
         isLoadingDocument = false
         sortedNotesCache = []
+        sidebarNotesCache = []
+        sidebarNoteIndexByID = [:]
+        sidebarRevision &+= 1
         sqliteBacklinks = []
         sqliteSearchResults = nil
         pinnedNoteIDs = []
@@ -551,6 +586,7 @@ final class EditorSession: ObservableObject {
         guard reloadGeneration == generation else { return }
         index = snapshot.index
         sortedNotesCache = snapshot.sortedNotes
+        updateSidebarNotesCache()
         if let document {
             scheduleDocumentIndexRefresh(for: document)
         }
@@ -596,6 +632,7 @@ final class EditorSession: ObservableObject {
         )
         index.notes[document.id] = entry
         sortedNotesCache = index.sortedNotes
+        updateSidebarNotesCache()
 
         var unresolved: [WikiLink] = []
         var ambiguous: [(WikiLink, [NoteID])] = []
@@ -697,6 +734,7 @@ final class EditorSession: ObservableObject {
                     if let refreshed {
                         self?.index = refreshed.index
                         self?.sortedNotesCache = refreshed.sortedNotes
+                        self?.updateSidebarNotesCache()
                         self?.statusMessage = "Indexed \(refreshed.sortedNotes.count) notes"
                     }
                     self?.scheduleBacklinkQuery(for: self?.selectedNoteID)
@@ -759,10 +797,12 @@ final class EditorSession: ObservableObject {
         guard !trimmed.isEmpty else {
             searchQueryTask?.cancel()
             sqliteSearchResults = nil
+            updateSidebarNotesCache()
             return
         }
         guard let indexStore else {
             sqliteSearchResults = nil
+            updateSidebarNotesCache()
             return
         }
         searchQueryTask?.cancel()
@@ -774,14 +814,60 @@ final class EditorSession: ObservableObject {
                 await MainActor.run {
                     guard self?.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines) == trimmed else { return }
                     self?.sqliteSearchResults = results
+                    self?.updateSidebarNotesCache()
                 }
             } catch is CancellationError {
             } catch {
                 await MainActor.run {
                     self?.sqliteSearchResults = nil
+                    self?.updateSidebarNotesCache()
                 }
             }
         }
+    }
+
+    private func updateSidebarNotesCache() {
+        let trimmedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        let baseNotes: [NoteIndexEntry]
+        if trimmedQuery.isEmpty {
+            baseNotes = sortedNotesCache
+        } else if let sqliteSearchResults {
+            baseNotes = sqliteSearchResults
+        } else {
+            baseNotes = indexer.search(trimmedQuery, in: index)
+        }
+
+        guard !pinnedNoteIDs.isEmpty else {
+            replaceSidebarNotesCache(with: baseNotes)
+            return
+        }
+
+        var pinned: [NoteIndexEntry] = []
+        var unpinned: [NoteIndexEntry] = []
+        pinned.reserveCapacity(min(pinnedNoteIDs.count, baseNotes.count))
+        unpinned.reserveCapacity(max(0, baseNotes.count - pinnedNoteIDs.count))
+        for note in baseNotes {
+            if pinnedNoteIDs.contains(note.id) {
+                pinned.append(note)
+            } else {
+                unpinned.append(note)
+            }
+        }
+        replaceSidebarNotesCache(with: pinned + unpinned)
+    }
+
+    private func replaceSidebarNotesCache(with notes: [NoteIndexEntry]) {
+        sidebarNotesCache = notes
+        sidebarNoteIndexByID.removeAll(keepingCapacity: true)
+        sidebarNoteIndexByID.reserveCapacity(notes.count)
+        for (index, note) in notes.enumerated() {
+            sidebarNoteIndexByID[note.id] = index
+        }
+        sidebarRevision &+= 1
+    }
+
+    func containsSidebarNote(_ noteID: NoteID) -> Bool {
+        sidebarNoteIndexByID[noteID] != nil
     }
 
     private func relativeRenamePath(for noteID: NoteID, rawName: String) -> String {
@@ -794,7 +880,8 @@ final class EditorSession: ObservableObject {
 
     private func loadPinnedNotes(for vault: Vault) {
         let byVault = userDefaults.object(forKey: AppPreferenceKeys.pinnedNotesByVault) as? [String: [String]] ?? [:]
-        pinnedNoteIDs = Set(byVault[pinnedStorageKey(for: vault), default: []].map(NoteID.init))
+        pinnedNoteIDs = Set(byVault[pinnedStorageKey(for: vault), default: []].map { NoteID($0) })
+        updateSidebarNotesCache()
     }
 
     private func persistPinnedNotes() {

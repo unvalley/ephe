@@ -152,7 +152,7 @@ private struct VaultSidebar: View {
                         scrollToSelectedNote(with: proxy)
                     }
                 }
-                .onChange(of: session.sidebarNotes.map(\.id)) { _, _ in
+                .onChange(of: session.sidebarRevision) { _, _ in
                     scrollToSelectedNote(with: proxy)
                 }
             }
@@ -176,7 +176,7 @@ private struct VaultSidebar: View {
     private func scrollToSelectedNote(with proxy: ScrollViewProxy) {
         guard let selectedNoteID = session.selectedNoteID else { return }
         Task { @MainActor in
-            guard session.sidebarNotes.contains(where: { $0.id == selectedNoteID }) else { return }
+            guard session.containsSidebarNote(selectedNoteID) else { return }
             withAnimation(.snappy(duration: 0.16)) {
                 proxy.scrollTo(selectedNoteID, anchor: .center)
             }
@@ -189,7 +189,7 @@ private struct VaultSidebar: View {
             set: { noteID in
                 guard let noteID, noteID != session.selectedNoteID else { return }
                 listFocused = true
-                session.selectNote(noteID)
+                session.selectSidebarNote(noteID)
             }
         )
     }
