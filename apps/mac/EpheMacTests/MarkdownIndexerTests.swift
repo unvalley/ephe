@@ -11,6 +11,13 @@ final class MarkdownIndexerTests: XCTestCase {
         XCTAssertEqual(links.map(\.alias), [nil, nil, "Today", "Today tasks"])
     }
 
+    func testParseWikiLinksIncludesTags() {
+        let indexer = MarkdownIndexer()
+        let links = indexer.parseWikiLinks(in: "#inbox text #swift/native\n# Heading\nhttps://example.com/#fragment")
+
+        XCTAssertEqual(links.map(\.target), ["inbox", "swift/native"])
+    }
+
     func testHeadingParsing() {
         let indexer = MarkdownIndexer()
         XCTAssertEqual(indexer.parseHeadings(in: "# Title\nText\n## Tasks\n#### Deep"), ["Title", "Tasks", "Deep"])
@@ -57,14 +64,16 @@ final class MarkdownIndexerTests: XCTestCase {
 
     func testBuildIndexCreatesBacklinksAndUnresolvedLinks() throws {
         let fixture = try TempVault()
-        try fixture.write("Home.md", "# Home\n[[Project]]\n[[Missing]]")
+        try fixture.write("Home.md", "# Home\n[[Project]]\n#Inbox\n[[Missing]]")
         try fixture.write("Project.md", "# Project\n")
+        try fixture.write("Inbox.md", "# Inbox\n")
 
         let store = VaultStore()
         let vault = try store.openVault(at: fixture.url)
         let index = try MarkdownIndexer(store: store).buildIndex(for: vault)
 
         XCTAssertEqual(index.backlinks[NoteID("Project.md")]?.first?.source, NoteID("Home.md"))
+        XCTAssertEqual(index.backlinks[NoteID("Inbox.md")]?.first?.link.target, "Inbox")
         XCTAssertEqual(index.unresolvedLinks[NoteID("Home.md")]?.map(\.target), ["Missing"])
     }
 

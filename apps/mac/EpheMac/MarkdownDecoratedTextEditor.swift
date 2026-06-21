@@ -347,6 +347,33 @@ private final class MarkdownSyntaxController {
             }
         }
 
+        if features.hasTag {
+            MarkdownSyntax.tagRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
+                guard
+                    let match,
+                    match.numberOfRanges >= 2,
+                    let tagRange = Range(match.range(at: 1), in: string)
+                else {
+                    return
+                }
+
+                let target = String(string[tagRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !target.isEmpty else { return }
+                let sourceRange = match.range(at: 0)
+                let wikiLink = WikiLink(
+                    target: target,
+                    heading: nil,
+                    alias: nil,
+                    sourceRange: TextRange(lowerBound: sourceRange.location, upperBound: sourceRange.location + sourceRange.length)
+                )
+
+                runs.append(MarkdownHighlightRun(attributes: [
+                    .foregroundColor: NSColor.systemBlue,
+                    .epheWikiLink: WikiLinkAttribute(wikiLink),
+                ], range: sourceRange))
+            }
+        }
+
         return runs
     }
 
@@ -462,6 +489,7 @@ private struct HighlightFeatures {
     let hasMarkdownLink: Bool
     let hasBareURL: Bool
     let hasWikiLink: Bool
+    let hasTag: Bool
 
     init(text: String) {
         hasHeading = text.contains("#")
@@ -472,6 +500,7 @@ private struct HighlightFeatures {
         hasMarkdownLink = text.contains("](")
         hasBareURL = text.contains("http://") || text.contains("https://")
         hasWikiLink = text.contains("[[")
+        hasTag = text.contains("#")
     }
 }
 
@@ -741,6 +770,7 @@ final class EpheMarkdownTextView: NSTextView {
 
 private enum MarkdownSyntax {
     static let wikiLinkRegex = try! NSRegularExpression(pattern: #"\[\[([^\[\]\n]+)\]\]"#)
+    static let tagRegex = try! NSRegularExpression(pattern: #"(?<![\w/#])#([A-Za-z0-9_\-/]+)"#)
     static let headingRegex = try! NSRegularExpression(pattern: #"(?m)^(#{1,6})[ \t]+.+$"#)
     static let markdownLinkRegex = try! NSRegularExpression(pattern: #"\[([^\]\n]+)\]\(([^)\s]+)\)"#)
     static let bareURLRegex = try! NSRegularExpression(pattern: #"https?://[^\s<>\]\)\"']+"#)

@@ -18,8 +18,8 @@ final class VaultIndexStoreTests: XCTestCase {
 
         XCTAssertEqual(note.title, "Home")
         XCTAssertEqual(note.headings, [ExtractedHeading(level: 1, text: "Home", line: 1)])
-        XCTAssertEqual(note.links.map(\.kind), [.markdown, .wiki, .embed])
-        XCTAssertEqual(note.links.map(\.target), ["https://example.com", "Project", "image.png"])
+        XCTAssertEqual(note.links.map(\.kind), [.markdown, .wiki, .embed, .wiki])
+        XCTAssertEqual(note.links.map(\.target), ["https://example.com", "Project", "image.png", "swift/native"])
         XCTAssertEqual(note.links[1].heading, "Plan")
         XCTAssertEqual(note.links[1].alias, "project plan")
         XCTAssertEqual(note.tags.map(\.name), ["swift/native"])
@@ -29,6 +29,7 @@ final class VaultIndexStoreTests: XCTestCase {
         let fixture = try TempVault()
         try fixture.write("Home.md", "# Home\n[[Project]]\n#inbox\n")
         try fixture.write("Project.md", "# Project\nship native app\n")
+        try fixture.write("inbox.md", "# Inbox\n")
 
         let store = VaultStore()
         let vault = try store.openVault(at: fixture.url)
@@ -39,6 +40,8 @@ final class VaultIndexStoreTests: XCTestCase {
 
         let backlinks = try await indexStore.backlinks(to: NoteID("Project.md"))
         XCTAssertEqual(backlinks.map(\.source), [NoteID("Home.md")])
+        let tagBacklinks = try await indexStore.backlinks(to: NoteID("inbox.md"))
+        XCTAssertEqual(tagBacklinks.map(\.source), [NoteID("Home.md")])
 
         let searchResults = try await indexStore.search("native")
         XCTAssertEqual(searchResults.map(\.id), [NoteID("Project.md")])

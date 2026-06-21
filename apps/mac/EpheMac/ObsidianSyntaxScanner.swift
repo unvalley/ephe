@@ -46,6 +46,9 @@ struct ObsidianSyntaxScanner: Sendable {
         let markdownLinks = extractMarkdownLinks(from: content)
         let obsidianLinks = extractObsidianLinks(from: content)
         let tags = extractTags(from: content)
+        let tagLinks = tags.map { tag in
+            ExtractedLink(kind: .wiki, target: tag.name, heading: nil, alias: nil, range: tag.range)
+        }
         let title = headings.first?.text ?? noteID.title
         let searchableText = ([title, noteID.rawValue] + headings.map(\.text) + tags.map(\.name) + [String(content.prefix(4_000))])
             .joined(separator: "\n")
@@ -56,7 +59,7 @@ struct ObsidianSyntaxScanner: Sendable {
             modifiedAt: modifiedAt,
             size: size,
             headings: headings,
-            links: markdownLinks + obsidianLinks,
+            links: markdownLinks + obsidianLinks + tagLinks,
             tags: tags,
             searchableText: searchableText
         )

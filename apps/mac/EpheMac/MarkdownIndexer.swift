@@ -1,6 +1,8 @@
 import Foundation
 
 final class MarkdownIndexer: @unchecked Sendable {
+    private static let tagRegex = try! NSRegularExpression(pattern: #"(?<![\w/#])#([A-Za-z0-9_\-/]+)"#)
+
     private let store: VaultStore
     private let searchableContentLimit = 4_000
 
@@ -12,7 +14,7 @@ final class MarkdownIndexer: @unchecked Sendable {
         let pattern = #"\[\[([^\[\]\n]+)\]\]"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
         let nsRange = NSRange(content.startIndex..<content.endIndex, in: content)
-        return regex.matches(in: content, range: nsRange).compactMap { match in
+        let wikiLinks: [WikiLink] = regex.matches(in: content, range: nsRange).compactMap { match in
             guard
                 let wholeRange = Range(match.range(at: 0), in: content),
                 let bodyRange = Range(match.range(at: 1), in: content)
@@ -39,6 +41,26 @@ final class MarkdownIndexer: @unchecked Sendable {
                 )
             )
         }
+        let tagLinks = Self.tagRegex.matches(in: content, range: nsRange).compactMap { match -> WikiLink? in
+            guard
+                let wholeRange = Range(match.range(at: 0), in: content),
+                let tagRange = Range(match.range(at: 1), in: content)
+            else {
+                return nil
+            }
+            let target = String(content[tagRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !target.isEmpty else { return nil }
+            return WikiLink(
+                target: target,
+                heading: nil,
+                alias: nil,
+                sourceRange: TextRange(
+                    lowerBound: content.distance(from: content.startIndex, to: wholeRange.lowerBound),
+                    upperBound: content.distance(from: content.startIndex, to: wholeRange.upperBound)
+                )
+            )
+        }
+        return wikiLinks + tagLinks
     }
 
     func parseHeadings(in content: String) -> [String] {
