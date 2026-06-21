@@ -543,6 +543,33 @@ final class EditorSession: ObservableObject {
         statusMessage = "Could not find an available Untitled note name."
     }
 
+    func createFolder(named name: String? = nil) {
+        guard let vault else { return }
+        let trimmedName = name?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        let candidateNames: [String]
+        if let trimmedName {
+            candidateNames = [trimmedName]
+        } else {
+            candidateNames = (1...999).map { number in
+                number == 1 ? "Untitled Folder" : "Untitled Folder \(number)"
+            }
+        }
+
+        for candidateName in candidateNames {
+            do {
+                let folderPath = try store.createFolder(named: candidateName, near: selectedNoteID, in: vault)
+                statusMessage = "Created \(folderPath)"
+                return
+            } catch VaultStoreError.folderAlreadyExists where trimmedName == nil {
+                continue
+            } catch {
+                statusMessage = error.localizedDescription
+                return
+            }
+        }
+        statusMessage = "Could not find an available Untitled Folder name."
+    }
+
     func openWikiLink(_ link: WikiLink) {
         guard let selectedNoteID else { return }
         switch indexer.resolve(link, from: selectedNoteID, in: index.notes) {

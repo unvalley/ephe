@@ -15,6 +15,7 @@ enum VaultStoreError: LocalizedError, Equatable {
     case notMarkdownFile
     case outsideVault
     case noteAlreadyExists(NoteID)
+    case folderAlreadyExists(String)
     case noteNotFound(NoteID)
     case ambiguousNoteName(String)
 
@@ -26,6 +27,8 @@ enum VaultStoreError: LocalizedError, Equatable {
             "The selected file is outside the current vault."
         case .noteAlreadyExists(let noteID):
             "A note already exists at \(noteID.rawValue)."
+        case .folderAlreadyExists(let path):
+            "A folder already exists at \(path)."
         case .noteNotFound(let noteID):
             "Could not find \(noteID.rawValue)."
         case .ambiguousNoteName(let name):
@@ -127,6 +130,28 @@ final class VaultStore: @unchecked Sendable {
         return try readNote(noteID, in: vault)
     }
 
+    func createFolder(named rawName: String, near source: NoteID?, in vault: Vault) throws -> String {
+        let cleanName = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let relativeBase: String
+        if cleanName.contains("/") {
+            relativeBase = cleanName
+        } else if let source {
+            let parent = source.rawValue.split(separator: "/").dropLast().joined(separator: "/")
+            relativeBase = parent.isEmpty ? cleanName : "\(parent)/\(cleanName)"
+        } else {
+            relativeBase = cleanName
+        }
+
+        let folderPath = normalizeFolderPath(relativeBase)
+        let url = vault.rootURL.appending(path: folderPath, directoryHint: .isDirectory)
+        try ensureDirectoryInsideVault(url, vault: vault)
+        if fileManager.fileExists(atPath: url.path(percentEncoded: false)) {
+            throw VaultStoreError.folderAlreadyExists(folderPath)
+        }
+        try fileManager.createDirectory(at: url, withIntermediateDirectories: true)
+        return folderPath
+    }
+
     func renameNote(_ noteID: NoteID, to rawName: String, in vault: Vault) throws -> NoteID {
         let destinationID = NoteID(rawName)
         let sourceURL = noteID.fileURL(in: vault)
@@ -160,6 +185,30 @@ final class VaultStore: @unchecked Sendable {
         guard fileURL.pathExtension.lowercased() == "md" else {
             throw VaultStoreError.notMarkdownFile
         }
+    }
+
+    private func ensureDirectoryInsideVault(_ directoryURL: URL, vault: Vault) throws {
+        let root = vault.rootURL.resolvingSymlinksInPath().standardizedFileURL.path(percentEncoded: false).removingTrailingSlash
+        let path = directoryURL.resolvingSymlinksInPath().standardizedFileURL.path(percentEncoded: false).removingTrailingSlash
+        guard path != root, path.hasPrefix(root + "/") else {
+            throw VaultStoreError.outsideVault
+        }
+    }
+
+    private func normalizeFolderPath(_ path: String) -> String {
+        let normalized = path.replacingOccurrences(of: "\\", with: "/")
+        var components: [String] = []
+        for component in normalized.split(separator: "/", omittingEmptySubsequences: true) {
+            switch component {
+            case ".":
+                continue
+            case "..":
+                _ = components.popLast()
+            default:
+                components.append(String(component))
+            }
+        }
+        return components.joined(separator: "/")
     }
 }
 

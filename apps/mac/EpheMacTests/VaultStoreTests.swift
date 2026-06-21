@@ -31,6 +31,10 @@ final class VaultStoreTests: XCTestCase {
         let created = try store.createNote(named: "Linked", near: NoteID("Folder/Source.md"), in: vault)
         XCTAssertEqual(created.id, NoteID("Folder/Linked.md"))
 
+        let folder = try store.createFolder(named: "Drafts", near: NoteID("Folder/Source.md"), in: vault)
+        XCTAssertEqual(folder, "Folder/Drafts")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: fixture.url.appending(path: "Folder/Drafts").path(percentEncoded: false)))
+
         let renamed = try store.renameNote(created.id, to: "Archive/Linked.md", in: vault)
         XCTAssertEqual(renamed, NoteID("Archive/Linked.md"))
         XCTAssertTrue(FileManager.default.fileExists(atPath: fixture.url.appending(path: "Archive/Linked.md").path(percentEncoded: false)))
