@@ -51,7 +51,8 @@ struct NoteID: Hashable, Identifiable, Comparable, Sendable {
 
     var id: String { rawValue }
     var title: String {
-        let name = URL(fileURLWithPath: rawValue).deletingPathExtension().lastPathComponent
+        let fileName = rawValue.split(separator: "/", omittingEmptySubsequences: true).last.map(String.init) ?? rawValue
+        let name = fileName.lowercased().hasSuffix(".md") ? String(fileName.dropLast(3)) : fileName
         return name.isEmpty ? "Untitled" : name
     }
 

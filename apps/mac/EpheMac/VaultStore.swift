@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 enum MarkdownFileReader {
     static func readString(from url: URL) throws -> String {
@@ -62,28 +63,7 @@ final class VaultStore: @unchecked Sendable {
     }
 
     func listNoteFiles(in vault: Vault) throws -> [NoteFileInfo] {
-        guard let enumerator = fileManager.enumerator(
-            at: vault.rootURL,
-            includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey, .fileSizeKey],
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else {
-            return []
-        }
-
-        var notes: [NoteFileInfo] = []
-        for case let url as URL in enumerator {
-            let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey, .contentModificationDateKey, .fileSizeKey])
-            if resourceValues.isDirectory == true {
-                continue
-            }
-            guard url.pathExtension.lowercased() == "md" else { continue }
-            notes.append(NoteFileInfo(
-                id: NoteID(rootURL: vault.rootURL, fileURL: url),
-                modifiedAt: resourceValues.contentModificationDate ?? Date.distantPast,
-                size: Int64(resourceValues.fileSize ?? 0)
-            ))
-        }
-        return notes.sorted { $0.id < $1.id }
+        try VaultMarkdownFileEnumerator.listNoteFiles(in: vault)
     }
 
     func readNote(_ noteID: NoteID, in vault: Vault) throws -> NoteDocument {
@@ -180,6 +160,62 @@ final class VaultStore: @unchecked Sendable {
         guard fileURL.pathExtension.lowercased() == "md" else {
             throw VaultStoreError.notMarkdownFile
         }
+    }
+}
+
+private enum VaultMarkdownFileEnumerator {
+    static func listNoteFiles(in vault: Vault) throws -> [NoteFileInfo] {
+        let rootPath = vault.rootURL.standardizedFileURL.path(percentEncoded: false).removingTrailingSlash
+        var notes: [NoteFileInfo] = []
+        notes.reserveCapacity(8_192)
+        try scanDirectory(at: rootPath, relativeDirectory: "", into: &notes)
+        notes.sort { $0.id < $1.id }
+        return notes
+    }
+
+    private static func scanDirectory(
+        at directoryPath: String,
+        relativeDirectory: String,
+        into notes: inout [NoteFileInfo]
+    ) throws {
+        guard let directory = opendir(directoryPath) else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        defer { closedir(directory) }
+
+        while let entry = readdir(directory) {
+            let name = withUnsafePointer(to: &entry.pointee.d_name) {
+                $0.withMemoryRebound(to: CChar.self, capacity: Int(NAME_MAX)) {
+                    String(cString: $0)
+                }
+            }
+            guard shouldScan(name: name) else { continue }
+
+            let fullPath = directoryPath + "/" + name
+            var statBuffer = stat()
+            guard lstat(fullPath, &statBuffer) == 0 else { continue }
+
+            if statBuffer.st_mode & S_IFMT == S_IFDIR {
+                let childRelativeDirectory = relativeDirectory.isEmpty ? name : "\(relativeDirectory)/\(name)"
+                try scanDirectory(at: fullPath, relativeDirectory: childRelativeDirectory, into: &notes)
+                continue
+            }
+
+            guard statBuffer.st_mode & S_IFMT == S_IFREG, name.lowercased().hasSuffix(".md") else {
+                continue
+            }
+            let relativePath = relativeDirectory.isEmpty ? name : "\(relativeDirectory)/\(name)"
+            notes.append(NoteFileInfo(
+                id: NoteID(relativePath),
+                modifiedAt: Date(timeIntervalSince1970: TimeInterval(statBuffer.st_mtimespec.tv_sec) + TimeInterval(statBuffer.st_mtimespec.tv_nsec) / 1_000_000_000),
+                size: Int64(statBuffer.st_size)
+            ))
+        }
+    }
+
+    private static func shouldScan(name: String) -> Bool {
+        guard name != ".", name != ".." else { return false }
+        return !name.hasPrefix(".")
     }
 }
 

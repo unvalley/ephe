@@ -27,9 +27,14 @@ final class VaultPerformanceBenchmarks: XCTestCase {
         let (_, skeletonMs) = try timed("skeleton_index_ms") {
             try markdownIndexer.buildSkeletonIndex(from: noteFiles)
         }
-        let (_, initialSQLiteMs) = try await timedAsync("sqlite_initial_index_ms") {
-            try await vaultIndexer.reindexChangedNotes(in: vault)
+        let (scannedNotes, scanAllNotesMs) = try timed("scan_all_notes_ms") {
+            try scanNoteIndexes(noteFiles: noteFiles, vault: vault)
         }
+        let (_, sqliteReplaceAllMs) = try await timedAsync("sqlite_replace_all_ms") {
+            try await indexStore.replaceAll(with: scannedNotes)
+        }
+        let initialSQLiteMs = scanAllNotesMs + sqliteReplaceAllMs
+        print("EPHE_BENCHMARK sqlite_initial_index_ms=\(format(initialSQLiteMs))")
         let (cachedEntries, cachedAllNotesMs) = try await timedAsync("sqlite_cached_all_notes_ms") {
             try await indexStore.allNotes()
         }
@@ -76,6 +81,8 @@ final class VaultPerformanceBenchmarks: XCTestCase {
             largest_note="\(largest.id.rawValue)" largest_bytes=\(largest.size) \
             list_note_files_ms=\(format(listMs)) \
             skeleton_index_ms=\(format(skeletonMs)) \
+            scan_all_notes_ms=\(format(scanAllNotesMs)) \
+            sqlite_replace_all_ms=\(format(sqliteReplaceAllMs)) \
             sqlite_initial_index_ms=\(format(initialSQLiteMs)) \
             sqlite_cached_all_notes_ms=\(format(cachedAllNotesMs)) \
             editor_session_cached_open_sidebar_ms=\(format(cachedOpenSidebarMs)) \
@@ -93,6 +100,22 @@ final class VaultPerformanceBenchmarks: XCTestCase {
             """
         print(summary)
         try summary.write(to: URL(fileURLWithPath: "/tmp/ephe-benchmark-results.txt"), atomically: true, encoding: .utf8)
+    }
+
+    private func scanNoteIndexes(noteFiles: [NoteFileInfo], vault: Vault) throws -> [NoteIndex] {
+        let scanner = ObsidianSyntaxScanner()
+        var notes: [NoteIndex] = []
+        notes.reserveCapacity(noteFiles.count)
+        for noteFile in noteFiles {
+            let content = try MarkdownFileReader.readString(from: noteFile.id.fileURL(in: vault))
+            notes.append(scanner.scan(
+                content: content,
+                noteID: noteFile.id,
+                modifiedAt: noteFile.modifiedAt,
+                size: noteFile.size
+            ))
+        }
+        return notes
     }
 
     private func timed<T>(_ label: String, _ body: () throws -> T) throws -> (T, Double) {

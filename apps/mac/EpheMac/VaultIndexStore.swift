@@ -140,9 +140,36 @@ actor VaultIndexStore {
             try execute("DELETE FROM links")
             try execute("DELETE FROM headings")
             try execute("DELETE FROM notes")
+
+            let noteStatement = try prepare(
+                "INSERT INTO notes(path, title, modified_at, size, searchable_text) VALUES (?, ?, ?, ?, ?)"
+            )
+            let headingStatement = try prepare(
+                "INSERT INTO headings(note_path, level, text, line) VALUES (?, ?, ?, ?)"
+            )
+            let linkStatement = try prepare(
+                """
+                INSERT INTO links(source_path, kind, target, heading, alias, lower_bound, upper_bound, resolved_path)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """
+            )
+            let tagStatement = try prepare(
+                "INSERT INTO tags(note_path, name, lower_bound, upper_bound) VALUES (?, ?, ?, ?)"
+            )
+            let searchStatement = try prepare(
+                "INSERT INTO search_index(path, title, body) VALUES (?, ?, ?)"
+            )
+            defer {
+                sqlite3_finalize(noteStatement)
+                sqlite3_finalize(headingStatement)
+                sqlite3_finalize(linkStatement)
+                sqlite3_finalize(tagStatement)
+                sqlite3_finalize(searchStatement)
+            }
+
             for note in notes {
                 try execute(
-                    "INSERT INTO notes(path, title, modified_at, size, searchable_text) VALUES (?, ?, ?, ?, ?)",
+                    noteStatement,
                     [
                         .text(note.id.rawValue),
                         .text(note.title),
@@ -153,16 +180,13 @@ actor VaultIndexStore {
                 )
                 for heading in note.headings {
                     try execute(
-                        "INSERT INTO headings(note_path, level, text, line) VALUES (?, ?, ?, ?)",
+                        headingStatement,
                         [.text(note.id.rawValue), .int(Int64(heading.level)), .text(heading.text), .int(Int64(heading.line))]
                     )
                 }
                 for link in note.links {
                     try execute(
-                        """
-                        INSERT INTO links(source_path, kind, target, heading, alias, lower_bound, upper_bound, resolved_path)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        """,
+                        linkStatement,
                         [
                             .text(note.id.rawValue),
                             .text(link.kind.rawValue),
@@ -177,12 +201,12 @@ actor VaultIndexStore {
                 }
                 for tag in note.tags {
                     try execute(
-                        "INSERT INTO tags(note_path, name, lower_bound, upper_bound) VALUES (?, ?, ?, ?)",
+                        tagStatement,
                         [.text(note.id.rawValue), .text(tag.name), .int(Int64(tag.range.lowerBound)), .int(Int64(tag.range.upperBound))]
                     )
                 }
                 try execute(
-                    "INSERT INTO search_index(path, title, body) VALUES (?, ?, ?)",
+                    searchStatement,
                     [.text(note.id.rawValue), .text(note.title), .text(note.searchableText)]
                 )
             }
@@ -374,9 +398,7 @@ actor VaultIndexStore {
         if lookup.paths.contains(mdID.rawValue) {
             return mdID.rawValue
         }
-        let basename = URL(fileURLWithPath: target.lowercased().hasSuffix(".md") ? target : "\(target).md")
-            .deletingPathExtension()
-            .lastPathComponent
+        let basename = markdownBasename(target)
         let candidates = lookup.basenamePaths[basename] ?? []
         return candidates.count == 1 ? candidates[0] : nil
     }
@@ -430,7 +452,7 @@ actor VaultIndexStore {
         basenamePaths.reserveCapacity(paths.count)
         for path in paths {
             pathSet.insert(path)
-            let basename = URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
+            let basename = markdownBasename(path)
             basenamePaths[basename, default: []].append(path)
         }
         return NoteLookup(paths: pathSet, basenamePaths: basenamePaths)
@@ -467,6 +489,17 @@ actor VaultIndexStore {
         }
     }
 
+    private func execute(_ statement: OpaquePointer, _ bindings: [SQLiteValue]) throws {
+        sqlite3_reset(statement)
+        sqlite3_clear_bindings(statement)
+        for (index, value) in bindings.enumerated() {
+            try bind(value, to: Int32(index + 1), in: statement)
+        }
+        guard sqlite3_step(statement) == SQLITE_DONE else {
+            throw VaultIndexStoreError.stepFailed(errorMessage)
+        }
+    }
+
     private func query<T>(_ sql: String, _ bindings: [SQLiteValue], map: (OpaquePointer) throws -> T) throws -> [T] {
         try withStatement(sql, bindings) { statement in
             var rows: [T] = []
@@ -483,7 +516,7 @@ actor VaultIndexStore {
         }
     }
 
-    private func withStatement<T>(_ sql: String, _ bindings: [SQLiteValue], body: (OpaquePointer) throws -> T) throws -> T {
+    private func prepare(_ sql: String) throws -> OpaquePointer {
         guard let database else {
             throw VaultIndexStoreError.openFailed("Database is not open.")
         }
@@ -491,6 +524,11 @@ actor VaultIndexStore {
         guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK, let statement else {
             throw VaultIndexStoreError.prepareFailed(errorMessage)
         }
+        return statement
+    }
+
+    private func withStatement<T>(_ sql: String, _ bindings: [SQLiteValue], body: (OpaquePointer) throws -> T) throws -> T {
+        let statement = try prepare(sql)
         defer { sqlite3_finalize(statement) }
         for (index, value) in bindings.enumerated() {
             try bind(value, to: Int32(index + 1), in: statement)
@@ -535,6 +573,11 @@ private enum SQLiteValue {
 private struct NoteLookup {
     var paths: Set<String>
     var basenamePaths: [String: [String]]
+}
+
+private func markdownBasename(_ path: String) -> String {
+    let fileName = path.split(separator: "/", omittingEmptySubsequences: true).last.map(String.init) ?? path
+    return fileName.lowercased().hasSuffix(".md") ? String(fileName.dropLast(3)) : fileName
 }
 
 private func columnText(_ statement: OpaquePointer, _ index: Int32) -> String {
