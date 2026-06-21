@@ -307,6 +307,10 @@ final class SidebarNotesTableController: NSObject, NSTableViewDataSource, NSTabl
         24
     }
 
+    func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
+        SidebarSelectionRowView()
+    }
+
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         guard notes.indices.contains(row) else { return nil }
         let cell = tableView.makeView(
@@ -401,6 +405,13 @@ final class SidebarNotesTableController: NSObject, NSTableViewDataSource, NSTabl
             return
         }
         rename(entry.id, entry.title)
+    }
+}
+
+private final class SidebarSelectionRowView: NSTableRowView {
+    override var isEmphasized: Bool {
+        get { true }
+        set {}
     }
 }
 
