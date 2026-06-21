@@ -5,13 +5,12 @@ struct ContentView: View {
     @EnvironmentObject private var session: EditorSession
     @State private var sidebarVisibility: NavigationSplitViewVisibility = .all
     @State private var inspectorVisible = false
+    @State private var folderName = "Untitled Folder"
+    @State private var folderAlertPresented = false
 
     var body: some View {
         NavigationSplitView(columnVisibility: $sidebarVisibility) {
-            VaultSidebar(
-                sidebarVisible: sidebarVisibility != .detailOnly,
-                toggleSidebar: toggleSidebar
-            )
+            VaultSidebar()
                 .navigationSplitViewColumnWidth(min: 200, ideal: 224, max: 320)
         } detail: {
             ZStack(alignment: .topTrailing) {
@@ -38,6 +37,10 @@ struct ContentView: View {
             EpheWindowToolbar(
                 sidebarVisible: sidebarVisibility != .detailOnly,
                 toggleSidebar: toggleSidebar,
+                newFolder: {
+                    folderName = "Untitled Folder"
+                    folderAlertPresented = true
+                },
                 inspectorVisible: inspectorVisible,
                 toggleInspector: {
                     withAnimation(.snappy(duration: 0.16)) {
@@ -57,6 +60,18 @@ struct ContentView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(session.conflictMessage ?? "")
+        }
+        .alert("New Folder", isPresented: $folderAlertPresented) {
+            TextField("Name", text: $folderName)
+            Button("Create") {
+                session.createFolder(named: folderName)
+                folderName = "Untitled Folder"
+            }
+            Button("Cancel", role: .cancel) {
+                folderName = "Untitled Folder"
+            }
+        } message: {
+            Text("Create a folder in the current note's folder.")
         }
     }
 
@@ -88,26 +103,11 @@ private struct WindowTitleHider: NSViewRepresentable {
 
 private struct VaultSidebar: View {
     @EnvironmentObject private var session: EditorSession
-    var sidebarVisible: Bool
-    var toggleSidebar: () -> Void
     @State private var renameTarget: NoteID?
     @State private var renameText = ""
-    @State private var folderName = "Untitled Folder"
-    @State private var folderAlertPresented = false
 
     var body: some View {
         VStack(spacing: 0) {
-            SidebarTopBar(
-                sidebarVisible: sidebarVisible,
-                toggleSidebar: toggleSidebar,
-                newFolder: {
-                    folderName = "Untitled Folder"
-                    folderAlertPresented = true
-                }
-            )
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-
             if session.isIndexing {
                 HStack(spacing: 8) {
                     ProgressView()
@@ -182,18 +182,6 @@ private struct VaultSidebar: View {
         } message: {
             Text("Rename this Markdown file.")
         }
-        .alert("New Folder", isPresented: $folderAlertPresented) {
-            TextField("Name", text: $folderName)
-            Button("Create") {
-                session.createFolder(named: folderName)
-                folderName = "Untitled Folder"
-            }
-            Button("Cancel", role: .cancel) {
-                folderName = "Untitled Folder"
-            }
-        } message: {
-            Text("Create a folder in the current note's folder.")
-        }
     }
 
     private var renameAlertPresented: Binding<Bool> {
@@ -205,94 +193,6 @@ private struct VaultSidebar: View {
                 }
             }
         )
-    }
-}
-
-private struct SidebarTopBar: View {
-    @EnvironmentObject private var session: EditorSession
-    var sidebarVisible: Bool
-    var toggleSidebar: () -> Void
-    var newFolder: () -> Void
-
-    var body: some View {
-        HStack(spacing: 6) {
-            SidebarIconButton(
-                systemName: "chevron.left",
-                help: "Back",
-                accessibilityIdentifier: "sidebar-navigate-back-button",
-                isEnabled: session.canNavigateBack,
-                action: {
-                    session.navigateBack()
-                }
-            )
-
-            SidebarIconButton(
-                systemName: "chevron.right",
-                help: "Forward",
-                accessibilityIdentifier: "sidebar-navigate-forward-button",
-                isEnabled: session.canNavigateForward,
-                action: {
-                    session.navigateForward()
-                }
-            )
-
-            Menu {
-                Button {
-                    session.createNote()
-                } label: {
-                    Label("New File", systemImage: "doc.badge.plus")
-                }
-                .disabled(session.vault == nil)
-
-                Button {
-                    newFolder()
-                } label: {
-                    Label("New Folder", systemImage: "folder.badge.plus")
-                }
-                .disabled(session.vault == nil)
-            } label: {
-                Image(systemName: "plus")
-                    .font(.system(size: 13, weight: .medium))
-                    .frame(width: 24, height: 24)
-                    .contentShape(Rectangle())
-            }
-            .menuStyle(.borderlessButton)
-            .buttonStyle(.plain)
-            .help("New")
-            .accessibilityIdentifier("sidebar-new-menu-button")
-
-            Spacer(minLength: 8)
-
-            SidebarIconButton(
-                systemName: "sidebar.left",
-                help: sidebarVisible ? "Hide Sidebar" : "Show Sidebar",
-                accessibilityIdentifier: "sidebar-toggle-button",
-                action: toggleSidebar
-            )
-        }
-        .frame(height: 26)
-    }
-}
-
-private struct SidebarIconButton: View {
-    var systemName: String
-    var help: String
-    var accessibilityIdentifier: String
-    var isEnabled = true
-    var action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: systemName)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(isEnabled ? Color.secondary : Color(nsColor: .disabledControlTextColor))
-                .frame(width: 24, height: 24)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(!isEnabled)
-        .help(help)
-        .accessibilityIdentifier(accessibilityIdentifier)
     }
 }
 
@@ -666,20 +566,50 @@ private struct EpheWindowToolbar: ToolbarContent {
     @EnvironmentObject private var session: EditorSession
     var sidebarVisible: Bool
     var toggleSidebar: () -> Void
+    var newFolder: () -> Void
     var inspectorVisible: Bool
     var toggleInspector: () -> Void
 
     var body: some ToolbarContent {
-        if !sidebarVisible {
-            ToolbarItem(placement: .navigation) {
-                BorderlessToolbarButton(
-                    systemName: "sidebar.left",
-                    help: "Show Sidebar",
-                    accessibilityIdentifier: "toggle-sidebar-button",
-                    action: toggleSidebar
-                )
-                .frame(width: 24, height: 24)
-            }
+        ToolbarItemGroup(placement: .navigation) {
+            BorderlessToolbarButton(
+                systemName: "chevron.left",
+                help: "Back",
+                accessibilityIdentifier: "navigate-back-button",
+                isEnabled: session.canNavigateBack,
+                action: {
+                    session.navigateBack()
+                }
+            )
+            .frame(width: 24, height: 24)
+
+            BorderlessToolbarButton(
+                systemName: "chevron.right",
+                help: "Forward",
+                accessibilityIdentifier: "navigate-forward-button",
+                isEnabled: session.canNavigateForward,
+                action: {
+                    session.navigateForward()
+                }
+            )
+            .frame(width: 24, height: 24)
+
+            BorderlessNewMenuButton(
+                isEnabled: session.vault != nil,
+                newFile: {
+                    session.createNote()
+                },
+                newFolder: newFolder
+            )
+            .frame(width: 24, height: 24)
+
+            BorderlessToolbarButton(
+                systemName: "sidebar.left",
+                help: sidebarVisible ? "Hide Sidebar" : "Show Sidebar",
+                accessibilityIdentifier: "toggle-sidebar-button",
+                action: toggleSidebar
+            )
+            .frame(width: 24, height: 24)
         }
 
         ToolbarItem(placement: .principal) {
@@ -695,6 +625,74 @@ private struct EpheWindowToolbar: ToolbarContent {
                 action: toggleInspector
             )
             .frame(width: 24, height: 24)
+        }
+    }
+}
+
+private struct BorderlessNewMenuButton: NSViewRepresentable {
+    var isEnabled: Bool
+    var newFile: () -> Void
+    var newFolder: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(newFile: newFile, newFolder: newFolder)
+    }
+
+    func makeNSView(context: Context) -> NSButton {
+        let button = NSButton()
+        button.isBordered = false
+        button.bezelStyle = .regularSquare
+        button.imagePosition = .imageOnly
+        button.imageScaling = .scaleProportionallyDown
+        button.setButtonType(.momentaryChange)
+        button.contentTintColor = .secondaryLabelColor
+        button.isEnabled = isEnabled
+        button.target = context.coordinator
+        button.action = #selector(Coordinator.showMenu(_:))
+        button.toolTip = "New"
+        button.setAccessibilityIdentifier("new-menu-button")
+        return button
+    }
+
+    func updateNSView(_ button: NSButton, context: Context) {
+        context.coordinator.newFile = newFile
+        context.coordinator.newFolder = newFolder
+        button.image = NSImage(systemSymbolName: "plus", accessibilityDescription: "New")
+        button.isEnabled = isEnabled
+        button.contentTintColor = isEnabled ? .secondaryLabelColor : .disabledControlTextColor
+    }
+
+    @MainActor
+    final class Coordinator: NSObject {
+        var newFile: () -> Void
+        var newFolder: () -> Void
+
+        init(newFile: @escaping () -> Void, newFolder: @escaping () -> Void) {
+            self.newFile = newFile
+            self.newFolder = newFolder
+        }
+
+        @objc func showMenu(_ sender: NSButton) {
+            let menu = NSMenu()
+            let newFileItem = NSMenuItem(title: "New File", action: #selector(createFile), keyEquivalent: "")
+            newFileItem.target = self
+            newFileItem.image = NSImage(systemSymbolName: "doc.badge.plus", accessibilityDescription: nil)
+            menu.addItem(newFileItem)
+
+            let newFolderItem = NSMenuItem(title: "New Folder", action: #selector(createFolder), keyEquivalent: "")
+            newFolderItem.target = self
+            newFolderItem.image = NSImage(systemSymbolName: "folder.badge.plus", accessibilityDescription: nil)
+            menu.addItem(newFolderItem)
+
+            menu.popUp(positioning: nil, at: NSPoint(x: 0, y: sender.bounds.maxY + 2), in: sender)
+        }
+
+        @objc private func createFile() {
+            newFile()
+        }
+
+        @objc private func createFolder() {
+            newFolder()
         }
     }
 }
