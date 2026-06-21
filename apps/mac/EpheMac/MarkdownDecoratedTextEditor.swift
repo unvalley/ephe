@@ -52,17 +52,12 @@ struct MarkdownDecoratedTextEditor: NSViewRepresentable {
 
     @MainActor
     final class Coordinator: NSObject, NSTextViewDelegate {
-        private static let highlightCache = MarkdownHighlightCache()
-
         var text: Binding<String>
         var fontChoice: EditorFontChoice
         var onWikiLink: (WikiLink) -> Void
         var isApplyingProgrammaticChange = false
 
-        private let decoratedCharacterLimit = 120_000
-        private var highlightTask: Task<Void, Never>?
-        private var lastHighlightedString: String?
-        private var pendingHighlightString: String?
+        private let syntaxController: MarkdownSyntaxController
         private var editedRange: NSRange?
 
         init(
@@ -73,262 +68,389 @@ struct MarkdownDecoratedTextEditor: NSViewRepresentable {
             self.text = text
             self.fontChoice = fontChoice
             self.onWikiLink = onWikiLink
+            syntaxController = MarkdownSyntaxController(fontChoice: fontChoice)
         }
 
         func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
             let replacementLength = (replacementString as NSString?)?.length ?? 0
-            editedRange = NSRange(location: affectedCharRange.location, length: replacementLength)
+            editedRange = NSRange(location: affectedCharRange.location, length: max(affectedCharRange.length, replacementLength))
             return true
         }
 
         func textDidChange(_ notification: Notification) {
             guard !isApplyingProgrammaticChange, let textView = notification.object as? NSTextView else { return }
             text.wrappedValue = textView.string
-            scheduleHighlighting(to: textView, delay: .milliseconds(12), range: editedRange)
+            syntaxController.invalidate(range: editedRange)
+            syntaxController.scheduleHighlighting(to: textView, delay: .zero)
             editedRange = nil
         }
 
         func scheduleHighlightingIfNeeded(to textView: NSTextView) {
-            guard lastHighlightedString != textView.string else { return }
-            guard pendingHighlightString != textView.string else { return }
-            if applyCachedHighlightingIfAvailable(to: textView) { return }
-            scheduleHighlighting(to: textView, delay: .milliseconds(16))
+            syntaxController.scheduleHighlightingIfNeeded(to: textView)
         }
 
         func scheduleHighlighting(to textView: NSTextView, delay: Duration, range: NSRange? = nil) {
-            highlightTask?.cancel()
-            pendingHighlightString = textView.string
-            highlightTask = Task { @MainActor [weak self, weak textView] in
-                if delay != .zero {
-                    try? await Task.sleep(for: delay)
-                }
-                guard let self else { return }
-                self.pendingHighlightString = nil
-                guard !Task.isCancelled, let textView else { return }
-                self.applyHighlighting(to: textView, range: range)
+            if let range {
+                syntaxController.invalidate(range: range)
             }
+            syntaxController.scheduleHighlighting(to: textView, delay: delay)
         }
 
         func applyBaseAttributes(to textView: NSTextView) {
-            textView.font = baseFont
-            textView.textColor = NSColor.textColor
-            textView.typingAttributes = baseAttributes
-            lastHighlightedString = nil
+            syntaxController.updateFontChoice(fontChoice)
+            syntaxController.applyBaseAttributes(to: textView)
         }
 
         func applyCachedHighlightingIfAvailable(to textView: NSTextView) -> Bool {
-            let string = textView.string
-            guard let attributedString = Self.highlightCache.attributedString(for: string, fontChoice: fontChoice) else {
-                return false
-            }
-            guard let storage = textView.textStorage else { return false }
-            let selectedRanges = textView.selectedRanges
-            storage.beginEditing()
-            storage.setAttributedString(attributedString)
-            storage.endEditing()
-            lastHighlightedString = string
-            pendingHighlightString = nil
-            textView.selectedRanges = selectedRanges
-            textView.typingAttributes = baseAttributes
-            return true
+            syntaxController.updateFontChoice(fontChoice)
+            return syntaxController.applyCachedHighlightingIfAvailable(to: textView)
         }
 
         #if DEBUG
         func applyHighlightingForBenchmark(to textView: NSTextView, range: NSRange? = nil) {
-            applyHighlighting(to: textView, range: range)
+            syntaxController.updateFontChoice(fontChoice)
+            syntaxController.applyHighlightingForBenchmark(to: textView, range: range)
         }
         #endif
+    }
+}
 
-        private func applyHighlighting(to textView: NSTextView, range requestedRange: NSRange?) {
-            let string = textView.string
-            guard requestedRange != nil || lastHighlightedString != string else { return }
-            let nsString = string as NSString
-            let fullRange = NSRange(location: 0, length: nsString.length)
-            guard fullRange.length > 0 else {
-                lastHighlightedString = string
-                textView.typingAttributes = baseAttributes
-                return
+@MainActor
+private final class MarkdownSyntaxController {
+    private static let highlightCache = MarkdownHighlightCache()
+
+    private let decoratedCharacterLimit = 120_000
+    private let leadingHighlightLength = 2_000
+
+    private var fontChoice: EditorFontChoice
+    private var highlightTask: Task<Void, Never>?
+    private var lastHighlightedString: String?
+    private var pendingHighlightString: String?
+    private var invalidRanges = MarkdownEditedRangeSet()
+
+    init(fontChoice: EditorFontChoice) {
+        self.fontChoice = fontChoice
+    }
+
+    func updateFontChoice(_ fontChoice: EditorFontChoice) {
+        guard self.fontChoice != fontChoice else { return }
+        self.fontChoice = fontChoice
+        lastHighlightedString = nil
+        _ = invalidRanges.removeAll()
+    }
+
+    func invalidate(range: NSRange?) {
+        invalidRanges.insert(range)
+    }
+
+    func scheduleHighlightingIfNeeded(to textView: NSTextView) {
+        guard lastHighlightedString != textView.string || !invalidRanges.isEmpty else { return }
+        guard pendingHighlightString != textView.string else { return }
+        if invalidRanges.isEmpty, applyCachedHighlightingIfAvailable(to: textView) { return }
+        scheduleHighlighting(to: textView, delay: .milliseconds(16))
+    }
+
+    func scheduleHighlighting(to textView: NSTextView, delay: Duration) {
+        highlightTask?.cancel()
+        pendingHighlightString = textView.string
+        highlightTask = Task { @MainActor [weak self, weak textView] in
+            if delay != .zero {
+                try? await Task.sleep(for: delay)
             }
-
-            let selectedRanges = textView.selectedRanges
-            guard let storage = textView.textStorage else { return }
-            guard requestedRange != nil || fullRange.length <= decoratedCharacterLimit else {
-                lastHighlightedString = string
-                textView.typingAttributes = baseAttributes
-                return
-            }
-            let highlightRange = normalizedHighlightRange(requestedRange, in: nsString, fallback: fullRange)
-            let features = HighlightFeatures(text: nsString.substring(with: highlightRange))
-
-            storage.beginEditing()
-            storage.setAttributes(baseAttributes, range: highlightRange)
-
-            if features.hasHeading {
-                MarkdownSyntax.headingRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
-                    guard let match else { return }
-                    let headingLevel = match.range(at: 1).length
-                    storage.addAttributes([
-                        .font: headingFont(for: headingLevel),
-                        .foregroundColor: NSColor.labelColor,
-                    ], range: match.range(at: 0))
-                }
-            }
-
-            if features.hasBold {
-                MarkdownSyntax.boldRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
-                    guard let range = match?.range(at: 0) else { return }
-                    addFontTrait(.boldFontMask, storage: storage, range: range)
-                }
-            }
-
-            if features.hasItalic {
-                MarkdownSyntax.italicRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
-                    guard let range = match?.range(at: 0) else { return }
-                    addFontTrait(.italicFontMask, storage: storage, range: range)
-                }
-            }
-
-            if features.hasInlineCode {
-                MarkdownSyntax.inlineCodeRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
-                    guard let range = match?.range(at: 0) else { return }
-                    storage.addAttributes([
-                        .font: codeFont,
-                        .foregroundColor: NSColor.controlTextColor,
-                        .backgroundColor: NSColor.textColor.withAlphaComponent(0.06),
-                    ], range: range)
-                }
-            }
-
-            if features.hasStrikethrough {
-                MarkdownSyntax.strikethroughRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
-                    guard let range = match?.range(at: 0) else { return }
-                    storage.addAttributes([
-                        .strikethroughStyle: NSUnderlineStyle.single.rawValue,
-                        .foregroundColor: NSColor.secondaryLabelColor,
-                    ], range: range)
-                }
-            }
-
-            var markdownLinkDestinationRanges: [NSRange] = []
-            if features.hasMarkdownLink {
-                MarkdownSyntax.markdownLinkRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
-                    guard let match else { return }
-                    let rawDestinationRange = match.range(at: 2)
-                    markdownLinkDestinationRanges.append(rawDestinationRange)
-                    var attributes: [NSAttributedString.Key: Any] = [
-                        .foregroundColor: NSColor.systemBlue,
-                        .underlineStyle: 0,
-                    ]
-                    if
-                        let destinationRange = Range(rawDestinationRange, in: string),
-                        let url = URL(string: String(string[destinationRange])),
-                        let scheme = url.scheme?.lowercased(),
-                        ["http", "https", "mailto"].contains(scheme)
-                    {
-                        attributes[.epheExternalURL] = url
-                    }
-                    storage.addAttributes(attributes, range: match.range(at: 0))
-                }
-            }
-
-            if features.hasBareURL {
-                MarkdownSyntax.bareURLRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
-                    guard
-                        let match,
-                        let urlRange = Range(match.range(at: 0), in: string),
-                        !markdownLinkDestinationRanges.contains(where: { NSIntersectionRange(match.range(at: 0), $0).length > 0 }),
-                        let url = URL(string: String(string[urlRange]))
-                    else {
-                        return
-                    }
-
-                    storage.addAttributes([
-                        .foregroundColor: NSColor.systemBlue,
-                        .underlineStyle: 0,
-                        .epheExternalURL: url,
-                    ], range: match.range(at: 0))
-                }
-            }
-
-            if features.hasWikiLink {
-                MarkdownSyntax.wikiLinkRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
-                    guard
-                        let match,
-                        match.numberOfRanges >= 2,
-                        let bodyRange = Range(match.range(at: 1), in: string)
-                    else {
-                        return
-                    }
-
-                    let body = String(string[bodyRange]).trimmingCharacters(in: .whitespacesAndNewlines)
-                    guard let wikiLink = MarkdownSyntax.parseWikiLink(body: body, sourceRange: match.range(at: 0)) else {
-                        return
-                    }
-
-                    storage.addAttributes([
-                        .foregroundColor: NSColor.systemBlue,
-                        .epheWikiLink: WikiLinkAttribute(wikiLink),
-                    ], range: match.range(at: 0))
-                }
-            }
-
-            storage.endEditing()
-            if requestedRange == nil {
-                Self.highlightCache.store(storage.attributedSubstring(from: fullRange), for: string, fontChoice: fontChoice)
-            }
-            lastHighlightedString = string
-            textView.selectedRanges = selectedRanges
-            textView.typingAttributes = baseAttributes
-        }
-
-        private func normalizedHighlightRange(_ requestedRange: NSRange?, in string: NSString, fallback: NSRange) -> NSRange {
-            guard var range = requestedRange else { return fallback }
-            range.location = max(0, min(range.location, string.length))
-            range.length = max(0, min(range.length, string.length - range.location))
-            if range.length == 0, string.length > 0 {
-                range.length = min(1, string.length - range.location)
-            }
-            let lineRange = string.lineRange(for: range)
-            let previousLocation = max(0, lineRange.location - 1)
-            let expandedStart = string.lineRange(for: NSRange(location: previousLocation, length: 0)).location
-            let expandedEndSeed = min(string.length, NSMaxRange(lineRange) + 1)
-            let expandedEnd = NSMaxRange(string.lineRange(for: NSRange(location: expandedEndSeed, length: 0)))
-            return NSIntersectionRange(NSRange(location: expandedStart, length: expandedEnd - expandedStart), fallback)
-        }
-
-        private func headingFont(for level: Int) -> NSFont {
-            let size: CGFloat
-            switch level {
-            case 1: size = 22
-            case 2: size = 19
-            case 3: size = 17
-            default: size = 15
-            }
-            return fontChoice.font(size: size, weight: .bold)
-        }
-
-        private func addFontTrait(_ trait: NSFontTraitMask, storage: NSTextStorage, range: NSRange) {
-            guard range.location < storage.length else { return }
-            let currentFont = storage.attribute(.font, at: range.location, effectiveRange: nil) as? NSFont ?? baseFont
-            let updatedFont = NSFontManager.shared.convert(currentFont, toHaveTrait: trait)
-            storage.addAttribute(.font, value: updatedFont, range: range)
-        }
-
-        private var baseAttributes: [NSAttributedString.Key: Any] {
-            [
-                .font: baseFont,
-                .foregroundColor: NSColor.textColor,
-            ]
-        }
-
-        private var baseFont: NSFont {
-            fontChoice.font(size: 15, weight: .regular)
-        }
-
-        private var codeFont: NSFont {
-            fontChoice.font(size: 14, weight: .regular)
+            guard let self else { return }
+            self.pendingHighlightString = nil
+            guard !Task.isCancelled, let textView else { return }
+            let requestedRange = self.invalidRanges.removeAll()
+            self.applyHighlighting(to: textView, range: requestedRange)
         }
     }
+
+    func applyBaseAttributes(to textView: NSTextView) {
+        textView.font = baseFont
+        textView.textColor = NSColor.textColor
+        textView.typingAttributes = baseAttributes
+        clearTemporaryAttributes(in: textView, range: fullRange(in: textView.string))
+        lastHighlightedString = nil
+        _ = invalidRanges.removeAll()
+    }
+
+    func applyCachedHighlightingIfAvailable(to textView: NSTextView) -> Bool {
+        let string = textView.string
+        guard let runs = Self.highlightCache.runs(for: string, fontChoice: fontChoice) else {
+            return false
+        }
+        let fullRange = fullRange(in: string)
+        guard fullRange.length > 0 else { return false }
+        clearTemporaryAttributes(in: textView, range: fullRange)
+        apply(runs: runs, to: textView)
+        lastHighlightedString = string
+        pendingHighlightString = nil
+        _ = invalidRanges.removeAll()
+        textView.typingAttributes = baseAttributes
+        return true
+    }
+
+    #if DEBUG
+    func applyHighlightingForBenchmark(to textView: NSTextView, range: NSRange? = nil) {
+        applyHighlighting(to: textView, range: range)
+    }
+    #endif
+
+    private func applyHighlighting(to textView: NSTextView, range requestedRange: NSRange?) {
+        let string = textView.string
+        guard requestedRange != nil || lastHighlightedString != string else { return }
+        let nsString = string as NSString
+        let fullRange = NSRange(location: 0, length: nsString.length)
+        guard fullRange.length > 0 else {
+            lastHighlightedString = string
+            textView.typingAttributes = baseAttributes
+            return
+        }
+        guard requestedRange != nil || fullRange.length <= decoratedCharacterLimit else {
+            let leadingRange = NSRange(location: 0, length: min(leadingHighlightLength, fullRange.length))
+            applyHighlighting(to: textView, string: string, nsString: nsString, range: normalizedHighlightRange(leadingRange, in: nsString, fallback: fullRange))
+            lastHighlightedString = string
+            textView.typingAttributes = baseAttributes
+            return
+        }
+
+        let highlightRange = normalizedHighlightRange(requestedRange, in: nsString, fallback: fullRange)
+        let runs = highlightRuns(in: string, nsString: nsString, range: highlightRange)
+        clearTemporaryAttributes(in: textView, range: highlightRange)
+        apply(runs: runs, to: textView)
+        if requestedRange == nil {
+            Self.highlightCache.store(runs, for: string, fontChoice: fontChoice)
+        }
+        lastHighlightedString = string
+        textView.typingAttributes = baseAttributes
+    }
+
+    private func applyHighlighting(to textView: NSTextView, string: String, nsString: NSString, range: NSRange) {
+        let runs = highlightRuns(in: string, nsString: nsString, range: range)
+        clearTemporaryAttributes(in: textView, range: range)
+        apply(runs: runs, to: textView)
+    }
+
+    private func highlightRuns(in string: String, nsString: NSString, range highlightRange: NSRange) -> [MarkdownHighlightRun] {
+        let features = HighlightFeatures(text: nsString.substring(with: highlightRange))
+        var runs: [MarkdownHighlightRun] = []
+        runs.reserveCapacity(64)
+
+        if features.hasHeading {
+            MarkdownSyntax.headingRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
+                guard let match else { return }
+                let headingLevel = match.range(at: 1).length
+                runs.append(MarkdownHighlightRun(attributes: [
+                    .font: headingFont(for: headingLevel),
+                    .foregroundColor: NSColor.labelColor,
+                ], range: match.range(at: 0)))
+            }
+        }
+
+        if features.hasBold {
+            let boldFont = fontChoice.font(size: 15, weight: .bold)
+            MarkdownSyntax.boldRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
+                guard let range = match?.range(at: 0) else { return }
+                runs.append(MarkdownHighlightRun(attributes: [.font: boldFont], range: range))
+            }
+        }
+
+        if features.hasItalic {
+            let italicFont = NSFontManager.shared.convert(baseFont, toHaveTrait: .italicFontMask)
+            MarkdownSyntax.italicRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
+                guard let range = match?.range(at: 0) else { return }
+                runs.append(MarkdownHighlightRun(attributes: [.font: italicFont], range: range))
+            }
+        }
+
+        if features.hasInlineCode {
+            MarkdownSyntax.inlineCodeRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
+                guard let range = match?.range(at: 0) else { return }
+                runs.append(MarkdownHighlightRun(attributes: [
+                    .font: codeFont,
+                    .foregroundColor: NSColor.controlTextColor,
+                    .backgroundColor: NSColor.textColor.withAlphaComponent(0.06),
+                ], range: range))
+            }
+        }
+
+        if features.hasStrikethrough {
+            MarkdownSyntax.strikethroughRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
+                guard let range = match?.range(at: 0) else { return }
+                runs.append(MarkdownHighlightRun(attributes: [
+                    .strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                    .foregroundColor: NSColor.secondaryLabelColor,
+                ], range: range))
+            }
+        }
+
+        var markdownLinkDestinationRanges: [NSRange] = []
+        if features.hasMarkdownLink {
+            MarkdownSyntax.markdownLinkRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
+                guard let match else { return }
+                let rawDestinationRange = match.range(at: 2)
+                markdownLinkDestinationRanges.append(rawDestinationRange)
+                var attributes: [NSAttributedString.Key: Any] = [
+                    .foregroundColor: NSColor.systemBlue,
+                    .underlineStyle: 0,
+                ]
+                if
+                    let destinationRange = Range(rawDestinationRange, in: string),
+                    let url = URL(string: String(string[destinationRange])),
+                    let scheme = url.scheme?.lowercased(),
+                    ["http", "https", "mailto"].contains(scheme)
+                {
+                    attributes[.epheExternalURL] = url
+                }
+                runs.append(MarkdownHighlightRun(attributes: attributes, range: match.range(at: 0)))
+            }
+        }
+
+        if features.hasBareURL {
+            MarkdownSyntax.bareURLRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
+                guard
+                    let match,
+                    let urlRange = Range(match.range(at: 0), in: string),
+                    !markdownLinkDestinationRanges.contains(where: { NSIntersectionRange(match.range(at: 0), $0).length > 0 }),
+                    let url = URL(string: String(string[urlRange]))
+                else {
+                    return
+                }
+
+                runs.append(MarkdownHighlightRun(attributes: [
+                    .foregroundColor: NSColor.systemBlue,
+                    .underlineStyle: 0,
+                    .epheExternalURL: url,
+                ], range: match.range(at: 0)))
+            }
+        }
+
+        if features.hasWikiLink {
+            MarkdownSyntax.wikiLinkRegex.enumerateMatches(in: string, range: highlightRange) { match, _, _ in
+                guard
+                    let match,
+                    match.numberOfRanges >= 2,
+                    let bodyRange = Range(match.range(at: 1), in: string)
+                else {
+                    return
+                }
+
+                let body = String(string[bodyRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+                guard let wikiLink = MarkdownSyntax.parseWikiLink(body: body, sourceRange: match.range(at: 0)) else {
+                    return
+                }
+
+                runs.append(MarkdownHighlightRun(attributes: [
+                    .foregroundColor: NSColor.systemBlue,
+                    .epheWikiLink: WikiLinkAttribute(wikiLink),
+                ], range: match.range(at: 0)))
+            }
+        }
+
+        return runs
+    }
+
+    private func clearTemporaryAttributes(in textView: NSTextView, range: NSRange) {
+        guard range.length > 0, let layoutManager = textView.layoutManager else { return }
+        for attribute in MarkdownHighlightRun.temporaryAttributeKeys {
+            layoutManager.removeTemporaryAttribute(attribute, forCharacterRange: range)
+        }
+    }
+
+    private func apply(runs: [MarkdownHighlightRun], to textView: NSTextView) {
+        guard let layoutManager = textView.layoutManager else { return }
+        for run in runs {
+            for (attribute, value) in run.attributes {
+                layoutManager.addTemporaryAttribute(attribute, value: value, forCharacterRange: run.range)
+            }
+        }
+    }
+
+    private func normalizedHighlightRange(_ requestedRange: NSRange?, in string: NSString, fallback: NSRange) -> NSRange {
+        guard var range = requestedRange else { return fallback }
+        range.location = max(0, min(range.location, string.length))
+        range.length = max(0, min(range.length, string.length - range.location))
+        if range.length == 0, string.length > 0 {
+            range.length = min(1, string.length - range.location)
+        }
+        let lineRange = string.lineRange(for: range)
+        let previousLocation = max(0, lineRange.location - 1)
+        let expandedStart = string.lineRange(for: NSRange(location: previousLocation, length: 0)).location
+        let expandedEndSeed = min(string.length, NSMaxRange(lineRange) + 1)
+        let expandedEnd = NSMaxRange(string.lineRange(for: NSRange(location: expandedEndSeed, length: 0)))
+        return NSIntersectionRange(NSRange(location: expandedStart, length: expandedEnd - expandedStart), fallback)
+    }
+
+    private func fullRange(in string: String) -> NSRange {
+        NSRange(location: 0, length: (string as NSString).length)
+    }
+
+    private func headingFont(for level: Int) -> NSFont {
+        let size: CGFloat
+        switch level {
+        case 1: size = 22
+        case 2: size = 19
+        case 3: size = 17
+        default: size = 15
+        }
+        return fontChoice.font(size: size, weight: .bold)
+    }
+
+    private var baseAttributes: [NSAttributedString.Key: Any] {
+        [
+            .font: baseFont,
+            .foregroundColor: NSColor.textColor,
+        ]
+    }
+
+    private var baseFont: NSFont {
+        fontChoice.font(size: 15, weight: .regular)
+    }
+
+    private var codeFont: NSFont {
+        fontChoice.font(size: 14, weight: .regular)
+    }
+}
+
+private struct MarkdownEditedRangeSet {
+    private var range: NSRange?
+
+    var isEmpty: Bool {
+        range == nil
+    }
+
+    mutating func insert(_ newRange: NSRange?) {
+        guard let newRange else {
+            range = nil
+            return
+        }
+        guard let existingRange = range else {
+            range = newRange
+            return
+        }
+        range = NSUnionRange(existingRange, newRange)
+    }
+
+    mutating func removeAll() -> NSRange? {
+        let removedRange = range
+        range = nil
+        return removedRange
+    }
+}
+
+private struct MarkdownHighlightRun {
+    static let temporaryAttributeKeys: [NSAttributedString.Key] = [
+        .font,
+        .foregroundColor,
+        .backgroundColor,
+        .strikethroughStyle,
+        .underlineStyle,
+        .epheExternalURL,
+        .epheWikiLink,
+    ]
+
+    var attributes: [NSAttributedString.Key: Any]
+    var range: NSRange
 }
 
 private struct HighlightFeatures {
@@ -406,7 +528,7 @@ private final class MarkdownHighlightCache {
     }
 
     private struct Entry {
-        let attributedString: NSAttributedString
+        let runs: [MarkdownHighlightRun]
         let cost: Int
     }
 
@@ -417,14 +539,14 @@ private final class MarkdownHighlightCache {
     private var mostRecentKeys: [Key] = []
     private var totalCost = 0
 
-    func attributedString(for string: String, fontChoice: EditorFontChoice) -> NSAttributedString? {
+    func runs(for string: String, fontChoice: EditorFontChoice) -> [MarkdownHighlightRun]? {
         let key = Key(string, fontChoice: fontChoice)
         guard let entry = entries[key] else { return nil }
         promote(key)
-        return entry.attributedString.copy() as? NSAttributedString
+        return entry.runs
     }
 
-    func store(_ attributedString: NSAttributedString, for string: String, fontChoice: EditorFontChoice) {
+    func store(_ runs: [MarkdownHighlightRun], for string: String, fontChoice: EditorFontChoice) {
         let key = Key(string, fontChoice: fontChoice)
         let cost = key.length
         guard cost > 0, cost <= entryCharacterLimit else { return }
@@ -432,7 +554,7 @@ private final class MarkdownHighlightCache {
             totalCost -= existing.cost
         }
         entries[key] = Entry(
-            attributedString: attributedString.copy() as? NSAttributedString ?? attributedString,
+            runs: runs,
             cost: cost
         )
         totalCost += cost
@@ -555,7 +677,7 @@ final class EpheMarkdownTextView: NSTextView {
             return nil
         }
 
-        if let wikiLink = textStorage.attribute(.epheWikiLink, at: characterIndex, effectiveRange: nil) as? WikiLinkAttribute {
+        if let wikiLink = markdownAttribute(.epheWikiLink, at: characterIndex) as? WikiLinkAttribute {
             let tooltip = attributedSubstringTooltip(at: characterIndex) ?? "Open wiki link"
             return LinkAction(
                 tooltip: tooltip,
@@ -564,7 +686,7 @@ final class EpheMarkdownTextView: NSTextView {
             )
         }
 
-        if let url = textStorage.attribute(.epheExternalURL, at: characterIndex, effectiveRange: nil) as? URL {
+        if let url = markdownAttribute(.epheExternalURL, at: characterIndex) as? URL {
             return LinkAction(
                 tooltip: url.absoluteString,
                 canActivate: { modifiers in modifiers.contains(.command) },
@@ -595,10 +717,17 @@ final class EpheMarkdownTextView: NSTextView {
         return layoutManager.characterIndexForGlyph(at: glyphIndex)
     }
 
+    private func markdownAttribute(_ key: NSAttributedString.Key, at characterIndex: Int, effectiveRange: NSRangePointer? = nil) -> Any? {
+        if let temporaryValue = layoutManager?.temporaryAttribute(key, atCharacterIndex: characterIndex, effectiveRange: effectiveRange) {
+            return temporaryValue
+        }
+        return textStorage?.attribute(key, at: characterIndex, effectiveRange: effectiveRange)
+    }
+
     private func attributedSubstringTooltip(at characterIndex: Int) -> String? {
         guard let textStorage else { return nil }
         var effectiveRange = NSRange(location: 0, length: 0)
-        _ = textStorage.attribute(.epheWikiLink, at: characterIndex, effectiveRange: &effectiveRange)
+        _ = markdownAttribute(.epheWikiLink, at: characterIndex, effectiveRange: &effectiveRange)
         guard effectiveRange.length > 0, NSMaxRange(effectiveRange) <= textStorage.length else { return nil }
         return textStorage.attributedSubstring(from: effectiveRange).string
     }
