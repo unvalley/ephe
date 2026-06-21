@@ -151,6 +151,40 @@ importers:
         specifier: ^4.1.8
         version: 4.1.8(@edge-runtime/vm@3.2.0)(@types/node@24.13.0)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(@vitest/ui@4.1.0)(msw@2.7.4(@types/node@24.13.0)(typescript@5.9.3))(vite@8.0.16(@types/node@24.13.0)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.48.0))
 
+  apps/tauri:
+    dependencies:
+      '@tauri-apps/api':
+        specifier: ^2.11.1
+        version: 2.11.1
+      '@tauri-apps/plugin-dialog':
+        specifier: ^2.7.1
+        version: 2.7.1
+      react:
+        specifier: ^19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ^19.2.7
+        version: 19.2.7(react@19.2.7)
+    devDependencies:
+      '@tauri-apps/cli':
+        specifier: ^2.11.2
+        version: 2.11.2
+      '@types/react':
+        specifier: 19.2.16
+        version: 19.2.16
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.16)
+      '@vitejs/plugin-react':
+        specifier: ^6.0.2
+        version: 6.0.2(babel-plugin-react-compiler@1.0.0)(vite@8.0.16(@types/node@24.13.0)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.48.0))
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vite:
+        specifier: ^8.0.16
+        version: 8.0.16(@types/node@24.13.0)(esbuild@0.27.7)(jiti@2.7.0)(terser@5.48.0)
+
 packages:
 
   '@alloc/quick-lru@5.2.0':
@@ -1726,6 +1760,88 @@ packages:
 
   '@tanstack/virtual-core@3.17.0':
     resolution: {integrity: sha512-gOxY/hFkPh/XQYhnThBHzkbkX3Ed+z/iushyz+R+JAr213aXxUDgQoTgTdrDpBSRsjFM73P/KfUyWmaF9WHMkQ==}
+
+  '@tauri-apps/api@2.11.1':
+    resolution: {integrity: sha512-M2FPuYND2m+wh5hfW9ZpSdxMPdEJovPBWwoHJmwUpysTYNHaOkVFN419m/K0LIgjb/7KU2vBgsUepJWugQCvAA==}
+
+  '@tauri-apps/cli-darwin-arm64@2.11.2':
+    resolution: {integrity: sha512-+4UZzLt+eOAEQCwgd+TqKgyUJMrvx+BgdXLLaqJYmPqzP+nE6YZr/hY6CWLYGQb8jFn99jEkmC6uA3tNvamA1w==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@tauri-apps/cli-darwin-x64@2.11.2':
+    resolution: {integrity: sha512-VjYYtZUPqDMLutSfJEyxFE3Bz+DPi7c8wC3imckgvciLDZLq4qwKJxBicg0BXGhXjJsl8vKWgWRFNMPELQ+Xyg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@tauri-apps/cli-linux-arm-gnueabihf@2.11.2':
+    resolution: {integrity: sha512-yMemD6f4i95AQriS8EazyOFzbE34yjnP16i3IOzpHGQvBoy2DjypFMFBq0NtPuITURv/cOGguRtHR5d79/9CSA==}
+    engines: {node: '>= 10'}
+    cpu: [arm]
+    os: [linux]
+
+  '@tauri-apps/cli-linux-arm64-gnu@2.11.2':
+    resolution: {integrity: sha512-cgI91D2wL8GSgoWwZXDqt+DwnuZCP2/bz03QAE4TrhgAKIsrB4hX26W/H1EONPUUNkqrsgeCD0wU6pcNjV/5kw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@tauri-apps/cli-linux-arm64-musl@2.11.2':
+    resolution: {integrity: sha512-X1rm0BERqAAggtYTESSgXrS3sz4Sb/OiPiz54UqISlXW+GkR3vNIGnsy/lejNmoXGVqri3Q53BCfQiclOIyRPw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@tauri-apps/cli-linux-riscv64-gnu@2.11.2':
+    resolution: {integrity: sha512-usbMLJbT3KtkOrBMDVeGYNM35aTHXx38SJSzTMSqqjeUIOQ+iVPjb2yAGNAE+KqmBbAx4FOFIyMeKXx2M/JKGQ==}
+    engines: {node: '>= 10'}
+    cpu: [riscv64]
+    os: [linux]
+    libc: [glibc]
+
+  '@tauri-apps/cli-linux-x64-gnu@2.11.2':
+    resolution: {integrity: sha512-Ru4gwJKPG0ctVGchRGpRup4Y4lW2SSfFnrbQcyHhCliKy4g8Qz97TrUgCur4CbWyAgKxvGh3SjrkA0LDYzDGiw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@tauri-apps/cli-linux-x64-musl@2.11.2':
+    resolution: {integrity: sha512-eUm7T6clN1MMmNSRQ9gaWsQdyehQx2Gmn5hht/QUlqZQI/qcP2OJK5dnaxqwFzCr2HdsEo9ydxaqcS1oJzMvUw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@tauri-apps/cli-win32-arm64-msvc@2.11.2':
+    resolution: {integrity: sha512-HeeZW80jU+gVTOEX4X/hC6NVSAdDVXajwP5fxIZ/3z9WvUC7qrudX2GMTilYq6Dg0e0sk0XgsAJD1hZ5wPBXUA==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@tauri-apps/cli-win32-ia32-msvc@2.11.2':
+    resolution: {integrity: sha512-YhjQNZcXfbkCLyazSv1nPnJ9iRFE1wm6kc51FDbU10/Dk09io+6PAGMLjkxnX2GdM0qMnDmTjstY8mTDVvtKeA==}
+    engines: {node: '>= 10'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@tauri-apps/cli-win32-x64-msvc@2.11.2':
+    resolution: {integrity: sha512-d2JchlFIpZevZVReyqhQOekJmb1UH3rhZ5VX6sH3ty9ETE0TKQavpihvoScUXfKKpW6HZC0MrFGRU0ZtD+w3gA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@tauri-apps/cli@2.11.2':
+    resolution: {integrity: sha512-bk3HemqvGRoy+5D/dVMUQHKMYLglD0jVnMm/0iGMH6ufZ+p8r14m6BpIixwij3PBvZdvORUp1YifTD8QxVZ1Nw==}
+    engines: {node: '>= 10'}
+    hasBin: true
+
+  '@tauri-apps/plugin-dialog@2.7.1':
+    resolution: {integrity: sha512-OK1UBXYt+ojcmxMktzzuyonYIFta8CmAASpX+CA+DTGK24KlHjhYI6x2iOJ/TjZF4N7/ACK1oFmEOjIY9IhzOQ==}
 
   '@tybys/wasm-util@0.10.2':
     resolution: {integrity: sha512-RoBvJ2X0wuKlWFIjrwffGw1IqZHKQqzIchKaadZZfnNpsAYp2mM0h36JtPCjNDAHGgYez/15uMBpfGwchhiMgg==}
@@ -5535,6 +5651,59 @@ snapshots:
       react-dom: 19.2.7(react@19.2.7)
 
   '@tanstack/virtual-core@3.17.0': {}
+
+  '@tauri-apps/api@2.11.1': {}
+
+  '@tauri-apps/cli-darwin-arm64@2.11.2':
+    optional: true
+
+  '@tauri-apps/cli-darwin-x64@2.11.2':
+    optional: true
+
+  '@tauri-apps/cli-linux-arm-gnueabihf@2.11.2':
+    optional: true
+
+  '@tauri-apps/cli-linux-arm64-gnu@2.11.2':
+    optional: true
+
+  '@tauri-apps/cli-linux-arm64-musl@2.11.2':
+    optional: true
+
+  '@tauri-apps/cli-linux-riscv64-gnu@2.11.2':
+    optional: true
+
+  '@tauri-apps/cli-linux-x64-gnu@2.11.2':
+    optional: true
+
+  '@tauri-apps/cli-linux-x64-musl@2.11.2':
+    optional: true
+
+  '@tauri-apps/cli-win32-arm64-msvc@2.11.2':
+    optional: true
+
+  '@tauri-apps/cli-win32-ia32-msvc@2.11.2':
+    optional: true
+
+  '@tauri-apps/cli-win32-x64-msvc@2.11.2':
+    optional: true
+
+  '@tauri-apps/cli@2.11.2':
+    optionalDependencies:
+      '@tauri-apps/cli-darwin-arm64': 2.11.2
+      '@tauri-apps/cli-darwin-x64': 2.11.2
+      '@tauri-apps/cli-linux-arm-gnueabihf': 2.11.2
+      '@tauri-apps/cli-linux-arm64-gnu': 2.11.2
+      '@tauri-apps/cli-linux-arm64-musl': 2.11.2
+      '@tauri-apps/cli-linux-riscv64-gnu': 2.11.2
+      '@tauri-apps/cli-linux-x64-gnu': 2.11.2
+      '@tauri-apps/cli-linux-x64-musl': 2.11.2
+      '@tauri-apps/cli-win32-arm64-msvc': 2.11.2
+      '@tauri-apps/cli-win32-ia32-msvc': 2.11.2
+      '@tauri-apps/cli-win32-x64-msvc': 2.11.2
+
+  '@tauri-apps/plugin-dialog@2.7.1':
+    dependencies:
+      '@tauri-apps/api': 2.11.1
 
   '@tybys/wasm-util@0.10.2':
     dependencies:

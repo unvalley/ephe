@@ -36,3 +36,19 @@ mac-benchmark-ui vault:
 
 mac-clean:
     rm -rf {{mac_derived_data}}
+
+tauri-dev:
+    pnpm --dir apps/tauri tauri:dev
+
+tauri-build:
+    pnpm --dir apps/tauri tauri:build
+
+tauri-check:
+    pnpm --dir apps/tauri build
+    pnpm --dir apps/tauri tauri:check
+
+tauri-benchmark notes="5000":
+    EPHE_TAURI_BENCH_NOTES={{notes}} cargo test --manifest-path apps/tauri/src-tauri/Cargo.toml benchmark_synthetic_vault_operations -- --ignored --nocapture
+
+tauri-dev-vault vault:
+    EPHE_TAURI_VAULT="{{vault}}" pnpm --dir apps/tauri tauri:dev
