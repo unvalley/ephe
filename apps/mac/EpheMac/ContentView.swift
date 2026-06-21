@@ -83,10 +83,8 @@ private struct WindowTitleHider: NSViewRepresentable {
 
 private struct VaultSidebar: View {
     @EnvironmentObject private var session: EditorSession
-    @FocusState private var listFocused: Bool
     @State private var renameTarget: NoteID?
     @State private var renameText = ""
-    @State private var scrollTask: Task<Void, Never>?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -103,68 +101,52 @@ private struct VaultSidebar: View {
                 .padding(.bottom, 8)
             }
 
-            ScrollViewReader { proxy in
-                List(selection: selectedNoteBinding) {
-                    if session.vault == nil {
-                        Button {
-                            session.openVaultWithPanel()
-                        } label: {
-                            Label("Open Vault", systemImage: "folder")
-                        }
-                        .accessibilityIdentifier("open-vault-row")
-                    } else {
-                        Section {
-                            SidebarVaultLabel(title: session.vault?.displayName ?? "Ephe")
+            if session.vault == nil {
+                Button {
+                    session.openVaultWithPanel()
+                } label: {
+                    Label("Open Vault", systemImage: "folder")
+                }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .accessibilityIdentifier("open-vault-row")
+            } else {
+                SidebarVaultLabel(title: session.vault?.displayName ?? "Ephe")
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
 
-                            let notes = session.sidebarNotes
-                            if notes.isEmpty {
-                                Label("No notes", systemImage: "doc")
-                                    .foregroundStyle(.secondary)
-                            } else {
-                                ForEach(notes) { entry in
-                                    SidebarFileLabel(entry: entry, isPinned: session.isPinned(entry.id))
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            listFocused = true
-                                            session.selectNote(entry.id)
-                                        }
-                                        .tag(entry.id)
-                                        .id(entry.id)
-                                        .contextMenu {
-                                            Button(session.isPinned(entry.id) ? "Unpin" : "Pin") {
-                                                session.togglePin(entry.id)
-                                            }
-
-                                            Button("Rename...") {
-                                                renameTarget = entry.id
-                                                renameText = entry.title
-                                            }
-                                        }
-                                        .accessibilityIdentifier("note-row-\(entry.id.rawValue)")
-                                }
-                            }
+                let notes = session.sidebarNotes
+                if notes.isEmpty {
+                    Label("No notes", systemImage: "doc")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                } else {
+                    SidebarNotesTable(
+                        notes: notes,
+                        selectedNoteID: session.selectedNoteID,
+                        pinnedNoteIDs: session.pinnedNoteIDs,
+                        revision: session.sidebarRevision,
+                        selectImmediately: { noteID in
+                            session.selectNote(noteID)
+                        },
+                        selectDeferred: { noteID in
+                            session.selectSidebarNote(noteID)
+                        },
+                        togglePin: { noteID in
+                            session.togglePin(noteID)
+                        },
+                        rename: { noteID, title in
+                            renameTarget = noteID
+                            renameText = title
                         }
-                    }
-                }
-                .listStyle(.sidebar)
-                .focused($listFocused)
-                .onAppear {
-                    listFocused = true
-                    scrollToSelectedNote(with: proxy)
-                }
-                .onChange(of: session.selectedNoteID) { _, selectedNoteID in
-                    if selectedNoteID != nil {
-                        listFocused = true
-                        scrollToSelectedNote(with: proxy)
-                    }
-                }
-                .onChange(of: session.sidebarRevision) { _, _ in
-                    scrollToSelectedNote(with: proxy)
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
-        }
-        .onDisappear {
-            scrollTask?.cancel()
         }
         .alert("Rename File", isPresented: renameAlertPresented) {
             TextField("Title", text: $renameText)
@@ -182,28 +164,6 @@ private struct VaultSidebar: View {
         }
     }
 
-    private func scrollToSelectedNote(with proxy: ScrollViewProxy) {
-        guard let selectedNoteID = session.selectedNoteID else { return }
-        scrollTask?.cancel()
-        scrollTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(90))
-            guard !Task.isCancelled else { return }
-            guard session.containsSidebarNote(selectedNoteID) else { return }
-            proxy.scrollTo(selectedNoteID, anchor: .center)
-        }
-    }
-
-    private var selectedNoteBinding: Binding<NoteID?> {
-        Binding(
-            get: { session.selectedNoteID },
-            set: { noteID in
-                guard let noteID, noteID != session.selectedNoteID else { return }
-                listFocused = true
-                session.selectSidebarNote(noteID)
-            }
-        )
-    }
-
     private var renameAlertPresented: Binding<Bool> {
         Binding(
             get: { renameTarget != nil },
@@ -213,30 +173,6 @@ private struct VaultSidebar: View {
                 }
             }
         )
-    }
-}
-
-private struct SidebarFileLabel: View {
-    var entry: NoteIndexEntry
-    var isPinned: Bool
-
-    var body: some View {
-        HStack(spacing: 0) {
-            Label {
-                Text(entry.title)
-                    .lineLimit(1)
-            } icon: {
-                Image(systemName: "doc.text")
-            }
-
-            Spacer(minLength: 8)
-
-            if isPinned {
-                Image(systemName: "pin.fill")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
-        }
     }
 }
 
@@ -251,6 +187,315 @@ private struct SidebarVaultLabel: View {
             Image(systemName: "folder.fill")
         }
     }
+}
+
+private struct SidebarNotesTable: NSViewRepresentable {
+    var notes: [NoteIndexEntry]
+    var selectedNoteID: NoteID?
+    var pinnedNoteIDs: Set<NoteID>
+    var revision: Int
+    var selectImmediately: (NoteID) -> Void
+    var selectDeferred: (NoteID) -> Void
+    var togglePin: (NoteID) -> Void
+    var rename: (NoteID, String) -> Void
+
+    func makeCoordinator() -> SidebarNotesTableController {
+        SidebarNotesTableController()
+    }
+
+    func makeNSView(context: Context) -> NSScrollView {
+        let scrollView = context.coordinator.makeScrollView()
+        context.coordinator.selectImmediately = selectImmediately
+        context.coordinator.selectDeferred = selectDeferred
+        context.coordinator.togglePin = togglePin
+        context.coordinator.rename = rename
+        return scrollView
+    }
+
+    func updateNSView(_ scrollView: NSScrollView, context: Context) {
+        context.coordinator.selectImmediately = selectImmediately
+        context.coordinator.selectDeferred = selectDeferred
+        context.coordinator.togglePin = togglePin
+        context.coordinator.rename = rename
+        context.coordinator.update(
+            notes: notes,
+            selectedNoteID: selectedNoteID,
+            pinnedNoteIDs: pinnedNoteIDs,
+            revision: revision
+        )
+    }
+}
+
+@MainActor
+final class SidebarNotesTableController: NSObject, NSTableViewDataSource, NSTableViewDelegate {
+    var selectImmediately: (NoteID) -> Void = { _ in }
+    var selectDeferred: (NoteID) -> Void = { _ in }
+    var togglePin: (NoteID) -> Void = { _ in }
+    var rename: (NoteID, String) -> Void = { _, _ in }
+
+    private(set) var notes: [NoteIndexEntry] = []
+    private var pinnedNoteIDs: Set<NoteID> = []
+    private var selectedNoteID: NoteID?
+    private var revision: Int?
+    private var suppressSelectionCallback = false
+    private let tableView = SidebarNSTableView()
+
+    func makeScrollView() -> NSScrollView {
+        let column = NSTableColumn(identifier: .noteColumn)
+        column.resizingMask = .autoresizingMask
+
+        tableView.addTableColumn(column)
+        tableView.headerView = nil
+        tableView.rowHeight = 24
+        tableView.intercellSpacing = NSSize(width: 0, height: 1)
+        tableView.style = .sourceList
+        tableView.allowsEmptySelection = true
+        tableView.allowsMultipleSelection = false
+        tableView.backgroundColor = .clear
+        tableView.usesAlternatingRowBackgroundColors = false
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.target = self
+        tableView.action = #selector(rowClicked(_:))
+        tableView.menuProvider = { [weak self] row in
+            self?.menu(for: row)
+        }
+        tableView.setAccessibilityIdentifier("notes-sidebar-table")
+
+        let scrollView = NSScrollView()
+        scrollView.drawsBackground = false
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.borderType = .noBorder
+        scrollView.documentView = tableView
+
+        DispatchQueue.main.async { [weak tableView] in
+            tableView?.window?.makeFirstResponder(tableView)
+        }
+
+        return scrollView
+    }
+
+    func update(
+        notes: [NoteIndexEntry],
+        selectedNoteID: NoteID?,
+        pinnedNoteIDs: Set<NoteID>,
+        revision: Int
+    ) {
+        self.selectedNoteID = selectedNoteID
+        let shouldReload = self.revision != revision || self.notes.count != notes.count
+        if shouldReload {
+            self.notes = notes
+            self.pinnedNoteIDs = pinnedNoteIDs
+            self.revision = revision
+            tableView.reloadData()
+        } else {
+            self.pinnedNoteIDs = pinnedNoteIDs
+        }
+        applySelection(scroll: true)
+        DispatchQueue.main.async { [weak tableView] in
+            guard let tableView, tableView.window?.firstResponder == nil else { return }
+            tableView.window?.makeFirstResponder(tableView)
+        }
+    }
+
+    func numberOfRows(in tableView: NSTableView) -> Int {
+        notes.count
+    }
+
+    func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
+        24
+    }
+
+    func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
+        guard notes.indices.contains(row) else { return nil }
+        let cell = tableView.makeView(
+            withIdentifier: SidebarNoteCellView.reuseIdentifier,
+            owner: self
+        ) as? SidebarNoteCellView ?? SidebarNoteCellView()
+        let entry = notes[row]
+        cell.configure(entry: entry, isPinned: pinnedNoteIDs.contains(entry.id))
+        cell.onClick = { [weak self] noteID in
+            self?.selectedNoteID = noteID
+            self?.selectImmediately(noteID)
+        }
+        return cell
+    }
+
+    func tableViewSelectionDidChange(_ notification: Notification) {
+        guard !suppressSelectionCallback else { return }
+        let row = tableView.selectedRow
+        guard notes.indices.contains(row) else { return }
+        let noteID = notes[row].id
+        selectedNoteID = noteID
+        switch NSApp.currentEvent?.type {
+        case .keyDown, .flagsChanged:
+            selectDeferred(noteID)
+        default:
+            selectImmediately(noteID)
+        }
+    }
+
+    @objc private func rowClicked(_ sender: NSTableView) {
+        let row = sender.clickedRow
+        guard notes.indices.contains(row) else { return }
+        let noteID = notes[row].id
+        selectedNoteID = noteID
+        selectImmediately(noteID)
+    }
+
+    func select(row: Int) {
+        guard notes.indices.contains(row) else { return }
+        suppressSelectionCallback = true
+        tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+        suppressSelectionCallback = false
+        tableView.scrollRowToVisible(row)
+    }
+
+    private func applySelection(scroll: Bool) {
+        guard let selectedNoteID, let row = notes.firstIndex(where: { $0.id == selectedNoteID }) else {
+            suppressSelectionCallback = true
+            tableView.deselectAll(nil)
+            suppressSelectionCallback = false
+            return
+        }
+        guard tableView.selectedRow != row else { return }
+        suppressSelectionCallback = true
+        tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+        suppressSelectionCallback = false
+        if scroll {
+            tableView.scrollRowToVisible(row)
+        }
+    }
+
+    private func menu(for row: Int) -> NSMenu? {
+        guard notes.indices.contains(row) else { return nil }
+        if tableView.selectedRow != row {
+            select(row: row)
+        }
+        let entry = notes[row]
+        let menu = NSMenu()
+        let pinTitle = pinnedNoteIDs.contains(entry.id) ? "Unpin" : "Pin"
+        let pinItem = NSMenuItem(title: pinTitle, action: #selector(togglePinItem(_:)), keyEquivalent: "")
+        pinItem.target = self
+        pinItem.representedObject = entry.id.rawValue
+        menu.addItem(pinItem)
+
+        let renameItem = NSMenuItem(title: "Rename...", action: #selector(renameItem(_:)), keyEquivalent: "")
+        renameItem.target = self
+        renameItem.representedObject = entry.id.rawValue
+        menu.addItem(renameItem)
+        return menu
+    }
+
+    @objc private func togglePinItem(_ sender: NSMenuItem) {
+        guard let rawValue = sender.representedObject as? String else { return }
+        togglePin(NoteID(indexedPath: rawValue))
+    }
+
+    @objc private func renameItem(_ sender: NSMenuItem) {
+        guard
+            let rawValue = sender.representedObject as? String,
+            let entry = notes.first(where: { $0.id.rawValue == rawValue })
+        else {
+            return
+        }
+        rename(entry.id, entry.title)
+    }
+}
+
+private final class SidebarNSTableView: NSTableView {
+    var menuProvider: ((Int) -> NSMenu?)?
+
+    override func menu(for event: NSEvent) -> NSMenu? {
+        let point = convert(event.locationInWindow, from: nil)
+        let row = row(at: point)
+        guard row >= 0 else { return nil }
+        return menuProvider?(row)
+    }
+}
+
+private final class SidebarNoteCellView: NSTableCellView {
+    static let reuseIdentifier = NSUserInterfaceItemIdentifier("SidebarNoteCellView")
+
+    private let noteIconView = NSImageView()
+    private let titleField = NSTextField(labelWithString: "")
+    private let pinIconView = NSImageView()
+    private var noteID: NoteID?
+    var onClick: ((NoteID) -> Void)?
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        identifier = Self.reuseIdentifier
+        wantsLayer = true
+        setup()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        identifier = Self.reuseIdentifier
+        wantsLayer = true
+        setup()
+    }
+
+    func configure(entry: NoteIndexEntry, isPinned: Bool) {
+        noteID = entry.id
+        titleField.stringValue = entry.title
+        pinIconView.isHidden = !isPinned
+        setAccessibilityElement(true)
+        setAccessibilityIdentifier("note-row-\(entry.id.rawValue)")
+        setAccessibilityLabel(entry.title)
+        setAccessibilityRole(.button)
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        if let noteID {
+            onClick?(noteID)
+        }
+    }
+
+    private func setup() {
+        imageView = noteIconView
+        textField = titleField
+
+        noteIconView.image = NSImage(systemSymbolName: "doc.text", accessibilityDescription: nil)
+        noteIconView.contentTintColor = .secondaryLabelColor
+        noteIconView.translatesAutoresizingMaskIntoConstraints = false
+
+        titleField.font = .systemFont(ofSize: 13)
+        titleField.lineBreakMode = .byTruncatingTail
+        titleField.textColor = .labelColor
+        titleField.translatesAutoresizingMaskIntoConstraints = false
+
+        pinIconView.image = NSImage(systemSymbolName: "pin.fill", accessibilityDescription: nil)
+        pinIconView.contentTintColor = .tertiaryLabelColor
+        pinIconView.translatesAutoresizingMaskIntoConstraints = false
+
+        addSubview(noteIconView)
+        addSubview(titleField)
+        addSubview(pinIconView)
+
+        NSLayoutConstraint.activate([
+            noteIconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 14),
+            noteIconView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            noteIconView.widthAnchor.constraint(equalToConstant: 13),
+            noteIconView.heightAnchor.constraint(equalToConstant: 13),
+
+            titleField.leadingAnchor.constraint(equalTo: noteIconView.trailingAnchor, constant: 7),
+            titleField.centerYAnchor.constraint(equalTo: centerYAnchor),
+
+            pinIconView.leadingAnchor.constraint(equalTo: titleField.trailingAnchor, constant: 6),
+            pinIconView.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -10),
+            pinIconView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            pinIconView.widthAnchor.constraint(equalToConstant: 11),
+            pinIconView.heightAnchor.constraint(equalToConstant: 11),
+        ])
+    }
+}
+
+private extension NSUserInterfaceItemIdentifier {
+    static let noteColumn = NSUserInterfaceItemIdentifier("note")
 }
 
 private struct EditorPane: View {

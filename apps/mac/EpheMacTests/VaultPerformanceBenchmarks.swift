@@ -30,11 +30,15 @@ final class VaultPerformanceBenchmarks: XCTestCase {
         let (_, initialSQLiteMs) = try await timedAsync("sqlite_initial_index_ms") {
             try await vaultIndexer.reindexChangedNotes(in: vault)
         }
-        let (_, cachedAllNotesMs) = try await timedAsync("sqlite_cached_all_notes_ms") {
+        let (cachedEntries, cachedAllNotesMs) = try await timedAsync("sqlite_cached_all_notes_ms") {
             try await indexStore.allNotes()
         }
         let cachedOpenSidebarMs = try await Self.measureEditorSessionCachedOpenSidebar(vaultURL: vaultURL, indexStore: indexStore)
         print("EPHE_BENCHMARK editor_session_cached_open_sidebar_ms=\(format(cachedOpenSidebarMs))")
+        let sidebarTableReloadMs = try await Self.measureSidebarTableReload(notes: cachedEntries)
+        print("EPHE_BENCHMARK sidebar_table_reload_ms=\(format(sidebarTableReloadMs))")
+        let sidebarTableSelectMs = try await Self.measureSidebarTableSelection(notes: cachedEntries)
+        print("EPHE_BENCHMARK sidebar_table_select_ms=\(format(sidebarTableSelectMs))")
         let (_, unchangedSQLiteMs) = try await timedAsync("sqlite_unchanged_refresh_ms") {
             try await vaultIndexer.reindexChangedNotes(in: vault)
         }
@@ -75,6 +79,8 @@ final class VaultPerformanceBenchmarks: XCTestCase {
             sqlite_initial_index_ms=\(format(initialSQLiteMs)) \
             sqlite_cached_all_notes_ms=\(format(cachedAllNotesMs)) \
             editor_session_cached_open_sidebar_ms=\(format(cachedOpenSidebarMs)) \
+            sidebar_table_reload_ms=\(format(sidebarTableReloadMs)) \
+            sidebar_table_select_ms=\(format(sidebarTableSelectMs)) \
             sqlite_unchanged_refresh_ms=\(format(unchangedSQLiteMs)) \
             largest_note_read_ms=\(format(largestReadMs)) \
             largest_note_scan_ms=\(format(largestScanMs)) \
@@ -186,6 +192,33 @@ final class VaultPerformanceBenchmarks: XCTestCase {
         let start = DispatchTime.now().uptimeNanoseconds
         for _ in 0..<iterations {
             session.moveSidebarSelection(delta: 1)
+        }
+        return Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000 / Double(iterations)
+    }
+
+    @MainActor
+    private static func measureSidebarTableReload(notes: [NoteIndexEntry]) throws -> Double {
+        let controller = SidebarNotesTableController()
+        let scrollView = controller.makeScrollView()
+        scrollView.frame = NSRect(x: 0, y: 0, width: 224, height: 640)
+        let start = DispatchTime.now().uptimeNanoseconds
+        controller.update(notes: notes, selectedNoteID: notes.first?.id, pinnedNoteIDs: [], revision: 1)
+        scrollView.layoutSubtreeIfNeeded()
+        return Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000
+    }
+
+    @MainActor
+    private static func measureSidebarTableSelection(notes: [NoteIndexEntry]) throws -> Double {
+        let controller = SidebarNotesTableController()
+        let scrollView = controller.makeScrollView()
+        scrollView.frame = NSRect(x: 0, y: 0, width: 224, height: 640)
+        controller.update(notes: notes, selectedNoteID: notes.first?.id, pinnedNoteIDs: [], revision: 1)
+        scrollView.layoutSubtreeIfNeeded()
+
+        let iterations = max(1, min(50, notes.count - 1))
+        let start = DispatchTime.now().uptimeNanoseconds
+        for row in 0..<iterations {
+            controller.select(row: row)
         }
         return Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000 / Double(iterations)
     }

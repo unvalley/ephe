@@ -110,7 +110,9 @@ final class EpheMacUITests: XCTestCase {
         let launchMs = milliseconds(since: launchStart)
 
         let rowStart = DispatchTime.now().uptimeNanoseconds
-        let noteRow = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "note-row-")).firstMatch
+        let noteRow = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH %@", "note-row-"))
+            .firstMatch
         XCTAssertTrue(waitUntilExists(noteRow, timeout: 15))
         let postLaunchRowMs = milliseconds(since: rowStart)
         let firstRowMs = milliseconds(since: launchStart)

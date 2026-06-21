@@ -72,7 +72,7 @@ final class VaultStore: @unchecked Sendable {
 
         var notes: [NoteFileInfo] = []
         for case let url as URL in enumerator {
-            let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey, .contentModificationDateKey])
+            let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey, .contentModificationDateKey, .fileSizeKey])
             if resourceValues.isDirectory == true {
                 continue
             }

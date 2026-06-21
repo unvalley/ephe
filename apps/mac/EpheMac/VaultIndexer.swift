@@ -18,10 +18,10 @@ actor VaultIndexer {
         self.fileManager = fileManager
     }
 
-    func index(noteID: NoteID, in vault: Vault) async throws {
+    func index(noteID: NoteID, in vault: Vault, refreshLinks: Bool = true) async throws {
         try Task.checkCancellation()
         let note = try extract(noteID: noteID, in: vault)
-        try await indexStore.upsert(note)
+        try await indexStore.upsert(note, refreshLinks: refreshLinks)
     }
 
     @discardableResult
@@ -33,21 +33,31 @@ actor VaultIndexer {
             try await rebuild(in: vault, noteFiles: noteFiles)
             return Set(noteFiles.map(\.id))
         }
+        var changed = false
         for noteFile in noteFiles {
             try Task.checkCancellation()
             if shouldIndex(noteFile: noteFile, indexedMetadata: indexedMetadata) {
-                try await index(noteID: noteFile.id, in: vault)
+                changed = true
+                try await index(noteID: noteFile.id, in: vault, refreshLinks: false)
             }
             await Task.yield()
+        }
+        if changed {
+            try await indexStore.refreshResolvedLinks()
         }
         return Set(noteFiles.map(\.id))
     }
 
     func removeDeletedNotes(existingNoteIDs: Set<NoteID>) async throws {
         let indexedNotes = try await indexStore.allNotes().map(\.id)
+        var removed = false
         for noteID in indexedNotes where !existingNoteIDs.contains(noteID) {
             try Task.checkCancellation()
-            try await indexStore.remove(noteID: noteID)
+            removed = true
+            try await indexStore.remove(noteID: noteID, refreshLinks: false)
+        }
+        if removed {
+            try await indexStore.refreshResolvedLinks()
         }
     }
 

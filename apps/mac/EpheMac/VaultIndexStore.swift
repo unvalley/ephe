@@ -53,7 +53,7 @@ actor VaultIndexStore {
         database = nil
     }
 
-    func upsert(_ note: NoteIndex) throws {
+    func upsert(_ note: NoteIndex, refreshLinks: Bool = true) throws {
         try open()
         try transaction {
             try execute(
@@ -100,7 +100,7 @@ actor VaultIndexStore {
                         .nullableText(link.alias),
                         .int(Int64(link.range.lowerBound)),
                         .int(Int64(link.range.upperBound)),
-                        .nullableText(resolve(link, from: note.id)),
+                        .nullableText(refreshLinks ? resolve(link, from: note.id) : nil),
                     ]
                 )
             }
@@ -116,15 +116,19 @@ actor VaultIndexStore {
                 "INSERT INTO search_index(path, title, body) VALUES (?, ?, ?)",
                 [.text(note.id.rawValue), .text(note.title), .text(note.searchableText)]
             )
-            try refreshResolvedLinks()
+            if refreshLinks {
+                try refreshResolvedLinksInCurrentTransaction()
+            }
         }
     }
 
-    func remove(noteID: NoteID) throws {
+    func remove(noteID: NoteID, refreshLinks: Bool = true) throws {
         try open()
         try transaction {
             try execute("DELETE FROM notes WHERE path = ?", [.text(noteID.rawValue)])
-            try refreshResolvedLinks()
+            if refreshLinks {
+                try refreshResolvedLinksInCurrentTransaction()
+            }
         }
     }
 
@@ -167,7 +171,7 @@ actor VaultIndexStore {
                             .nullableText(link.alias),
                             .int(Int64(link.range.lowerBound)),
                             .int(Int64(link.range.upperBound)),
-                            .nullableText(resolve(link, from: note.id)),
+                            .nullableText(nil),
                         ]
                     )
                 }
@@ -182,7 +186,7 @@ actor VaultIndexStore {
                     [.text(note.id.rawValue), .text(note.title), .text(note.searchableText)]
                 )
             }
-            try refreshResolvedLinks()
+            try refreshResolvedLinksInCurrentTransaction()
         }
     }
 
@@ -352,6 +356,10 @@ actor VaultIndexStore {
     }
 
     private func resolve(_ link: ExtractedLink, from source: NoteID) throws -> String? {
+        try resolve(link, from: source, using: try noteLookup())
+    }
+
+    private func resolve(_ link: ExtractedLink, from source: NoteID, using lookup: NoteLookup) throws -> String? {
         guard link.kind == .wiki || link.kind == .embed else { return nil }
         let sourceFolder = source.rawValue.split(separator: "/").dropLast().joined(separator: "/")
         let target = link.target.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -359,19 +367,29 @@ actor VaultIndexStore {
             ? target
             : "\(sourceFolder)/\(target)"
         let exactID = NoteID(relativeTarget)
-        if try noteExists(exactID) {
+        if lookup.paths.contains(exactID.rawValue) {
             return exactID.rawValue
+        }
+        let mdID = NoteID(exactID.rawValue.lowercased().hasSuffix(".md") ? exactID.rawValue : "\(exactID.rawValue).md")
+        if lookup.paths.contains(mdID.rawValue) {
+            return mdID.rawValue
         }
         let basename = URL(fileURLWithPath: target.lowercased().hasSuffix(".md") ? target : "\(target).md")
             .deletingPathExtension()
             .lastPathComponent
-        let candidates = try query("SELECT path FROM notes WHERE title = ? ORDER BY path LIMIT 2", [.text(basename)]) { statement in
-            columnText(statement, 0)
-        }
+        let candidates = lookup.basenamePaths[basename] ?? []
         return candidates.count == 1 ? candidates[0] : nil
     }
 
-    private func refreshResolvedLinks() throws {
+    func refreshResolvedLinks() throws {
+        try open()
+        try transaction {
+            try refreshResolvedLinksInCurrentTransaction()
+        }
+    }
+
+    private func refreshResolvedLinksInCurrentTransaction() throws {
+        let lookup = try noteLookup()
         let links = try query(
             "SELECT rowid, source_path, kind, target FROM links WHERE kind IN ('wiki', 'embed')",
             []
@@ -383,15 +401,39 @@ actor VaultIndexStore {
                 target: columnText(statement, 3)
             )
         }
-        for link in links {
-            let kind = ExtractedLinkKind(rawValue: link.kind) ?? .wiki
-            let resolved = try resolve(ExtractedLink(kind: kind, target: link.target, heading: nil, alias: nil, range: TextRange(lowerBound: 0, upperBound: 0)), from: link.source)
-            try execute("UPDATE links SET resolved_path = ? WHERE rowid = ?", [.nullableText(resolved), .int(link.rowID)])
+        try withStatement("UPDATE links SET resolved_path = ? WHERE rowid = ?", []) { statement in
+            for link in links {
+                sqlite3_reset(statement)
+                sqlite3_clear_bindings(statement)
+                let kind = ExtractedLinkKind(rawValue: link.kind) ?? .wiki
+                let resolved = try resolve(
+                    ExtractedLink(kind: kind, target: link.target, heading: nil, alias: nil, range: TextRange(lowerBound: 0, upperBound: 0)),
+                    from: link.source,
+                    using: lookup
+                )
+                try bind(.nullableText(resolved), to: 1, in: statement)
+                try bind(.int(link.rowID), to: 2, in: statement)
+                guard sqlite3_step(statement) == SQLITE_DONE else {
+                    throw VaultIndexStoreError.stepFailed(errorMessage)
+                }
+            }
         }
     }
 
-    private func noteExists(_ noteID: NoteID) throws -> Bool {
-        try query("SELECT 1 FROM notes WHERE path = ? LIMIT 1", [.text(noteID.rawValue)]) { _ in true }.first == true
+    private func noteLookup() throws -> NoteLookup {
+        let paths = try query("SELECT path FROM notes", []) { statement in
+            columnText(statement, 0)
+        }
+        var pathSet = Set<String>()
+        pathSet.reserveCapacity(paths.count)
+        var basenamePaths: [String: [String]] = [:]
+        basenamePaths.reserveCapacity(paths.count)
+        for path in paths {
+            pathSet.insert(path)
+            let basename = URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
+            basenamePaths[basename, default: []].append(path)
+        }
+        return NoteLookup(paths: pathSet, basenamePaths: basenamePaths)
     }
 
     private func transaction(_ body: () throws -> Void) throws {
@@ -488,6 +530,11 @@ private enum SQLiteValue {
     case nullableText(String?)
     case int(Int64)
     case double(Double)
+}
+
+private struct NoteLookup {
+    var paths: Set<String>
+    var basenamePaths: [String: [String]]
 }
 
 private func columnText(_ statement: OpaquePointer, _ index: Int32) -> String {
