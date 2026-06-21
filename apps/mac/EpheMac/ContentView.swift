@@ -10,8 +10,14 @@ struct ContentView: View {
 
     var body: some View {
         NavigationSplitView(columnVisibility: $sidebarVisibility) {
-            VaultSidebar()
-                .navigationSplitViewColumnWidth(min: 200, ideal: 224, max: 320)
+            VaultSidebar(
+                sidebarVisible: sidebarVisibility != .detailOnly,
+                toggleSidebar: toggleSidebar,
+                newFolder: presentNewFolderAlert,
+                inspectorVisible: inspectorVisible,
+                toggleInspector: toggleInspector
+            )
+            .navigationSplitViewColumnWidth(min: 200, ideal: 224, max: 320)
         } detail: {
             ZStack(alignment: .topTrailing) {
                 EditorPane()
@@ -33,22 +39,6 @@ struct ContentView: View {
         .background(Color.epheCanvas)
         .background(WindowTitleHider())
         .frame(minWidth: 1040, minHeight: 660)
-        .toolbar {
-            EpheWindowToolbar(
-                sidebarVisible: sidebarVisibility != .detailOnly,
-                toggleSidebar: toggleSidebar,
-                newFolder: {
-                    folderName = "Untitled Folder"
-                    folderAlertPresented = true
-                },
-                inspectorVisible: inspectorVisible,
-                toggleInspector: {
-                    withAnimation(.snappy(duration: 0.16)) {
-                        inspectorVisible.toggle()
-                    }
-                }
-            )
-        }
         .sheet(isPresented: $session.commandPalettePresented) {
             CommandPaletteView()
                 .environmentObject(session)
@@ -80,6 +70,17 @@ struct ContentView: View {
             sidebarVisibility = sidebarVisibility == .detailOnly ? .all : .detailOnly
         }
     }
+
+    private func presentNewFolderAlert() {
+        folderName = "Untitled Folder"
+        folderAlertPresented = true
+    }
+
+    private func toggleInspector() {
+        withAnimation(.snappy(duration: 0.16)) {
+            inspectorVisible.toggle()
+        }
+    }
 }
 
 private struct WindowTitleHider: NSViewRepresentable {
@@ -103,11 +104,24 @@ private struct WindowTitleHider: NSViewRepresentable {
 
 private struct VaultSidebar: View {
     @EnvironmentObject private var session: EditorSession
+    var sidebarVisible: Bool
+    var toggleSidebar: () -> Void
+    var newFolder: () -> Void
+    var inspectorVisible: Bool
+    var toggleInspector: () -> Void
     @State private var renameTarget: NoteID?
     @State private var renameText = ""
 
     var body: some View {
         VStack(spacing: 0) {
+            SidebarTopBar(
+                sidebarVisible: sidebarVisible,
+                toggleSidebar: toggleSidebar,
+                newFolder: newFolder,
+                inspectorVisible: inspectorVisible,
+                toggleInspector: toggleInspector
+            )
+
             if session.isIndexing {
                 HStack(spacing: 8) {
                     ProgressView()
@@ -193,6 +207,70 @@ private struct VaultSidebar: View {
                 }
             }
         )
+    }
+}
+
+private struct SidebarTopBar: View {
+    @EnvironmentObject private var session: EditorSession
+    var sidebarVisible: Bool
+    var toggleSidebar: () -> Void
+    var newFolder: () -> Void
+    var inspectorVisible: Bool
+    var toggleInspector: () -> Void
+
+    var body: some View {
+        HStack(spacing: 4) {
+            BorderlessToolbarButton(
+                systemName: "chevron.left",
+                help: "Back",
+                accessibilityIdentifier: "navigate-back-button",
+                isEnabled: session.canNavigateBack
+            ) {
+                session.navigateBack()
+            }
+            .frame(width: 24, height: 24)
+
+            BorderlessToolbarButton(
+                systemName: "chevron.right",
+                help: "Forward",
+                accessibilityIdentifier: "navigate-forward-button",
+                isEnabled: session.canNavigateForward
+            ) {
+                session.navigateForward()
+            }
+            .frame(width: 24, height: 24)
+
+            BorderlessNewMenuButton(
+                isEnabled: session.vault != nil,
+                newFile: {
+                    session.createNote()
+                },
+                newFolder: newFolder
+            )
+            .frame(width: 24, height: 24)
+
+            Spacer(minLength: 8)
+
+            BorderlessToolbarButton(
+                systemName: "sidebar.left",
+                help: sidebarVisible ? "Hide Sidebar" : "Show Sidebar",
+                accessibilityIdentifier: "toggle-sidebar-button",
+                action: toggleSidebar
+            )
+            .frame(width: 24, height: 24)
+
+            BorderlessToolbarButton(
+                systemName: "list.bullet.rectangle",
+                help: inspectorVisible ? "Hide Details" : "Show Details",
+                accessibilityIdentifier: "toggle-inspector-button",
+                action: toggleInspector
+            )
+            .frame(width: 24, height: 24)
+        }
+        .frame(height: 36)
+        .padding(.horizontal, 10)
+        .padding(.top, 6)
+        .padding(.bottom, 4)
     }
 }
 
@@ -562,73 +640,6 @@ private struct EditorPane: View {
     }
 }
 
-private struct EpheWindowToolbar: ToolbarContent {
-    @EnvironmentObject private var session: EditorSession
-    var sidebarVisible: Bool
-    var toggleSidebar: () -> Void
-    var newFolder: () -> Void
-    var inspectorVisible: Bool
-    var toggleInspector: () -> Void
-
-    var body: some ToolbarContent {
-        ToolbarItemGroup(placement: .navigation) {
-            BorderlessToolbarButton(
-                systemName: "chevron.left",
-                help: "Back",
-                accessibilityIdentifier: "navigate-back-button",
-                isEnabled: session.canNavigateBack,
-                action: {
-                    session.navigateBack()
-                }
-            )
-            .frame(width: 24, height: 24)
-
-            BorderlessToolbarButton(
-                systemName: "chevron.right",
-                help: "Forward",
-                accessibilityIdentifier: "navigate-forward-button",
-                isEnabled: session.canNavigateForward,
-                action: {
-                    session.navigateForward()
-                }
-            )
-            .frame(width: 24, height: 24)
-
-            BorderlessNewMenuButton(
-                isEnabled: session.vault != nil,
-                newFile: {
-                    session.createNote()
-                },
-                newFolder: newFolder
-            )
-            .frame(width: 24, height: 24)
-
-            BorderlessToolbarButton(
-                systemName: "sidebar.left",
-                help: sidebarVisible ? "Hide Sidebar" : "Show Sidebar",
-                accessibilityIdentifier: "toggle-sidebar-button",
-                action: toggleSidebar
-            )
-            .frame(width: 24, height: 24)
-        }
-
-        ToolbarItem(placement: .principal) {
-            HeaderTitle(title: session.document?.title)
-        }
-
-        ToolbarItem(placement: .primaryAction) {
-            BorderlessToolbarButton(
-                systemName: "list.bullet.rectangle",
-                help: inspectorVisible ? "Hide Details" : "Show Details",
-                accessibilityIdentifier: "toggle-inspector-button",
-                isEnabled: true,
-                action: toggleInspector
-            )
-            .frame(width: 24, height: 24)
-        }
-    }
-}
-
 private struct BorderlessNewMenuButton: NSViewRepresentable {
     var isEnabled: Bool
     var newFile: () -> Void
@@ -694,30 +705,6 @@ private struct BorderlessNewMenuButton: NSViewRepresentable {
         @objc private func createFolder() {
             newFolder()
         }
-    }
-}
-
-private struct HeaderTitle: NSViewRepresentable {
-    var title: String?
-
-    func makeNSView(context: Context) -> NSTextField {
-        let field = NSTextField(labelWithString: title ?? "")
-        field.font = .systemFont(ofSize: 14, weight: .semibold)
-        field.textColor = .labelColor
-        field.alignment = .center
-        field.lineBreakMode = .byTruncatingMiddle
-        field.maximumNumberOfLines = 1
-        field.isSelectable = false
-        field.drawsBackground = false
-        field.isBezeled = false
-        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        return field
-    }
-
-    func updateNSView(_ field: NSTextField, context: Context) {
-        let text = title ?? ""
-        field.stringValue = text
-        field.toolTip = text.isEmpty ? nil : text
     }
 }
 
