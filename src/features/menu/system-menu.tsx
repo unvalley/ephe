@@ -35,7 +35,8 @@ import { useAtom, useAtomValue } from "jotai";
 const cx = (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" ");
 
 const panelClassName =
-  "cosmos-menu-panel absolute bottom-full left-0 z-20 mb-2 w-[248px] max-w-[calc(100vw-1rem)] select-none overflow-hidden rounded-xl bg-white/95 p-2 text-[13px] text-neutral-950 shadow-xl backdrop-blur-xl focus:outline-none dark:bg-neutral-950/95 dark:text-neutral-50";
+  // No overflow-hidden: row hint tooltips extend past the panel's right edge.
+  "cosmos-menu-panel absolute bottom-full left-0 z-20 mb-2 w-[248px] max-w-[calc(100vw-1rem)] select-none rounded-xl bg-white/95 p-2 text-[13px] text-neutral-950 shadow-xl backdrop-blur-xl focus:outline-none dark:bg-neutral-950/95 dark:text-neutral-50";
 
 const rowBaseClassName =
   "flex min-h-11 w-full items-center justify-between gap-3 rounded-md px-3 text-left transition-[background-color,transform,color] duration-150 ease-out";
@@ -121,7 +122,7 @@ const MenuRowContent = ({ label, children, icon, labelSuffix, hint }: Omit<MenuR
       {hint && (
         <span
           role="tooltip"
-          className="pointer-events-none absolute bottom-full left-2 z-30 mb-1 w-52 whitespace-normal rounded-md bg-white px-2.5 py-1.5 text-[11px] text-neutral-700 leading-snug opacity-0 shadow-lg ring-1 ring-neutral-200 transition-opacity delay-150 duration-150 group-hover/hint:opacity-100 dark:bg-neutral-900 dark:text-neutral-300 dark:ring-white/10"
+          className="pointer-events-none absolute top-1/2 left-full z-30 ml-4 w-56 -translate-y-1/2 whitespace-normal rounded-md bg-white px-2.5 py-1.5 text-[11px] text-neutral-700 leading-snug opacity-0 shadow-lg ring-1 ring-neutral-200 transition-opacity delay-150 duration-150 group-hover/hint:opacity-100 dark:bg-neutral-900 dark:text-neutral-300 dark:ring-white/10"
         >
           {hint}
         </span>
