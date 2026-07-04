@@ -27,9 +27,14 @@ import {
   NotebookIcon,
   GithubLogoIcon,
   CrosshairSimpleIcon,
+  CalculatorIcon,
+  CalendarBlankIcon,
+  ClockIcon,
 } from "@phosphor-icons/react";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
+import { formatDateKey } from "../../utils/storage";
 import { useFocusMode } from "../../utils/hooks/use-focus-mode";
+import { useInlineCalc } from "../../utils/hooks/use-inline-calc";
 import { useAtom } from "jotai";
 
 // Custom hook for markdown formatter
@@ -67,11 +72,20 @@ type CommandItem = {
   perform: () => void;
 };
 
-const INTERFACE_IDS = new Set(["theme-toggle", "paper-mode", "editor-width", "font-family", "focus-mode"]);
+const INTERFACE_IDS = new Set([
+  "theme-toggle",
+  "paper-mode",
+  "editor-width",
+  "font-family",
+  "focus-mode",
+  "inline-calc",
+]);
 const OPERATION_IDS = new Set([
   "export-markdown",
   "format-document",
   "insert-github-issues",
+  "insert-date",
+  "insert-time",
   "open-tasks",
   "open-snapshots",
   "save-snapshot",
@@ -94,6 +108,7 @@ export const CommandMenu = ({
   const listRef = useRef<HTMLDivElement>(null);
   const [fontFamily, setFontFamily] = useAtom(fontFamilyAtom);
   const { focusMode, toggleFocusMode } = useFocusMode();
+  const { inlineCalcMode, toggleInlineCalc } = useInlineCalc();
 
   useEffect(() => {
     if (!open) {
@@ -134,6 +149,11 @@ export const CommandMenu = ({
 
   const toggleFocusModeThenClose = () => {
     toggleFocusMode();
+    onClose();
+  };
+
+  const toggleInlineCalcThenClose = () => {
+    toggleInlineCalc();
     onClose();
   };
 
@@ -242,34 +262,49 @@ export const CommandMenu = ({
     }
   };
 
-  const handleInsertGitHubIssues = async () => {
+  // The "input" userEvent annotation makes the persistence listener in
+  // use-markdown-editor.ts pick up the inserted text immediately.
+  const insertTextAtCursor = (text: string): boolean => {
     if (!editorView) {
       showToast("Editor not available", "error");
-      onClose();
-      return;
+      return false;
     }
+    const cursorPos = editorView.state.selection.main.head;
+    editorView.dispatch({
+      changes: { from: cursorPos, to: cursorPos, insert: text },
+      selection: { anchor: cursorPos + text.length },
+      annotations: Transaction.userEvent.of("input"),
+    });
+    return true;
+  };
+
+  const handleInsertGitHubIssues = async () => {
     try {
       const github_user_id = prompt("Enter GitHub User ID:");
       if (!github_user_id) {
-        onClose();
         return;
       }
       const issuesTaskList = await fetchGitHubIssuesTaskList(github_user_id);
-      const state = editorView.state;
-      const cursorPos = state.selection.main.head;
-
-      editorView.dispatch({
-        changes: { from: cursorPos, to: cursorPos, insert: issuesTaskList },
-        selection: { anchor: cursorPos + issuesTaskList.length },
-      });
-
-      showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
+      if (insertTextAtCursor(issuesTaskList)) {
+        showToast(`Inserted GitHub issues for ${github_user_id}`, "success");
+      }
     } catch (error) {
       console.error("Error inserting GitHub issues:", error);
       showToast("Failed to insert GitHub issues", "error");
     } finally {
       onClose();
     }
+  };
+
+  const handleInsertDate = () => {
+    insertTextAtCursor(formatDateKey(new Date()));
+    onClose();
+  };
+
+  const handleInsertTime = () => {
+    const now = new Date();
+    insertTextAtCursor(`${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`);
+    onClose();
   };
 
   const goToGitHubRepo = () => {
@@ -348,6 +383,12 @@ export const CommandMenu = ({
       perform: toggleFocusModeThenClose,
     });
     list.push({
+      id: "inline-calc",
+      name: "Toggle inline calculator (Experimental)",
+      icon: <CalculatorIcon className="size-4" weight="light" />,
+      perform: toggleInlineCalcThenClose,
+    });
+    list.push({
       id: "export-markdown",
       name: "Export markdown",
       icon: <FileIcon className="size-4" weight="light" />,
@@ -370,6 +411,18 @@ export const CommandMenu = ({
         name: "Create GitHub issue list (Public Repos)",
         icon: <GithubLogoIcon className="size-4" weight="light" />,
         perform: handleInsertGitHubIssues,
+      });
+      list.push({
+        id: "insert-date",
+        name: "Insert current date",
+        icon: <CalendarBlankIcon className="size-4" weight="light" />,
+        perform: handleInsertDate,
+      });
+      list.push({
+        id: "insert-time",
+        name: "Insert current time",
+        icon: <ClockIcon className="size-4" weight="light" />,
+        perform: handleInsertTime,
       });
     }
 
@@ -490,6 +543,11 @@ export const CommandMenu = ({
                               {command.id === "focus-mode" && (
                                 <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
                                   ({focusMode})
+                                </span>
+                              )}
+                              {command.id === "inline-calc" && (
+                                <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                                  ({inlineCalcMode})
                                 </span>
                               )}
                             </span>
