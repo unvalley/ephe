@@ -121,7 +121,7 @@ const MenuRowContent = ({ label, children, icon, labelSuffix, hint }: Omit<MenuR
       {hint && (
         <span
           role="tooltip"
-          className="pointer-events-none absolute bottom-full left-2 z-30 mb-1 w-52 whitespace-normal rounded-md bg-neutral-900 px-2.5 py-1.5 text-[11px] text-white leading-snug opacity-0 shadow-lg transition-opacity delay-150 duration-150 group-hover/hint:opacity-100 dark:bg-neutral-100 dark:text-neutral-900"
+          className="pointer-events-none absolute bottom-full left-2 z-30 mb-1 w-52 whitespace-normal rounded-md bg-white px-2.5 py-1.5 text-[11px] text-neutral-700 leading-snug opacity-0 shadow-lg ring-1 ring-neutral-200 transition-opacity delay-150 duration-150 group-hover/hint:opacity-100 dark:bg-neutral-900 dark:text-neutral-300 dark:ring-white/10"
         >
           {hint}
         </span>
