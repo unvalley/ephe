@@ -71,39 +71,41 @@ export const taskDecoration = ViewPlugin.fromClass(
       this.decorations = this.createBaseDecorations(this.taskes);
     }
 
-    // Detect all tasks in the document
+    // Detect tasks in the visible portion of the document only
     findAllTaskes(view: EditorView): TaskInfo[] {
       const result: TaskInfo[] = [];
-      const { state } = view;
-      const { doc } = state;
+      const { doc } = view.state;
 
-      // Process visible lines only for performance
-      for (let i = 1; i <= doc.lines; i++) {
-        const line = doc.line(i);
-        const match = line.text.match(taskItemRegex);
+      for (const { from, to } of view.visibleRanges) {
+        for (let pos = from; pos <= to; ) {
+          const line = doc.lineAt(pos);
+          const match = line.text.match(taskItemRegex);
 
-        if (match) {
-          // Search for the entire task pattern to determine the exact position
-          const matchIndex = match.index || 0;
-          const prefixLength = match[1].length;
+          if (match) {
+            // Search for the entire task pattern to determine the exact position
+            const matchIndex = match.index || 0;
+            const prefixLength = match[1].length;
 
-          // Calculate the position of '['
-          const taskStartPos = matchIndex + prefixLength;
-          const from = line.from + taskStartPos;
-          const contentPos = from + 1; // next of '['
-          const to = from + 3; // '[' + content + ']' = 3 chars
+            // Calculate the position of '['
+            const taskStartPos = matchIndex + prefixLength;
+            const taskFrom = line.from + taskStartPos;
+            const contentPos = taskFrom + 1; // next of '['
+            const taskTo = taskFrom + 3; // '[' + content + ']' = 3 chars
 
-          const checkChar = match[2];
-          const taskContent = line.text.substring(matchIndex + prefixLength + 3).trim();
+            const checkChar = match[2];
+            const taskContent = line.text.substring(matchIndex + prefixLength + 3).trim();
 
-          result.push({
-            from,
-            to,
-            contentPos,
-            checked: checkChar === "x" || checkChar === "X",
-            line: i,
-            key: getTaskKey(i, taskContent),
-          });
+            result.push({
+              from: taskFrom,
+              to: taskTo,
+              contentPos,
+              checked: checkChar === "x" || checkChar === "X",
+              line: line.number,
+              key: getTaskKey(line.number, taskContent),
+            });
+          }
+
+          pos = line.to + 1;
         }
       }
       return result;
@@ -118,10 +120,10 @@ export const taskDecoration = ViewPlugin.fromClass(
       return builder.finish();
     }
 
-    // Detect tasks when the document changes
+    // Detect tasks when the document or visible range changes
     update(update: ViewUpdate) {
-      if (update.docChanged) {
-        // Keep task decorations in sync with document edits.
+      if (update.docChanged || update.viewportChanged) {
+        // Keep task decorations in sync with document edits and scrolling.
         this.taskes = this.findAllTaskes(update.view);
         this.decorations = this.createBaseDecorations(this.taskes);
       }
