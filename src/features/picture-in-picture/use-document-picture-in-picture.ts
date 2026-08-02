@@ -10,14 +10,14 @@ const PICTURE_IN_PICTURE_SIZE = {
 
 type UseDocumentPictureInPictureOptions = {
   editorSlotRef: RefObject<HTMLDivElement | null>;
-  editorSurfaceRef: RefObject<HTMLDivElement | null>;
+  editorSurface: HTMLDivElement;
   getEditorView: () => EditorView | null;
   paperModeClass: string;
 };
 
 export const useDocumentPictureInPicture = ({
   editorSlotRef,
-  editorSurfaceRef,
+  editorSurface,
   getEditorView,
   paperModeClass,
 }: UseDocumentPictureInPictureOptions) => {
@@ -49,9 +49,8 @@ export const useDocumentPictureInPicture = ({
     themeObserverRef.current?.disconnect();
     themeObserverRef.current = null;
 
-    const editorSurface = editorSurfaceRef.current;
     const editorSlot = editorSlotRef.current;
-    if (editorSurface && editorSlot && editorSurface.parentElement !== editorSlot) {
+    if (editorSlot && editorSurface.parentElement !== editorSlot) {
       editorSlot.append(editorSurface);
     }
 
@@ -59,13 +58,16 @@ export const useDocumentPictureInPicture = ({
     if (editorView) {
       editorView.setRoot(document);
       editorView.requestMeasure();
-      editorView.focus();
     }
 
     pictureInPictureWindowRef.current = null;
     pictureInPictureRootRef.current = null;
     setIsPictureInPicture(false);
-  }, [editorSlotRef, editorSurfaceRef]);
+    window.focus();
+    requestAnimationFrame(() => {
+      getEditorViewRef.current()?.focus();
+    });
+  }, [editorSlotRef, editorSurface]);
 
   const closePictureInPicture = useCallback(() => {
     const pictureInPictureWindow = pictureInPictureWindowRef.current;
@@ -79,8 +81,7 @@ export const useDocumentPictureInPicture = ({
 
   const openPictureInPicture = useCallback(async () => {
     const documentPictureInPicture = getDocumentPictureInPicture();
-    const editorSurface = editorSurfaceRef.current;
-    if (!documentPictureInPicture || !editorSurface || isOpeningRef.current) return;
+    if (!documentPictureInPicture || isOpeningRef.current) return;
 
     if (documentPictureInPicture.window) {
       documentPictureInPicture.window.focus();
@@ -135,20 +136,19 @@ export const useDocumentPictureInPicture = ({
     } finally {
       isOpeningRef.current = false;
     }
-  }, [editorSurfaceRef, returnEditorToMainWindow, syncAppearance]);
+  }, [editorSurface, returnEditorToMainWindow, syncAppearance]);
 
   useLayoutEffect(() => {
     return () => {
       themeObserverRef.current?.disconnect();
-      const editorSurface = editorSurfaceRef.current;
       const editorSlot = editorSlotRef.current;
-      if (editorSurface && editorSlot && editorSurface.parentElement !== editorSlot) {
+      if (editorSlot && editorSurface.parentElement !== editorSlot) {
         editorSlot.append(editorSurface);
         getEditorViewRef.current()?.setRoot(document);
       }
       pictureInPictureWindowRef.current?.close();
     };
-  }, [editorSlotRef, editorSurfaceRef]);
+  }, [editorSlotRef, editorSurface]);
 
   return {
     closePictureInPicture,

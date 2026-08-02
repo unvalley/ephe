@@ -13,7 +13,8 @@ import { Link } from "react-router-dom";
 import { EPHE_VERSION } from "../utils/constants";
 import { useCommandK } from "../utils/hooks/use-command-k";
 import { useEditorMode } from "../utils/hooks/use-editor-mode";
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback, useRef, useState, useEffect, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAtom } from "jotai";
 import { HistoryModal } from "../features/history/history-modal";
 import { editorContentAtom } from "../utils/atoms/editor";
@@ -33,9 +34,23 @@ export const EditorPage = () => {
   const multiEditorRef = useRef<MultiEditorRef>(null);
   const singleEditorRef = useRef<SingleEditorRef>(null);
   const editorSlotRef = useRef<HTMLDivElement>(null);
-  const editorSurfaceRef = useRef<HTMLDivElement>(null);
+  const [editorSurface] = useState(() => {
+    const surface = document.createElement("div");
+    surface.className = "z-0 h-full min-h-0 w-full flex-1";
+    return surface;
+  });
   const [editorContent] = useAtom(editorContentAtom);
   const { isMobile } = useMobileDetector();
+
+  useLayoutEffect(() => {
+    const editorSlot = editorSlotRef.current;
+    if (editorSlot && editorSurface.parentElement !== editorSlot) {
+      editorSlot.prepend(editorSurface);
+    }
+    return () => {
+      editorSurface.remove();
+    };
+  }, [editorSurface]);
 
   const getEditorView = useCallback(
     () => (editorMode === "multi" ? multiEditorRef.current?.view : singleEditorRef.current?.view) ?? null,
@@ -45,7 +60,7 @@ export const EditorPage = () => {
   const { closePictureInPicture, isPictureInPicture, isPictureInPictureSupported, openPictureInPicture } =
     useDocumentPictureInPicture({
       editorSlotRef,
-      editorSurfaceRef,
+      editorSurface,
       getEditorView,
       paperModeClass,
     });
@@ -90,13 +105,14 @@ export const EditorPage = () => {
     <LazyMotion features={domAnimation} strict>
       <div className={`flex h-screen flex-col overflow-hidden antialiased ${paperModeClass}`}>
         <div ref={editorSlotRef} className="relative flex flex-1 overflow-hidden">
-          <div ref={editorSurfaceRef} className="z-0 flex-1">
-            {editorMode === "multi" ? (
-              <MultiDocumentEditor ref={multiEditorRef} />
+          {createPortal(
+            editorMode === "multi" ? (
+              <MultiDocumentEditor ref={multiEditorRef} transitionsEnabled={!isPictureInPicture} />
             ) : (
               <CodeMirrorEditor ref={singleEditorRef} />
-            )}
-          </div>
+            ),
+            editorSurface,
+          )}
           {isPictureInPicture ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-4 text-neutral-500 dark:text-neutral-400">
               <PictureInPictureIcon className="size-8" weight="regular" />

@@ -9,9 +9,10 @@ import { AnimatePresence, m } from "motion/react";
 
 type MultiDocumentEditorProps = {
   ref?: React.Ref<MultiEditorRef>;
+  transitionsEnabled?: boolean;
 };
 
-export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
+export const MultiDocumentEditor = ({ ref, transitionsEnabled = true }: MultiDocumentEditorProps) => {
   const [activeIndex, setActiveIndex] = useAtom(activeDocumentIndexAtom);
   const [documents, setDocuments] = useAtom(documentsAtom);
   const editorRef = useRef<SingleEditorRef | null>(null);
@@ -103,14 +104,14 @@ export const MultiDocumentEditor = ({ ref }: MultiDocumentEditorProps) => {
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode={transitionsEnabled ? "wait" : "sync"}>
         <m.div
           key={documents[activeIndex].id}
           className="h-full w-full"
-          initial={{ opacity: 0 }}
+          initial={transitionsEnabled ? { opacity: 0 } : false}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+          exit={transitionsEnabled ? { opacity: 0 } : undefined}
+          transition={{ duration: transitionsEnabled ? 0.3 : 0, ease: "easeInOut" }}
         >
           <CodeMirrorEditor
             ref={editorRef}

@@ -1,6 +1,6 @@
 import { useAtom } from "jotai";
 import { activeDocumentIndexAtom, documentsAtom } from "../../../utils/atoms/multi-document";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
 import { useMultiDocument } from "./multi-context";
 import { Tooltip } from "../../../utils/components/tooltip";
@@ -54,6 +54,7 @@ export const DocumentNavigation = () => {
   const [documents] = useAtom(documentsAtom);
   const [showLeftCard, setShowLeftCard] = useState(false);
   const [showRightCard, setShowRightCard] = useState(false);
+  const eventBoundaryRef = useRef<HTMLSpanElement>(null);
 
   const canGoLeft = activeIndex > 0;
   const canGoRight = activeIndex < documents.length - 1;
@@ -61,22 +62,27 @@ export const DocumentNavigation = () => {
   const { navigateToDocument } = useMultiDocument();
 
   useEffect(() => {
+    const eventBoundary = eventBoundaryRef.current?.parentElement;
+    if (!eventBoundary) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       const { clientX, clientY } = e;
       const yThreshold = 80; // Vertical threshold for showing cards
       const xThreshold = 100; // Horizontal threshold for showing cards
-      const inVerticalRange = clientY > yThreshold && clientY < window.innerHeight - yThreshold;
+      const bounds = eventBoundary.getBoundingClientRect();
+      const inVerticalRange = clientY > bounds.top + yThreshold && clientY < bounds.bottom - yThreshold;
 
-      setShowLeftCard(canGoLeft && clientX < xThreshold && inVerticalRange);
-      setShowRightCard(canGoRight && clientX > window.innerWidth - xThreshold && inVerticalRange);
+      setShowLeftCard(canGoLeft && clientX < bounds.left + xThreshold && inVerticalRange);
+      setShowRightCard(canGoRight && clientX > bounds.right - xThreshold && inVerticalRange);
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    eventBoundary.addEventListener("mousemove", handleMouseMove);
+    return () => eventBoundary.removeEventListener("mousemove", handleMouseMove);
   }, [canGoLeft, canGoRight]);
 
   return (
     <>
+      <span ref={eventBoundaryRef} className="hidden" aria-hidden="true" />
       {canGoLeft && (
         <NavigationCard
           direction="left"

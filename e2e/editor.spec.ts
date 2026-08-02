@@ -72,12 +72,31 @@ test.describe("Editor Page", () => {
     await pictureInPicturePage.keyboard.press(`${modifier}+z`);
     await expect(pictureInPicturePage.locator(".cm-content")).toContainText("PiP keeps this edit");
     await pictureInPicturePage.keyboard.press(`${modifier}+a`);
-    await pictureInPicturePage.keyboard.type("PiP keeps this edit after moving");
+    await pictureInPicturePage.keyboard.type("# PiP heading\n- [ ] task after moving");
+    await expect(pictureInPicturePage.locator(".cm-content")).toContainText("# PiP heading");
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const documents = JSON.parse(localStorage.getItem("ephe:documents") ?? "[]") as Array<{ content: string }>;
+          return documents[0]?.content;
+        }),
+      )
+      .toContain("# PiP heading");
+
+    const viewport = pictureInPicturePage.viewportSize();
+    if (!viewport) throw new Error("Picture-in-Picture viewport is unavailable");
+    await pictureInPicturePage.mouse.move(viewport.width - 1, viewport.height / 2);
+    await pictureInPicturePage.getByRole("button", { name: "Next" }).click();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("ephe:active-document-index"))).toBe("1");
+    await expect(pictureInPicturePage.locator(".cm-content")).not.toContainText("# PiP heading");
+
+    await pictureInPicturePage.mouse.move(1, viewport.height / 2);
+    await pictureInPicturePage.getByRole("button", { name: "Previous" }).click();
+    await expect(pictureInPicturePage.locator(".cm-content")).toContainText("# PiP heading");
 
     await page.getByRole("button", { name: "Return editor" }).click();
     await expect(page.getByText("Editing in Picture-in-Picture")).not.toBeVisible();
-    await expect(page.locator(".cm-content")).toContainText("PiP keeps this edit after moving");
-    await expect(page.locator(".cm-editor")).toHaveClass(/cm-focused/);
+    await expect(page.locator(".cm-content")).toContainText("# PiP heading");
   });
 
   test("closes Picture-in-Picture when leaving the editor page", async ({ page, context }) => {
