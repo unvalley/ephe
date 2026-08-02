@@ -6,6 +6,7 @@ import { copyDocumentStyles, getDocumentPictureInPicture } from "./document-pict
 const PICTURE_IN_PICTURE_SIZE = {
   width: 420,
   height: 560,
+  disallowReturnToOpener: true,
 } as const;
 
 type UseDocumentPictureInPictureOptions = {
@@ -113,8 +114,15 @@ export const useDocumentPictureInPicture = ({
       if (editorView) {
         editorView.setRoot(pictureInPictureDocument);
         editorView.requestMeasure();
-        editorView.focus();
       }
+
+      const focusEditor = () => {
+        pictureInPictureWindow.requestAnimationFrame(() => {
+          getEditorViewRef.current()?.focus();
+        });
+      };
+      focusEditor();
+      pictureInPictureWindow.addEventListener("focus", focusEditor);
 
       syncAppearance();
       themeObserverRef.current = new MutationObserver(syncAppearance);
@@ -123,7 +131,14 @@ export const useDocumentPictureInPicture = ({
         attributeFilter: ["class"],
       });
 
-      pictureInPictureWindow.addEventListener("pagehide", returnEditorToMainWindow, { once: true });
+      pictureInPictureWindow.addEventListener(
+        "pagehide",
+        () => {
+          pictureInPictureWindow.removeEventListener("focus", focusEditor);
+          returnEditorToMainWindow();
+        },
+        { once: true },
+      );
       setIsPictureInPicture(true);
     } catch (error) {
       const pictureInPictureWindow = pictureInPictureWindowRef.current;

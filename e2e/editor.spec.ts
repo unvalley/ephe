@@ -4,7 +4,9 @@ const mockDocumentPictureInPicture = async (page: Page) => {
   await page.addInitScript(() => {
     const documentPictureInPicture = {
       window: null as Window | null,
-      async requestWindow() {
+      async requestWindow(options?: { disallowReturnToOpener?: boolean; height?: number; width?: number }) {
+        (window as Window & { __documentPictureInPictureOptions?: typeof options }).__documentPictureInPictureOptions =
+          options;
         const popup = window.open("", "", "width=420,height=560");
         if (!popup) throw new Error("Popup was blocked");
         this.window = popup;
@@ -63,8 +65,23 @@ test.describe("Editor Page", () => {
 
     await expect(page.getByText("Editing in Picture-in-Picture")).toBeVisible();
     await expect(pictureInPicturePage.locator(".cm-content")).toContainText("PiP keeps this edit");
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (window as Window & { __documentPictureInPictureOptions?: { disallowReturnToOpener?: boolean } })
+              .__documentPictureInPictureOptions?.disallowReturnToOpener,
+        ),
+      )
+      .toBe(true);
 
-    await pictureInPicturePage.getByTestId("code-mirror-editor").focus();
+    await pictureInPicturePage.evaluate(() => {
+      (document.activeElement as HTMLElement | null)?.blur();
+      window.dispatchEvent(new FocusEvent("focus"));
+    });
+    await expect
+      .poll(() => pictureInPicturePage.evaluate(() => document.activeElement?.classList.contains("cm-content")))
+      .toBe(true);
     await pictureInPicturePage.keyboard.type(" after moving");
     await expect(pictureInPicturePage.locator(".cm-content")).toContainText("PiP keeps this edit after moving");
 

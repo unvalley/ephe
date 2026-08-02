@@ -1,6 +1,7 @@
 type DocumentPictureInPictureOptions = {
   width?: number;
   height?: number;
+  disallowReturnToOpener?: boolean;
 };
 
 export type DocumentPictureInPicture = {
