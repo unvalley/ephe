@@ -1,4 +1,29 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+
+const mockDocumentPictureInPicture = async (page: Page) => {
+  await page.addInitScript(() => {
+    const documentPictureInPicture = {
+      window: null as Window | null,
+      async requestWindow() {
+        const popup = window.open("", "", "width=420,height=560");
+        if (!popup) throw new Error("Popup was blocked");
+        this.window = popup;
+        popup.addEventListener(
+          "pagehide",
+          () => {
+            this.window = null;
+          },
+          { once: true },
+        );
+        return popup;
+      },
+    };
+    Object.defineProperty(window, "documentPictureInPicture", {
+      configurable: true,
+      value: documentPictureInPicture,
+    });
+  });
+};
 
 test.describe("Editor Page", () => {
   test("load page", async ({ page }) => {
@@ -22,6 +47,52 @@ test.describe("Editor Page", () => {
     // check input
     const editorContent = await page.locator(".cm-content");
     await expect(editorContent).toContainText("Hello World");
+  });
+
+  test("moves the live editor into Picture-in-Picture and back", async ({ page, context }) => {
+    await mockDocumentPictureInPicture(page);
+    await page.goto("/");
+
+    const editor = page.getByTestId("code-mirror-editor");
+    await editor.focus();
+    await page.keyboard.type("PiP keeps this edit");
+
+    const popupPromise = context.waitForEvent("page");
+    await page.getByRole("button", { name: "Open Picture-in-Picture" }).click();
+    const pictureInPicturePage = await popupPromise;
+
+    await expect(page.getByText("Editing in Picture-in-Picture")).toBeVisible();
+    await expect(pictureInPicturePage.locator(".cm-content")).toContainText("PiP keeps this edit");
+
+    await pictureInPicturePage.getByTestId("code-mirror-editor").focus();
+    await pictureInPicturePage.keyboard.type(" after moving");
+    await expect(pictureInPicturePage.locator(".cm-content")).toContainText("PiP keeps this edit after moving");
+
+    const modifier = process.platform === "darwin" ? "Meta" : "Control";
+    await pictureInPicturePage.keyboard.press(`${modifier}+z`);
+    await expect(pictureInPicturePage.locator(".cm-content")).toContainText("PiP keeps this edit");
+    await pictureInPicturePage.keyboard.press(`${modifier}+a`);
+    await pictureInPicturePage.keyboard.type("PiP keeps this edit after moving");
+
+    await page.getByRole("button", { name: "Return editor" }).click();
+    await expect(page.getByText("Editing in Picture-in-Picture")).not.toBeVisible();
+    await expect(page.locator(".cm-content")).toContainText("PiP keeps this edit after moving");
+    await expect(page.locator(".cm-editor")).toHaveClass(/cm-focused/);
+  });
+
+  test("closes Picture-in-Picture when leaving the editor page", async ({ page, context }) => {
+    await mockDocumentPictureInPicture(page);
+    await page.goto("/");
+
+    const popupPromise = context.waitForEvent("page");
+    await page.getByRole("button", { name: "Open Picture-in-Picture" }).click();
+    const pictureInPicturePage = await popupPromise;
+    await expect(page.getByText("Editing in Picture-in-Picture")).toBeVisible();
+
+    await page.getByRole("link", { name: /^Ephe v/ }).click();
+
+    await expect(page).toHaveURL(/\/landing$/);
+    await expect.poll(() => pictureInPicturePage.isClosed()).toBe(true);
   });
 
   test("keeps editor input active after changing system menu controls", async ({ page }) => {
