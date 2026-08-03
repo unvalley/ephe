@@ -102,7 +102,11 @@ export const EditorPage = () => {
         <div ref={editorSlotRef} className="relative flex flex-1 overflow-hidden">
           {createPortal(
             editorMode === "multi" ? (
-              <MultiDocumentEditor ref={multiEditorRef} transitionsEnabled={!isPictureInPicture} />
+              <MultiDocumentEditor
+                ref={multiEditorRef}
+                transitionsEnabled={!isPictureInPicture}
+                navigationEnabled={!isPictureInPicture}
+              />
             ) : (
               <CodeMirrorEditor ref={singleEditorRef} />
             ),

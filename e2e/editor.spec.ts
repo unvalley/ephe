@@ -103,13 +103,9 @@ test.describe("Editor Page", () => {
     const viewport = pictureInPicturePage.viewportSize();
     if (!viewport) throw new Error("Picture-in-Picture viewport is unavailable");
     await pictureInPicturePage.mouse.move(viewport.width - 1, viewport.height / 2);
-    await pictureInPicturePage.getByRole("button", { name: "Next" }).click();
-    await expect.poll(() => page.evaluate(() => localStorage.getItem("ephe:active-document-index"))).toBe("1");
-    await expect(pictureInPicturePage.locator(".cm-content")).not.toContainText("# PiP heading");
-
+    await expect(pictureInPicturePage.getByRole("button", { name: "Next" })).toHaveCount(0);
     await pictureInPicturePage.mouse.move(1, viewport.height / 2);
-    await pictureInPicturePage.getByRole("button", { name: "Previous" }).click();
-    await expect(pictureInPicturePage.locator(".cm-content")).toContainText("# PiP heading");
+    await expect(pictureInPicturePage.getByRole("button", { name: "Previous" })).toHaveCount(0);
 
     await page.getByRole("button", { name: "Floating" }).click();
     await expect(page.getByRole("button", { name: "Float" })).toBeVisible();

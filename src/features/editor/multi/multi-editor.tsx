@@ -10,9 +10,14 @@ import { AnimatePresence, m } from "motion/react";
 type MultiDocumentEditorProps = {
   ref?: React.Ref<MultiEditorRef>;
   transitionsEnabled?: boolean;
+  navigationEnabled?: boolean;
 };
 
-export const MultiDocumentEditor = ({ ref, transitionsEnabled = true }: MultiDocumentEditorProps) => {
+export const MultiDocumentEditor = ({
+  ref,
+  transitionsEnabled = true,
+  navigationEnabled = true,
+}: MultiDocumentEditorProps) => {
   const [activeIndex, setActiveIndex] = useAtom(activeDocumentIndexAtom);
   const [documents, setDocuments] = useAtom(documentsAtom);
   const editorRef = useRef<SingleEditorRef | null>(null);
@@ -122,9 +127,11 @@ export const MultiDocumentEditor = ({ ref, transitionsEnabled = true }: MultiDoc
         </m.div>
       </AnimatePresence>
 
-      <MultiDocumentProvider navigateToDocument={navigateToDocument}>
-        <DocumentNavigation />
-      </MultiDocumentProvider>
+      {navigationEnabled && (
+        <MultiDocumentProvider navigateToDocument={navigateToDocument}>
+          <DocumentNavigation />
+        </MultiDocumentProvider>
+      )}
     </div>
   );
 };
