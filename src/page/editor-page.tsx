@@ -130,7 +130,17 @@ export const EditorPage = () => {
 
         <Footer
           autoHide={true}
-          leftContent={<SystemMenu onOpenHistoryModal={openHistoryModal} onRestoreEditorFocus={restoreEditorFocus} />}
+          leftContent={
+            <div className="flex items-center gap-1">
+              <SystemMenu onOpenHistoryModal={openHistoryModal} onRestoreEditorFocus={restoreEditorFocus} />
+              {isPictureInPictureSupported ? (
+                <PictureInPictureButton
+                  isActive={isPictureInPicture}
+                  onClick={isPictureInPicture ? closePictureInPicture : openPictureInPicture}
+                />
+              ) : null}
+            </div>
+          }
           centerContent={
             isMobile || editorMode === "single" ? null : (
               <DocumentDock onNavigate={(index) => multiEditorRef.current?.navigateToDocument(index)} />
@@ -139,12 +149,6 @@ export const EditorPage = () => {
           rightContent={
             <>
               <HoursDisplay />
-              {isPictureInPictureSupported ? (
-                <PictureInPictureButton
-                  isActive={isPictureInPicture}
-                  onClick={isPictureInPicture ? closePictureInPicture : openPictureInPicture}
-                />
-              ) : null}
               <FooterButton>
                 <Link to="/landing">Ephe v{EPHE_VERSION}</Link>
               </FooterButton>

@@ -60,10 +60,11 @@ test.describe("Editor Page", () => {
     await page.keyboard.type("PiP keeps this edit");
 
     const popupPromise = context.waitForEvent("page");
-    await page.getByRole("button", { name: "Open Picture-in-Picture" }).click();
+    await page.getByRole("button", { name: "Float" }).click();
     const pictureInPicturePage = await popupPromise;
 
     await expect(page.getByText("Editing in Picture-in-Picture")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Floating" })).toBeVisible();
     await expect(pictureInPicturePage.locator(".cm-content")).toContainText("PiP keeps this edit");
     await expect
       .poll(() =>
@@ -121,7 +122,7 @@ test.describe("Editor Page", () => {
     await page.goto("/");
 
     const popupPromise = context.waitForEvent("page");
-    await page.getByRole("button", { name: "Open Picture-in-Picture" }).click();
+    await page.getByRole("button", { name: "Float" }).click();
     const pictureInPicturePage = await popupPromise;
     await expect(page.getByText("Editing in Picture-in-Picture")).toBeVisible();
 

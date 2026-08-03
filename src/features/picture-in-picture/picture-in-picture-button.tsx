@@ -1,4 +1,3 @@
-import { PictureInPictureIcon } from "@phosphor-icons/react";
 import { FooterButton } from "../../utils/components/footer";
 
 type PictureInPictureButtonProps = {
@@ -7,11 +6,11 @@ type PictureInPictureButtonProps = {
 };
 
 export const PictureInPictureButton = ({ isActive, onClick }: PictureInPictureButtonProps) => {
-  const label = isActive ? "Close Picture-in-Picture" : "Open Picture-in-Picture";
+  const label = isActive ? "Floating" : "Float";
 
   return (
-    <FooterButton aria-label={label} title={label} onClick={onClick}>
-      <PictureInPictureIcon className="size-4" weight={isActive ? "fill" : "regular"} />
+    <FooterButton aria-pressed={isActive} title={label} onClick={onClick}>
+      {label}
     </FooterButton>
   );
 };
