@@ -44,9 +44,16 @@ While PiP is open, everything tied to that window lives in a single
 
 - `window` / `root` — the PiP window and the `<main>` element hosting the editor.
 - `dispose()` — a closure that unregisters exactly what `open` registered
-  (the focus listener and the theme `MutationObserver`). Keeping registration
+  (the focus listeners and the theme `MutationObserver`). Keeping registration
   and teardown in one place is the point; nothing else may add session-scoped
   listeners without also extending `dispose`.
+
+The PiP window keeps the editor focused at all times: a `focusout` guard on the
+PiP document refocuses the editor whenever focus would land on `<body>`. The
+window hosts nothing else focusable, and a non-editable `activeElement` breaks
+more than caret position — extensions such as Vimium decide per keystroke
+whether the page is "editable" by inspecting `document.activeElement`, and
+start swallowing keys when it is not.
 
 `sessionRef.current !== null` ⇔ a PiP session exists. React state
 (`isPictureInPicture`) mirrors this only for rendering.
