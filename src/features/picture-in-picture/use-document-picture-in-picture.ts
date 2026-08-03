@@ -116,13 +116,20 @@ export const useDocumentPictureInPicture = ({
       };
       targetWindow.addEventListener("focus", focusEditor);
 
-      // The floating window hosts nothing but the editor, so focus must never
-      // rest anywhere else. Without this, keystrokes land on <body> and
-      // extensions like Vimium (which treat a non-editable activeElement as
-      // normal mode) start swallowing keys instead of letting them type.
-      const keepEditorFocused = (event: FocusEvent) => {
-        if (event.relatedTarget) return;
-        focusEditor();
+      // The floating window hosts nothing but the editor, so focus should
+      // never settle on <body>: extensions like Vimium treat a non-editable
+      // activeElement as "not typing" and start intercepting keystrokes
+      // (Vimium's Escape handler even blurs the editor on purpose). Decide
+      // one frame after the focus change — relatedTarget is null for
+      // cross-frame moves (e.g. into Vimium's omnibar iframe), and stealing
+      // focus back from a real target would fight that UI.
+      const keepEditorFocused = () => {
+        targetWindow.requestAnimationFrame(() => {
+          const active = targetWindow.document.activeElement;
+          if (!active || active === targetWindow.document.body) {
+            getEditorViewRef.current()?.focus();
+          }
+        });
       };
       targetWindow.document.addEventListener("focusout", keepEditorFocused);
 
