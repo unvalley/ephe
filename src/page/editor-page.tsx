@@ -45,9 +45,6 @@ export const EditorPage = () => {
     if (editorSlot && editorSurface.parentElement !== editorSlot) {
       editorSlot.prepend(editorSurface);
     }
-    return () => {
-      editorSurface.remove();
-    };
   }, [editorSurface]);
 
   const getEditorView = useCallback(

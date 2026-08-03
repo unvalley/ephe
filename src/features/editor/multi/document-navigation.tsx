@@ -9,8 +9,6 @@ type NavigationCardProps = {
   direction: "left" | "right";
   isVisible: boolean;
   onClick: () => void;
-  documentIndex: number;
-  documentPreview?: string;
 };
 
 const NavigationCard = ({ direction, isVisible, onClick }: NavigationCardProps) => {
@@ -88,8 +86,6 @@ export const DocumentNavigation = () => {
           direction="left"
           isVisible={showLeftCard}
           onClick={() => navigateToDocument(activeIndex - 1)}
-          documentIndex={activeIndex - 1}
-          documentPreview={documents[activeIndex - 1]?.content}
         />
       )}
       {canGoRight && (
@@ -97,8 +93,6 @@ export const DocumentNavigation = () => {
           direction="right"
           isVisible={showRightCard}
           onClick={() => navigateToDocument(activeIndex + 1)}
-          documentIndex={activeIndex + 1}
-          documentPreview={documents[activeIndex + 1]?.content}
         />
       )}
     </>

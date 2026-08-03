@@ -15,16 +15,26 @@ describe("document picture-in-picture helpers", () => {
     expect(getDocumentPictureInPicture(supportedWindow)).toBeDefined();
   });
 
-  test("copies inline stylesheet rules into another document", () => {
+  test("copies app styles without duplicating runtime styles", () => {
     const source = document.implementation.createHTMLDocument("source");
     const target = document.implementation.createHTMLDocument("target");
-    const style = source.createElement("style");
-    style.textContent = ".ephe-test { color: rgb(1, 2, 3); }";
-    source.head.append(style);
+    const appStyle = source.createElement("style");
+    appStyle.dataset.viteDevId = "/src/globals.css";
+    appStyle.textContent = ".ephe-test { color: rgb(1, 2, 3); }";
+    source.head.append(appStyle);
+    const appStylesheet = source.createElement("link");
+    appStylesheet.rel = "stylesheet";
+    appStylesheet.href = "/assets/app.css";
+    source.head.append(appStylesheet);
+    const runtimeStyle = source.createElement("style");
+    runtimeStyle.textContent = ".runtime-style { color: rgb(4, 5, 6); }";
+    source.head.append(runtimeStyle);
 
     copyDocumentStyles(source, target);
 
     expect(target.head.querySelector("style")?.textContent).toContain(".ephe-test");
     expect(target.head.querySelector("style")?.textContent).toContain("rgb(1, 2, 3)");
+    expect(target.head.querySelector("link")?.getAttribute("href")).toBe("/assets/app.css");
+    expect(target.head.textContent).not.toContain(".runtime-style");
   });
 });
