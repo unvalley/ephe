@@ -1,26 +1,26 @@
 import "../globals.css";
-import { LazyMotion, domAnimation } from "motion/react";
-import { usePaperMode } from "../utils/hooks/use-paper-mode";
-import { Footer, FooterButton } from "../utils/components/footer";
-import { CommandMenu } from "../features/menu/command-menu";
-import { MultiDocumentEditor } from "../features/editor/multi/multi-editor";
+import { PictureInPictureIcon } from "@phosphor-icons/react";
+import { useAtom } from "jotai";
+import { domAnimation, LazyMotion } from "motion/react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { Link } from "react-router-dom";
 import { CodeMirrorEditor } from "../features/editor/codemirror/codemirror-editor";
 import type { MultiEditorRef, SingleEditorRef } from "../features/editor/editor-ref";
 import { DocumentDock } from "../features/editor/multi/dock-menu";
+import { MultiDocumentEditor } from "../features/editor/multi/multi-editor";
+import { HistoryModal } from "../features/history/history-modal";
+import { CommandMenu } from "../features/menu/command-menu";
 import { SystemMenu } from "../features/menu/system-menu";
+import { useDocumentPictureInPicture } from "../features/picture-in-picture/use-document-picture-in-picture";
 import { HoursDisplay } from "../features/time-display/hours-display";
-import { Link } from "react-router-dom";
+import { editorContentAtom } from "../utils/atoms/editor";
+import { Footer, FooterButton } from "../utils/components/footer";
 import { EPHE_VERSION } from "../utils/constants";
 import { useCommandK } from "../utils/hooks/use-command-k";
 import { useEditorMode } from "../utils/hooks/use-editor-mode";
-import { useCallback, useRef, useState, useEffect, useLayoutEffect } from "react";
-import { createPortal } from "react-dom";
-import { useAtom } from "jotai";
-import { HistoryModal } from "../features/history/history-modal";
-import { editorContentAtom } from "../utils/atoms/editor";
 import { useMobileDetector } from "../utils/hooks/use-mobile-detector";
-import { useDocumentPictureInPicture } from "../features/picture-in-picture/use-document-picture-in-picture";
-import { PictureInPictureIcon } from "@phosphor-icons/react";
+import { usePaperMode } from "../utils/hooks/use-paper-mode";
 
 export const EditorPage = () => {
   const { paperModeClass } = usePaperMode();
@@ -152,7 +152,7 @@ export const EditorPage = () => {
             <>
               <HoursDisplay />
               <FooterButton>
-                <Link to="/landing">Ephe v{EPHE_VERSION}</Link>
+                <Link to="/landing">Ephe</Link>
               </FooterButton>
             </>
           }
