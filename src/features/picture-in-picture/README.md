@@ -97,6 +97,10 @@ back into the editor slot with `setRoot(document)`, clear state, refocus the
 main window, then focus the editor inside `requestAnimationFrame` (the surface
 is not reliably focusable in the same frame as the DOM move).
 
+`pagehide` also fires when the floating window reloads (e.g. an extension's
+reload command). The handler closes the window outright, so a reload ends the
+session cleanly instead of leaving an empty floating window behind.
+
 ## Unmount safety net
 
 The `useLayoutEffect` cleanup handles `EditorPage` unmounting (e.g. route

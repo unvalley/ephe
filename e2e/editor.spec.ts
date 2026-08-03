@@ -114,6 +114,27 @@ test.describe("Editor Page", () => {
     await expect(page.locator(".cm-content")).toContainText("# PiP heading");
   });
 
+  test("closes Picture-in-Picture when the floating window reloads", async ({ page, context }) => {
+    await mockDocumentPictureInPicture(page);
+    await page.goto("/");
+
+    const editor = page.getByTestId("code-mirror-editor");
+    await editor.focus();
+    await page.keyboard.type("survives reload");
+
+    const popupPromise = context.waitForEvent("page");
+    await page.getByRole("button", { name: "Float" }).click();
+    const pictureInPicturePage = await popupPromise;
+    await expect(page.getByText("Editing in Picture-in-Picture")).toBeVisible();
+
+    // e.g. an extension's reload command hitting the floating window
+    await pictureInPicturePage.reload().catch(() => {});
+
+    await expect.poll(() => pictureInPicturePage.isClosed()).toBe(true);
+    await expect(page.getByRole("button", { name: "Float" })).toBeVisible();
+    await expect(page.locator(".cm-content")).toContainText("survives reload");
+  });
+
   test("closes Picture-in-Picture when leaving the editor page", async ({ page, context }) => {
     await mockDocumentPictureInPicture(page);
     await page.goto("/");

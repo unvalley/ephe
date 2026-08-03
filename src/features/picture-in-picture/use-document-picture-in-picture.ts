@@ -135,7 +135,19 @@ export const useDocumentPictureInPicture = ({
       syncAppearanceRef.current();
       focusEditor();
 
-      targetWindow.addEventListener("pagehide", returnEditorToMainWindow, { once: true });
+      targetWindow.addEventListener(
+        "pagehide",
+        () => {
+          returnEditorToMainWindow();
+          // pagehide also fires when the floating window reloads (e.g. an
+          // extension's reload command); close it so a reload cannot leave an
+          // empty floating window behind.
+          if (!targetWindow.closed) {
+            targetWindow.close();
+          }
+        },
+        { once: true },
+      );
       setIsPictureInPicture(true);
     } catch (error) {
       if (pictureInPictureWindow && !pictureInPictureWindow.closed) {
