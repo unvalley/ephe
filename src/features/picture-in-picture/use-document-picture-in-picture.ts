@@ -77,7 +77,6 @@ export const useDocumentPictureInPicture = ({
       return;
     }
     pictureInPictureWindow.close();
-    returnEditorToMainWindow();
   }, [returnEditorToMainWindow]);
 
   const openPictureInPicture = useCallback(async () => {
@@ -104,7 +103,6 @@ export const useDocumentPictureInPicture = ({
       copyDocumentStyles(document, pictureInPictureDocument);
 
       const pictureInPictureRoot = pictureInPictureDocument.createElement("main");
-      pictureInPictureRoot.dataset.ephePictureInPicture = "";
       pictureInPictureRootRef.current = pictureInPictureRoot;
       pictureInPictureDocument.body.className = "m-0 h-screen overflow-hidden";
       pictureInPictureDocument.body.append(pictureInPictureRoot);

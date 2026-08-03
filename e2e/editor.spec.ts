@@ -63,7 +63,6 @@ test.describe("Editor Page", () => {
     await page.getByRole("button", { name: "Float" }).click();
     const pictureInPicturePage = await popupPromise;
 
-    await expect(page.getByText("Editing in Picture-in-Picture")).toBeVisible();
     await expect(page.getByRole("button", { name: "Floating" })).toBeVisible();
     await expect(pictureInPicturePage.locator(".cm-content")).toContainText("PiP keeps this edit");
     await expect
@@ -112,8 +111,8 @@ test.describe("Editor Page", () => {
     await pictureInPicturePage.getByRole("button", { name: "Previous" }).click();
     await expect(pictureInPicturePage.locator(".cm-content")).toContainText("# PiP heading");
 
-    await page.getByRole("button", { name: "Return editor" }).click();
-    await expect(page.getByText("Editing in Picture-in-Picture")).not.toBeVisible();
+    await page.getByRole("button", { name: "Floating" }).click();
+    await expect(page.getByRole("button", { name: "Float" })).toBeVisible();
     await expect(page.locator(".cm-content")).toContainText("# PiP heading");
   });
 
@@ -124,7 +123,7 @@ test.describe("Editor Page", () => {
     const popupPromise = context.waitForEvent("page");
     await page.getByRole("button", { name: "Float" }).click();
     const pictureInPicturePage = await popupPromise;
-    await expect(page.getByText("Editing in Picture-in-Picture")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Floating" })).toBeVisible();
 
     await page.getByRole("link", { name: /^Ephe v/ }).click();
 
