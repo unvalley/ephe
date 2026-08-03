@@ -20,7 +20,6 @@ import { HistoryModal } from "../features/history/history-modal";
 import { editorContentAtom } from "../utils/atoms/editor";
 import { useMobileDetector } from "../utils/hooks/use-mobile-detector";
 import { useDocumentPictureInPicture } from "../features/picture-in-picture/use-document-picture-in-picture";
-import { PictureInPictureButton } from "../features/picture-in-picture/picture-in-picture-button";
 import { PictureInPictureIcon } from "@phosphor-icons/react";
 
 export const EditorPage = () => {
@@ -134,10 +133,12 @@ export const EditorPage = () => {
             <div className="flex items-center gap-1">
               <SystemMenu onOpenHistoryModal={openHistoryModal} onRestoreEditorFocus={restoreEditorFocus} />
               {isPictureInPictureSupported ? (
-                <PictureInPictureButton
-                  isActive={isPictureInPicture}
+                <FooterButton
+                  aria-pressed={isPictureInPicture}
                   onClick={isPictureInPicture ? closePictureInPicture : openPictureInPicture}
-                />
+                >
+                  {isPictureInPicture ? "Floating" : "Float"}
+                </FooterButton>
               ) : null}
             </div>
           }
