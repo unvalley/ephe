@@ -1,13 +1,19 @@
 import type { EditorView } from "@codemirror/view";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { showToast } from "../../utils/components/toast";
-import { copyDocumentStyles, getDocumentPictureInPicture } from "./document-picture-in-picture";
+import { getDocumentPictureInPicture, preparePictureInPictureDocument } from "./document-picture-in-picture";
 
 const PICTURE_IN_PICTURE_SIZE = {
   width: 420,
   height: 560,
   disallowReturnToOpener: true,
 } as const;
+
+type PictureInPictureSession = {
+  window: Window;
+  root: HTMLElement;
+  dispose: () => void;
+};
 
 type UseDocumentPictureInPictureOptions = {
   editorSlotRef: RefObject<HTMLDivElement | null>;
@@ -23,60 +29,68 @@ export const useDocumentPictureInPicture = ({
   paperModeClass,
 }: UseDocumentPictureInPictureOptions) => {
   const [isPictureInPicture, setIsPictureInPicture] = useState(false);
-  const pictureInPictureWindowRef = useRef<Window | null>(null);
-  const pictureInPictureRootRef = useRef<HTMLElement | null>(null);
-  const themeObserverRef = useRef<MutationObserver | null>(null);
-  const getEditorViewRef = useRef(getEditorView);
+  const sessionRef = useRef<PictureInPictureSession | null>(null);
   const isOpeningRef = useRef(false);
+  const getEditorViewRef = useRef(getEditorView);
 
   useEffect(() => {
     getEditorViewRef.current = getEditorView;
   }, [getEditorView]);
 
   const syncAppearance = useCallback(() => {
-    const pictureInPictureWindow = pictureInPictureWindowRef.current;
-    const pictureInPictureRoot = pictureInPictureRootRef.current;
-    if (!pictureInPictureWindow || !pictureInPictureRoot) return;
+    const session = sessionRef.current;
+    if (!session) return;
 
-    pictureInPictureWindow.document.documentElement.className = document.documentElement.className;
-    pictureInPictureRoot.className = `h-screen overflow-hidden antialiased ${paperModeClass}`;
+    session.window.document.documentElement.className = document.documentElement.className;
+    session.root.className = `h-screen overflow-hidden antialiased ${paperModeClass}`;
   }, [paperModeClass]);
 
+  // The theme observer must always see the latest paperModeClass, not the one
+  // captured when the picture-in-picture window was opened.
+  const syncAppearanceRef = useRef(syncAppearance);
   useEffect(() => {
+    syncAppearanceRef.current = syncAppearance;
     syncAppearance();
   }, [syncAppearance]);
 
+  const attachEditorTo = useCallback(
+    (container: HTMLElement, root: Document) => {
+      if (editorSurface.parentElement !== container) {
+        container.append(editorSurface);
+      }
+      const editorView = getEditorViewRef.current();
+      if (editorView) {
+        editorView.setRoot(root);
+        editorView.requestMeasure();
+      }
+    },
+    [editorSurface],
+  );
+
   const returnEditorToMainWindow = useCallback(() => {
-    themeObserverRef.current?.disconnect();
-    themeObserverRef.current = null;
+    sessionRef.current?.dispose();
+    sessionRef.current = null;
 
     const editorSlot = editorSlotRef.current;
-    if (editorSlot && editorSurface.parentElement !== editorSlot) {
-      editorSlot.append(editorSurface);
+    if (editorSlot) {
+      attachEditorTo(editorSlot, document);
     }
 
-    const editorView = getEditorViewRef.current();
-    if (editorView) {
-      editorView.setRoot(document);
-      editorView.requestMeasure();
-    }
-
-    pictureInPictureWindowRef.current = null;
-    pictureInPictureRootRef.current = null;
     setIsPictureInPicture(false);
     window.focus();
     requestAnimationFrame(() => {
       getEditorViewRef.current()?.focus();
     });
-  }, [editorSlotRef, editorSurface]);
+  }, [attachEditorTo, editorSlotRef]);
 
   const closePictureInPicture = useCallback(() => {
-    const pictureInPictureWindow = pictureInPictureWindowRef.current;
-    if (!pictureInPictureWindow || pictureInPictureWindow.closed) {
+    const session = sessionRef.current;
+    if (!session || session.window.closed) {
       returnEditorToMainWindow();
       return;
     }
-    pictureInPictureWindow.close();
+    // Closing fires "pagehide", which returns the editor to the main window.
+    session.window.close();
   }, [returnEditorToMainWindow]);
 
   const openPictureInPicture = useCallback(async () => {
@@ -89,57 +103,41 @@ export const useDocumentPictureInPicture = ({
     }
 
     isOpeningRef.current = true;
+    let pictureInPictureWindow: Window | null = null;
     try {
-      const pictureInPictureWindow = await documentPictureInPicture.requestWindow(PICTURE_IN_PICTURE_SIZE);
-      pictureInPictureWindowRef.current = pictureInPictureWindow;
+      pictureInPictureWindow = await documentPictureInPicture.requestWindow(PICTURE_IN_PICTURE_SIZE);
+      const pictureInPictureRoot = preparePictureInPictureDocument(document, pictureInPictureWindow.document);
 
-      const { document: pictureInPictureDocument } = pictureInPictureWindow;
-      pictureInPictureDocument.title = "Ephe";
-
-      const viewport = pictureInPictureDocument.createElement("meta");
-      viewport.name = "viewport";
-      viewport.content = "width=device-width, initial-scale=1";
-      pictureInPictureDocument.head.append(viewport);
-      copyDocumentStyles(document, pictureInPictureDocument);
-
-      const pictureInPictureRoot = pictureInPictureDocument.createElement("main");
-      pictureInPictureRootRef.current = pictureInPictureRoot;
-      pictureInPictureDocument.body.className = "m-0 h-screen overflow-hidden";
-      pictureInPictureDocument.body.append(pictureInPictureRoot);
-      pictureInPictureRoot.append(editorSurface);
-
-      const editorView = getEditorViewRef.current();
-      if (editorView) {
-        editorView.setRoot(pictureInPictureDocument);
-        editorView.requestMeasure();
-      }
-
+      const targetWindow = pictureInPictureWindow;
       const focusEditor = () => {
-        pictureInPictureWindow.requestAnimationFrame(() => {
+        targetWindow.requestAnimationFrame(() => {
           getEditorViewRef.current()?.focus();
         });
       };
-      focusEditor();
-      pictureInPictureWindow.addEventListener("focus", focusEditor);
+      targetWindow.addEventListener("focus", focusEditor);
 
-      syncAppearance();
-      themeObserverRef.current = new MutationObserver(syncAppearance);
-      themeObserverRef.current.observe(document.documentElement, {
+      const themeObserver = new MutationObserver(() => syncAppearanceRef.current());
+      themeObserver.observe(document.documentElement, {
         attributes: true,
         attributeFilter: ["class"],
       });
 
-      pictureInPictureWindow.addEventListener(
-        "pagehide",
-        () => {
-          pictureInPictureWindow.removeEventListener("focus", focusEditor);
-          returnEditorToMainWindow();
+      sessionRef.current = {
+        window: targetWindow,
+        root: pictureInPictureRoot,
+        dispose: () => {
+          themeObserver.disconnect();
+          targetWindow.removeEventListener("focus", focusEditor);
         },
-        { once: true },
-      );
+      };
+
+      attachEditorTo(pictureInPictureRoot, targetWindow.document);
+      syncAppearanceRef.current();
+      focusEditor();
+
+      targetWindow.addEventListener("pagehide", returnEditorToMainWindow, { once: true });
       setIsPictureInPicture(true);
     } catch (error) {
-      const pictureInPictureWindow = pictureInPictureWindowRef.current;
       if (pictureInPictureWindow && !pictureInPictureWindow.closed) {
         pictureInPictureWindow.close();
       }
@@ -149,19 +147,22 @@ export const useDocumentPictureInPicture = ({
     } finally {
       isOpeningRef.current = false;
     }
-  }, [editorSurface, returnEditorToMainWindow, syncAppearance]);
+  }, [attachEditorTo, returnEditorToMainWindow]);
 
   useLayoutEffect(() => {
     return () => {
-      themeObserverRef.current?.disconnect();
+      const session = sessionRef.current;
+      if (!session) return;
+      session.dispose();
+      sessionRef.current = null;
+
       const editorSlot = editorSlotRef.current;
-      if (editorSlot && editorSurface.parentElement !== editorSlot) {
-        editorSlot.append(editorSurface);
-        getEditorViewRef.current()?.setRoot(document);
+      if (editorSlot) {
+        attachEditorTo(editorSlot, document);
       }
-      pictureInPictureWindowRef.current?.close();
+      session.window.close();
     };
-  }, [editorSlotRef, editorSurface]);
+  }, [attachEditorTo, editorSlotRef]);
 
   return {
     closePictureInPicture,

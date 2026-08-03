@@ -22,3 +22,18 @@ export const copyDocumentStyles = (source: Document, target: Document) => {
     target.head.append(style.cloneNode(true));
   }
 };
+
+export const preparePictureInPictureDocument = (source: Document, target: Document): HTMLElement => {
+  target.title = "Ephe";
+
+  const viewport = target.createElement("meta");
+  viewport.name = "viewport";
+  viewport.content = "width=device-width, initial-scale=1";
+  target.head.append(viewport);
+  copyDocumentStyles(source, target);
+
+  const root = target.createElement("main");
+  target.body.className = "m-0 h-screen overflow-hidden";
+  target.body.append(root);
+  return root;
+};
