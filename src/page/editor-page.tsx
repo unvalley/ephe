@@ -20,6 +20,7 @@ import { HistoryModal } from "../features/history/history-modal";
 import { editorContentAtom } from "../utils/atoms/editor";
 import { useMobileDetector } from "../utils/hooks/use-mobile-detector";
 import { useDocumentPictureInPicture } from "../features/picture-in-picture/use-document-picture-in-picture";
+import { PictureInPictureIcon } from "@phosphor-icons/react";
 
 export const EditorPage = () => {
   const { paperModeClass } = usePaperMode();
@@ -112,6 +113,19 @@ export const EditorPage = () => {
             ),
             editorSurface,
           )}
+          {isPictureInPicture ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-4 text-neutral-500 dark:text-neutral-400">
+              <PictureInPictureIcon className="size-8" weight="regular" />
+              <p className="text-sm">Editing in Picture-in-Picture</p>
+              <button
+                type="button"
+                className="rounded-md px-3 py-2 text-neutral-700 text-sm transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:text-neutral-200 dark:focus-visible:ring-neutral-600 dark:hover:bg-white/10"
+                onClick={closePictureInPicture}
+              >
+                Return editor
+              </button>
+            </div>
+          ) : null}
         </div>
 
         <Footer
