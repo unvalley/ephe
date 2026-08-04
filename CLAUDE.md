@@ -19,9 +19,8 @@ pnpm test:unit:coverage  # Run tests with coverage report
 
 ### Code Quality
 ```bash
-pnpm lint             # Run both Biome and ESLint
+pnpm lint             # Run Biome lint
 pnpm lint:biome:write # Auto-fix with Biome
-pnpm lint:eslint:fix  # Auto-fix with ESLint
 pnpm format           # Format code with Biome
 ```
 
