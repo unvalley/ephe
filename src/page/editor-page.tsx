@@ -16,7 +16,6 @@ import { useDocumentPictureInPicture } from "../features/picture-in-picture/use-
 import { HoursDisplay } from "../features/time-display/hours-display";
 import { editorContentAtom } from "../utils/atoms/editor";
 import { Footer, FooterButton } from "../utils/components/footer";
-import { EPHE_VERSION } from "../utils/constants";
 import { useCommandK } from "../utils/hooks/use-command-k";
 import { useEditorMode } from "../utils/hooks/use-editor-mode";
 import { useMobileDetector } from "../utils/hooks/use-mobile-detector";
