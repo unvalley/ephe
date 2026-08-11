@@ -29,12 +29,14 @@ import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
 import { useTaskAutoFlush, type TaskAutoFlushMode } from "../../utils/hooks/use-task-auto-flush";
 import { useFocusMode, type FocusMode } from "../../utils/hooks/use-focus-mode";
+import { useInlineCalc, type InlineCalcMode } from "../../utils/hooks/use-inline-calc";
 import { useAtom, useAtomValue } from "jotai";
 
 const cx = (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" ");
 
 const panelClassName =
-  "cosmos-menu-panel absolute bottom-full left-0 z-20 mb-2 w-[248px] max-w-[calc(100vw-1rem)] select-none overflow-hidden rounded-xl bg-white/95 p-2 text-[13px] text-neutral-950 shadow-xl backdrop-blur-xl focus:outline-none dark:bg-neutral-950/95 dark:text-neutral-50";
+  // No overflow-hidden: row hint tooltips extend past the panel's right edge.
+  "cosmos-menu-panel absolute bottom-full left-0 z-20 mb-2 w-[248px] max-w-[calc(100vw-1rem)] select-none rounded-xl bg-white/95 p-2 text-[13px] text-neutral-950 shadow-xl backdrop-blur-xl focus:outline-none dark:bg-neutral-950/95 dark:text-neutral-50";
 
 const rowBaseClassName =
   "flex min-h-11 w-full items-center justify-between gap-3 rounded-md px-3 text-left transition-[background-color,transform,color] duration-150 ease-out";
@@ -63,6 +65,10 @@ type MenuRowProps = {
   label: string;
   children?: ReactNode;
   icon?: ReactNode;
+  /** Extra qualifier rendered after the label in smaller, dimmed text. */
+  labelSuffix?: string;
+  /** Feature explanation shown as a tooltip while hovering the row. */
+  hint?: string;
   onClick?: () => void;
 };
 
@@ -108,9 +114,20 @@ const ValuePill = ({ children }: { children: ReactNode }) => (
   </span>
 );
 
-const MenuRowContent = ({ label, children, icon }: Omit<MenuRowProps, "onClick">) => (
+const MenuRowContent = ({ label, children, icon, labelSuffix, hint }: Omit<MenuRowProps, "onClick">) => (
   <>
-    <span className="min-w-0 truncate">{label}</span>
+    <span className="min-w-0 truncate">
+      {label}
+      {labelSuffix && <span className="ml-1 text-[10px] text-neutral-400 dark:text-neutral-500">{labelSuffix}</span>}
+      {hint && (
+        <span
+          role="tooltip"
+          className="pointer-events-none absolute top-1/2 left-full z-30 ml-4 w-56 -translate-y-1/2 whitespace-normal rounded-md bg-white px-2.5 py-1.5 text-[11px] text-neutral-700 leading-snug opacity-0 shadow-lg ring-1 ring-neutral-200 transition-opacity delay-150 duration-150 group-hover/hint:opacity-100 dark:bg-neutral-900 dark:text-neutral-300 dark:ring-white/10"
+        >
+          {hint}
+        </span>
+      )}
+    </span>
     {children ? (
       children
     ) : (
@@ -121,9 +138,9 @@ const MenuRowContent = ({ label, children, icon }: Omit<MenuRowProps, "onClick">
   </>
 );
 
-const StaticMenuRow = ({ label, children, icon }: Omit<MenuRowProps, "onClick">) => (
-  <div className={staticRowClassName}>
-    <MenuRowContent label={label} icon={icon}>
+const StaticMenuRow = ({ label, children, icon, labelSuffix, hint }: Omit<MenuRowProps, "onClick">) => (
+  <div className={cx(staticRowClassName, hint && "group/hint relative")}>
+    <MenuRowContent label={label} icon={icon} labelSuffix={labelSuffix} hint={hint}>
       {children}
     </MenuRowContent>
   </div>
@@ -245,6 +262,7 @@ export const SystemMenu = ({ onOpenHistoryModal, onRestoreEditorFocus }: SystemM
   const { snapshotCount } = useSnapshotCount(menuOpen);
   const { taskAutoFlushMode, setTaskAutoFlushMode } = useTaskAutoFlush();
   const { focusMode, setFocusMode } = useFocusMode();
+  const { inlineCalcMode, setInlineCalcMode } = useInlineCalc();
 
   const themeOptions: Array<SegmentOption<ColorTheme>> = [
     { value: COLOR_THEME.LIGHT, label: "Light", icon: <SunIcon className="size-4" weight="regular" /> },
@@ -274,6 +292,11 @@ export const SystemMenu = ({ onOpenHistoryModal, onRestoreEditorFocus }: SystemM
   ];
 
   const focusModeOptions: Array<SegmentOption<FocusMode>> = [
+    { value: "off", label: "Off" },
+    { value: "on", label: "On" },
+  ];
+
+  const inlineCalcOptions: Array<SegmentOption<InlineCalcMode>> = [
     { value: "off", label: "Off" },
     { value: "on", label: "On" },
   ];
@@ -401,6 +424,22 @@ export const SystemMenu = ({ onOpenHistoryModal, onRestoreEditorFocus }: SystemM
                   options={focusModeOptions}
                   onChange={(next) => {
                     setFocusMode(next);
+                    restoreEditorFocusSoon();
+                  }}
+                  variant="text"
+                />
+              </StaticMenuRow>
+              <StaticMenuRow
+                label="Calc"
+                labelSuffix="(Experimental)"
+                hint="Evaluates math as you type: 12 * 4, variables like price = 1200, and sum / average for the lines above. Click a result to copy it."
+              >
+                <SegmentedControl
+                  ariaLabel="Inline calculator"
+                  value={inlineCalcMode}
+                  options={inlineCalcOptions}
+                  onChange={(next) => {
+                    setInlineCalcMode(next);
                     restoreEditorFocusSoon();
                   }}
                   variant="text"

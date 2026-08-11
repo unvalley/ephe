@@ -25,6 +25,8 @@ import { cursorColorAtom, resolveCursorColor } from "../../../utils/hooks/use-cu
 import { customCursorLayer } from "./cursor-layer";
 import { useFocusMode } from "../../../utils/hooks/use-focus-mode";
 import { focusModeExtension } from "./focus-mode";
+import { useInlineCalc } from "../../../utils/hooks/use-inline-calc";
+import { inlineCalcExtension } from "./calc";
 
 const useMarkdownFormatter = () => {
   const ref = useRef<DprintMarkdownFormatter | null>(null);
@@ -87,10 +89,12 @@ export const useMarkdownEditor = (
   const { isMobile } = useMobileDetector();
 
   const { isFocusMode } = useFocusMode();
+  const { isInlineCalcEnabled } = useInlineCalc();
 
   const themeCompartment = useRef(new Compartment()).current;
   const highlightCompartment = useRef(new Compartment()).current;
   const focusModeCompartment = useRef(new Compartment()).current;
+  const inlineCalcCompartment = useRef(new Compartment()).current;
 
   // Tracks the last value the editor itself pushed into `content`. When the
   // sync effect below sees `content` equal this ref, it knows the value is its
@@ -225,6 +229,7 @@ export const useMarkdownEditor = (
         themeCompartment.of(editorTheme),
         highlightCompartment.of(editorHighlightStyle),
         focusModeCompartment.of(isFocusMode ? focusModeExtension : []),
+        inlineCalcCompartment.of(isInlineCalcEnabled ? inlineCalcExtension : []),
         // Only show placeholder on non-mobile devices
         ...(isMobile ? [] : [placeholder(getRandomQuote())]),
 
@@ -276,6 +281,15 @@ export const useMarkdownEditor = (
       effects: focusModeCompartment.reconfigure(isFocusMode ? focusModeExtension : []),
     });
   }, [focusModeCompartment.reconfigure, isFocusMode]);
+
+  // Toggle inline calculator (math results at line ends)
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    view.dispatch({
+      effects: inlineCalcCompartment.reconfigure(isInlineCalcEnabled ? inlineCalcExtension : []),
+    });
+  }, [inlineCalcCompartment.reconfigure, isInlineCalcEnabled]);
 
   // Listen for external content updates
   // - text edit emits storage event
