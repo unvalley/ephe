@@ -48,44 +48,27 @@ body {
   }
 }
 
-/* Paper Mode: Graph Paper (Light Mode) */
-.bg-graph-paper {
-  background-image:
-    linear-gradient(rgba(210, 210, 210, 0.3) 1px, transparent 1px),
-    linear-gradient(to right, rgba(210, 210, 210, 0.3) 1px, transparent 1px);
-  background-size: 12px 12px;
-  background-color: #fff;
-  background-position: -14px 14px;
-}
-
-/* Paper Mode: Graph Paper (Dark Mode) */
-.dark .bg-graph-paper {
-  background-image:
-    linear-gradient(rgba(80, 80, 80, 0.3) 1px, transparent 1px),
-    linear-gradient(to right, rgba(80, 80, 80, 0.3) 1px, transparent 1px);
-  background-size: 12px 12px;
-  background-color: #0d1117;
-  background-position: -14px 14px;
-}
-
-/* Paper Mode: Normal (Light Mode) */
-.bg-normal-paper {
+/*
+ * The colour of the sheet the editor writes on. Graph and dots rulings are
+ * painted by the editor itself (src/features/editor/codemirror/paper-background.ts)
+ * so they can line up with the text; only the colour belongs to the page.
+ */
+.bg-paper {
   background-color: #fff;
 }
 
-/* Paper Mode: Normal (Dark Mode) */
-.dark .bg-normal-paper {
+.dark .bg-paper {
   background-color: #0d1117;
 }
 
-/* Paper Mode: Dots (Light Mode) */
+/* Dots for the landing page, which has no text to align to (Light Mode) */
 .bg-dots-paper {
   background-image: radial-gradient(rgba(210, 210, 210, 0.5) 1px, transparent 1px);
   background-size: 24px 24px;
   background-color: #fff;
 }
 
-/* Paper Mode: Dots (Dark Mode) */
+/* Dots for the landing page (Dark Mode) */
 .dark .bg-dots-paper {
   background-image: radial-gradient(rgba(80, 80, 80, 0.5) 1px, transparent 1px);
   background-size: 16px 16px;

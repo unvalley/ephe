@@ -2,6 +2,7 @@ import type { EditorView } from "@codemirror/view";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { showToast } from "../../utils/components/toast";
 import { getDocumentPictureInPicture, preparePictureInPictureDocument } from "./document-picture-in-picture";
+import { PAPER_SURFACE_CLASS } from "../../utils/hooks/use-paper-mode";
 
 const PICTURE_IN_PICTURE_SIZE = {
   width: 420,
@@ -19,14 +20,12 @@ type UseDocumentPictureInPictureOptions = {
   editorSlotRef: RefObject<HTMLDivElement | null>;
   editorSurface: HTMLDivElement;
   getEditorView: () => EditorView | null;
-  paperModeClass: string;
 };
 
 export const useDocumentPictureInPicture = ({
   editorSlotRef,
   editorSurface,
   getEditorView,
-  paperModeClass,
 }: UseDocumentPictureInPictureOptions) => {
   const [isPictureInPicture, setIsPictureInPicture] = useState(false);
   const sessionRef = useRef<PictureInPictureSession | null>(null);
@@ -37,21 +36,15 @@ export const useDocumentPictureInPicture = ({
     getEditorViewRef.current = getEditorView;
   }, [getEditorView]);
 
+  // The paper's grid or dots ride along with the editor's own theme, so only
+  // the light/dark class on the root has to be mirrored by hand.
   const syncAppearance = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
 
     session.window.document.documentElement.className = document.documentElement.className;
-    session.root.className = `h-screen overflow-hidden antialiased ${paperModeClass}`;
-  }, [paperModeClass]);
-
-  // The theme observer must always see the latest paperModeClass, not the one
-  // captured when the picture-in-picture window was opened.
-  const syncAppearanceRef = useRef(syncAppearance);
-  useEffect(() => {
-    syncAppearanceRef.current = syncAppearance;
-    syncAppearance();
-  }, [syncAppearance]);
+    session.root.className = `h-screen overflow-hidden antialiased ${PAPER_SURFACE_CLASS}`;
+  }, []);
 
   const attachEditorTo = useCallback(
     (container: HTMLElement, root: Document) => {
@@ -116,7 +109,7 @@ export const useDocumentPictureInPicture = ({
       };
       targetWindow.addEventListener("focus", focusEditor);
 
-      const themeObserver = new MutationObserver(() => syncAppearanceRef.current());
+      const themeObserver = new MutationObserver(syncAppearance);
       themeObserver.observe(document.documentElement, {
         attributes: true,
         attributeFilter: ["class"],
@@ -132,7 +125,7 @@ export const useDocumentPictureInPicture = ({
       };
 
       attachEditorTo(pictureInPictureRoot, targetWindow.document);
-      syncAppearanceRef.current();
+      syncAppearance();
       focusEditor();
 
       targetWindow.addEventListener(
@@ -159,7 +152,7 @@ export const useDocumentPictureInPicture = ({
     } finally {
       isOpeningRef.current = false;
     }
-  }, [attachEditorTo, returnEditorToMainWindow]);
+  }, [attachEditorTo, returnEditorToMainWindow, syncAppearance]);
 
   useLayoutEffect(() => {
     return () => {
