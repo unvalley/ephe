@@ -25,6 +25,7 @@ import { cursorColorAtom, resolveCursorColor } from "../../../utils/hooks/use-cu
 import { customCursorLayer } from "./cursor-layer";
 import { useFocusMode } from "../../../utils/hooks/use-focus-mode";
 import { focusModeExtension } from "./focus-mode";
+import { usePaperMode } from "../../../utils/hooks/use-paper-mode";
 
 const useMarkdownFormatter = () => {
   const ref = useRef<DprintMarkdownFormatter | null>(null);
@@ -82,8 +83,15 @@ export const useMarkdownEditor = (
   const { isWideMode } = useEditorWidth();
   const currentFontValue = useAtomValue(currentFontValueAtom);
   const cursorColor = resolveCursorColor(useAtomValue(cursorColorAtom));
+  const { paperMode } = usePaperMode();
 
-  const { editorTheme, editorHighlightStyle } = useEditorTheme(isDarkMode, isWideMode, currentFontValue, cursorColor);
+  const { editorTheme, editorHighlightStyle } = useEditorTheme(
+    isDarkMode,
+    isWideMode,
+    currentFontValue,
+    cursorColor,
+    paperMode,
+  );
   const { isMobile } = useMobileDetector();
 
   const { isFocusMode } = useFocusMode();

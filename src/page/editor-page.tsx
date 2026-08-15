@@ -19,10 +19,9 @@ import { Footer, FooterButton } from "../utils/components/footer";
 import { useCommandK } from "../utils/hooks/use-command-k";
 import { useEditorMode } from "../utils/hooks/use-editor-mode";
 import { useMobileDetector } from "../utils/hooks/use-mobile-detector";
-import { usePaperMode } from "../utils/hooks/use-paper-mode";
+import { PAPER_SURFACE_CLASS } from "../utils/hooks/use-paper-mode";
 
 export const EditorPage = () => {
-  const { paperModeClass } = usePaperMode();
   const { editorMode } = useEditorMode();
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [historyModalTabIndex, setHistoryModalTabIndex] = useState(0);
@@ -57,7 +56,6 @@ export const EditorPage = () => {
       editorSlotRef,
       editorSurface,
       getEditorView,
-      paperModeClass,
     });
 
   const restoreEditorFocus = useCallback(() => {
@@ -98,7 +96,7 @@ export const EditorPage = () => {
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <div className={`flex h-screen flex-col overflow-hidden antialiased ${paperModeClass}`}>
+      <div className={`flex h-screen flex-col overflow-hidden antialiased ${PAPER_SURFACE_CLASS}`}>
         <div ref={editorSlotRef} className="relative flex flex-1 overflow-hidden">
           {createPortal(
             editorMode === "multi" ? (
