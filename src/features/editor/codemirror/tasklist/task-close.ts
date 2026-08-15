@@ -8,6 +8,7 @@ import {
 } from "@codemirror/view";
 import { StateEffect, StateField, RangeSetBuilder } from "@codemirror/state";
 import type { OnTaskClosed } from ".";
+import { findTaskSection } from "./task-section-utils";
 
 export type TaskHandler = {
   onTaskClosed: ({ taskContent, originalLine, section }: OnTaskClosed) => void;
@@ -240,6 +241,9 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
         event.preventDefault();
         const newChar = task.checked ? " " : "x";
 
+        const line = this.view.state.doc.lineAt(task.from);
+        const taskContent = line.text.substring(task.to - line.from).trim();
+
         this.view.dispatch({
           changes: {
             from: task.contentPos,
@@ -248,6 +252,18 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
           },
           userEvent: "input.toggleTask",
         });
+
+        if (newChar === "x") {
+          this.taskHandler?.onTaskClosed({
+            taskContent,
+            originalLine: line.text,
+            section: findTaskSection(this.view, line.number),
+            pos: task.from,
+            view: this.view,
+          });
+        } else {
+          this.taskHandler?.onTaskOpen(taskContent);
+        }
       }
     },
   );
