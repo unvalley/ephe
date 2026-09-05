@@ -12,7 +12,6 @@ import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-f
 import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
 import { createDefaultTaskHandler, createChecklistPlugin } from "./tasklist";
-import { registerTaskHandler } from "./tasklist/task-close";
 import { snapshotStorage } from "../../snapshots/snapshot-storage";
 import { useEditorTheme } from "./use-editor-theme";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
@@ -45,13 +44,13 @@ const useMarkdownFormatter = () => {
   return ref;
 };
 
+// The editor is created once per document, so the extension reads the handler
+// through the ref and picks up auto-flush setting changes without a rebuild.
 const useTaskHandler = () => {
   const { taskAutoFlushMode } = useTaskAutoFlush();
   const handlerRef = useRef(createDefaultTaskHandler(taskStorage, taskAutoFlushMode));
   useEffect(() => {
     handlerRef.current = createDefaultTaskHandler(taskStorage, taskAutoFlushMode);
-    registerTaskHandler(handlerRef.current);
-    return () => registerTaskHandler(undefined);
   }, [taskAutoFlushMode]);
   return handlerRef;
 };
@@ -208,7 +207,7 @@ export const useMarkdownEditor = (
         keymap.of(historyKeymap),
 
         // Task key bindings with high priority BEFORE markdown extension
-        Prec.high(createChecklistPlugin(taskHandlerRef.current)),
+        Prec.high(createChecklistPlugin(() => taskHandlerRef.current)),
 
         markdown({
           base: markdownLanguage,

@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { type Snapshot, snapshotStorage } from "../snapshots/snapshot-storage";
 import { type CompletedTask, taskStorage } from "../editor/tasks/task-storage";
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { showToast } from "../../utils/components/toast";
+import { formatDateKey } from "../../utils/storage";
 
 // Type definition for grouped items
 export type DateGroupedItems<T> = {
@@ -26,33 +27,9 @@ type HistoryData = {
   refresh: () => void;
 };
 
-// Cache for date strings to avoid recreating them repeatedly
-const dateStringCache = new Map<string, string>();
-
-// Helper to get date string for grouping with caching
-const getDateString = (date: Date): string => {
-  const time = date.getTime();
-  const cacheKey = `date_${time}`;
-
-  const cachedDate = dateStringCache.get(cacheKey);
-  if (cachedDate) {
-    return cachedDate;
-  }
-
-  const dateStr = date.toISOString().split("T")[0]; // YYYY-MM-DD
-  dateStringCache.set(cacheKey, dateStr);
-
-  // Cleanup cache if it gets too large
-  if (dateStringCache.size > 100) {
-    // Get the oldest keys and remove them
-    const keys = Array.from(dateStringCache.keys()).slice(0, 50);
-    keys.forEach((key) => {
-      dateStringCache.delete(key);
-    });
-  }
-
-  return dateStr;
-};
+// Group by the user's local calendar day; ISO (UTC) dates would put a task
+// completed early in the morning into "yesterday" or "older" east of UTC.
+const getDateString = (date: Date): string => formatDateKey(date);
 
 // Function to group items by date
 const groupItemsByDate = <T extends { timestamp?: string; completedAt?: string }>(items: T[]): DateGroupedItems<T> => {
@@ -109,53 +86,30 @@ export const useHistoryData = (): HistoryData => {
   const groupedSnapshots = groupItemsByDate(snapshots);
   const groupedTasks = groupItemsByDate(tasks);
 
-  // Load data from storage with optimizations
-  const loadData = () => {
+  // localStorage is synchronous; a stable reference keeps the modal's
+  // `refresh` effect from re-running on every render.
+  const loadData = useCallback(() => {
     setIsLoading(true);
-    let loadingComplete = false;
-
-    // Create a timeout to ensure we don't show loading state for too long
-    const loadingTimeout = setTimeout(() => {
-      if (!loadingComplete) {
-        setIsLoading(false);
-      }
-    }, 500);
-
-    // Performance optimization: Use promise.all to load data in parallel
-    Promise.all([
-      // Load snapshots with caching
-      new Promise<void>((resolve) => {
-        try {
-          const allSnapshots = snapshotStorage
-            .getAll()
-            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-          setSnapshots(allSnapshots);
-        } catch (snapshotError) {
-          console.error("Error loading snapshots:", snapshotError);
-          setSnapshots([]);
-        }
-        resolve();
-      }),
-
-      // Load tasks with caching
-      new Promise<void>((resolve) => {
-        try {
-          const allTasks = taskStorage
-            .getAll()
-            .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
-          setTasks(allTasks);
-        } catch (taskError) {
-          console.error("Error loading tasks:", taskError);
-          setTasks([]);
-        }
-        resolve();
-      }),
-    ]).then(() => {
-      loadingComplete = true;
-      clearTimeout(loadingTimeout);
-      setIsLoading(false);
-    });
-  };
+    try {
+      const allSnapshots = snapshotStorage
+        .getAll()
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setSnapshots(allSnapshots);
+    } catch (snapshotError) {
+      console.error("Error loading snapshots:", snapshotError);
+      setSnapshots([]);
+    }
+    try {
+      const allTasks = taskStorage
+        .getAll()
+        .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+      setTasks(allTasks);
+    } catch (taskError) {
+      console.error("Error loading tasks:", taskError);
+      setTasks([]);
+    }
+    setIsLoading(false);
+  }, []);
 
   // Initialize data
   useEffect(() => {
@@ -172,7 +126,7 @@ export const useHistoryData = (): HistoryData => {
     return () => {
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, []);
+  }, [loadData]);
 
   // Handle restore snapshot
   const handleRestoreSnapshot = (snapshot: Snapshot) => {

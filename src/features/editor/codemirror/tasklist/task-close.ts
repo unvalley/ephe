@@ -6,8 +6,9 @@ import {
   type DecorationSet,
   type PluginValue,
 } from "@codemirror/view";
-import { StateEffect, StateField, RangeSetBuilder } from "@codemirror/state";
+import { StateEffect, StateField, RangeSetBuilder, type Text, type Transaction } from "@codemirror/state";
 import type { OnTaskClosed } from ".";
+import { findTaskSection } from "./task-section-utils";
 
 export type TaskHandler = {
   onTaskClosed: ({ taskContent, originalLine, section }: OnTaskClosed) => void;
@@ -41,20 +42,11 @@ const taskHoverStyle = Decoration.mark({
   inclusive: false,
 });
 
-type TaskPluginValue = PluginValue & {
-  taskHandler?: TaskHandler;
-};
-
-// Single global task handler instance
-let globalTaskHandler: TaskHandler | undefined;
-
-export const registerTaskHandler = (handler: TaskHandler | undefined): void => {
-  globalTaskHandler = handler;
-};
-
-export const getRegisteredTaskHandler = (): TaskHandler | undefined => {
-  return globalTaskHandler;
-};
+/**
+ * Resolves the handler lazily so the editor can swap it (e.g. when the
+ * auto-flush setting changes) without reconfiguring the extension.
+ */
+export type GetTaskHandler = () => TaskHandler | undefined;
 
 // Utility to generate a unique key for a task
 const getTaskKey = (lineNumber: number, content: string): string => {
@@ -159,13 +151,10 @@ export const taskHoverField = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f),
 });
 
-export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
+export const taskMouseInteraction = () => {
   return ViewPlugin.fromClass(
-    class implements TaskPluginValue {
-      taskHandler: TaskHandler | undefined;
-
+    class implements PluginValue {
       constructor(readonly view: EditorView) {
-        this.taskHandler = taskHandler;
         this.handleMouseMove = this.handleMouseMove.bind(this);
         this.handleMouseLeave = this.handleMouseLeave.bind(this);
         this.handleMouseDown = this.handleMouseDown.bind(this);
@@ -252,3 +241,105 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
     },
   );
 };
+
+type TaskState = "open" | "closed";
+
+// Looser than `taskItemRegex`: also accepts `- []` so the keyboard flow
+// "Backspace the space, then type x" is seen as open -> closed instead of
+// as two unrelated non-task lines.
+const taskStateRegex = /^\s*[-*]\s+\[([^\]]*)\]\s*(.*)$/;
+
+type ParsedTaskLine = { state: TaskState; content: string };
+
+export const parseTaskState = (lineText: string): ParsedTaskLine | null => {
+  const match = lineText.match(taskStateRegex);
+  if (!match) return null;
+  const inner = match[1].trim();
+  if (inner === "x" || inner === "X") return { state: "closed", content: match[2].trim() };
+  if (inner === "") return { state: "open", content: match[2].trim() };
+  return null;
+};
+
+export type TaskToggle = {
+  state: TaskState; // state after the change
+  content: string;
+  lineNumber: number; // in the new document
+  from: number; // line start in the new document
+  originalLine: string;
+};
+
+const linesInRange = (doc: Text, from: number, to: number) => {
+  const first = doc.lineAt(from).number;
+  const last = doc.lineAt(to).number;
+  const lines = [];
+  for (let n = first; n <= last; n++) lines.push(doc.line(n));
+  return lines;
+};
+
+/**
+ * A toggle is a line whose checkbox flipped while its content stayed the same.
+ * Only changes that keep the line count (typing/clicking inside the brackets,
+ * undo of such an edit) qualify; pasting or restoring whole blocks does not
+ * count as completing work.
+ */
+export const findTaskToggles = (tr: Transaction): TaskToggle[] => {
+  const toggles: TaskToggle[] = [];
+  if (!tr.docChanged) return toggles;
+
+  tr.changes.iterChangedRanges((fromA, toA, fromB, toB) => {
+    const before = linesInRange(tr.startState.doc, fromA, toA);
+    const after = linesInRange(tr.state.doc, fromB, toB);
+    if (before.length !== after.length) return;
+
+    for (let i = 0; i < after.length; i++) {
+      const prev = parseTaskState(before[i].text);
+      const next = parseTaskState(after[i].text);
+      if (!prev || !next || prev.state === next.state || prev.content !== next.content) continue;
+      toggles.push({
+        state: next.state,
+        content: next.content,
+        lineNumber: after[i].number,
+        from: after[i].from,
+        originalLine: after[i].text,
+      });
+    }
+  });
+
+  return toggles;
+};
+
+/**
+ * Notifies the task handler when a checkbox is toggled by the user.
+ * The handler runs in a microtask: CodeMirror forbids dispatching from inside
+ * an update, and auto-flush needs to dispatch a follow-up deletion.
+ */
+export const taskToggleListener = (getHandler: GetTaskHandler) =>
+  EditorView.updateListener.of((update) => {
+    if (!update.docChanged) return;
+    const toggles = update.transactions.flatMap(findTaskToggles);
+    if (toggles.length === 0) return;
+
+    // Resolve sections now, while line numbers still match this update.
+    // Process bottom-up so an auto-flush deletion cannot shift a later `pos`.
+    const events = toggles
+      .map((toggle) => ({ ...toggle, section: findTaskSection(update.view, toggle.lineNumber) }))
+      .sort((a, b) => b.from - a.from);
+
+    queueMicrotask(() => {
+      const handler = getHandler();
+      if (!handler) return;
+      for (const event of events) {
+        if (event.state === "closed") {
+          handler.onTaskClosed({
+            taskContent: event.content,
+            originalLine: event.originalLine,
+            section: event.section,
+            pos: event.from,
+            view: update.view,
+          });
+        } else {
+          handler.onTaskOpen(event.content);
+        }
+      }
+    });
+  });
