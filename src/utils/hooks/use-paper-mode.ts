@@ -4,11 +4,12 @@ import { useAtom } from "jotai";
 
 export type PaperMode = "normal" | "graph" | "dots";
 
-const PAPER_MODE_CLASSES = {
-  normal: "bg-normal-paper",
-  graph: "bg-graph-paper",
-  dots: "bg-dots-paper",
-} as const;
+/**
+ * The colour of the sheet. Its grid or dots are painted by the editor itself
+ * (see `paper-background.ts`), which is the only place that knows where the
+ * text sits, so a mode does not get a class of its own here.
+ */
+export const PAPER_SURFACE_CLASS = "bg-paper";
 
 const modes = ["normal", "graph", "dots"] as const;
 const paperModeAtom = atomWithStorage<PaperMode>(LOCAL_STORAGE_KEYS.PAPER_MODE, "normal");
@@ -25,7 +26,6 @@ export const usePaperMode = () => {
 
   return {
     paperMode,
-    paperModeClass: PAPER_MODE_CLASSES[paperMode],
     cyclePaperMode,
     setPaperMode,
   };

@@ -16,5 +16,3 @@ export const LOCAL_STORAGE_KEYS = {
   ACTIVE_DOCUMENT_INDEX: "ephe:active-document-index",
   EDITOR_MODE: "ephe:editor-mode",
 } as const satisfies Record<string, `ephe:${string}`>;
-
-export const EPHE_VERSION = "0.0.1";

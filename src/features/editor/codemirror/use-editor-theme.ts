@@ -3,11 +3,19 @@ import { EditorView } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 import { useMemo } from "react";
 import { getCursorColor, type CursorColor } from "../../../utils/hooks/use-cursor-color";
+import type { PaperMode } from "../../../utils/hooks/use-paper-mode";
+import { EDITOR_LAYOUT, paperBackgroundStyle } from "./paper-background";
 
 /**
- * Manages the CodeMirror theme and highlight style based on dark mode, editor width, and font family.
+ * Manages the CodeMirror theme and highlight style based on dark mode, editor width, font family, and paper mode.
  */
-export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFamily: string, cursorColor: CursorColor) => {
+export const useEditorTheme = (
+  isDarkMode: boolean,
+  isWideMode: boolean,
+  fontFamily: string,
+  cursorColor: CursorColor,
+  paperMode: PaperMode,
+) => {
   return useMemo(() => {
     const COLORS = isDarkMode ? EPHE_COLORS.dark : EPHE_COLORS.light;
     const CODE_SYNTAX_HIGHLIGHT = isDarkMode ? SYNTAX_HIGHLIGHT_STYLES.dark : SYNTAX_HIGHLIGHT_STYLES.light;
@@ -22,22 +30,25 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
         tag: tags.heading1,
         color: COLORS.heading,
         fontSize: "1.2em",
+        ...STAYS_WITHIN_ONE_ROW,
       },
       {
         tag: tags.heading2,
         color: COLORS.heading,
         fontSize: "1.2em",
+        ...STAYS_WITHIN_ONE_ROW,
       },
       {
         tag: tags.heading3,
         color: COLORS.heading,
         fontSize: "1.1em",
+        ...STAYS_WITHIN_ONE_ROW,
       },
       { tag: tags.emphasis, color: COLORS.emphasis, fontStyle: "italic" },
       { tag: tags.strong, color: COLORS.emphasis },
       { tag: tags.link, color: COLORS.string, textDecoration: "underline" },
       { tag: tags.url, color: COLORS.string, textDecoration: "underline" },
-      { tag: tags.monospace, color: COLORS.constant, fontFamily: "monospace" },
+      { tag: tags.monospace, color: COLORS.constant, fontFamily: "monospace", ...STAYS_WITHIN_ONE_ROW },
     ]);
 
     const theme = {
@@ -49,10 +60,10 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
       },
       ".cm-content": {
         fontFamily: fontFamily,
-        fontSize: "16px",
-        padding: "60px 20px",
-        lineHeight: "1.6",
-        maxWidth: isWideMode ? "100%" : "680px",
+        fontSize: `${EDITOR_LAYOUT.fontSizePx}px`,
+        padding: `${EDITOR_LAYOUT.paddingYPx}px ${EDITOR_LAYOUT.paddingXPx}px`,
+        lineHeight: `${EDITOR_LAYOUT.lineHeightPx}px`,
+        maxWidth: isWideMode ? "100%" : `${EDITOR_LAYOUT.maxWidthPx}px`,
         margin: "0 auto",
         caretColor: "transparent",
         fontFeatureSettings: fontFamily.includes("Mynerve") ? '"calt" off, "salt" off' : "normal",
@@ -97,7 +108,7 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
       },
       ".cm-scroller": {
         fontFamily: fontFamily,
-        background: "transparent",
+        ...paperBackgroundStyle(paperMode, isDarkMode, isWideMode),
         fontFeatureSettings: fontFamily.includes("Mynerve")
           ? '"calt" off, "salt" off, "liga" off, "dlig" off, "clig" off'
           : "normal",
@@ -119,8 +130,17 @@ export const useEditorTheme = (isDarkMode: boolean, isWideMode: boolean, fontFam
       editorTheme: EditorView.theme(theme),
       editorHighlightStyle: syntaxHighlighting(epheHighlightStyle, { fallback: true }),
     };
-  }, [isDarkMode, isWideMode, fontFamily, cursorColor]);
+  }, [isDarkMode, isWideMode, fontFamily, cursorColor, paperMode]);
 };
+
+/**
+ * Inline text that changes the font's metrics — a larger size, another family —
+ * would otherwise stretch its line past one row of paper: the browser aligns
+ * that box with the line's strut on their shared baseline, so the taller box's
+ * ascender sticks out above it. Sizing the inline box to its own glyphs keeps
+ * it inside the strut, and every line stays exactly one row tall.
+ */
+const STAYS_WITHIN_ONE_ROW = { lineHeight: "1" } as const;
 
 const EPHE_COLORS = {
   light: {
