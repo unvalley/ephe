@@ -13,6 +13,7 @@ import { HistoryModal } from "../features/history/history-modal";
 import { CommandMenu } from "../features/menu/command-menu";
 import { SystemMenu } from "../features/menu/system-menu";
 import { useDocumentPictureInPicture } from "../features/picture-in-picture/use-document-picture-in-picture";
+import { useFolderSyncRunner } from "../features/sync/use-folder-sync";
 import { HoursDisplay } from "../features/time-display/hours-display";
 import { editorContentAtom } from "../utils/atoms/editor";
 import { Footer, FooterButton } from "../utils/components/footer";
@@ -57,6 +58,8 @@ export const EditorPage = () => {
       editorSurface,
       getEditorView,
     });
+
+  useFolderSyncRunner(getEditorView);
 
   const restoreEditorFocus = useCallback(() => {
     getEditorView()?.focus();

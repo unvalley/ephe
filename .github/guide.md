@@ -31,6 +31,7 @@ It stays out of your way, but helps where it counts:
 - Customize appearance (Dark mode, Paper style, Width) from the bottom-left settings
 - Task Flush (If set to instant, closing a task (`- [ ]`) deletes the line immediately)
 - <kbd>Cmd</kbd> + <kbd>↑</kbd> / <kbd>↓</kbd> moves tasks and lists up or down
+- Folder sync (Chromium browsers): pick a local folder from the bottom-left settings to keep your pages in sync across browsers
 
 
 I hope this one page helps you start your day with focus.
