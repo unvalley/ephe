@@ -30,6 +30,7 @@ import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
 import { useTaskAutoFlush, type TaskAutoFlushMode } from "../../utils/hooks/use-task-auto-flush";
 import { useFocusMode, type FocusMode } from "../../utils/hooks/use-focus-mode";
+import { useFolderSync } from "../sync/use-folder-sync";
 import { useAtom, useAtomValue } from "jotai";
 
 const cx = (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(" ");
@@ -261,6 +262,7 @@ export const SystemMenu = ({
   const { snapshotCount } = useSnapshotCount(menuOpen);
   const { taskAutoFlushMode, setTaskAutoFlushMode } = useTaskAutoFlush();
   const { focusMode, setFocusMode } = useFocusMode();
+  const { folderSync, isFolderSyncSupported, toggleFolderSync } = useFolderSync();
 
   const themeOptions: Array<SegmentOption<ColorTheme>> = [
     { value: COLOR_THEME.LIGHT, label: "Light", icon: <SunIcon className="size-4" weight="regular" /> },
@@ -464,6 +466,23 @@ export const SystemMenu = ({
                   variant="text"
                 />
               </StaticMenuRow>
+              {isFolderSyncSupported && (
+                <ActionMenuRow
+                  label="Folder sync"
+                  onClick={() => {
+                    void toggleFolderSync();
+                    restoreEditorFocusSoon();
+                  }}
+                >
+                  <ValuePill>
+                    {folderSync.status === "on"
+                      ? folderSync.folderName
+                      : folderSync.status === "needs-permission"
+                        ? "Reconnect"
+                        : "Off"}
+                  </ValuePill>
+                </ActionMenuRow>
+              )}
             </MenuItems>
           )}
         </>

@@ -15,4 +15,5 @@ export const LOCAL_STORAGE_KEYS = {
   DOCUMENTS: "ephe:documents",
   ACTIVE_DOCUMENT_INDEX: "ephe:active-document-index",
   EDITOR_MODE: "ephe:editor-mode",
+  SYNC_BASES: "ephe:sync-bases",
 } as const satisfies Record<string, `ephe:${string}`>;
