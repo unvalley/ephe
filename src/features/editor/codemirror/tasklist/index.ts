@@ -31,6 +31,8 @@ export const createDefaultTaskHandler = (
             from: line.from,
             to: line.to + (view.state.doc.lines > line.number ? 1 : 0),
           },
+          // The editor only persists input/delete user events
+          userEvent: "delete.taskAutoFlush",
         });
       } catch (e) {
         console.error("[AutoFlush Debug] Error deleting line:", e);

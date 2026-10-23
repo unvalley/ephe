@@ -7,6 +7,7 @@ import {
   type PluginValue,
 } from "@codemirror/view";
 import { StateEffect, StateField, RangeSetBuilder } from "@codemirror/state";
+import { findTaskSection } from "./task-section-utils";
 import type { OnTaskClosed } from ".";
 
 export type TaskHandler = {
@@ -247,6 +248,26 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
             insert: newChar,
           },
           userEvent: "input.toggleTask",
+        });
+
+        // Prefer the registered handler so a flush mode change applies without rebuilding the editor
+        const handler = getRegisteredTaskHandler() ?? this.taskHandler;
+        if (!handler) return;
+
+        const line = this.view.state.doc.lineAt(task.from);
+        const taskContent = line.text.substring(task.to - line.from).trim();
+
+        if (task.checked) {
+          handler.onTaskOpen(taskContent);
+          return;
+        }
+
+        handler.onTaskClosed({
+          taskContent,
+          originalLine: line.text,
+          section: findTaskSection(this.view, line.number),
+          pos: task.from,
+          view: this.view,
         });
       }
     },
