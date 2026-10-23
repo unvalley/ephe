@@ -24,6 +24,7 @@ import {
   TextAaIcon,
   ArrowsInLineHorizontalIcon,
   ArrowsOutLineHorizontalIcon,
+  PictureInPictureIcon,
 } from "@phosphor-icons/react";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
@@ -52,6 +53,9 @@ const dividerClassName = "my-1 h-px bg-neutral-200/60 dark:bg-white/10";
 type SystemMenuProps = {
   onOpenHistoryModal?: (tabIndex: number) => void;
   onRestoreEditorFocus?: () => void;
+  isFloating?: boolean;
+  // Omitted when Document Picture-in-Picture is unavailable, which hides the Float row
+  onToggleFloat?: () => void;
 };
 
 type SegmentOption<T extends string> = {
@@ -64,6 +68,7 @@ type MenuRowProps = {
   label: string;
   children?: ReactNode;
   icon?: ReactNode;
+  pressed?: boolean;
   onClick?: () => void;
 };
 
@@ -109,7 +114,7 @@ const ValuePill = ({ children }: { children: ReactNode }) => (
   </span>
 );
 
-const MenuRowContent = ({ label, children, icon }: Omit<MenuRowProps, "onClick">) => (
+const MenuRowContent = ({ label, children, icon }: Omit<MenuRowProps, "onClick" | "pressed">) => (
   <>
     <span className="min-w-0 truncate">{label}</span>
     {children ? (
@@ -122,7 +127,7 @@ const MenuRowContent = ({ label, children, icon }: Omit<MenuRowProps, "onClick">
   </>
 );
 
-const StaticMenuRow = ({ label, children, icon }: Omit<MenuRowProps, "onClick">) => (
+const StaticMenuRow = ({ label, children, icon }: Omit<MenuRowProps, "onClick" | "pressed">) => (
   <div className={staticRowClassName}>
     <MenuRowContent label={label} icon={icon}>
       {children}
@@ -130,9 +135,15 @@ const StaticMenuRow = ({ label, children, icon }: Omit<MenuRowProps, "onClick">)
   </div>
 );
 
-const ActionMenuRow = ({ label, children, icon, onClick }: MenuRowProps) => (
+const ActionMenuRow = ({ label, children, icon, pressed, onClick }: MenuRowProps) => (
   <MenuItem as="div">
-    <button type="button" className={actionRowClassName} onMouseDown={preserveEditorFocusOnMouseDown} onClick={onClick}>
+    <button
+      type="button"
+      className={actionRowClassName}
+      aria-pressed={pressed}
+      onMouseDown={preserveEditorFocusOnMouseDown}
+      onClick={onClick}
+    >
       <MenuRowContent label={label} icon={icon}>
         {children}
       </MenuRowContent>
@@ -229,7 +240,12 @@ const CursorColorControl = ({
   </span>
 );
 
-export const SystemMenu = ({ onOpenHistoryModal, onRestoreEditorFocus }: SystemMenuProps) => {
+export const SystemMenu = ({
+  onOpenHistoryModal,
+  onRestoreEditorFocus,
+  isFloating,
+  onToggleFloat,
+}: SystemMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -284,6 +300,12 @@ export const SystemMenu = ({ onOpenHistoryModal, onRestoreEditorFocus }: SystemM
     if (!onOpenHistoryModal) return;
     setMenuOpen(false);
     onOpenHistoryModal(tabIndex);
+  };
+
+  // Must stay synchronous: opening the floating window needs the click's user activation
+  const toggleFloat = () => {
+    setMenuOpen(false);
+    onToggleFloat?.();
   };
 
   const restoreEditorFocusSoon = () => {
@@ -421,6 +443,14 @@ export const SystemMenu = ({ onOpenHistoryModal, onRestoreEditorFocus }: SystemM
                   variant="text"
                 />
               </StaticMenuRow>
+              {onToggleFloat ? (
+                <ActionMenuRow
+                  label={isFloating ? "Floating" : "Float"}
+                  pressed={isFloating}
+                  onClick={toggleFloat}
+                  icon={<PictureInPictureIcon className="size-5" weight={isFloating ? "fill" : "regular"} />}
+                />
+              ) : null}
 
               <div className={dividerClassName} />
 
