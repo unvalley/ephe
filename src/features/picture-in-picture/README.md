@@ -2,7 +2,7 @@
 
 Lets the user pop the editor out into an always-on-top floating window using the
 [Document Picture-in-Picture API](https://developer.mozilla.org/en-US/docs/Web/API/Document_Picture-in-Picture_API)
-(Chromium-only; the Float button is hidden when the API is unavailable).
+(Chromium-only; the Float row in the System menu is hidden when the API is unavailable).
 
 ## Files
 
