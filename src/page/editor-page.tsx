@@ -58,6 +58,8 @@ export const EditorPage = () => {
       getEditorView,
     });
 
+  const togglePictureInPicture = isPictureInPicture ? closePictureInPicture : openPictureInPicture;
+
   const restoreEditorFocus = useCallback(() => {
     getEditorView()?.focus();
   }, [getEditorView]);
@@ -128,17 +130,12 @@ export const EditorPage = () => {
         <Footer
           autoHide={true}
           leftContent={
-            <div className="flex items-center gap-1">
-              <SystemMenu onOpenHistoryModal={openHistoryModal} onRestoreEditorFocus={restoreEditorFocus} />
-              {isPictureInPictureSupported ? (
-                <FooterButton
-                  aria-pressed={isPictureInPicture}
-                  onClick={isPictureInPicture ? closePictureInPicture : openPictureInPicture}
-                >
-                  {isPictureInPicture ? "Floating" : "Float"}
-                </FooterButton>
-              ) : null}
-            </div>
+            <SystemMenu
+              onOpenHistoryModal={openHistoryModal}
+              onRestoreEditorFocus={restoreEditorFocus}
+              isFloating={isPictureInPicture}
+              onToggleFloat={isPictureInPictureSupported ? togglePictureInPicture : undefined}
+            />
           }
           centerContent={
             isMobile || editorMode === "single" ? null : (

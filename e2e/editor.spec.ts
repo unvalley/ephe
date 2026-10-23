@@ -27,6 +27,16 @@ const mockDocumentPictureInPicture = async (page: Page) => {
   });
 };
 
+const openSystemMenu = async (page: Page) => {
+  await page.locator("footer").getByRole("button", { name: "System" }).first().click();
+  return page.locator(".cosmos-menu-panel");
+};
+
+const clickFloat = async (page: Page) => {
+  const systemMenu = await openSystemMenu(page);
+  await systemMenu.getByRole("button", { name: "Float" }).click();
+};
+
 test.describe("Editor Page", () => {
   test("load page", async ({ page }) => {
     await page.goto("/");
@@ -60,11 +70,13 @@ test.describe("Editor Page", () => {
     await page.keyboard.type("PiP keeps this edit");
 
     const popupPromise = context.waitForEvent("page");
-    await page.getByRole("button", { name: "Float" }).click();
+    await clickFloat(page);
     const pictureInPicturePage = await popupPromise;
 
     await expect(page.getByText("Editing in Picture-in-Picture")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Floating" })).toBeVisible();
+    await expect(page.locator(".cosmos-menu-panel")).toHaveCount(0);
+    const systemMenu = await openSystemMenu(page);
+    await expect(systemMenu.getByRole("button", { name: "Floating" })).toHaveAttribute("aria-pressed", "true");
     await expect(pictureInPicturePage.locator(".cm-content")).toContainText("PiP keeps this edit");
     await expect
       .poll(() =>
@@ -110,7 +122,7 @@ test.describe("Editor Page", () => {
 
     await page.getByRole("button", { name: "Return editor" }).click();
     await expect(page.getByText("Editing in Picture-in-Picture")).not.toBeVisible();
-    await expect(page.getByRole("button", { name: "Float" })).toBeVisible();
+    await expect((await openSystemMenu(page)).getByRole("button", { name: "Float" })).toBeVisible();
     await expect(page.locator(".cm-content")).toContainText("# PiP heading");
   });
 
@@ -123,7 +135,7 @@ test.describe("Editor Page", () => {
     await page.keyboard.type("survives reload");
 
     const popupPromise = context.waitForEvent("page");
-    await page.getByRole("button", { name: "Float" }).click();
+    await clickFloat(page);
     const pictureInPicturePage = await popupPromise;
     await expect(page.getByText("Editing in Picture-in-Picture")).toBeVisible();
 
@@ -131,7 +143,7 @@ test.describe("Editor Page", () => {
     await pictureInPicturePage.reload().catch(() => {});
 
     await expect.poll(() => pictureInPicturePage.isClosed()).toBe(true);
-    await expect(page.getByRole("button", { name: "Float" })).toBeVisible();
+    await expect((await openSystemMenu(page)).getByRole("button", { name: "Float" })).toBeVisible();
     await expect(page.locator(".cm-content")).toContainText("survives reload");
   });
 
@@ -140,7 +152,7 @@ test.describe("Editor Page", () => {
     await page.goto("/");
 
     const popupPromise = context.waitForEvent("page");
-    await page.getByRole("button", { name: "Float" }).click();
+    await clickFloat(page);
     const pictureInPicturePage = await popupPromise;
     await expect(page.getByText("Editing in Picture-in-Picture")).toBeVisible();
 
