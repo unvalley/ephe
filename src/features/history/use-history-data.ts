@@ -23,7 +23,6 @@ type HistoryData = {
   handleDeleteAllSnapshots: () => void;
   handleDeleteTask: (id: string) => void;
   handleDeleteAllTasks: () => void;
-  refresh: () => void;
 };
 
 // Cache for date strings to avoid recreating them repeatedly
@@ -101,7 +100,7 @@ const groupItemsByDate = <T extends { timestamp?: string; completedAt?: string }
   return result;
 };
 
-export const useHistoryData = (): HistoryData => {
+export const useHistoryData = (isOpen: boolean): HistoryData => {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [tasks, setTasks] = useState<CompletedTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -173,6 +172,14 @@ export const useHistoryData = (): HistoryData => {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
+
+  // The modal stays mounted while closed, so reload whenever it opens.
+  // Keyed on isOpen only: loadData is recreated each render, and depending on it loops forever.
+  useEffect(() => {
+    if (isOpen) {
+      loadData();
+    }
+  }, [isOpen]);
 
   // Handle restore snapshot
   const handleRestoreSnapshot = (snapshot: Snapshot) => {
@@ -252,6 +259,5 @@ export const useHistoryData = (): HistoryData => {
     handleDeleteAllSnapshots,
     handleDeleteTask,
     handleDeleteAllTasks,
-    refresh: loadData,
   };
 };

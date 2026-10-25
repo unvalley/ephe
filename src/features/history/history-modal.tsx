@@ -64,14 +64,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
     handleDeleteAllSnapshots,
     handleDeleteTask,
     handleDeleteAllTasks,
-    refresh,
-  } = useHistoryData();
-
-  useEffect(() => {
-    if (isOpen) {
-      refresh();
-    }
-  }, [isOpen, refresh]);
+  } = useHistoryData(isOpen);
 
   useEffect(() => {
     if (isOpen && snapshots.length > 0 && !selectedSnapshot) {
