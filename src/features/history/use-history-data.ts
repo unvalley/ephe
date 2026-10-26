@@ -5,7 +5,7 @@ import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
 import { showToast } from "../../utils/components/toast";
 
 // Type definition for grouped items
-export type DateGroupedItems<T> = {
+type DateGroupedItems<T> = {
   today: T[];
   yesterday: T[];
   older: { date: string; items: T[] }[];
@@ -25,36 +25,11 @@ type HistoryData = {
   handleDeleteAllTasks: () => void;
 };
 
-// Cache for date strings to avoid recreating them repeatedly
-const dateStringCache = new Map<string, string>();
+// YYYY-MM-DD (UTC) used for grouping
+const getDateString = (date: Date): string => date.toISOString().split("T")[0];
 
-// Helper to get date string for grouping with caching
-const getDateString = (date: Date): string => {
-  const time = date.getTime();
-  const cacheKey = `date_${time}`;
-
-  const cachedDate = dateStringCache.get(cacheKey);
-  if (cachedDate) {
-    return cachedDate;
-  }
-
-  const dateStr = date.toISOString().split("T")[0]; // YYYY-MM-DD
-  dateStringCache.set(cacheKey, dateStr);
-
-  // Cleanup cache if it gets too large
-  if (dateStringCache.size > 100) {
-    // Get the oldest keys and remove them
-    const keys = Array.from(dateStringCache.keys()).slice(0, 50);
-    keys.forEach((key) => {
-      dateStringCache.delete(key);
-    });
-  }
-
-  return dateStr;
-};
-
-// Function to group items by date
-const groupItemsByDate = <T extends { timestamp?: string; completedAt?: string }>(items: T[]): DateGroupedItems<T> => {
+// Group items into today / yesterday / older dates
+const groupByRecency = <T extends { timestamp?: string; completedAt?: string }>(items: T[]): DateGroupedItems<T> => {
   const now = new Date();
   const today = getDateString(now);
 
@@ -73,11 +48,8 @@ const groupItemsByDate = <T extends { timestamp?: string; completedAt?: string }
 
   items.forEach((item) => {
     // Get the date string from item (handle both snapshot and task)
-    const dateStr = item.timestamp
-      ? getDateString(new Date(item.timestamp))
-      : item.completedAt
-        ? getDateString(new Date(item.completedAt))
-        : "";
+    const itemDate = item.timestamp || item.completedAt;
+    const dateStr = itemDate ? getDateString(new Date(itemDate)) : "";
 
     if (dateStr === today) {
       result.today.push(item);
@@ -105,55 +77,27 @@ export const useHistoryData = (isOpen: boolean): HistoryData => {
   const [tasks, setTasks] = useState<CompletedTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const groupedSnapshots = groupItemsByDate(snapshots);
-  const groupedTasks = groupItemsByDate(tasks);
+  const groupedSnapshots = groupByRecency(snapshots);
+  const groupedTasks = groupByRecency(tasks);
 
-  // Load data from storage with optimizations
   const loadData = () => {
-    setIsLoading(true);
-    let loadingComplete = false;
-
-    // Create a timeout to ensure we don't show loading state for too long
-    const loadingTimeout = setTimeout(() => {
-      if (!loadingComplete) {
-        setIsLoading(false);
-      }
-    }, 500);
-
-    // Performance optimization: Use promise.all to load data in parallel
-    Promise.all([
-      // Load snapshots with caching
-      new Promise<void>((resolve) => {
-        try {
-          const allSnapshots = snapshotStorage
-            .getAll()
-            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-          setSnapshots(allSnapshots);
-        } catch (snapshotError) {
-          console.error("Error loading snapshots:", snapshotError);
-          setSnapshots([]);
-        }
-        resolve();
-      }),
-
-      // Load tasks with caching
-      new Promise<void>((resolve) => {
-        try {
-          const allTasks = taskStorage
-            .getAll()
-            .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
-          setTasks(allTasks);
-        } catch (taskError) {
-          console.error("Error loading tasks:", taskError);
-          setTasks([]);
-        }
-        resolve();
-      }),
-    ]).then(() => {
-      loadingComplete = true;
-      clearTimeout(loadingTimeout);
-      setIsLoading(false);
-    });
+    try {
+      setSnapshots(
+        snapshotStorage.getAll().sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
+      );
+    } catch (snapshotError) {
+      console.error("Error loading snapshots:", snapshotError);
+      setSnapshots([]);
+    }
+    try {
+      setTasks(
+        taskStorage.getAll().sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()),
+      );
+    } catch (taskError) {
+      console.error("Error loading tasks:", taskError);
+      setTasks([]);
+    }
+    setIsLoading(false);
   };
 
   // Initialize data

@@ -1,13 +1,6 @@
 import { LOCAL_STORAGE_KEYS } from "../../utils/constants";
-import {
-  type StorageProvider,
-  createBrowserLocalStorage,
-  createStorage,
-  type DateFilter,
-  filterItemsByDate,
-  groupItemsByDate,
-  defaultStorageProvider,
-} from "../../utils/storage";
+import { showToast } from "../../utils/components/toast";
+import { type StorageProvider, createStorage, type DateFilter, defaultStorageProvider } from "../../utils/storage";
 
 type SnapshotStorage = {
   getAll: () => Snapshot[];
@@ -19,7 +12,7 @@ type SnapshotStorage = {
 };
 
 // Snapshot Storage factory function
-const createSnapshotStorage = (storage: StorageProvider = createBrowserLocalStorage()): SnapshotStorage => {
+const createSnapshotStorage = (storage: StorageProvider): SnapshotStorage => {
   const baseStorage = createStorage<Snapshot>(storage, LOCAL_STORAGE_KEYS.SNAPSHOTS);
 
   const save = (snapshot: Omit<Snapshot, "id" | "timestamp">): void => {
@@ -35,16 +28,9 @@ const createSnapshotStorage = (storage: StorageProvider = createBrowserLocalStor
     baseStorage.save(newSnapshot);
   };
 
-  const getByDate = (filter?: DateFilter): Record<string, Snapshot[]> => {
-    const snapshots = baseStorage.getAll();
-    const filteredSnapshots = filterItemsByDate(snapshots, filter);
-    return groupItemsByDate(filteredSnapshots);
-  };
-
   return {
     ...baseStorage,
     save,
-    getByDate,
   };
 };
 
@@ -55,4 +41,21 @@ export type Snapshot = {
   timestamp: string;
   content: string;
   charCount: number;
+};
+
+/** Saves `content` as a snapshot and reports the result with a toast. Returns whether it was saved. */
+export const saveSnapshotWithToast = (content: string): boolean => {
+  if (!content) {
+    showToast("No content to save", "error");
+    return false;
+  }
+  try {
+    snapshotStorage.save({ content, charCount: content.length });
+    showToast("Snapshot saved", "default");
+    return true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "unknown";
+    showToast(`Error saving snapshot: ${message}`, "error");
+    return false;
+  }
 };

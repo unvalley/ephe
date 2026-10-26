@@ -5,7 +5,7 @@ import { usePaperMode, type PaperMode } from "../../utils/hooks/use-paper-mode";
 import { useEditorWidth, type EditorWidth } from "../../utils/hooks/use-editor-width";
 import { useCharCount } from "../../utils/hooks/use-char-count";
 import { useWordCount } from "../../utils/hooks/use-word-count";
-import { FONT_FAMILY_OPTIONS, fontFamilyAtom, currentFontDisplayValueAtom } from "../../utils/hooks/use-font";
+import { fontFamilyAtom, currentFontDisplayValueAtom, nextFontFamily } from "../../utils/hooks/use-font";
 import {
   CURSOR_COLORS,
   CURSOR_COLOR_OPTIONS,
@@ -28,6 +28,7 @@ import {
 } from "@phosphor-icons/react";
 import { taskStorage } from "../editor/tasks/task-storage";
 import { snapshotStorage } from "../snapshots/snapshot-storage";
+import { formatDateKey } from "../../utils/storage";
 import { useTaskAutoFlush, type TaskAutoFlushMode } from "../../utils/hooks/use-task-auto-flush";
 import { useFocusMode, type FocusMode } from "../../utils/hooks/use-focus-mode";
 import { useAtom, useAtomValue } from "jotai";
@@ -86,12 +87,7 @@ const useTodayCompletedTasks = (menuOpen: boolean) => {
       month: today.getMonth() + 1,
       day: today.getDate(),
     });
-    const todayDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
-      2,
-      "0",
-    )}-${String(today.getDate()).padStart(2, "0")}`;
-
-    setTodayCompletedTasks(tasksByDate[todayDateStr]?.length ?? 0);
+    setTodayCompletedTasks(tasksByDate[formatDateKey(today)]?.length ?? 0);
   }, [menuOpen]);
 
   return { todayCompletedTasks };
@@ -313,14 +309,14 @@ export const SystemMenu = ({
   };
 
   const cycleFont = () => {
-    const currentIndex = FONT_FAMILY_OPTIONS.indexOf(fontFamily);
-    setFontFamily(FONT_FAMILY_OPTIONS[(currentIndex + 1) % FONT_FAMILY_OPTIONS.length]);
+    setFontFamily(nextFontFamily(fontFamily));
     restoreEditorFocusSoon();
   };
 
   useEffect(() => {
+    if (!menuOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node) && menuOpen) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setMenuOpen(false);
       }
     };

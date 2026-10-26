@@ -1,6 +1,6 @@
 import type { EditorView } from "@codemirror/view";
 
-export type BaseEditorRef = {
+type BaseEditorRef = {
   view: EditorView | null;
   getCurrentContent: () => string;
   setContent: (content: string) => void;

@@ -67,8 +67,7 @@ export const EditorPage = () => {
   // Unified snapshot restore event handler
   useEffect(() => {
     const handleContentRestored = (event: CustomEvent<{ content: string }>) => {
-      const customEvent = event;
-      const restoredContent = customEvent.detail.content;
+      const restoredContent = event.detail.content;
       // Route to appropriate editor based on mode
       if (editorMode === "multi" && multiEditorRef.current) {
         multiEditorRef.current.setContent(restoredContent);

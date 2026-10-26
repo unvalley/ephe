@@ -1,8 +1,8 @@
 import type { EditorView } from "@codemirror/view";
 import type { Text } from "@codemirror/state";
 import { isTaskLine, isRegularListLine, parseTaskLine, parseRegularListLine } from "./task-list-utils";
+import { isHeadingLine } from "./task-section-utils";
 
-const MARKDOWN_HEADING = /^#{1,6}\s+\S/;
 const EMPTY_LINE = /^\s*$/u;
 
 type BlockRange = {
@@ -12,7 +12,6 @@ type BlockRange = {
 };
 
 const isListLine = (text: string): boolean => isTaskLine(text) || isRegularListLine(text);
-const isHeadingLine = (text: string): boolean => MARKDOWN_HEADING.test(text);
 const isEmptyLine = (text: string): boolean => EMPTY_LINE.test(text);
 
 /**

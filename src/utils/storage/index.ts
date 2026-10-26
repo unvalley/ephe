@@ -17,10 +17,11 @@ type Storage<T> = {
   save: (item: T) => void;
   deleteById: (id: string) => void;
   deleteAll: () => void;
+  getByDate: (filter?: DateFilter) => Record<string, T[]>;
 };
 
 // Create browser local storage provider
-export const createBrowserLocalStorage = (): StorageProvider => ({
+const createBrowserLocalStorage = (): StorageProvider => ({
   getItem: (key: string): string | null => localStorage.getItem(key),
   setItem: (key: string, value: string): void => localStorage.setItem(key, value),
 });
@@ -29,19 +30,15 @@ export const createBrowserLocalStorage = (): StorageProvider => ({
 export const formatDateKey = (date: Date): string =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
-export const filterItemsByDate = <T extends { timestamp?: string; completedAt?: string }>(
-  items: T[],
-  filter?: DateFilter,
-): T[] => {
+type DatedItem = { timestamp?: string; completedAt?: string };
+
+const getItemDate = (item: DatedItem): string => item.timestamp || item.completedAt || "";
+
+export const filterItemsByDate = <T extends DatedItem>(items: T[], filter?: DateFilter): T[] => {
   if (!filter) return items;
 
   return items.filter((item) => {
-    const dateStr =
-      "timestamp" in item && item.timestamp
-        ? item.timestamp
-        : "completedAt" in item && item.completedAt
-          ? item.completedAt
-          : "";
+    const dateStr = getItemDate(item);
 
     if (!dateStr) return false;
 
@@ -59,18 +56,11 @@ export const filterItemsByDate = <T extends { timestamp?: string; completedAt?: 
   });
 };
 
-export const groupItemsByDate = <T extends { timestamp?: string; completedAt?: string }>(
-  items: T[],
-): Record<string, T[]> => {
+export const groupItemsByDate = <T extends DatedItem>(items: T[]): Record<string, T[]> => {
   const itemsByDate: Record<string, T[]> = {};
 
   for (const item of items) {
-    const dateStr =
-      "timestamp" in item && item.timestamp
-        ? item.timestamp
-        : "completedAt" in item && item.completedAt
-          ? item.completedAt
-          : "";
+    const dateStr = getItemDate(item);
 
     if (!dateStr) continue;
 
@@ -87,7 +77,10 @@ export const groupItemsByDate = <T extends { timestamp?: string; completedAt?: s
 };
 
 // Generic storage factory function
-export const createStorage = <T extends { id: string }>(storage: StorageProvider, storageKey: string): Storage<T> => {
+export const createStorage = <T extends { id: string } & DatedItem>(
+  storage: StorageProvider,
+  storageKey: string,
+): Storage<T> => {
   const getAll = (): T[] => {
     try {
       const itemsJson = storage.getItem(storageKey);
@@ -130,12 +123,15 @@ export const createStorage = <T extends { id: string }>(storage: StorageProvider
     }
   };
 
+  const getByDate = (filter?: DateFilter): Record<string, T[]> => groupItemsByDate(filterItemsByDate(getAll(), filter));
+
   return {
     getAll,
     getById,
     save,
-    deleteById: deleteById,
-    deleteAll: deleteAll,
+    deleteById,
+    deleteAll,
+    getByDate,
   };
 };
 

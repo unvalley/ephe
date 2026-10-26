@@ -22,12 +22,12 @@ type CardStyle = {
   zIndex: number;
 };
 
-export const generatePreviewContent = (content: string): string => {
+const generatePreviewContent = (content: string): string => {
   const lines = content.split("\n").slice(0, 5).join("\n");
   return lines.length > 100 ? `${lines.substring(0, 100)}...` : lines;
 };
 
-export const calculateCardStyle = (
+const calculateCardStyle = (
   index: number,
   total: number,
   hoveredIndex: number | null,
@@ -49,7 +49,7 @@ export const calculateCardStyle = (
   return { x, y, rotate: rotation, scale, zIndex };
 };
 
-export const getCardButtonClasses = (isActive: boolean, isDockHovered: boolean): string => {
+const getCardButtonClasses = (isActive: boolean, isDockHovered: boolean): string => {
   const baseClasses = "w-full h-full relative overflow-hidden";
 
   const shapeClasses = isDockHovered ? "rounded-lg border shadow-lg backdrop-blur-sm" : "rounded-md";
