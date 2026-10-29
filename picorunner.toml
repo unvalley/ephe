@@ -1,0 +1,28 @@
+schema = 1
+name = "Ephe"
+
+[runtime]
+kind = "node"
+version = "24"
+package_manager = "pnpm"
+
+[[setup.steps]]
+kind = "dependencies"
+locked = true
+
+[[setup.steps]]
+run = ["pnpm", "run", "build"]
+
+[launch]
+command = ["pnpm", "run", "preview", "--host", "{host}", "--port", "{port}", "--strictPort"]
+host = "127.0.0.1"
+port = 3000
+
+[health]
+type = "http"
+path = "/"
+timeout_seconds = 90
+
+# Browser storage is scoped to the browser profile and origin, outside this checkout.
+[persistence]
+paths = []

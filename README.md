@@ -15,3 +15,9 @@ Ephe gives you just one clean page to focus your day.
 
 See the <a href=".github/guide.md">guide</a> for details.
 
+
+## Run locally with PicoRunner
+
+[![Launch on PicoRunner](https://picorunner.com/badges/launch.svg)](https://picorunner.com/launch/?repository=https%3A%2F%2Fgithub.com%2Funvalley%2Fephe)
+
+This launches the local web app. Notes and settings remain in the browser profile for the same local address.
