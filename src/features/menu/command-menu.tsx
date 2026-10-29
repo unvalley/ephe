@@ -27,9 +27,11 @@ import {
   NotebookIcon,
   GithubLogoIcon,
   CrosshairSimpleIcon,
+  FolderIcon,
 } from "@phosphor-icons/react";
 import { saveSnapshotWithToast } from "../snapshots/snapshot-storage";
 import { useFocusMode } from "../../utils/hooks/use-focus-mode";
+import { useFolderSync } from "../sync/use-folder-sync";
 import { useAtom } from "jotai";
 
 type CommandMenuProps = {
@@ -56,6 +58,7 @@ const OPERATION_IDS = new Set([
   "open-tasks",
   "open-snapshots",
   "save-snapshot",
+  "folder-sync",
 ]);
 const NAVIGATION_IDS = new Set(["github-repo", "history"]);
 
@@ -75,6 +78,7 @@ export const CommandMenu = ({
   const listRef = useRef<HTMLDivElement>(null);
   const [fontFamily, setFontFamily] = useAtom(fontFamilyAtom);
   const { focusMode, toggleFocusMode } = useFocusMode();
+  const { folderSync, isFolderSyncSupported, toggleFolderSync } = useFolderSync();
 
   useEffect(() => {
     if (!open) {
@@ -308,6 +312,24 @@ export const CommandMenu = ({
       icon: <FloppyDiskIcon className="size-4" weight="light" />,
       perform: handleSaveSnapshot,
     });
+
+    if (isFolderSyncSupported) {
+      list.push({
+        id: "folder-sync",
+        name:
+          folderSync.status === "on"
+            ? "Turn off folder sync"
+            : folderSync.status === "needs-permission"
+              ? "Reconnect sync folder"
+              : "Sync with a local folder",
+        icon: <FolderIcon className="size-4" weight="light" />,
+        // The folder picker needs the user gesture, so it opens before the menu closes.
+        perform: () => {
+          void toggleFolderSync();
+          onClose();
+        },
+      });
+    }
     list.push({
       id: "github-repo",
       name: "Go to Ephe GitHub Repo",
