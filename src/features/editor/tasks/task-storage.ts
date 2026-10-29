@@ -1,13 +1,5 @@
 import { LOCAL_STORAGE_KEYS } from "../../../utils/constants";
-import {
-  createBrowserLocalStorage,
-  createStorage,
-  type DateFilter,
-  defaultStorageProvider,
-  filterItemsByDate,
-  groupItemsByDate,
-  type StorageProvider,
-} from "../../../utils/storage";
+import { createStorage, type DateFilter, defaultStorageProvider, type StorageProvider } from "../../../utils/storage";
 
 export type TaskStorage = {
   getAll: () => CompletedTask[];
@@ -32,17 +24,8 @@ export const generateTaskIdentifier = (taskContent: string): string => {
 };
 
 // Task Storage factory function
-const createTaskStorage = (storage: StorageProvider = createBrowserLocalStorage()): TaskStorage => {
+const createTaskStorage = (storage: StorageProvider): TaskStorage => {
   const baseStorage = createStorage<CompletedTask>(storage, LOCAL_STORAGE_KEYS.COMPLETED_TASKS);
-
-  // Task specific operations
-  const save = (task: CompletedTask): void => {
-    baseStorage.save(task);
-  };
-
-  const deleteItem = (id: string): void => {
-    baseStorage.deleteById(id);
-  };
 
   const deleteByIdentifier = (taskIdentifier: string): void => {
     try {
@@ -54,23 +37,9 @@ const createTaskStorage = (storage: StorageProvider = createBrowserLocalStorage(
     }
   };
 
-  const purgeAll = (): void => {
-    baseStorage.deleteAll();
-  };
-
-  const getByDate = (filter?: DateFilter): Record<string, CompletedTask[]> => {
-    const tasks = baseStorage.getAll();
-    const filteredTasks = filterItemsByDate(tasks, filter);
-    return groupItemsByDate(filteredTasks);
-  };
-
   return {
     ...baseStorage,
-    save,
-    deleteById: deleteItem,
     deleteByIdentifier,
-    deleteAll: purgeAll,
-    getByDate,
   };
 };
 

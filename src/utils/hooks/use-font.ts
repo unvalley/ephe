@@ -26,6 +26,9 @@ export const FONT_FAMILIES = {
 export type FontFamily = keyof typeof FONT_FAMILIES;
 export const FONT_FAMILY_OPTIONS = Object.keys(FONT_FAMILIES) as (keyof typeof FONT_FAMILIES)[];
 
+export const nextFontFamily = (current: FontFamily): FontFamily =>
+  FONT_FAMILY_OPTIONS[(FONT_FAMILY_OPTIONS.indexOf(current) + 1) % FONT_FAMILY_OPTIONS.length];
+
 export const fontFamilyAtom = atomWithStorage<FontFamily>(LOCAL_STORAGE_KEYS.FONT_FAMILY, "IA_WRITER_MONO");
 
 export const currentFontValueAtom = atom((get) => FONT_FAMILIES[get(fontFamilyAtom)].value);

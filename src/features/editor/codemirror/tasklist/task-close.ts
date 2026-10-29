@@ -6,7 +6,7 @@ import {
   type DecorationSet,
   type PluginValue,
 } from "@codemirror/view";
-import { StateEffect, StateField, RangeSetBuilder } from "@codemirror/state";
+import { StateEffect, StateField, RangeSetBuilder, type Line } from "@codemirror/state";
 import { findTaskSection } from "./task-section-utils";
 import type { OnTaskClosed } from ".";
 
@@ -15,7 +15,7 @@ export type TaskHandler = {
   onTaskOpen: (taskContent: string) => void;
 };
 
-// use utils
+// Differs from TASK_LINE_REGEX in task-list-utils on purpose: no padding inside the brackets, any spacing after the bullet
 const taskItemRegex = /^(\s*[-*]\s+)\[([ xX])\]/;
 
 type TaskInfo = {
@@ -53,13 +53,31 @@ export const registerTaskHandler = (handler: TaskHandler | undefined): void => {
   globalTaskHandler = handler;
 };
 
-export const getRegisteredTaskHandler = (): TaskHandler | undefined => {
+const getRegisteredTaskHandler = (): TaskHandler | undefined => {
   return globalTaskHandler;
 };
 
 // Utility to generate a unique key for a task
 const getTaskKey = (lineNumber: number, content: string): string => {
   return `${lineNumber}:${content.trim()}`;
+};
+
+const parseTaskInfo = (line: Line): TaskInfo | null => {
+  const match = line.text.match(taskItemRegex);
+  if (!match) return null;
+
+  // Position of '['
+  const taskStartPos = (match.index || 0) + match[1].length;
+  const from = line.from + taskStartPos;
+  const checkChar = match[2];
+  return {
+    from,
+    to: from + 3, // '[' + content + ']' = 3 chars
+    contentPos: from + 1, // next of '['
+    checked: checkChar === "x" || checkChar === "X",
+    line: line.number,
+    key: getTaskKey(line.number, line.text.substring(taskStartPos + 3)),
+  };
 };
 
 export const taskDecoration = ViewPlugin.fromClass(
@@ -80,31 +98,8 @@ export const taskDecoration = ViewPlugin.fromClass(
       for (const { from, to } of view.visibleRanges) {
         for (let pos = from; pos <= to; ) {
           const line = doc.lineAt(pos);
-          const match = line.text.match(taskItemRegex);
-
-          if (match) {
-            // Search for the entire task pattern to determine the exact position
-            const matchIndex = match.index || 0;
-            const prefixLength = match[1].length;
-
-            // Calculate the position of '['
-            const taskStartPos = matchIndex + prefixLength;
-            const taskFrom = line.from + taskStartPos;
-            const contentPos = taskFrom + 1; // next of '['
-            const taskTo = taskFrom + 3; // '[' + content + ']' = 3 chars
-
-            const checkChar = match[2];
-            const taskContent = line.text.substring(matchIndex + prefixLength + 3).trim();
-
-            result.push({
-              from: taskFrom,
-              to: taskTo,
-              contentPos,
-              checked: checkChar === "x" || checkChar === "X",
-              line: line.number,
-              key: getTaskKey(line.number, taskContent),
-            });
-          }
+          const task = parseTaskInfo(line);
+          if (task) result.push(task);
 
           pos = line.to + 1;
         }
@@ -183,31 +178,8 @@ export const taskMouseInteraction = (taskHandler?: TaskHandler) => {
       }
 
       getTaskAt(pos: number): TaskInfo | null {
-        const line = this.view.state.doc.lineAt(pos);
-        const match = line.text.match(taskItemRegex);
-        if (!match) return null;
-
-        const matchIndex = match.index || 0;
-        const prefixLength = match[1].length;
-        const taskStartPos = matchIndex + prefixLength;
-        const from = line.from + taskStartPos;
-        const contentPos = from + 1;
-        const to = from + 3; // next of ']'
-
-        if (pos >= from && pos < to) {
-          const checkChar = match[2];
-          const taskContent = line.text.substring(matchIndex + prefixLength + 3).trim();
-
-          return {
-            from,
-            to,
-            contentPos,
-            checked: checkChar === "x" || checkChar === "X",
-            line: line.number,
-            key: getTaskKey(line.number, taskContent),
-          };
-        }
-        return null;
+        const task = parseTaskInfo(this.view.state.doc.lineAt(pos));
+        return task && pos >= task.from && pos < task.to ? task : null;
       }
 
       handleMouseMove(event: MouseEvent) {

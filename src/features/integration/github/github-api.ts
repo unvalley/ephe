@@ -17,7 +17,7 @@ export type GitHubIssue = {
  * @param github_user_id The GitHub user ID to fetch issues for
  * @returns Promise with the list of issues assigned to the user
  */
-export const fetchAssignedIssues = async (github_user_id: string): Promise<GitHubIssue[]> => {
+const fetchAssignedIssues = async (github_user_id: string): Promise<GitHubIssue[]> => {
   try {
     const response = await fetch(`https://api.github.com/search/issues?q=assignee:${github_user_id}+state:open`);
 

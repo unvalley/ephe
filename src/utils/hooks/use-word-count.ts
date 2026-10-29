@@ -1,23 +1,8 @@
-import { useAtomValue } from "jotai";
-import { atom } from "jotai";
-import { editorContentAtom } from "../atoms/editor";
-import { editorModeAtom } from "./use-editor-mode";
-import { documentsAtom, activeDocumentIndexAtom } from "../atoms/multi-document";
+import { atom, useAtomValue } from "jotai";
+import { activeContentAtom } from "../atoms/active-content";
 
 // Derive word count from editor content
-export const wordCountAtom = atom((get) => {
-  const mode = get(editorModeAtom);
-
-  if (mode === "multi") {
-    const docs = get(documentsAtom);
-    const idx = get(activeDocumentIndexAtom);
-    const content = docs[idx]?.content;
-    return countWords(content);
-  }
-
-  const singleEditorContent = get(editorContentAtom);
-  return countWords(singleEditorContent);
-});
+const wordCountAtom = atom((get) => countWords(get(activeContentAtom)));
 
 // Hook to use word count
 export const useWordCount = () => {

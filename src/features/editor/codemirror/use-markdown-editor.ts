@@ -8,12 +8,12 @@ import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { showToast } from "../../../utils/components/toast";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 import { useTheme } from "../../../utils/hooks/use-theme";
-import { DprintMarkdownFormatter } from "../markdown/formatter/dprint-markdown-formatter";
+import { formatEditorView, useMarkdownFormatter } from "../markdown/formatter/format-editor";
 import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
 import { createDefaultTaskHandler, createChecklistPlugin } from "./tasklist";
 import { registerTaskHandler } from "./tasklist/task-close";
-import { snapshotStorage } from "../../snapshots/snapshot-storage";
+import { saveSnapshotWithToast } from "../../snapshots/snapshot-storage";
 import { useEditorTheme } from "./use-editor-theme";
 import { useTaskAutoFlush } from "../../../utils/hooks/use-task-auto-flush";
 import { useMobileDetector } from "../../../utils/hooks/use-mobile-detector";
@@ -26,24 +26,6 @@ import { customCursorLayer } from "./cursor-layer";
 import { useFocusMode } from "../../../utils/hooks/use-focus-mode";
 import { focusModeExtension } from "./focus-mode";
 import { usePaperMode } from "../../../utils/hooks/use-paper-mode";
-
-const useMarkdownFormatter = () => {
-  const ref = useRef<DprintMarkdownFormatter | null>(null);
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const fmt = await DprintMarkdownFormatter.getInstance();
-      if (alive) {
-        ref.current = fmt;
-      }
-    })();
-    return () => {
-      alive = false;
-      ref.current = null;
-    };
-  }, []);
-  return ref;
-};
 
 const useTaskHandler = () => {
   const { taskAutoFlushMode } = useTaskAutoFlush();
@@ -111,9 +93,7 @@ export const useMarkdownEditor = (
     // Only update if content actually changed to prevent unnecessary updates
     setContent((prevContent) => (prevContent !== newContent ? newContent : prevContent));
     // Call onChange callback if provided (for multi-editor)
-    if (onChange) {
-      onChange(newContent);
-    }
+    onChange?.(newContent);
   }, 300);
 
   useEffect(() => {
@@ -130,39 +110,12 @@ export const useMarkdownEditor = (
       return false;
     }
     try {
-      // format
-      const { state } = view;
-      const scrollTop = view.scrollDOM.scrollTop;
-      const cursorPos = state.selection.main.head;
-      const cursorLine = state.doc.lineAt(cursorPos);
-      const cursorLineNumber = cursorLine.number;
-      const cursorColumn = cursorPos - cursorLine.from;
-      const currentText = state.doc.toString();
-      const formattedText = await formatterRef.current.formatMarkdown(currentText);
-      if (formattedText !== currentText) {
-        view.dispatch({
-          changes: { from: 0, to: state.doc.length, insert: formattedText },
-        });
+      const formattedText = await formatEditorView(view, formatterRef.current);
+      if (formattedText !== null) {
         // Persist formatted content to state/storage and notify listeners
         lastWroteFromEditorRef.current = formattedText;
         setContent((prevContent) => (prevContent !== formattedText ? formattedText : prevContent));
-        if (onChange) {
-          onChange(formattedText);
-        }
-        // Restore cursor position after formatting
-        try {
-          const newState = view.state;
-          const newDocLineCount = newState.doc.lines;
-          if (cursorLineNumber <= newDocLineCount) {
-            const newLine = newState.doc.line(cursorLineNumber);
-            const newColumn = Math.min(cursorColumn, newLine.length);
-            const newPos = newLine.from + newColumn;
-            view.dispatch({ selection: { anchor: newPos, head: newPos } });
-          }
-        } catch (_selectionError) {
-          view.dispatch({ selection: { anchor: 0, head: 0 } });
-        }
-        view.scrollDOM.scrollTop = Math.min(scrollTop, view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight);
+        onChange?.(formattedText);
       }
       return true;
     } catch (error) {
@@ -175,26 +128,7 @@ export const useMarkdownEditor = (
   const onSaveSnapshot = async () => {
     const view = viewRef.current;
     if (!view) return false;
-    try {
-      const currentText = view.state.doc.toString();
-      if (!currentText) {
-        showToast("No content to save", "error");
-        return false;
-      }
-
-      // snapshot
-      snapshotStorage.save({
-        content: currentText,
-        charCount: currentText.length,
-      });
-
-      showToast("Snapshot saved", "default");
-      return true;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "unknown";
-      showToast(`Error saving snapshot: ${message}`, "error");
-      return false;
-    }
+    return saveSnapshotWithToast(view.state.doc.toString());
   };
 
   useLayoutEffect(() => {

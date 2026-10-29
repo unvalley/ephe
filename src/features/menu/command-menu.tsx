@@ -7,10 +7,10 @@ import { showToast } from "../../utils/components/toast";
 import { usePaperMode } from "../../utils/hooks/use-paper-mode";
 import { COLOR_THEME } from "../../utils/theme-initializer";
 import { useEditorWidth } from "../../utils/hooks/use-editor-width";
-import { FONT_FAMILIES, FONT_FAMILY_OPTIONS, fontFamilyAtom } from "../../utils/hooks/use-font";
+import { FONT_FAMILIES, fontFamilyAtom, nextFontFamily } from "../../utils/hooks/use-font";
 import type { EditorView } from "@codemirror/view";
 import { fetchGitHubIssuesTaskList } from "../integration/github/github-api";
-import { DprintMarkdownFormatter } from "../editor/markdown/formatter/dprint-markdown-formatter";
+import { formatEditorView, useMarkdownFormatter } from "../editor/markdown/formatter/format-editor";
 import { Transaction } from "@codemirror/state";
 import {
   CheckCircleIcon,
@@ -28,28 +28,9 @@ import {
   GithubLogoIcon,
   CrosshairSimpleIcon,
 } from "@phosphor-icons/react";
-import { snapshotStorage } from "../snapshots/snapshot-storage";
+import { saveSnapshotWithToast } from "../snapshots/snapshot-storage";
 import { useFocusMode } from "../../utils/hooks/use-focus-mode";
 import { useAtom } from "jotai";
-
-// Custom hook for markdown formatter
-const useMarkdownFormatter = () => {
-  const ref = useRef<DprintMarkdownFormatter | null>(null);
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const fmt = await DprintMarkdownFormatter.getInstance();
-      if (alive) {
-        ref.current = fmt;
-      }
-    })();
-    return () => {
-      alive = false;
-      ref.current = null;
-    };
-  }, []);
-  return ref;
-};
 
 type CommandMenuProps = {
   open: boolean;
@@ -105,11 +86,7 @@ export const CommandMenu = ({
     // which trips jsx-a11y/no-autofocus.
     const raf = requestAnimationFrame(() => inputRef.current?.focus());
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        e.stopPropagation();
-        onClose();
-      } else if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+      if (e.key === "Escape" || (e.key === "k" && (e.ctrlKey || e.metaKey))) {
         e.preventDefault();
         e.stopPropagation();
         onClose();
@@ -138,31 +115,17 @@ export const CommandMenu = ({
   };
 
   const cycleFont = () => {
-    const fontKeys = FONT_FAMILY_OPTIONS;
-    const currentIndex = fontKeys.indexOf(fontFamily);
-    const nextIndex = (currentIndex + 1) % fontKeys.length;
-    setFontFamily(fontKeys[nextIndex]);
+    setFontFamily(nextFontFamily(fontFamily));
     onClose();
   };
 
-  const openTaskModal = () => {
+  const openHistoryTab = (tabIndex: number) => {
     if (!onOpenHistoryModal) return;
     onClose(); // Close command menu first
     // Use requestAnimationFrame to ensure command menu has completed its close animation
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        onOpenHistoryModal(0);
-      });
-    });
-  };
-
-  const openSnapshotModal = () => {
-    if (!onOpenHistoryModal) return;
-    onClose(); // Close command menu first
-    // Use requestAnimationFrame to ensure command menu has completed its close animation
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        onOpenHistoryModal(1);
+        onOpenHistoryModal(tabIndex);
       });
     });
   };
@@ -200,39 +163,7 @@ export const CommandMenu = ({
       return;
     }
     try {
-      const { state } = editorView;
-      const scrollTop = editorView.scrollDOM.scrollTop;
-      const cursorPos = state.selection.main.head;
-      const cursorLine = state.doc.lineAt(cursorPos);
-      const cursorLineNumber = cursorLine.number;
-      const cursorColumn = cursorPos - cursorLine.from;
-      const currentText = state.doc.toString();
-      const formattedText = await formatterRef.current.formatMarkdown(currentText);
-
-      if (formattedText !== currentText) {
-        editorView.dispatch({
-          changes: { from: 0, to: state.doc.length, insert: formattedText },
-          annotations: Transaction.userEvent.of("input"),
-        });
-
-        // Restore cursor position after formatting
-        try {
-          const newState = editorView.state;
-          const newDocLineCount = newState.doc.lines;
-          if (cursorLineNumber <= newDocLineCount) {
-            const newLine = newState.doc.line(cursorLineNumber);
-            const newColumn = Math.min(cursorColumn, newLine.length);
-            const newPos = newLine.from + newColumn;
-            editorView.dispatch({ selection: { anchor: newPos, head: newPos } });
-          }
-        } catch (_selectionError) {
-          editorView.dispatch({ selection: { anchor: 0, head: 0 } });
-        }
-        editorView.scrollDOM.scrollTop = Math.min(
-          scrollTop,
-          editorView.scrollDOM.scrollHeight - editorView.scrollDOM.clientHeight,
-        );
-      }
+      await formatEditorView(editorView, formatterRef.current, Transaction.userEvent.of("input"));
     } catch (error) {
       const message = error instanceof Error ? error.message : "unknown";
       showToast(`Error formatting document: ${message}`, "error");
@@ -283,24 +214,8 @@ export const CommandMenu = ({
   };
 
   const handleSaveSnapshot = () => {
-    if (!editorContent) {
-      showToast("No content to save", "error");
-      onClose();
-      return;
-    }
-
-    try {
-      snapshotStorage.save({
-        content: editorContent,
-        charCount: editorContent.length,
-      });
-      showToast("Snapshot saved", "default");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "unknown";
-      showToast(`Error saving snapshot: ${message}`, "error");
-    } finally {
-      onClose();
-    }
+    saveSnapshotWithToast(editorContent);
+    onClose();
   };
 
   const commandsList = (): CommandItem[] => {
@@ -377,14 +292,14 @@ export const CommandMenu = ({
       id: "open-tasks",
       name: "Open task modal",
       icon: <CheckCircleIcon className="size-4" weight="light" />,
-      perform: openTaskModal,
+      perform: () => openHistoryTab(0),
     });
 
     list.push({
       id: "open-snapshots",
       name: "Open snapshot modal",
       icon: <FileIcon className="size-4" weight="light" />,
-      perform: openSnapshotModal,
+      perform: () => openHistoryTab(1),
     });
 
     list.push({

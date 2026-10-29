@@ -4,7 +4,7 @@ import { useAtom } from "jotai";
 
 export type FocusMode = "off" | "on";
 
-export const focusModeAtom = atomWithStorage<FocusMode>(LOCAL_STORAGE_KEYS.FOCUS_MODE, "off");
+const focusModeAtom = atomWithStorage<FocusMode>(LOCAL_STORAGE_KEYS.FOCUS_MODE, "off");
 
 export const useFocusMode = () => {
   const [focusMode, setFocusMode] = useAtom(focusModeAtom);
