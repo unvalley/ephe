@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { isMac } from "../platform";
 
 export const useCommandK = (isModalOpen?: boolean) => {
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
@@ -15,7 +16,7 @@ export const useCommandK = (isModalOpen?: boolean) => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "k" && (event.ctrlKey || event.metaKey)) {
+      if (event.key === "k" && (isMac() ? event.metaKey : event.ctrlKey)) {
         event.preventDefault();
         toggleCommandMenu();
       }
