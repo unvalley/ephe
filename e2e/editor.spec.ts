@@ -187,8 +187,7 @@ test.describe("Editor Page", () => {
     await expect(dialog).not.toBeVisible();
 
     // open command menu by Ctrl+K（or Cmd+K）
-    const isMac = process.platform === "darwin";
-    const modifier = isMac ? "Meta" : "Control";
+    const modifier = await page.evaluate(() => (/mac/i.test(navigator.userAgent) ? "Meta" : "Control"));
     await page.keyboard.press(`${modifier}+k`);
     await expect(dialog).toBeVisible();
     await expect(dialog).toHaveClass(/opacity-100/);
@@ -206,8 +205,7 @@ test.describe("Editor Page", () => {
     await expect(dialog).not.toBeVisible();
 
     // open command menu
-    const isMac = process.platform === "darwin";
-    const modifier = isMac ? "Meta" : "Control";
+    const modifier = await page.evaluate(() => (/mac/i.test(navigator.userAgent) ? "Meta" : "Control"));
     await page.keyboard.press(`${modifier}+k`);
 
     // Dialog should now be visible
