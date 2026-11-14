@@ -24,13 +24,9 @@
         }
       },
       "nursery": {
-        "useSortedClasses": {
+        "useTailwindSortedClasses": {
           "level": "error",
-          "fix": "unsafe",
-          "options": {
-            "attributes": [],
-            "functions": []
-          }
+          "fix": "unsafe"
         }
       }
     }
@@ -52,5 +48,6 @@
     "parser": {
       "tailwindDirectives": true
     }
-  }
+  },
+  "tailwind": { "attributes": ["class", "className"], "stylesheet": "./src/globals.css" }
 }

@@ -96,7 +96,7 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
       if (snapshots.length > 1) {
         const newSelectedIndex = snapshots.findIndex((s) => s.id === selectedSnapshot.id);
         const nextIndex = newSelectedIndex === 0 ? 1 : newSelectedIndex - 1;
-        setSelectedSnapshot(snapshots[nextIndex >= 0 ? nextIndex : 0]);
+        setSelectedSnapshot(snapshots[Math.max(nextIndex, 0)]);
       } else {
         setSelectedSnapshot(null);
       }
@@ -188,13 +188,13 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                                   <div className="flex items-center">
                                     <span className="mr-1">{task.content}</span>
                                     {task.section && (
-                                      <span className="text-neutral-500 text-sm dark:text-neutral-400">
+                                      <span className="text-sm text-neutral-500 dark:text-neutral-400">
                                         {task.section}
                                       </span>
                                     )}
                                   </div>
                                   <div className="flex items-center gap-3">
-                                    <span className="text-neutral-500 text-sm dark:text-neutral-400">
+                                    <span className="text-sm text-neutral-500 dark:text-neutral-400">
                                       {formatDate(task.completedAt)}
                                     </span>
                                     <button
@@ -231,14 +231,14 @@ export const HistoryModal = ({ isOpen, onClose, initialTabIndex = 0 }: HistoryMo
                           </div>
                         )}
                         <div className="flex h-[60vh]">
-                          <div className="flex-1 overflow-y-auto border-neutral-200 border-r pr-4 dark:border-neutral-600">
+                          <div className="flex-1 overflow-y-auto border-r border-neutral-200 pr-4 dark:border-neutral-600">
                             {snapshots.length === 0 ? (
                               <div className="flex h-full items-center justify-center">
                                 <div className="text-center text-neutral-500 dark:text-neutral-400">
                                   No snapshots found.
                                   <br />
                                   You can save a snapshot by{" "}
-                                  <kbd className="rounded-md border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-medium text-neutral-800 text-xs dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-200">
+                                  <kbd className="rounded-md border border-neutral-200 bg-neutral-100 px-1 py-0.5 text-xs font-medium text-neutral-800 dark:border-neutral-600 dark:bg-neutral-700 dark:text-neutral-200">
                                     Cmd + Shift + s
                                   </kbd>{" "}
                                   on the editor.

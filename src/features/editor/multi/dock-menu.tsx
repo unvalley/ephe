@@ -258,7 +258,7 @@ export const DocumentDock = ({ onNavigate }: DocumentDockProps) => {
                 {dockActive && (
                   <div className="flex h-full flex-col p-3">
                     <div className="flex-1 overflow-hidden">
-                      <pre className="text-left text-[10px] text-gray-500 leading-tight dark:text-gray-300">
+                      <pre className="text-left text-[10px] leading-tight text-gray-500 dark:text-gray-300">
                         {documentPreviews[index]}
                       </pre>
                     </div>
