@@ -31,6 +31,7 @@ import {
 import { saveSnapshotWithToast } from "../snapshots/snapshot-storage";
 import { useFocusMode } from "../../utils/hooks/use-focus-mode";
 import { useAtom } from "jotai";
+import { isMac } from "../../utils/platform";
 
 type CommandMenuProps = {
   open: boolean;
@@ -86,7 +87,7 @@ export const CommandMenu = ({
     // which trips jsx-a11y/no-autofocus.
     const raf = requestAnimationFrame(() => inputRef.current?.focus());
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" || (e.key === "k" && (e.ctrlKey || e.metaKey))) {
+      if (e.key === "Escape" || (e.key === "k" && (isMac() ? e.metaKey : e.ctrlKey))) {
         e.preventDefault();
         e.stopPropagation();
         onClose();
