@@ -1,6 +1,6 @@
 export const LandingPage = () => {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-dots-paper px-4 py-20 antialiased">
+    <div className="bg-dots-paper flex min-h-screen flex-col items-center justify-center px-4 py-20 antialiased">
       <div className="w-full max-w-lg space-y-12 sm:space-y-12">
         <div className="space-y-2 sm:space-y-2">
           <p className="">
@@ -52,14 +52,14 @@ export const LandingPage = () => {
         <div className="my-10 flex justify-center">
           <a
             href="/"
-            className="rounded-md border border-neutral-400 px-3 py-1 text-neutral-400 transition-colors duration-300 hover:text-neutral-900 dark:border-netural-600 dark:text-neutral-400 dark:hover:border-neutral-100 dark:hover:text-neutral-100"
+            className="dark:border-netural-600 rounded-md border border-neutral-400 px-3 py-1 text-neutral-400 transition-colors duration-300 hover:text-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-100 dark:hover:text-neutral-100"
           >
             Try it out
           </a>
         </div>
       </div>
 
-      <footer className="text-center text-neutral-600 text-sm sm:text-base dark:text-neutral-400">
+      <footer className="text-center text-sm text-neutral-600 sm:text-base dark:text-neutral-400">
         This project is built by{" "}
         <a href="https://x.com/unvalley_" className="text-blue-400 hover:underline">
           unvalley

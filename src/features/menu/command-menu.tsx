@@ -346,7 +346,7 @@ export const CommandMenu = ({
               e.stopPropagation();
             }}
           >
-            <div className="relative border-neutral-200 border-b dark:border-zinc-800">
+            <div className="relative border-b border-neutral-200 dark:border-zinc-800">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <MagnifyingGlassIcon className="size-4" weight="thin" />
               </div>
@@ -355,21 +355,21 @@ export const CommandMenu = ({
                 value={inputValue}
                 onValueChange={setInputValue}
                 placeholder="Type a command or search..."
-                className="w-full border-none bg-transparent py-2.5 pr-3 pl-9 text-neutral-900 text-sm outline-none placeholder:text-neutral-400 focus:ring-0 dark:text-neutral-100 dark:placeholder:text-neutral-500" // focus:ring-0 でフォーカス時のリングを消去
+                className="w-full border-none bg-transparent py-2.5 pr-3 pl-9 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:ring-0 dark:text-neutral-100 dark:placeholder:text-neutral-500" // focus:ring-0 でフォーカス時のリングを消去
               />
             </div>
 
             <Command.List
               ref={listRef}
-              className="scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent max-h-[min(60vh,350px)] overflow-y-auto p-2" // 高さを調整
+              className="max-h-[min(60vh,350px)] scrollbar-thin scrollbar-thumb-neutral-200 scrollbar-track-transparent overflow-y-auto p-2 dark:scrollbar-thumb-zinc-700" // 高さを調整
             >
-              <Command.Empty className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">
+              <Command.Empty className="py-6 text-center text-sm text-neutral-500 dark:text-neutral-400">
                 No results found.
               </Command.Empty>
 
               <Command.Group
                 heading="Interface"
-                className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
+                className="mb-1 px-1 text-xs font-medium tracking-wider text-neutral-500 dark:text-neutral-400"
               >
                 {commandsList().flatMap((command) =>
                   INTERFACE_IDS.has(command.id)
@@ -378,39 +378,39 @@ export const CommandMenu = ({
                           key={command.id}
                           value={command.name}
                           onSelect={command.perform}
-                          className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                          className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-neutral-900 transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:hover:bg-zinc-800 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400"
                         >
                           <div className="flex items-center gap-2">
-                            <div className="flex size-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                            <div className="flex size-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-hover:bg-zinc-600 dark:group-aria-selected:bg-primary-600/20">
                               {command.icon}
                             </div>
                             <span className="flex-grow truncate">
                               {" "}
                               {command.name}
                               {command.id === "paper-mode" && currentPaperMode && (
-                                <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                                <span className="ml-1.5 text-xs text-neutral-500 dark:text-neutral-400">
                                   ({currentPaperMode})
                                 </span>
                               )}
                               {command.id === "editor-width" && currentEditorWidth && (
-                                <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                                <span className="ml-1.5 text-xs text-neutral-500 dark:text-neutral-400">
                                   ({currentEditorWidth})
                                 </span>
                               )}
                               {command.id === "font-family" && (
-                                <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                                <span className="ml-1.5 text-xs text-neutral-500 dark:text-neutral-400">
                                   ({FONT_FAMILIES[fontFamily].displayValue})
                                 </span>
                               )}
                               {command.id === "focus-mode" && (
-                                <span className="ml-1.5 text-neutral-500 text-xs dark:text-neutral-400">
+                                <span className="ml-1.5 text-xs text-neutral-500 dark:text-neutral-400">
                                   ({focusMode})
                                 </span>
                               )}
                             </span>
                           </div>
                           {command.shortcut && (
-                            <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                            <kbd className="hidden flex-shrink-0 rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-xs font-medium text-neutral-500 select-none group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
                               {command.shortcut}
                             </kbd>
                           )}
@@ -422,7 +422,7 @@ export const CommandMenu = ({
 
               <Command.Group
                 heading="Operations"
-                className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
+                className="mb-1 px-1 text-xs font-medium tracking-wider text-neutral-500 dark:text-neutral-400"
               >
                 {commandsList().flatMap((command) =>
                   OPERATION_IDS.has(command.id)
@@ -431,16 +431,16 @@ export const CommandMenu = ({
                           key={command.id}
                           value={command.name}
                           onSelect={command.perform}
-                          className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                          className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-neutral-900 transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:hover:bg-zinc-800 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400"
                         >
                           <div className="flex items-center gap-2">
-                            <div className="flex size-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                            <div className="flex size-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-hover:bg-zinc-600 dark:group-aria-selected:bg-primary-600/20">
                               {command.icon}
                             </div>
                             <span className="flex-grow truncate">{command.name}</span>
                           </div>
                           {command.shortcut && (
-                            <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                            <kbd className="hidden flex-shrink-0 rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-xs font-medium text-neutral-500 select-none group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
                               {command.shortcut}
                             </kbd>
                           )}
@@ -452,7 +452,7 @@ export const CommandMenu = ({
 
               <Command.Group
                 heading="Navigation"
-                className="mb-1 px-1 font-medium text-neutral-500 text-xs tracking-wider dark:text-neutral-400"
+                className="mb-1 px-1 text-xs font-medium tracking-wider text-neutral-500 dark:text-neutral-400"
               >
                 {commandsList().flatMap((command) =>
                   NAVIGATION_IDS.has(command.id)
@@ -461,16 +461,16 @@ export const CommandMenu = ({
                           key={command.id}
                           value={command.name}
                           onSelect={command.perform}
-                          className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-neutral-900 text-sm transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400 dark:hover:bg-zinc-800"
+                          className="group mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-neutral-900 transition-colors hover:bg-neutral-100 aria-selected:bg-primary-500/10 aria-selected:text-primary-600 dark:text-neutral-100 dark:hover:bg-zinc-800 dark:aria-selected:bg-primary-500/20 dark:aria-selected:text-primary-400"
                         >
                           <div className="flex items-center gap-2">
-                            <div className="flex size-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-aria-selected:bg-primary-600/20 dark:group-hover:bg-zinc-600">
+                            <div className="flex size-5 flex-shrink-0 items-center justify-center rounded-md bg-neutral-100/80 text-neutral-900 transition-colors group-hover:bg-neutral-200 group-aria-selected:bg-primary-500/20 dark:bg-zinc-700/60 dark:text-neutral-100 dark:group-hover:bg-zinc-600 dark:group-aria-selected:bg-primary-600/20">
                               {command.icon}
                             </div>
                             <span className="flex-grow truncate">{command.name}</span>
                           </div>
                           {command.shortcut && (
-                            <kbd className="hidden flex-shrink-0 select-none rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-500 text-xs group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
+                            <kbd className="hidden flex-shrink-0 rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-xs font-medium text-neutral-500 select-none group-hover:border-neutral-300 sm:inline-block dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
                               {command.shortcut}
                             </kbd>
                           )}
@@ -481,7 +481,7 @@ export const CommandMenu = ({
               </Command.Group>
             </Command.List>
 
-            <div className="flex items-center justify-between border-neutral-200 border-t px-3 py-2 text-neutral-500 text-xs dark:border-zinc-800 dark:text-neutral-400">
+            <div className="flex items-center justify-between border-t border-neutral-200 px-3 py-2 text-xs text-neutral-500 dark:border-zinc-800 dark:text-neutral-400">
               <div className="flex items-center gap-1">
                 <kbd className="rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-neutral-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-neutral-400">
                   ⌘

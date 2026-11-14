@@ -117,7 +117,7 @@ export const EditorPage = () => {
               <p className="text-sm">Editing in Picture-in-Picture</p>
               <button
                 type="button"
-                className="rounded-md px-3 py-2 text-neutral-700 text-sm transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:text-neutral-200 dark:focus-visible:ring-neutral-600 dark:hover:bg-white/10"
+                className="rounded-md px-3 py-2 text-sm text-neutral-700 transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 dark:text-neutral-200 dark:hover:bg-white/10 dark:focus-visible:ring-neutral-600"
                 onClick={closePictureInPicture}
               >
                 Return editor

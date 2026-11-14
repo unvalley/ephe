@@ -104,7 +104,7 @@ const useSnapshotCount = (menuOpen: boolean) => {
 };
 
 const ValuePill = ({ children }: { children: ReactNode }) => (
-  <span className="inline-flex min-w-0 max-w-28 items-center justify-center rounded-md bg-neutral-100 px-2.5 py-1 text-[12px] text-neutral-600 leading-none dark:bg-white/10 dark:text-neutral-300">
+  <span className="inline-flex max-w-28 min-w-0 items-center justify-center rounded-md bg-neutral-100 px-2.5 py-1 text-[12px] leading-none text-neutral-600 dark:bg-white/10 dark:text-neutral-300">
     <span className="truncate">{children}</span>
   </span>
 );
@@ -332,7 +332,7 @@ export const SystemMenu = ({
       {({ open }) => (
         <>
           <MenuButton
-            className="inline-flex h-9 select-none items-center rounded-md bg-white/90 px-3 text-[13px] text-neutral-950 backdrop-blur-xl transition-[background-color,transform] duration-150 ease-out hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 active:translate-y-px dark:bg-neutral-950/85 dark:text-neutral-50 dark:focus-visible:ring-neutral-600 dark:hover:bg-neutral-900"
+            className="inline-flex h-9 items-center rounded-md bg-white/90 px-3 text-[13px] text-neutral-950 backdrop-blur-xl transition-[background-color,transform] duration-150 ease-out select-none hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 active:translate-y-px dark:bg-neutral-950/85 dark:text-neutral-50 dark:hover:bg-neutral-900 dark:focus-visible:ring-neutral-600"
             onMouseDown={preserveEditorFocusOnMouseDown}
             onClick={() => setMenuOpen(!menuOpen)}
           >

@@ -5,19 +5,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: {
-          DEFAULT: "#333333",
-          50: "#FFFFFF",
-          100: "#F5F5F5",
-          200: "#E0E0E0",
-          300: "#CCCCCC",
-          400: "#999999",
-          500: "#666666",
-          600: "#333333",
-          700: "#1F1F1F",
-          800: "#111111",
-          900: "#000000",
-        },
+        // `primary` lives in `@theme` in src/globals.css so Biome's useTailwindSortedClasses can read it.
         blue: {
           DEFAULT: "#00A3FF",
           50: "#E6F6FF",
