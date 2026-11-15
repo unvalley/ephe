@@ -21,3 +21,7 @@ export const showToast = (message: string, type: ToastType = "default", options?
       sonnerToast(message, options);
   }
 };
+
+export const dismissToast = (id: string | number) => {
+  sonnerToast.dismiss(id);
+};

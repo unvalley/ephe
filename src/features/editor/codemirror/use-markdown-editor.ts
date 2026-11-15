@@ -255,6 +255,12 @@ export const useMarkdownEditor = (
         head: Math.min(currentHead, content.length),
       },
     });
+    // The editor now shows external content, so nothing it wrote or was about
+    // to write is still in flight. A pending save would put the replaced text
+    // back into storage, and a later external change equal to the last own
+    // write would be mistaken for the echo above and never reach the editor.
+    debouncedSetContent.cancel();
+    lastWroteFromEditorRef.current = null;
   }, [content]);
 
   return {
