@@ -24,6 +24,11 @@ const ERASE_MS = 22;
 const HOLD_MS = 2400;
 const GAP_MS = 450;
 
+// Stands in for the prompt while nothing is typed. CodeMirror places the caret
+// of an empty page from the placeholder's box, and an empty span has no height,
+// so the caret would be drawn zero pixels tall and the page would look unfocused.
+const ZERO_WIDTH_SPACE = "​";
+
 const shuffled = <T>(items: readonly T[]): T[] => {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i--) {
@@ -36,6 +41,10 @@ const shuffled = <T>(items: readonly T[]): T[] => {
 const createTypewriter = (phrases: readonly string[]) => {
   const element = document.createElement("span");
   element.className = "cm-typewriter";
+  const show = (text: string) => {
+    element.textContent = text || ZERO_WIDTH_SPACE;
+  };
+  show("");
   const order = shuffled(phrases).map((phrase) => Array.from(phrase));
   let phraseIndex = 0;
   let length = 0;
@@ -46,7 +55,7 @@ const createTypewriter = (phrases: readonly string[]) => {
     const phrase = order[phraseIndex];
     if (!erasing) {
       length += 1;
-      element.textContent = phrase.slice(0, length).join("");
+      show(phrase.slice(0, length).join(""));
       if (length >= phrase.length) {
         erasing = true;
         timer = setTimeout(tick, HOLD_MS);
@@ -56,7 +65,7 @@ const createTypewriter = (phrases: readonly string[]) => {
       return;
     }
     length -= 1;
-    element.textContent = phrase.slice(0, length).join("");
+    show(phrase.slice(0, length).join(""));
     if (length <= 0) {
       erasing = false;
       phraseIndex = (phraseIndex + 1) % order.length;
@@ -72,7 +81,7 @@ const createTypewriter = (phrases: readonly string[]) => {
     element,
     start: () => {
       if (prefersReducedMotion()) {
-        element.textContent = order[phraseIndex].join("");
+        show(order[phraseIndex].join(""));
         return;
       }
       if (timer === undefined) timer = setTimeout(tick, GAP_MS);

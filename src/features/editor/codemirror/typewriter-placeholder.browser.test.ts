@@ -25,6 +25,13 @@ describe("typewriterPlaceholder", () => {
     }
   });
 
+  test("gives the caret a line's height before the first letter is typed", () => {
+    const view = createView("");
+    const caret = view.coordsAtPos(0, 1);
+    expect(caret).not.toBeNull();
+    expect((caret?.bottom ?? 0) - (caret?.top ?? 0)).toBeGreaterThan(0);
+  });
+
   test("types a prompt into the placeholder of an empty page", async () => {
     const view = createView("");
     await wait(700);
