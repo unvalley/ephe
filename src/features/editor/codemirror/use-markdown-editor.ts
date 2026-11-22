@@ -2,14 +2,13 @@ import { defaultKeymap, historyKeymap, history } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { Compartment, EditorState, Prec } from "@codemirror/state";
-import { EditorView, keymap, placeholder } from "@codemirror/view";
+import { EditorView, keymap } from "@codemirror/view";
 import { useAtom, useAtomValue } from "jotai";
 import { useRef, useEffect, useLayoutEffect, useState } from "react";
 import { showToast } from "../../../utils/components/toast";
 import { useEditorWidth } from "../../../utils/hooks/use-editor-width";
 import { useTheme } from "../../../utils/hooks/use-theme";
 import { formatEditorView, useMarkdownFormatter } from "../markdown/formatter/format-editor";
-import { getRandomQuote } from "../quotes";
 import { taskStorage } from "../tasks/task-storage";
 import { createDefaultTaskHandler, createChecklistPlugin } from "./tasklist";
 import { registerTaskHandler } from "./tasklist/task-close";
@@ -25,6 +24,7 @@ import { cursorColorAtom, resolveCursorColor } from "../../../utils/hooks/use-cu
 import { customCursorLayer } from "./cursor-layer";
 import { useFocusMode } from "../../../utils/hooks/use-focus-mode";
 import { focusModeExtension } from "./focus-mode";
+import { typewriterPlaceholder } from "./typewriter-placeholder";
 import { isPersistedEdit } from "./persisted-edit";
 import { usePaperMode } from "../../../utils/hooks/use-paper-mode";
 
@@ -164,7 +164,7 @@ export const useMarkdownEditor = (
         highlightCompartment.of(editorHighlightStyle),
         focusModeCompartment.of(isFocusMode ? focusModeExtension : []),
         // Only show placeholder on non-mobile devices
-        ...(isMobile ? [] : [placeholder(getRandomQuote())]),
+        ...(isMobile ? [] : [typewriterPlaceholder()]),
 
         keymap.of([
           {

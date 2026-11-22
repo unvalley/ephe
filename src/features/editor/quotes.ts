@@ -9,7 +9,3 @@ export const WRITING_QUOTES = [
   "Later equals never.",
   "Divide and conquer.",
 ];
-
-export const getRandomQuote = (): string => {
-  return WRITING_QUOTES[Math.floor(Math.random() * WRITING_QUOTES.length)];
-};
