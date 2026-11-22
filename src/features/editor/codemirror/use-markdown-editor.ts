@@ -25,6 +25,7 @@ import { cursorColorAtom, resolveCursorColor } from "../../../utils/hooks/use-cu
 import { customCursorLayer } from "./cursor-layer";
 import { useFocusMode } from "../../../utils/hooks/use-focus-mode";
 import { focusModeExtension } from "./focus-mode";
+import { isPersistedEdit } from "./persisted-edit";
 import { usePaperMode } from "../../../utils/hooks/use-paper-mode";
 
 const useTaskHandler = () => {
@@ -153,14 +154,9 @@ export const useMarkdownEditor = (
         EditorView.lineWrapping,
         customCursorLayer,
         EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            // Skip updates from programmatic changes (formatting, restore, etc.)
-            // Only update for user input
-            const isUserInput = update.transactions.some((tr) => tr.isUserEvent("input") || tr.isUserEvent("delete"));
-            if (isUserInput) {
-              const updatedContent = update.state.doc.toString();
-              debouncedSetContent(updatedContent);
-            }
+          // Skip programmatic changes (restore, external sync); save anything the user did, undo included
+          if (update.transactions.some(isPersistedEdit)) {
+            debouncedSetContent(update.state.doc.toString());
           }
         }),
 
