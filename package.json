@@ -46,7 +46,7 @@
     "@babel/core": "^7.29.13",
     "@biomejs/biome": "latest",
     "@playwright/test": "^1.65.1",
-    "@rolldown/plugin-babel": "^0.2.4",
+    "@rolldown/plugin-babel": "^0.3.1",
     "@tailwindcss/postcss": "^4.3.5",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.5",
